@@ -70,9 +70,20 @@ func (e expr) Column() clause.Column {
 
 type BuildOpt func(clause.Column) interface{}
 
-var WithAlias BuildOpt = func(col clause.Column) interface{} {
-	return col
-}
+var (
+	// WithAlias build column with alias
+	WithAlias BuildOpt = func(col clause.Column) interface{} {
+		return clause.Column{Name: col.Name, Alias: col.Alias}
+	}
+
+	// WithTable build column with table
+	WithTable BuildOpt = func(col clause.Column) interface{} {
+		return clause.Column{Name: col.Name, Table: col.Table}
+	}
+
+	// WithAll build column with table and alias
+	WithAll BuildOpt = func(col clause.Column) interface{} { return col }
+)
 
 func (e expr) BuildColumn(stmt *gorm.Statement, opts ...BuildOpt) string {
 	var col interface{} = e.Col.Name
