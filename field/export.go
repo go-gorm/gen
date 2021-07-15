@@ -2,13 +2,13 @@ package field
 
 import "gorm.io/gorm/clause"
 
-// ======================== 通用类型 =======================
+// ======================== generic field =======================
 
 func NewField(column string) Field {
 	return Field{expr: expr{Col: clause.Column{Name: column}}}
 }
 
-// ======================== 整数类型 =======================
+// ======================== integer =======================
 
 func NewInt(column string) Int {
 	return Int{expr: expr{Col: clause.Column{Name: column}}}
@@ -50,7 +50,7 @@ func NewUint64(column string) Uint64 {
 	return Uint64{expr: expr{Col: clause.Column{Name: column}}}
 }
 
-// ======================== 浮点数类型 =======================
+// ======================== float =======================
 
 func NewFloat32(column string) Float32 {
 	return Float32{expr: expr{Col: clause.Column{Name: column}}}
@@ -60,7 +60,7 @@ func NewFloat64(column string) Float64 {
 	return Float64{expr: expr{Col: clause.Column{Name: column}}}
 }
 
-// ======================== 字符串类型 =======================
+// ======================== string =======================
 
 func NewString(column string) String {
 	return String{expr: expr{Col: clause.Column{Name: column}}}
@@ -70,13 +70,13 @@ func NewBytes(column string) Bytes {
 	return Bytes{expr: expr{Col: clause.Column{Name: column}}}
 }
 
-// ======================== 布尔类型 =======================
+// ======================== bool =======================
 
 func NewBool(column string) Bool {
 	return Bool{expr: expr{Col: clause.Column{Name: column}}}
 }
 
-// ======================== 时间类型 =======================
+// ======================== time =======================
 
 func NewTime(column string) Time {
 	return Time{expr: expr{Col: clause.Column{Name: column}}}

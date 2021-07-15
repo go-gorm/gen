@@ -11,8 +11,7 @@ import (
 
 var _ Expr = new(Field)
 
-// Expr 用于查询的表达式
-// 函数Mark无实际意义，用于区分Expr和clause.Expression
+// Expr a query expression about field
 type Expr interface {
 	clause.Expression
 
@@ -21,7 +20,8 @@ type Expr interface {
 	BuildColumn(*gorm.Statement, ...BuildOpt) string
 	RawExpr() interface{}
 
-	mark()
+	// pirvate do nothing, prevent users from implementing interfaces outside the package
+	private()
 }
 
 func Or(exprs ...Expr) Expr {
@@ -44,7 +44,7 @@ func toExpression(conds ...Expr) []clause.Expression {
 	return exprs
 }
 
-// Field 代表标准字段结构
+// Field a standard field struct
 type Field struct {
 	expr
 }
@@ -55,8 +55,7 @@ type expr struct {
 	expression clause.Expression
 }
 
-// mark 限制外部实现Expr接口
-func (expr) mark() {}
+func (expr) private() {}
 
 func (e expr) Build(builder clause.Builder) {
 	if e.expression == nil {
@@ -90,7 +89,7 @@ func (e expr) RawExpr() interface{} {
 	return e.expression
 }
 
-// ======================== 基本函数 ========================
+// ======================== basic function ========================
 func (e expr) Count() Expr {
 	return &expr{Col: e.Col, expression: clause.Expr{SQL: "COUNT(?)", Vars: []interface{}{e.Col}}}
 }
@@ -119,7 +118,7 @@ func (e expr) WithTable(table string) Expr {
 	return &expr{Col: e.Col, expression: clause.Expr{SQL: "?.?", Vars: []interface{}{clause.Table{Name: table}, e.Col}}}
 }
 
-// ======================== 列间通用比较 ========================
+// ======================== comparison between columns ========================
 func (e expr) EqCol(col Expr) Expr {
 	return &expr{expression: clause.Expr{SQL: "? = ?", Vars: []interface{}{e.RawExpr(), col.RawExpr()}}}
 }
@@ -140,7 +139,7 @@ func (e expr) LteCol(col Expr) Expr {
 	return &expr{expression: clause.Expr{SQL: "? <= ?", Vars: []interface{}{e.RawExpr(), col.RawExpr()}}}
 }
 
-// ======================== 关键字 ========================
+// ======================== keyword ========================
 func (e expr) As(alias string) Expr {
 	if e.expression != nil {
 		return &expr{Col: e.Col, expression: clause.Expr{SQL: "? AS ?", Vars: []interface{}{e.expression, clause.Column{Name: alias}}}}
@@ -152,7 +151,7 @@ func (e expr) Desc() Expr {
 	return &expr{Col: e.Col, expression: clause.Expr{SQL: "? DESC", Vars: []interface{}{e.Col}}}
 }
 
-// ======================== 通用Experssion ========================
+// ======================== general experssion ========================
 func (e expr) between(values []interface{}) Expr {
 	return &expr{Col: e.Col, expression: clause.Expr{SQL: "? BETWEEN ? AND ?", Vars: append([]interface{}{e.Col}, values...)}}
 }

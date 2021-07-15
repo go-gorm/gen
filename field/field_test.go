@@ -59,7 +59,7 @@ func TestExpr_Build(t *testing.T) {
 		ExpectedVars []interface{}
 		Result       string
 	}{
-		// ======================== 通用方法数据 ========================
+		// ======================== generic ========================
 		{
 			Expr:         field.NewField("id").EqCol(field.NewField("new_id")),
 			ExpectedVars: nil,
@@ -80,7 +80,7 @@ func TestExpr_Build(t *testing.T) {
 			ExpectedVars: nil,
 			Result:       "`id` = `tableB`.`new_id`",
 		},
-		// ======================== 整数类型数据 ========================
+		// ======================== integer ========================
 		{
 			Expr:         field.NewUint("id"),
 			ExpectedVars: nil,
@@ -186,7 +186,7 @@ func TestExpr_Build(t *testing.T) {
 			ExpectedVars: []interface{}{3},
 			Result:       "`age`<<?",
 		},
-		// ======================== 浮点数类型数据 ========================
+		// ======================== float ========================
 		{
 			Expr:         field.NewFloat64("score").Add(3.0),
 			ExpectedVars: []interface{}{float64(3.0)},
@@ -212,7 +212,7 @@ func TestExpr_Build(t *testing.T) {
 			ExpectedVars: []interface{}{float64(3.0)},
 			Result:       "`score` DIV ?",
 		},
-		// ======================== 字符串类型数据 ========================
+		// ======================== string ========================
 		{
 			Expr:         field.NewString("name").Eq("tom"),
 			ExpectedVars: []interface{}{"tom"},
@@ -243,7 +243,7 @@ func TestExpr_Build(t *testing.T) {
 			ExpectedVars: []interface{}{".*"},
 			Result:       "NOT `name` REGEXP ?",
 		},
-		// ======================== 时间类型数据 ========================
+		// ======================== time ========================
 		{
 			Expr:         field.NewTime("creatAt").Eq(timeData),
 			ExpectedVars: []interface{}{timeData},
@@ -284,7 +284,7 @@ func TestExpr_Build(t *testing.T) {
 			ExpectedVars: []interface{}{time.Duration(24 * time.Hour).Microseconds()},
 			Result:       "DATE_SUB(`creatAt`, INTERVAL ? MICROSECOND)",
 		},
-		// ======================== 布尔类型数据 ========================
+		// ======================== bool ========================
 		{
 			Expr:         field.NewBool("male").Not(),
 			ExpectedVars: nil,
