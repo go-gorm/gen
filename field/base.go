@@ -245,14 +245,14 @@ func (e expr) xor(value interface{}) Expr {
 }
 
 // ======================== subquery method ========================
-func ContainsSubQuery(columns []Expr, subQuery *gorm.Statement) Expr {
+func ContainsSubQuery(columns []Expr, subQuery *gorm.DB) Expr {
 	switch len(columns) {
 	case 0:
 		return &expr{expression: clause.Expr{}}
 	case 1:
 		return &expr{expression: clause.Expr{
-			SQL:  fmt.Sprint("?", " IN ", wrap(subQuery.SQL.String())),
-			Vars: append([]interface{}{columns[0].RawExpr()}, subQuery.Statement.Vars...),
+			SQL:  "? IN (?)",
+			Vars: append([]interface{}{columns[0].RawExpr()}, subQuery),
 		}}
 	default: // len(columns) > 0
 		vars := make([]string, len(columns))
@@ -261,8 +261,8 @@ func ContainsSubQuery(columns []Expr, subQuery *gorm.Statement) Expr {
 			vars[i], queryCols[i] = "?", c.RawExpr()
 		}
 		return &expr{expression: clause.Expr{
-			SQL:  fmt.Sprint(wrap(strings.Join(vars, ", ")), " IN ", wrap(subQuery.SQL.String())),
-			Vars: append(queryCols, subQuery.Statement.Vars...),
+			SQL:  fmt.Sprintf("(%s) IN (?)", strings.Join(vars, ", ")),
+			Vars: append(queryCols, subQuery),
 		}}
 	}
 }
@@ -277,13 +277,9 @@ const (
 	LteOp CompareOperate = " <= "
 )
 
-func CompareSubQuery(op CompareOperate, column Expr, subQuery *gorm.Statement) Expr {
+func CompareSubQuery(op CompareOperate, column Expr, subQuery *gorm.DB) Expr {
 	return &expr{expression: clause.Expr{
-		SQL:  fmt.Sprint("?", op, wrap(subQuery.SQL.String())),
-		Vars: append([]interface{}{column.RawExpr()}, subQuery.Statement.Vars...),
+		SQL:  fmt.Sprint("?", op, "(?)"),
+		Vars: append([]interface{}{column.RawExpr()}, subQuery),
 	}}
-}
-
-func wrap(subQuery string) string {
-	return "(" + subQuery + ")"
 }
