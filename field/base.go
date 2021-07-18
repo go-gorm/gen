@@ -71,11 +71,6 @@ func (e expr) Column() clause.Column {
 type BuildOpt func(clause.Column) interface{}
 
 var (
-	// WithAlias build column with alias
-	WithAlias BuildOpt = func(col clause.Column) interface{} {
-		return clause.Column{Name: col.Name, Alias: col.Alias}
-	}
-
 	// WithTable build column with table
 	WithTable BuildOpt = func(col clause.Column) interface{} {
 		return clause.Column{Name: col.Name, Table: col.Table}
