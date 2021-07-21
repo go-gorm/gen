@@ -24,19 +24,6 @@ func NewStage(db *gorm.DB) *Stage { return &Stage{db: db} }
 type Stage struct {
 	db    *gorm.DB
 	alias string // for subquery
-
-	metricsClient
-}
-
-// UseMetric specify a metric client
-func (s *Stage) UseMetric(client metricsClient) {
-	s.metricsClient = client
-}
-
-func (s *Stage) Emit(m BasicMethod) {
-	if s.metricsClient != nil {
-		s.metricsClient.Emit(m)
-	}
 }
 
 // UseDB specify a db connection(*gorm.DB)
@@ -62,7 +49,7 @@ func (s *Stage) Table() string {
 
 // UnderlyingDB return the underlying database connection
 func (s *Stage) UnderlyingDB() *gorm.DB {
-	s.Emit(diyM)
+	Emit(diyM)
 	return s.db
 }
 
@@ -81,7 +68,7 @@ func (s *Stage) buildWhere() []clause.Expression {
 type stmtOpt func(*gorm.Statement) *gorm.Statement
 
 var (
-	// withFROM add FROM clause
+	// withFROM 增加FROM子句
 	withFROM stmtOpt = func(stmt *gorm.Statement) *gorm.Statement {
 		if stmt.Table == "" {
 			_ = stmt.Parse(stmt.Model)
@@ -90,7 +77,7 @@ var (
 		return stmt
 	}
 
-	// // withSELECT add SELECT clause
+	// // withSELECT 增加SELECT子句
 	// withSELECT stmtOpt = func(stmt *gorm.Statement) *gorm.Statement {
 	// 	if _, ok := stmt.Clauses["SELECT"]; !ok {
 	// 		stmt.AddClause(clause.Select{})
@@ -124,12 +111,12 @@ func (s *Stage) buildStmt(opts ...stmtOpt) *gorm.Statement {
 // 	return clause.Expr{SQL: "(" + stmt.SQL.String() + ")", Vars: stmt.Vars}
 // }
 
-// As return with alias, must be used at the end
+// As 指定的值不可继承，因此需要在结尾使用
 func (s *Stage) As(alias string) Dao {
 	return &Stage{db: s.db, alias: alias}
 }
 
-// ======================== logic operate ========================
+// ======================== 逻辑操作 ========================
 func (s *Stage) Not(conds ...Condition) Dao {
 	return NewStage(s.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Not(condToExpression(conds...)...)}}))
 }
@@ -140,7 +127,7 @@ func (s *Stage) Or(conds ...Condition) Dao {
 
 // ======================== chainable api ========================
 func (s *Stage) Select(columns ...field.Expr) Dao {
-	s.Emit(selectM)
+	Emit(selectM)
 	if len(columns) == 0 {
 		return NewStage(s.db.Clauses(clause.Select{}))
 	}
@@ -148,7 +135,7 @@ func (s *Stage) Select(columns ...field.Expr) Dao {
 }
 
 func (s *Stage) Where(conds ...Condition) Dao {
-	s.Emit(whereM)
+	Emit(whereM)
 	var exprs = make([]clause.Expression, 0, len(conds))
 	for _, cond := range conds {
 		switch cond := cond.(type) {
@@ -162,42 +149,42 @@ func (s *Stage) Where(conds ...Condition) Dao {
 }
 
 func (s *Stage) Order(columns ...field.Expr) Dao {
-	s.Emit(orderM)
+	Emit(orderM)
 	return NewStage(s.db.Clauses(clause.OrderBy{Expression: CommaExpression{Exprs: toExpression(columns...)}}))
 }
 
 func (s *Stage) Distinct(columns ...field.Expr) Dao {
-	s.Emit(distinctM)
+	Emit(distinctM)
 	return NewStage(s.db.Distinct(toInterfaceSlice(toColNames(s.db.Statement, columns...))))
 }
 
 func (s *Stage) Omit(columns ...field.Expr) Dao {
-	s.Emit(omitM)
+	Emit(omitM)
 	return NewStage(s.db.Omit(toColNames(s.db.Statement, columns...)...))
 }
 
 func (s *Stage) Group(column field.Expr) Dao {
-	s.Emit(groupM)
+	Emit(groupM)
 	return NewStage(s.db.Group(column.Column().Name))
 }
 
 func (s *Stage) Having(conds ...Condition) Dao {
-	s.Emit(havingM)
+	Emit(havingM)
 	return NewStage(s.db.Clauses(clause.GroupBy{Having: condToExpression(conds...)}))
 }
 
 func (s *Stage) Limit(limit int) Dao {
-	s.Emit(limitM)
+	Emit(limitM)
 	return NewStage(s.db.Limit(limit))
 }
 
 func (s *Stage) Offset(offset int) Dao {
-	s.Emit(offsetM)
+	Emit(offsetM)
 	return NewStage(s.db.Offset(offset))
 }
 
 func (s *Stage) Scopes(funcs ...func(Dao) Dao) Dao {
-	s.Emit(scopesM)
+	Emit(scopesM)
 	var result Dao = s
 	for _, f := range funcs {
 		result = f(result)
@@ -206,80 +193,80 @@ func (s *Stage) Scopes(funcs ...func(Dao) Dao) Dao {
 }
 
 func (s *Stage) Unscoped() Dao {
-	s.Emit(unscopedM)
+	Emit(unscopedM)
 	return NewStage(s.db.Unscoped())
 }
 
 // ======================== finisher api ========================
 func (s *Stage) Create(value interface{}) error {
-	s.Emit(createM)
+	Emit(createM)
 	return s.db.Create(value).Error
 }
 
 func (s *Stage) CreateInBatches(value interface{}, batchSize int) error {
-	s.Emit(createInBatchesM)
+	Emit(createInBatchesM)
 	return s.db.CreateInBatches(value, batchSize).Error
 }
 
 func (s *Stage) Save(value interface{}) error {
-	s.Emit(saveM)
+	Emit(saveM)
 	return s.db.Save(value).Error
 }
 
 func (s *Stage) First(dest interface{}, conds ...field.Expr) error {
-	s.Emit(firstM)
+	Emit(firstM)
 	return s.db.Clauses(toExpression(conds...)...).First(dest).Error
 }
 
 func (s *Stage) Take(dest interface{}, conds ...field.Expr) error {
-	s.Emit(takeM)
+	Emit(takeM)
 	return s.db.Clauses(toExpression(conds...)...).Take(dest).Error
 }
 
 func (s *Stage) Last(dest interface{}, conds ...field.Expr) error {
-	s.Emit(lastM)
+	Emit(lastM)
 	return s.db.Clauses(toExpression(conds...)...).Last(dest).Error
 }
 
 func (s *Stage) Find(dest interface{}, conds ...field.Expr) error {
-	s.Emit(findM)
+	Emit(findM)
 	return s.db.Clauses(toExpression(conds...)...).Find(dest).Error
 }
 
 func (s *Stage) FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error {
-	s.Emit(findInBatchesM)
+	Emit(findInBatchesM)
 	return s.db.FindInBatches(dest, batchSize, func(tx *gorm.DB, batch int) error { return fc(NewStage(tx), batch) }).Error
 }
 
 func (s *Stage) FirstOrInit(dest interface{}, conds ...field.Expr) error {
-	s.Emit(firstOrInitM)
+	Emit(firstOrInitM)
 	return s.db.Clauses(toExpression(conds...)...).FirstOrInit(dest).Error
 }
 
 func (s *Stage) FirstOrCreate(dest interface{}, conds ...field.Expr) error {
-	s.Emit(firstOrCreateM)
+	Emit(firstOrCreateM)
 	return s.db.Clauses(toExpression(conds...)...).FirstOrCreate(dest).Error
 }
 
 func (s *Stage) Update(column field.Expr, value interface{}) error {
-	s.Emit(updateM)
+	Emit(updateM)
 	switch expr := column.RawExpr().(type) {
 	case clause.Expression:
-		return s.db.Update(column.BuildColumn(s.db.Statement), expr).Error
+		return s.db.Update(column.Column().Name, expr).Error
 	}
 
 	switch value := value.(type) {
 	case field.Expr:
-		return s.db.Update(column.BuildColumn(s.db.Statement), value.RawExpr()).Error
+		return s.db.Update(column.Column().Name, value.RawExpr()).Error
 	case *Stage:
-		return s.db.Update(column.BuildColumn(s.db.Statement), value.db).Error
+		return s.db.Update(column.Column().Name, value.db).Error
 	default:
-		return s.db.Update(column.BuildColumn(s.db.Statement), value).Error
+		return s.db.Update(column.Column().Name, value).Error
 	}
 }
 
 func (s *Stage) Updates(values interface{}) error {
-	s.Emit(updatesM)
+	Emit(updatesM)
 	if vs, ok := values.(map[string]interface{}); ok {
 		return s.db.Updates(toQuotedSubQueryMap(s.db.Statement, vs)).Error
 	}
@@ -287,24 +274,24 @@ func (s *Stage) Updates(values interface{}) error {
 }
 
 func (s *Stage) UpdateColumn(column field.Expr, value interface{}) error {
-	s.Emit(updateColumnM)
+	Emit(updateColumnM)
 	switch expr := column.RawExpr().(type) {
 	case clause.Expression:
-		return s.db.UpdateColumn(column.BuildColumn(s.db.Statement), expr).Error
+		return s.db.UpdateColumn(column.Column().Name, expr).Error
 	}
 
 	switch value := value.(type) {
 	case field.Expr:
-		return s.db.UpdateColumn(column.BuildColumn(s.db.Statement), value.RawExpr()).Error
+		return s.db.UpdateColumn(column.Column().Name, value.RawExpr()).Error
 	case *Stage:
-		return s.db.UpdateColumn(column.BuildColumn(s.db.Statement), value.db).Error
+		return s.db.UpdateColumn(column.Column().Name, value.db).Error
 	default:
-		return s.db.UpdateColumn(column.BuildColumn(s.db.Statement), value).Error
+		return s.db.UpdateColumn(column.Column().Name, value).Error
 	}
 }
 
 func (s *Stage) UpdateColumns(values interface{}) error {
-	s.Emit(updateColumnsM)
+	Emit(updateColumnsM)
 	if vs, ok := values.(map[string]interface{}); ok {
 		return s.db.UpdateColumns(toQuotedSubQueryMap(s.db.Statement, vs)).Error
 	}
@@ -312,67 +299,67 @@ func (s *Stage) UpdateColumns(values interface{}) error {
 }
 
 func (s *Stage) Delete(value interface{}, conds ...field.Expr) error {
-	s.Emit(deleteM)
+	Emit(deleteM)
 	return s.db.Clauses(toExpression(conds...)...).Delete(value).Error
 }
 
 func (s *Stage) Count(count *int64) error {
-	s.Emit(countM)
+	Emit(countM)
 	return s.db.Count(count).Error
 }
 
 func (s *Stage) Row() *sql.Row {
-	s.Emit(rowM)
+	Emit(rowM)
 	return s.db.Row()
 }
 
 func (s *Stage) Rows() (*sql.Rows, error) {
-	s.Emit(rowsM)
+	Emit(rowsM)
 	return s.db.Rows()
 }
 
 func (s *Stage) Scan(dest interface{}) error {
-	s.Emit(scanM)
+	Emit(scanM)
 	return s.db.Scan(dest).Error
 }
 
 func (s *Stage) Pluck(column field.Expr, dest interface{}) error {
-	s.Emit(pluckM)
-	return s.db.Pluck(column.BuildColumn(s.db.Statement), dest).Error
+	Emit(pluckM)
+	return s.db.Pluck(column.Column().Name, dest).Error
 }
 
 func (s *Stage) ScanRows(rows *sql.Rows, dest interface{}) error {
-	s.Emit(scanRowsM)
+	Emit(scanRowsM)
 	return s.db.ScanRows(rows, dest)
 }
 
 func (s *Stage) Transaction(fc func(Dao) error, opts ...*sql.TxOptions) error {
-	s.Emit(transactionM)
+	Emit(transactionM)
 	return s.db.Transaction(func(tx *gorm.DB) error { return fc(NewStage(tx)) }, opts...)
 }
 
 func (s *Stage) Begin(opts ...*sql.TxOptions) Dao {
-	s.Emit(beginM)
+	Emit(beginM)
 	return NewStage(s.db.Begin(opts...))
 }
 
 func (s *Stage) Commit() Dao {
-	s.Emit(commitM)
+	Emit(commitM)
 	return NewStage(s.db.Commit())
 }
 
 func (s *Stage) RollBack() Dao {
-	s.Emit(rollbackM)
+	Emit(rollbackM)
 	return NewStage(s.db.Rollback())
 }
 
 func (s *Stage) SavePoint(name string) Dao {
-	s.Emit(savePointM)
+	Emit(savePointM)
 	return NewStage(s.db.SavePoint(name))
 }
 
 func (s *Stage) RollBackTo(name string) Dao {
-	s.Emit(rollbackToM)
+	Emit(rollbackToM)
 	return NewStage(s.db.RollbackTo(name))
 }
 
@@ -426,8 +413,8 @@ func toQuotedSubQueryMap(stmt *gorm.Statement, values map[string]interface{}) ma
 	return escapedValues
 }
 
-// ======================== temporary structure ========================
-// CommaExpression comma expression
+// ======================== 临时数据结构 ========================
+// 逗号分割的表达式
 type CommaExpression struct {
 	Exprs []clause.Expression
 }

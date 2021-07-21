@@ -1,10 +1,9 @@
 package gen
 
-type metricsClient interface{ Emit(BasicMethod) }
-
 const (
-	diyM BasicMethod = iota // diy methond
+	diyM BasicMethod = iota // 用户自定义方法
 
+	// modelM 不支持 Model 方法
 	selectM
 	whereM
 	orderM
@@ -148,5 +147,23 @@ func (b BasicMethod) String() string {
 		return "rollbackto"
 	default:
 		return "unknown"
+	}
+}
+
+type metricsClient interface {
+	Emit(BasicMethod)
+}
+
+var mClient metricsClient
+
+// UseMetric specify a metric client
+func UseMetric(client metricsClient) {
+	mClient = client
+}
+
+// Emit metrics emit
+func Emit(m BasicMethod) {
+	if mClient != nil {
+		mClient.Emit(m)
 	}
 }
