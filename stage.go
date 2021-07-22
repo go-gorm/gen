@@ -49,7 +49,7 @@ func (s *Stage) Table() string {
 
 // UnderlyingDB return the underlying database connection
 func (s *Stage) UnderlyingDB() *gorm.DB {
-	Emit(diyM)
+	Emit(methodDiy)
 	return s.db
 }
 
@@ -127,7 +127,7 @@ func (s *Stage) Or(conds ...Condition) Dao {
 
 // ======================== chainable api ========================
 func (s *Stage) Select(columns ...field.Expr) Dao {
-	Emit(selectM)
+	Emit(methodSelect)
 	if len(columns) == 0 {
 		return NewStage(s.db.Clauses(clause.Select{}))
 	}
@@ -135,7 +135,7 @@ func (s *Stage) Select(columns ...field.Expr) Dao {
 }
 
 func (s *Stage) Where(conds ...Condition) Dao {
-	Emit(whereM)
+	Emit(methodWhere)
 	var exprs = make([]clause.Expression, 0, len(conds))
 	for _, cond := range conds {
 		switch cond := cond.(type) {
@@ -149,42 +149,42 @@ func (s *Stage) Where(conds ...Condition) Dao {
 }
 
 func (s *Stage) Order(columns ...field.Expr) Dao {
-	Emit(orderM)
+	Emit(methodOrder)
 	return NewStage(s.db.Clauses(clause.OrderBy{Expression: CommaExpression{Exprs: toExpression(columns...)}}))
 }
 
 func (s *Stage) Distinct(columns ...field.Expr) Dao {
-	Emit(distinctM)
+	Emit(methodDistinct)
 	return NewStage(s.db.Distinct(toInterfaceSlice(toColNames(s.db.Statement, columns...))))
 }
 
 func (s *Stage) Omit(columns ...field.Expr) Dao {
-	Emit(omitM)
+	Emit(methodOmit)
 	return NewStage(s.db.Omit(toColNames(s.db.Statement, columns...)...))
 }
 
 func (s *Stage) Group(column field.Expr) Dao {
-	Emit(groupM)
+	Emit(methodGroup)
 	return NewStage(s.db.Group(column.Column().Name))
 }
 
 func (s *Stage) Having(conds ...Condition) Dao {
-	Emit(havingM)
+	Emit(methodHaving)
 	return NewStage(s.db.Clauses(clause.GroupBy{Having: condToExpression(conds...)}))
 }
 
 func (s *Stage) Limit(limit int) Dao {
-	Emit(limitM)
+	Emit(methodLimit)
 	return NewStage(s.db.Limit(limit))
 }
 
 func (s *Stage) Offset(offset int) Dao {
-	Emit(offsetM)
+	Emit(methodOffset)
 	return NewStage(s.db.Offset(offset))
 }
 
 func (s *Stage) Scopes(funcs ...func(Dao) Dao) Dao {
-	Emit(scopesM)
+	Emit(methodScopes)
 	var result Dao = s
 	for _, f := range funcs {
 		result = f(result)
@@ -193,63 +193,63 @@ func (s *Stage) Scopes(funcs ...func(Dao) Dao) Dao {
 }
 
 func (s *Stage) Unscoped() Dao {
-	Emit(unscopedM)
+	Emit(methodUnscoped)
 	return NewStage(s.db.Unscoped())
 }
 
 // ======================== finisher api ========================
 func (s *Stage) Create(value interface{}) error {
-	Emit(createM)
+	Emit(methodCreate)
 	return s.db.Create(value).Error
 }
 
 func (s *Stage) CreateInBatches(value interface{}, batchSize int) error {
-	Emit(createInBatchesM)
+	Emit(methodCreateInBatches)
 	return s.db.CreateInBatches(value, batchSize).Error
 }
 
 func (s *Stage) Save(value interface{}) error {
-	Emit(saveM)
+	Emit(methodSave)
 	return s.db.Save(value).Error
 }
 
 func (s *Stage) First(dest interface{}, conds ...field.Expr) error {
-	Emit(firstM)
+	Emit(methodFirst)
 	return s.db.Clauses(toExpression(conds...)...).First(dest).Error
 }
 
 func (s *Stage) Take(dest interface{}, conds ...field.Expr) error {
-	Emit(takeM)
+	Emit(methodTake)
 	return s.db.Clauses(toExpression(conds...)...).Take(dest).Error
 }
 
 func (s *Stage) Last(dest interface{}, conds ...field.Expr) error {
-	Emit(lastM)
+	Emit(methodLast)
 	return s.db.Clauses(toExpression(conds...)...).Last(dest).Error
 }
 
 func (s *Stage) Find(dest interface{}, conds ...field.Expr) error {
-	Emit(findM)
+	Emit(methodFind)
 	return s.db.Clauses(toExpression(conds...)...).Find(dest).Error
 }
 
 func (s *Stage) FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error {
-	Emit(findInBatchesM)
+	Emit(methodFindInBatches)
 	return s.db.FindInBatches(dest, batchSize, func(tx *gorm.DB, batch int) error { return fc(NewStage(tx), batch) }).Error
 }
 
 func (s *Stage) FirstOrInit(dest interface{}, conds ...field.Expr) error {
-	Emit(firstOrInitM)
+	Emit(methodFirstOrInit)
 	return s.db.Clauses(toExpression(conds...)...).FirstOrInit(dest).Error
 }
 
 func (s *Stage) FirstOrCreate(dest interface{}, conds ...field.Expr) error {
-	Emit(firstOrCreateM)
+	Emit(methodFirstOrCreate)
 	return s.db.Clauses(toExpression(conds...)...).FirstOrCreate(dest).Error
 }
 
 func (s *Stage) Update(column field.Expr, value interface{}) error {
-	Emit(updateM)
+	Emit(methodUpdate)
 	switch expr := column.RawExpr().(type) {
 	case clause.Expression:
 		return s.db.Update(column.Column().Name, expr).Error
@@ -266,12 +266,12 @@ func (s *Stage) Update(column field.Expr, value interface{}) error {
 }
 
 func (s *Stage) Updates(values interface{}) error {
-	Emit(updatesM)
+	Emit(methodUpdates)
 	return s.db.Updates(values).Error
 }
 
 func (s *Stage) UpdateColumn(column field.Expr, value interface{}) error {
-	Emit(updateColumnM)
+	Emit(methodUpdateColumn)
 	switch expr := column.RawExpr().(type) {
 	case clause.Expression:
 		return s.db.UpdateColumn(column.Column().Name, expr).Error
@@ -288,72 +288,72 @@ func (s *Stage) UpdateColumn(column field.Expr, value interface{}) error {
 }
 
 func (s *Stage) UpdateColumns(values interface{}) error {
-	Emit(updateColumnsM)
+	Emit(methodUpdateColumns)
 	return s.db.UpdateColumns(values).Error
 }
 
 func (s *Stage) Delete(value interface{}, conds ...field.Expr) error {
-	Emit(deleteM)
+	Emit(methodDelete)
 	return s.db.Clauses(toExpression(conds...)...).Delete(value).Error
 }
 
 func (s *Stage) Count(count *int64) error {
-	Emit(countM)
+	Emit(methodCount)
 	return s.db.Count(count).Error
 }
 
 func (s *Stage) Row() *sql.Row {
-	Emit(rowM)
+	Emit(methodRow)
 	return s.db.Row()
 }
 
 func (s *Stage) Rows() (*sql.Rows, error) {
-	Emit(rowsM)
+	Emit(methodRows)
 	return s.db.Rows()
 }
 
 func (s *Stage) Scan(dest interface{}) error {
-	Emit(scanM)
+	Emit(methodScan)
 	return s.db.Scan(dest).Error
 }
 
 func (s *Stage) Pluck(column field.Expr, dest interface{}) error {
-	Emit(pluckM)
+	Emit(methodPluck)
 	return s.db.Pluck(column.Column().Name, dest).Error
 }
 
 func (s *Stage) ScanRows(rows *sql.Rows, dest interface{}) error {
-	Emit(scanRowsM)
+	Emit(methodScanRows)
 	return s.db.ScanRows(rows, dest)
 }
 
 func (s *Stage) Transaction(fc func(Dao) error, opts ...*sql.TxOptions) error {
-	Emit(transactionM)
+	Emit(methodTransaction)
 	return s.db.Transaction(func(tx *gorm.DB) error { return fc(NewStage(tx)) }, opts...)
 }
 
 func (s *Stage) Begin(opts ...*sql.TxOptions) Dao {
-	Emit(beginM)
+	Emit(methodBegin)
 	return NewStage(s.db.Begin(opts...))
 }
 
 func (s *Stage) Commit() Dao {
-	Emit(commitM)
+	Emit(methodCommit)
 	return NewStage(s.db.Commit())
 }
 
 func (s *Stage) RollBack() Dao {
-	Emit(rollbackM)
+	Emit(methodRollback)
 	return NewStage(s.db.Rollback())
 }
 
 func (s *Stage) SavePoint(name string) Dao {
-	Emit(savePointM)
+	Emit(methodSavePoint)
 	return NewStage(s.db.SavePoint(name))
 }
 
 func (s *Stage) RollBackTo(name string) Dao {
-	Emit(rollbackToM)
+	Emit(methodRollbackTo)
 	return NewStage(s.db.RollbackTo(name))
 }
 
