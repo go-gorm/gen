@@ -267,9 +267,6 @@ func (s *Stage) Update(column field.Expr, value interface{}) error {
 
 func (s *Stage) Updates(values interface{}) error {
 	Emit(updatesM)
-	if vs, ok := values.(map[string]interface{}); ok {
-		return s.db.Updates(toQuotedSubQueryMap(s.db.Statement, vs)).Error
-	}
 	return s.db.Updates(values).Error
 }
 
@@ -292,9 +289,6 @@ func (s *Stage) UpdateColumn(column field.Expr, value interface{}) error {
 
 func (s *Stage) UpdateColumns(values interface{}) error {
 	Emit(updateColumnsM)
-	if vs, ok := values.(map[string]interface{}); ok {
-		return s.db.UpdateColumns(toQuotedSubQueryMap(s.db.Statement, vs)).Error
-	}
 	return s.db.UpdateColumns(values).Error
 }
 
@@ -400,17 +394,6 @@ func toInterfaceSlice(value interface{}) []interface{} {
 	default:
 		return nil
 	}
-}
-
-func toQuotedSubQueryMap(stmt *gorm.Statement, values map[string]interface{}) map[string]interface{} {
-	escapedValues := make(map[string]interface{}, len(values))
-	for k, v := range values {
-		if query, ok := v.(*Stage); ok {
-			v = query.db
-		}
-		escapedValues[stmt.Quote(k)] = v
-	}
-	return escapedValues
 }
 
 // ======================== 临时数据结构 ========================
