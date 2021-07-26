@@ -38,7 +38,7 @@ func (UserRaw) TableName() string {
 }
 
 type User struct {
-	Stage
+	DO
 
 	ID         field.Uint
 	Name       field.String
@@ -65,7 +65,7 @@ var u = func() User {
 }()
 
 func checkBuildExpr(t *testing.T, e Dao, opts []stmtOpt, result string, vars []interface{}) {
-	stmt := e.(*Stage).buildStmt(opts...)
+	stmt := e.(*DO).buildStmt(opts...)
 
 	sql := strings.TrimSpace(stmt.SQL.String())
 	if sql != result {
@@ -77,7 +77,7 @@ func checkBuildExpr(t *testing.T, e Dao, opts []stmtOpt, result string, vars []i
 	}
 }
 
-func TestStage_methods(t *testing.T) {
+func TestDO_methods(t *testing.T) {
 	testcases := []struct {
 		Expr         Dao
 		Opts         []stmtOpt

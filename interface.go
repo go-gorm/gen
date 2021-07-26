@@ -9,7 +9,7 @@ import (
 	"gorm.io/gen/field"
 )
 
-var _ Condition = Dao(&Stage{})
+var _ Condition = Dao(&DO{})
 var _ Condition = field.Expr(field.NewField("", "field"))
 
 // Condition query condition
