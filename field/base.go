@@ -121,7 +121,7 @@ func (e expr) Sum() Expr {
 }
 
 func (e expr) WithTable(table string) Expr {
-	return &expr{Col: e.Col, expression: clause.Expr{SQL: "?.?", Vars: []interface{}{clause.Table{Name: table}, e.Col}}}
+	return &expr{Col: e.Col, expression: clause.Expr{SQL: "?.?", Vars: []interface{}{clause.Table{Name: table}, clause.Column{Name: e.Col.Name, Alias: e.Col.Alias}}}}
 }
 
 // ======================== comparison between columns ========================
