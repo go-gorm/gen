@@ -68,7 +68,7 @@ func (s *DO) buildWhere() []clause.Expression {
 type stmtOpt func(*gorm.Statement) *gorm.Statement
 
 var (
-	// withFROM 
+	// withFROM add FROM clause
 	withFROM stmtOpt = func(stmt *gorm.Statement) *gorm.Statement {
 		if stmt.Table == "" {
 			_ = stmt.Parse(stmt.Model)
@@ -77,7 +77,7 @@ var (
 		return stmt
 	}
 
-	// // withSELECT 增加SELECT子句
+	// // withSELECT add SELECT clause
 	// withSELECT stmtOpt = func(stmt *gorm.Statement) *gorm.Statement {
 	// 	if _, ok := stmt.Clauses["SELECT"]; !ok {
 	// 		stmt.AddClause(clause.Select{})
@@ -111,12 +111,12 @@ func (s *DO) buildStmt(opts ...stmtOpt) *gorm.Statement {
 // 	return clause.Expr{SQL: "(" + stmt.SQL.String() + ")", Vars: stmt.Vars}
 // }
 
-// As 指定的值不可继承，因此需要在结尾使用
+// As alias cannot be heired, As must used on tail
 func (s *DO) As(alias string) Dao {
 	return &DO{db: s.db, alias: alias}
 }
 
-// ======================== 逻辑操作 ========================
+// ======================== chainable api ========================
 func (s *DO) Not(conds ...Condition) Dao {
 	return NewDO(s.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Not(condToExpression(conds...)...)}}))
 }
@@ -125,7 +125,6 @@ func (s *DO) Or(conds ...Condition) Dao {
 	return NewDO(s.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Or(clause.And(condToExpression(conds...)...))}}))
 }
 
-// ======================== chainable api ========================
 func (s *DO) Select(columns ...field.Expr) Dao {
 	Emit(methodSelect)
 	if len(columns) == 0 {
@@ -396,8 +395,8 @@ func toInterfaceSlice(value interface{}) []interface{} {
 	}
 }
 
-// ======================== 临时数据结构 ========================
-// 逗号分割的表达式
+// ======================== temporary ========================
+// CommaExpression comma expression
 type CommaExpression struct {
 	Exprs []clause.Expression
 }
