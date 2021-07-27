@@ -86,7 +86,7 @@ func GenBaseStructs(db *gorm.DB, pkg string, tableName ...string) (bases []*Base
 
 		base.NewStructName = strings.ToLower(base.StructName)
 		base.S = string(base.NewStructName[0])
-		_ = base.checkStructAndMembers()
+		_ = base.check()
 		bases = append(bases, &base)
 	}
 	return

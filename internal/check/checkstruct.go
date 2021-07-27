@@ -2,7 +2,6 @@ package check
 
 import (
 	"fmt"
-	"strings"
 
 	"gorm.io/gorm"
 
@@ -30,7 +29,7 @@ func (b *BaseStruct) getMembers(st interface{}) {
 	for _, field := range stmt.Schema.Fields {
 		b.Members = append(b.Members, &Member{
 			Name:       field.Name,
-			Type:       DelPointer(field.FieldType.String()),
+			Type:       DelPointerSym(field.FieldType.String()),
 			ColumnName: field.DBName,
 		})
 	}
@@ -43,8 +42,8 @@ func (b *BaseStruct) getTableName(st interface{}) {
 	b.TableName = stmt.Table
 }
 
-// checkStructAndMembers check if struct is exportable and if member's type is regular
-func (b *BaseStruct) checkStructAndMembers() (err error) {
+// check if struct is exportable and if member's type is regular
+func (b *BaseStruct) check() (err error) {
 	if !isCapitalize(b.StructName) {
 		err = fmt.Errorf("ignoring non exportable struct name:%s", b.NewStructName)
 		log.Println(err)
@@ -54,15 +53,7 @@ func (b *BaseStruct) checkStructAndMembers() (err error) {
 		if !allowType(m.Type) {
 			b.Members[index].Type = "field"
 		}
-		b.Members[index].NewType = getNewType(m.Type)
+		b.Members[index].NewType = getTypeName(m.Type)
 	}
 	return nil
-}
-
-func getNewType(t string) string {
-	var newType string
-	for _, s := range strings.Split(t, ".") {
-		newType = s
-	}
-	return strings.Title(newType)
 }

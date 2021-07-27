@@ -38,7 +38,7 @@ func isDBUndefined(db *gorm.DB) bool {
 }
 
 func getPackageName(fullName string) string {
-	return strings.Split(fullName, ".")[0]
+	return strings.Split(DelPointerSym(fullName), ".")[0]
 }
 
 func isDigit(str string) bool {
@@ -71,10 +71,18 @@ func stringHasMore(i int, str string) bool {
 	return i < len(str)-1
 }
 
-func DelPointer(name string) string {
+func DelPointerSym(name string) string {
 	return strings.TrimLeft(name, "*")
 }
 
 func GetSimpleName(s string) string {
-	return string(strings.ToLower(s)[0])
+	return string(strings.ToLower(DelPointerSym(s))[0])
+}
+
+func getTypeName(t string) string {
+	var res string
+	for _, s := range strings.Split(t, ".") {
+		res = s
+	}
+	return strings.Title(res)
 }
