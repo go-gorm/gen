@@ -275,6 +275,10 @@ func (s *Slices) parseElSE(name string) (res ElseClause) {
 	res.Cond = slice.Value
 	res.VarName = name
 	res.Type = slice.Type
+
+	if !s.HasMore() {
+		return
+	}
 	for n := s.Next(); s.HasMore(); n = s.Next() {
 		switch n.Type {
 		case SQL, DATA, VARIABLE:
