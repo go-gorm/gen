@@ -5,7 +5,6 @@ package gen
 type BasicMethod uint
 
 const (
-	// 用户自定义方法
 	methodDiy BasicMethod = iota
 
 	methodSelect

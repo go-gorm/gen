@@ -68,7 +68,7 @@ func (s *DO) buildWhere() []clause.Expression {
 type stmtOpt func(*gorm.Statement) *gorm.Statement
 
 var (
-	// withFROM 增加FROM子句
+	// withFROM 
 	withFROM stmtOpt = func(stmt *gorm.Statement) *gorm.Statement {
 		if stmt.Table == "" {
 			_ = stmt.Parse(stmt.Model)
