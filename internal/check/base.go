@@ -1,5 +1,7 @@
 package check
 
+import "bytes"
+
 type Status int
 
 const (
@@ -41,4 +43,22 @@ type Column struct {
 	ColumnKey     string `gorm:"column:COLUMN_KEY"`
 	ColumnType    string `gorm:"column:COLUMN_TYPE"`
 	Extra         string `gorm:"column:EXTRA"`
+}
+
+type sql struct{ bytes.Buffer }
+
+func (s *sql) WriteSql(b byte) {
+	switch b {
+	case '\n', '\t', ' ':
+		if s.Len() == 0 || s.Bytes()[s.Len()-1] != ' ' {
+			_ = s.WriteByte(' ')
+		}
+	default:
+		_ = s.WriteByte(b)
+	}
+}
+
+func (s *sql) Dump() string {
+	defer s.Reset()
+	return s.String()
 }

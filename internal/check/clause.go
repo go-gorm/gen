@@ -1,7 +1,6 @@
 package check
 
 import (
-	"bytes"
 	"fmt"
 	"strings"
 
@@ -39,9 +38,9 @@ func (s SQLClause) String() string {
 // IfClause if clause
 type IfClause struct {
 	clause
-	Cond    string
-	Value   []Clause
-	Else    []Clause
+	Cond  string
+	Value []Clause
+	Else  []Clause
 }
 
 func (i IfClause) String() string {
@@ -476,29 +475,25 @@ func (f *fragment) fragmentByParams(params []parser.Param) {
 }
 
 func splitTemplate(tmpl string, params []parser.Param) (fragList []fragment, err error) {
-	var out bytes.Buffer
-	// TODO add dump func to out
+	var buf sql
 	var f fragment
 	for i := 0; !strOutrange(i, tmpl); i++ {
 		switch tmpl[i] {
 		case '"':
-			out.WriteByte(tmpl[i])
+			buf.WriteByte(tmpl[i])
 			for i++; ; i++ {
 				if strOutrange(i, tmpl) {
 					return nil, fmt.Errorf("incomplete code:%s", tmpl)
 				}
-				out.WriteByte(tmpl[i])
+				buf.WriteByte(tmpl[i])
 
 				if tmpl[i] == '"' && tmpl[i-1] != '\\' {
-					fragList = append(fragList, fragment{Type: STRING, Value: out.String()})
-					out.Reset()
+					fragList = append(fragList, fragment{Type: STRING, Value: buf.Dump()})
 					break
 				}
 			}
 		case ' ':
-			sqlClause := out.String()
-			out.Reset()
-			if sqlClause != "" {
+			if sqlClause := buf.Dump(); sqlClause != "" {
 				f, err = checkFragment(sqlClause, params)
 				if err != nil {
 					return nil, err
@@ -506,9 +501,7 @@ func splitTemplate(tmpl string, params []parser.Param) (fragList []fragment, err
 				fragList = append(fragList, f)
 			}
 		case '>', '<', '=', '!':
-			sqlClause := out.String()
-			out.Reset()
-			if sqlClause != "" {
+			if sqlClause := buf.Dump(); sqlClause != "" {
 				f, err = checkFragment(sqlClause, params)
 				if err != nil {
 					return nil, err
@@ -516,22 +509,21 @@ func splitTemplate(tmpl string, params []parser.Param) (fragList []fragment, err
 				fragList = append(fragList, f)
 			}
 
-			out.WriteByte(tmpl[i])
+			buf.WriteByte(tmpl[i])
 
 			if strOutrange(i+1, tmpl) {
 				return nil, fmt.Errorf("incomplete code:%s", tmpl)
 			}
 			if tmpl[i+1] == '=' {
-				out.WriteByte(tmpl[i+1])
+				buf.WriteByte(tmpl[i+1])
 				i++
 			}
 
-			f, err = checkFragment(out.String(), params)
+			f, err = checkFragment(buf.Dump(), params)
 			if err != nil {
 				return nil, err
 			}
 			fragList = append(fragList, f)
-			out.Reset()
 		case '&', '|':
 			if strOutrange(i+1, tmpl) {
 				return nil, fmt.Errorf("incomplete code:%s", tmpl)
@@ -540,12 +532,10 @@ func splitTemplate(tmpl string, params []parser.Param) (fragList []fragment, err
 			if tmpl[i+1] == tmpl[i] {
 				i++
 
-				sqlClause := out.String()
-				out.Reset()
-				if sqlClause != "" {
-					f, err = checkFragment(out.String(), params)
+				if sqlClause := buf.Dump(); sqlClause != "" {
+					f, err = checkFragment(sqlClause, params)
 					if err != nil {
-						return
+						return nil, err
 					}
 					fragList = append(fragList, f)
 				}
@@ -557,16 +547,14 @@ func splitTemplate(tmpl string, params []parser.Param) (fragList []fragment, err
 				})
 			}
 		default:
-			out.WriteByte(tmpl[i])
+			buf.WriteByte(tmpl[i])
 		}
 	}
 
-	sqlClause := out.String()
-	out.Reset()
-	if sqlClause != "" {
-		f, err = checkFragment(out.String(), params)
+	if sqlClause := buf.Dump(); sqlClause != "" {
+		f, err = checkFragment(sqlClause, params)
 		if err != nil {
-			return
+			return nil, err
 		}
 		fragList = append(fragList, f)
 	}

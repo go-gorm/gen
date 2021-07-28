@@ -1,7 +1,6 @@
 package check
 
 import (
-	"bytes"
 	"fmt"
 	"strconv"
 	"strings"
@@ -126,46 +125,32 @@ func (f *InterfaceMethod) parseDocString() string {
 	return docString
 }
 
-type sql struct{ bytes.Buffer }
-
-func (s *sql) WriteSql(b byte) {
-	switch b {
-	case '\n', '\t', ' ':
-		if s.Len() == 0 || s.Bytes()[s.Len()-1] != ' ' {
-			_ = s.WriteByte(' ')
-		}
-	default:
-		_ = s.WriteByte(b)
-	}
-}
-
 // sqlStateCheck check sql with an adeterministic finite automaton
 func (f *InterfaceMethod) sqlStateCheck() error {
 	sqlString := f.SqlString
 	result := NewSlices()
-	var out sql
+	var buf sql
 	for i := 0; !strOutrange(i, sqlString); i++ {
 		b := sqlString[i]
 		switch b {
 		case '"':
-			_ = out.WriteByte(sqlString[i])
+			_ = buf.WriteByte(sqlString[i])
 			for i++; ; i++ {
 				if strOutrange(i, sqlString) {
 					return fmt.Errorf("incomplete SQL:%s", sqlString)
 				}
-				_ = out.WriteByte(sqlString[i])
+				_ = buf.WriteByte(sqlString[i])
 				if sqlString[i] == '"' && sqlString[i-1] != '\\' {
 					break
 				}
 			}
 		case '{', '@':
-			if sqlClause := out.String(); strings.TrimSpace(sqlClause) != "" {
+			if sqlClause := buf.Dump(); strings.TrimSpace(sqlClause) != "" {
 				result.slices = append(result.slices, slice{
 					Type:  SQL,
 					Value: strconv.Quote(sqlClause),
 				})
 			}
-			out.Reset()
 
 			if strOutrange(i+1, sqlString) {
 				return fmt.Errorf("incomplete SQL:%s", sqlString)
@@ -176,12 +161,12 @@ func (f *InterfaceMethod) sqlStateCheck() error {
 						return fmt.Errorf("incomplete SQL:%s", sqlString)
 					}
 					if sqlString[i] == '"' {
-						_ = out.WriteByte(sqlString[i])
+						_ = buf.WriteByte(sqlString[i])
 						for i++; ; i++ {
 							if strOutrange(i, sqlString) {
 								return fmt.Errorf("incomplete SQL:%s", sqlString)
 							}
-							_ = out.WriteByte(sqlString[i])
+							_ = buf.WriteByte(sqlString[i])
 							if sqlString[i] == '"' && sqlString[i-1] != '\\' {
 								break
 							}
@@ -195,15 +180,15 @@ func (f *InterfaceMethod) sqlStateCheck() error {
 					if sqlString[i] == '}' && sqlString[i+1] == '}' {
 						i++
 
-						part, err := checkTemplate(out.String(), f.Params)
+						sqlClause := buf.Dump()
+						part, err := checkTemplate(sqlClause, f.Params)
 						if err != nil {
-							return fmt.Errorf("sql [%s] dynamic template %s err:%w", sqlString, out.String(), err)
+							return fmt.Errorf("sql [%s] dynamic template %s err:%w", sqlString, sqlClause, err)
 						}
 						result.slices = append(result.slices, part)
-						out.Reset()
 						break
 					}
-					out.WriteSql(sqlString[i])
+					buf.WriteSql(sqlString[i])
 				}
 			}
 			if b == '@' {
@@ -215,9 +200,7 @@ func (f *InterfaceMethod) sqlStateCheck() error {
 				}
 				for ; ; i++ {
 					if strOutrange(i, sqlString) || isEnd(sqlString[i]) {
-						varString := out.String()
-						out.Reset()
-
+						varString := buf.Dump()
 						params, err := f.methodParams(varString, status)
 						if err != nil {
 							return fmt.Errorf("sql [%s] varable %s err:%s", sqlString, varString, err)
@@ -226,14 +209,14 @@ func (f *InterfaceMethod) sqlStateCheck() error {
 						i--
 						break
 					}
-					out.WriteSql(sqlString[i])
+					buf.WriteSql(sqlString[i])
 				}
 			}
 		default:
-			out.WriteSql(b)
+			buf.WriteSql(b)
 		}
 	}
-	if sqlClause := out.String(); strings.TrimSpace(sqlClause) != "" {
+	if sqlClause := buf.Dump(); strings.TrimSpace(sqlClause) != "" {
 		result.slices = append(result.slices, slice{
 			Type:  SQL,
 			Value: strconv.Quote(sqlClause),
