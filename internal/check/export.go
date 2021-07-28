@@ -38,7 +38,7 @@ func CheckStructs(db *gorm.DB, structs ...interface{}) (bases []*BaseStruct, err
 }
 
 // CheckInterface check the legitimacy of interfaces
-func CheckInterface(f *parser.InterfaceSet, s *BaseStruct) (checkResult []*InterfaceMethod, err error) {
+func CheckInterface(f *parser.InterfaceSet, s *BaseStruct) (checkResults []*InterfaceMethod, err error) {
 	for _, interfaceInfo := range f.Interfaces {
 		for _, method := range interfaceInfo.Methods {
 			t := &InterfaceMethod{
@@ -52,19 +52,16 @@ func CheckInterface(f *parser.InterfaceSet, s *BaseStruct) (checkResult []*Inter
 				Table:         s.TableName,
 				InterfaceName: interfaceInfo.Name,
 			}
-			err = t.checkParams(method.Params)
-			if err != nil {
+			if err = t.checkParams(method.Params); err != nil {
 				return
 			}
-			err = t.checkResult(method.Result)
-			if err != nil {
+			if err = t.checkResult(method.Result); err != nil {
 				return
 			}
-			err = t.checkSQL()
-			if err != nil {
+			if err = t.checkSQL(); err != nil {
 				return
 			}
-			checkResult = append(checkResult, t)
+			checkResults = append(checkResults, t)
 		}
 	}
 	return

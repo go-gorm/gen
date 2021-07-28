@@ -26,7 +26,7 @@ func ({{.S}} {{.MethodStruct}}){{.MethodName}}({{range $index,$params:=.Params}}
 	{{if eq .Table "_"}}table:={{.S}}.UnderlyingDB().Statement.Table{{end}}
 
 	var generateSQL string
-	{{range $line:=.SqlList}}{{$line}}
+	{{range $line:=.SqlTmplList}}{{$line}}
 	{{end}}
 
 	{{if .HasNeedNewResult}}result =new({{if ne .ResultData.Package ""}}{{.ResultData.Package}}.{{end}}{{.ResultData.Type}}){{end}}

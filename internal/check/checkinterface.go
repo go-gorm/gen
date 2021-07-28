@@ -26,7 +26,7 @@ type InterfaceMethod struct {
 	Result        []parser.Param
 	ResultData    parser.Param
 	ExecuteResult string
-	SqlList       []string
+	SqlTmplList   []string
 	SqlData       []string
 	SqlString     string
 	GormOption    string
@@ -64,7 +64,7 @@ func (f *InterfaceMethod) checkParams(params []parser.Param) (err error) {
 
 // checkResult check all parameters and replace gen.T by target structure. Parameters must be one of int/string/struct
 func (f *InterfaceMethod) checkResult(result []parser.Param) (err error) {
-	retList := make([]parser.Param, len(result))
+	resList := make([]parser.Param, len(result))
 	for i, param := range result {
 		if param.Package == "UNDEFINED" {
 			param.Package = f.OriginStruct.Package
@@ -74,20 +74,20 @@ func (f *InterfaceMethod) checkResult(result []parser.Param) (err error) {
 			param.SetName("err")
 			f.ExecuteResult = "err"
 		case param.Eq(f.OriginStruct) || param.IsGenT():
+			param.SetName("result")
 			param.Type = f.OriginStruct.Type
 			param.Package = f.OriginStruct.Package
-			param.SetName("result")
 			param.IsPointer = true
 			f.ResultData = param
 		case param.AllowType(), param.IsTime():
 			param.SetName("result")
 			f.ResultData = param
 		default:
-			return fmt.Errorf("illegal parameter：%s.%s on struct %s.%s generated method %s \n ", param.Package, param.Type, f.OriginStruct.Package, f.OriginStruct.Type, f.MethodName)
+			return fmt.Errorf("illegal parameter：%s.%s on struct %s.%s generated method %s", param.Package, param.Type, f.OriginStruct.Package, f.OriginStruct.Type, f.MethodName)
 		}
-		retList[i] = param
+		resList[i] = param
 	}
-	f.Result = retList
+	f.Result = resList
 	return
 }
 
@@ -137,23 +137,20 @@ func (s *sql) WriteSql(b byte) {
 	default:
 		_ = s.WriteByte(b)
 	}
-
 }
 
 // sqlStateCheck check sql with an adeterministic finite automaton
-func (f *InterfaceMethod) sqlStateCheck() (err error) {
-	sqlString := f.SqlString + " "
+func (f *InterfaceMethod) sqlStateCheck() error {
+	sqlString := f.SqlString
 	result := NewSlices()
 	var out sql
-
-	for i := 0; i < len(sqlString); i++ {
+	for i := 0; !strOutrange(i, sqlString); i++ {
 		b := sqlString[i]
 		switch b {
 		case '"':
 			_ = out.WriteByte(sqlString[i])
-			for {
-				i++
-				if !stringHasMore(i, sqlString) {
+			for i++; ; i++ {
+				if strOutrange(i, sqlString) {
 					return fmt.Errorf("incomplete SQL:%s", sqlString)
 				}
 				_ = out.WriteByte(sqlString[i])
@@ -161,105 +158,98 @@ func (f *InterfaceMethod) sqlStateCheck() (err error) {
 					break
 				}
 			}
-
 		case '{', '@':
-			sqlClause := out.String()
-			if strings.TrimSpace(sqlClause) != "" {
+			if sqlClause := out.String(); strings.TrimSpace(sqlClause) != "" {
 				result.slices = append(result.slices, slice{
 					Type:  SQL,
-					Value: strconv.Quote(out.String()),
+					Value: strconv.Quote(sqlClause),
 				})
-
 			}
 			out.Reset()
 
-			if !stringHasMore(i+1, sqlString) {
+			if strOutrange(i+1, sqlString) {
 				return fmt.Errorf("incomplete SQL:%s", sqlString)
 			}
 			if b == '{' && sqlString[i+1] == '{' {
-				i += 2
-				for {
-					if !stringHasMore(i, sqlString) {
+				for i += 2; ; i++ {
+					if strOutrange(i, sqlString) {
 						return fmt.Errorf("incomplete SQL:%s", sqlString)
 					}
 					if sqlString[i] == '"' {
 						_ = out.WriteByte(sqlString[i])
-						for {
-							i++
-							if !stringHasMore(i, sqlString) {
+						for i++; ; i++ {
+							if strOutrange(i, sqlString) {
 								return fmt.Errorf("incomplete SQL:%s", sqlString)
 							}
 							_ = out.WriteByte(sqlString[i])
 							if sqlString[i] == '"' && sqlString[i-1] != '\\' {
-								i++
 								break
 							}
 						}
+						i++
+					}
 
+					if strOutrange(i+1, sqlString) {
+						return fmt.Errorf("incomplete SQL:%s", sqlString)
 					}
 					if sqlString[i] == '}' && sqlString[i+1] == '}' {
+						i++
+
 						part, err := checkTemplate(out.String(), f.Params)
 						if err != nil {
-							err := fmt.Errorf("sql [%s] dynamic template %s err:%s  ", sqlString, out.String(), err)
-							return err
+							return fmt.Errorf("sql [%s] dynamic template %s err:%w", sqlString, out.String(), err)
 						}
 						result.slices = append(result.slices, part)
-						i++
 						out.Reset()
 						break
 					}
 					out.WriteSql(sqlString[i])
-					i++
-
 				}
-
 			}
 			if b == '@' {
-				t := DATA
 				i++
+				status := DATA
 				if sqlString[i] == '@' {
-					t = VARIABLE
 					i++
+					status = VARIABLE
 				}
-				for {
-					if i == len(sqlString) || isStringEnd(sqlString[i]) {
+				for ; ; i++ {
+					if strOutrange(i, sqlString) || isEnd(sqlString[i]) {
 						varString := out.String()
-						s, err := f.isParamInMethod(varString, t)
+						out.Reset()
+
+						params, err := f.methodParams(varString, status)
 						if err != nil {
 							return fmt.Errorf("sql [%s] varable %s err:%s", sqlString, varString, err)
 						}
-
-						result.slices = append(result.slices, s)
-						out.Reset()
+						result.slices = append(result.slices, params)
 						i--
 						break
 					}
-
 					out.WriteSql(sqlString[i])
-					i++
 				}
 			}
 		default:
 			out.WriteSql(b)
 		}
 	}
-	if strings.Trim(out.String(), " ") != "" {
+	if sqlClause := out.String(); strings.TrimSpace(sqlClause) != "" {
 		result.slices = append(result.slices, slice{
 			Type:  SQL,
-			Value: strconv.Quote(out.String()),
+			Value: strconv.Quote(sqlClause),
 		})
 	}
 
-	_, err = result.parse()
+	_, err := result.parse()
 	if err != nil {
-		return fmt.Errorf("sql [%s] parser err:%s", sqlString, err)
+		return fmt.Errorf("sql [%s] parser err:%w", sqlString, err)
 	}
-	f.SqlList = result.tmpl
-	return
+	f.SqlTmplList = result.tmpl
+	return nil
 }
 
-// isParamInMethod if sql's param is not external(except table), generate by gorm
-func (f *InterfaceMethod) isParamInMethod(param string, s Status) (result slice, err error) {
+// methodParams return extrenal parameters, table name
+func (f *InterfaceMethod) methodParams(param string, s Status) (result slice, err error) {
 	for _, p := range f.Params {
 		if p.Name == param {
 			var str string

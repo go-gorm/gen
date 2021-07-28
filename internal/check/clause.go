@@ -13,11 +13,23 @@ type Clause interface {
 	String() string
 }
 
-// SQLClause sql condition clause
-type SQLClause struct {
+var (
+	_ Clause = new(SQLClause)
+	_ Clause = new(IfClause)
+	_ Clause = new(ElseClause)
+	_ Clause = new(WhereClause)
+	_ Clause = new(SetClause)
+)
+
+type clause struct {
 	VarName string
 	Type    Status
-	Value   []string
+}
+
+// SQLClause sql condition clause
+type SQLClause struct {
+	clause
+	Value []string
 }
 
 func (s SQLClause) String() string {
@@ -26,9 +38,8 @@ func (s SQLClause) String() string {
 
 // IfClause if clause
 type IfClause struct {
-	VarName string
+	clause
 	Cond    string
-	Type    Status
 	Value   []Clause
 	Else    []Clause
 }
@@ -39,25 +50,23 @@ func (i IfClause) String() string {
 
 // ElseClause else clause
 type ElseClause struct {
-	VarName string
-	Cond    string
-	Type    Status
-	Value   []Clause
+	clause
+	Cond  string
+	Value []Clause
 }
 
 func (e ElseClause) String() (res string) {
-	strList := make([]string, len(e.Value))
+	condList := make([]string, len(e.Value))
 	for i, v := range e.Value {
-		strList[i] = v.String()
+		condList[i] = v.String()
 	}
-	return strings.ReplaceAll(strings.Join(strList, "+"), `"+"`, "")
+	return strings.ReplaceAll(strings.Join(condList, "+"), `"+"`, "")
 }
 
 // WhereClause where clause
 type WhereClause struct {
-	VarName string
-	Type    Status
-	Value   []Clause
+	clause
+	Value []Clause
 }
 
 func (w WhereClause) String() string {
@@ -66,9 +75,8 @@ func (w WhereClause) String() string {
 
 // SetClause set clause
 type SetClause struct {
-	VarName string
-	Type    Status
-	Value   []Clause
+	clause
+	Value []Clause
 }
 
 func (w SetClause) String() string {
@@ -92,6 +100,11 @@ func NewSlices() *Slices {
 			SET:   0,
 		},
 	}
+}
+
+// Len return length of s.slices
+func (s *Slices) Len() int {
+	return len(s.slices)
 }
 
 // Next return next slice and increase index by 1
@@ -156,12 +169,13 @@ func (s *Slices) CreateStringSet(name string) {
 }
 
 // parse slice and append result to tmpl, return a Clause array
-func (s *Slices) parse() (res []Clause, err error) {
+func (s *Slices) parse() ([]Clause, error) {
 	if s.IsNull() {
-		err = fmt.Errorf("sql is null")
-		return
+		return nil, fmt.Errorf("sql is null")
 	}
+
 	name := "generateSQL"
+	res := make([]Clause, 0, s.Len())
 	for slice := s.Current(); ; slice = s.Next() {
 		s.tmpl = append(s.tmpl, "")
 		switch slice.Type {
@@ -170,39 +184,36 @@ func (s *Slices) parse() (res []Clause, err error) {
 			res = append(res, sqlClause)
 			s.tmpl = append(s.tmpl, fmt.Sprintf("%s+=%s", name, sqlClause.String()))
 		case IF:
-			var ifClause IfClause
-			ifClause, err = s.parseIF()
+			ifClause, err := s.parseIF()
 			if err != nil {
-				return
+				return nil, err
 			}
 			res = append(res, ifClause)
 			s.tmpl = append(s.tmpl, fmt.Sprintf("%s+=helper.IfClause(%s)", name, ifClause.VarName))
 		case WHERE:
-			var whereClause WhereClause
-			whereClause, err = s.parseWhere()
+			whereClause, err := s.parseWhere()
 			if err != nil {
-				return
+				return nil, err
 			}
 			res = append(res, whereClause)
 			s.tmpl = append(s.tmpl, fmt.Sprintf("%s+=helper.WhereClause(%s)", name, whereClause.VarName))
 		case SET:
-			var setClause SetClause
-			setClause, err = s.parseSet()
+			setClause, err := s.parseSet()
 			if err != nil {
-				return
+				return nil, err
 			}
 			res = append(res, setClause)
 			s.tmpl = append(s.tmpl, fmt.Sprintf("%s+=helper.SetClause(%s)", name, setClause.VarName))
 		case END:
 		default:
-			err = fmt.Errorf("unknow clause:%s", slice.Origin)
-			return
+			return nil, fmt.Errorf("unknow clause:%s", slice.Origin)
 		}
 
 		if !s.HasMore() {
-			return
+			break
 		}
 	}
+	return res, nil
 }
 
 // parseIF parse if clause
@@ -399,58 +410,52 @@ func (s *Slices) parseSQL(name string) (res SQLClause) {
 // sql fragment
 type fragment struct {
 	Type  Status
-	value string
+	Value string
 }
 
 func checkFragment(s string, params []parser.Param) (f fragment, err error) {
-	f = fragment{Type: UNKNOWN, value: strings.Trim(s, " ")}
+	digital := func(str string) string {
+		if isDigit(str) {
+			return "<integer>"
+		}
+		return str
+	}
+
+	f = fragment{Type: UNKNOWN, Value: strings.Trim(s, " ")}
 	str := strings.ToLower(strings.Trim(s, " "))
-	switch str {
+	switch digital(str) {
+	case "<integer>":
+		f.Type = INT
 	case "&&", "||":
 		f.Type = LOGICAL
-		return
 	case ">", "<", ">=", "<=", "==", "!=":
 		f.Type = EXPRESSION
-		return
 	case "end":
 		f.Type = END
-		return
 	case "if":
 		f.Type = IF
-		return
 	case "set":
 		f.Type = SET
-		return
 	case "else":
 		f.Type = ELSE
-		return
 	case "where":
 		f.Type = WHERE
-		return
 	case "true", "false":
 		f.Type = BOOL
-		return
 	case "nil":
 		f.Type = OTHER
-		return
 	default:
-		if isDigit(str) {
-			f.Type = INT
-			return
-		}
-
 		f.fragmentByParams(params)
-		if f.Type != UNKNOWN {
-			return
+		if f.Type == UNKNOWN {
+			err = fmt.Errorf("unknow parameter: %s", s)
 		}
 	}
-	// TODO double check
-	return f, fmt.Errorf("unknow parameter: %s", s)
+	return
 }
 
 func (f *fragment) fragmentByParams(params []parser.Param) {
 	for _, param := range params {
-		if param.Name == f.value {
+		if param.Name == f.Value {
 			switch param.Type {
 			case "bool":
 				f.Type = BOOL
@@ -470,100 +475,102 @@ func (f *fragment) fragmentByParams(params []parser.Param) {
 	}
 }
 
-func splitTemplate(tmpl string, params []parser.Param) (newList []fragment, err error) {
-	tmpl += " "
+func splitTemplate(tmpl string, params []parser.Param) (fragList []fragment, err error) {
 	var out bytes.Buffer
-	var t fragment
-	for i := 0; i < len(tmpl); i++ {
+	// TODO add dump func to out
+	var f fragment
+	for i := 0; !strOutrange(i, tmpl); i++ {
 		switch tmpl[i] {
 		case '"':
-			for {
-				out.WriteByte(tmpl[i])
-				if !stringHasMore(i, tmpl) {
-					err = fmt.Errorf("incomplete code:%s", tmpl)
-					return
+			out.WriteByte(tmpl[i])
+			for i++; ; i++ {
+				if strOutrange(i, tmpl) {
+					return nil, fmt.Errorf("incomplete code:%s", tmpl)
 				}
-				i++
+				out.WriteByte(tmpl[i])
+
 				if tmpl[i] == '"' && tmpl[i-1] != '\\' {
-					out.WriteByte(tmpl[i])
-					newList = append(newList, fragment{Type: STRING, value: out.String()})
+					fragList = append(fragList, fragment{Type: STRING, Value: out.String()})
 					out.Reset()
 					break
 				}
 			}
-			continue
 		case ' ':
-			t, err = checkFragment(out.String(), params)
-			if err != nil {
-				return
-			}
-			if t.value != "" {
-				newList = append(newList, t)
-			}
+			sqlClause := out.String()
 			out.Reset()
+			if sqlClause != "" {
+				f, err = checkFragment(sqlClause, params)
+				if err != nil {
+					return nil, err
+				}
+				fragList = append(fragList, f)
+			}
 		case '>', '<', '=', '!':
-			t, err = checkFragment(out.String(), params)
-			if err != nil {
-				return
-			}
-			if t.value != "" {
-				newList = append(newList, t)
-			}
+			sqlClause := out.String()
 			out.Reset()
+			if sqlClause != "" {
+				f, err = checkFragment(sqlClause, params)
+				if err != nil {
+					return nil, err
+				}
+				fragList = append(fragList, f)
+			}
 
 			out.WriteByte(tmpl[i])
+
+			if strOutrange(i+1, tmpl) {
+				return nil, fmt.Errorf("incomplete code:%s", tmpl)
+			}
 			if tmpl[i+1] == '=' {
 				out.WriteByte(tmpl[i+1])
 				i++
 			}
-			t, err = checkFragment(out.String(), params)
+
+			f, err = checkFragment(out.String(), params)
 			if err != nil {
-				return
+				return nil, err
 			}
-			if t.value != "" {
-				newList = append(newList, t)
-			}
+			fragList = append(fragList, f)
 			out.Reset()
-			continue
 		case '&', '|':
-			if tmpl[i+1] == tmpl[i] {
-				t, err = checkFragment(out.String(), params)
-				if err != nil {
-					return
-				}
-				if t.value != "" {
-					newList = append(newList, t)
-				}
-				out.Reset()
-				out.WriteString(tmpl[i : i+2])
-				t, err = checkFragment(out.String(), params)
-				if err != nil {
-					return
-				}
-				if t.value != "" {
-					newList = append(newList, t)
-				}
-				out.Reset()
-				i++
-				continue
+			if strOutrange(i+1, tmpl) {
+				return nil, fmt.Errorf("incomplete code:%s", tmpl)
 			}
 
-		}
+			if tmpl[i+1] == tmpl[i] {
+				i++
 
-		out.WriteByte(tmpl[i])
+				sqlClause := out.String()
+				out.Reset()
+				if sqlClause != "" {
+					f, err = checkFragment(out.String(), params)
+					if err != nil {
+						return
+					}
+					fragList = append(fragList, f)
+				}
+
+				// write && or ||
+				fragList = append(fragList, fragment{
+					Type:  LOGICAL,
+					Value: tmpl[i-1 : i+1],
+				})
+			}
+		default:
+			out.WriteByte(tmpl[i])
+		}
 	}
-	t, err = checkFragment(out.String(), params)
-	if err != nil {
-		return
+
+	sqlClause := out.String()
+	out.Reset()
+	if sqlClause != "" {
+		f, err = checkFragment(out.String(), params)
+		if err != nil {
+			return
+		}
+		fragList = append(fragList, f)
 	}
-	if t.value != "" {
-		newList = append(newList, t)
-	}
-	// TODO check if verbose?
-	if len(newList) == 0 {
-		return
-	}
-	return
+	return fragList, nil
 }
 
 // check validition of clause's value
@@ -581,7 +588,7 @@ func checkTempleFragmentValid(list []fragment) error {
 				}
 			}
 		default:
-			return fmt.Errorf("unknow fragment ： %s ", list[i].value)
+			return fmt.Errorf("unknow fragment ： %s ", list[i].Value)
 		}
 	}
 	return nil
@@ -594,7 +601,7 @@ func fragmentToString(list []fragment) string {
 		return ""
 	}
 	for _, t := range list {
-		values = append(values, t.value)
+		values = append(values, t.Value)
 	}
 	return strings.Join(values, " ")
 }
@@ -606,7 +613,7 @@ func fragmentToSLice(list []fragment) (part slice, err error) {
 		return
 	}
 	for _, t := range list {
-		values = append(values, t.value)
+		values = append(values, t.Value)
 	}
 	part.Origin = strings.Join(values, " ")
 	switch strings.ToLower(values[0]) {

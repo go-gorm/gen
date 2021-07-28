@@ -18,7 +18,7 @@ func isCapitalize(s string) bool {
 	return false
 }
 
-func isStringEnd(b byte) bool {
+func isEnd(b byte) bool {
 	switch {
 	case b >= 'a' && b <= 'z':
 		return false
@@ -67,8 +67,8 @@ func allowType(typ string) bool {
 	}
 }
 
-func stringHasMore(i int, str string) bool {
-	return i < len(str)-1
+func strOutrange(index int, str string) bool {
+	return index >= len(str)
 }
 
 func DelPointerSym(name string) string {
