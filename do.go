@@ -26,9 +26,20 @@ type DO struct {
 	alias string // for subquery
 }
 
+type doOptions func(*gorm.DB) *gorm.DB
+
+var (
+	// Debug use DB in debug mode
+	Debug = func(db *gorm.DB) *gorm.DB { return db.Debug() }
+)
+
 // UseDB specify a db connection(*gorm.DB)
-func (s *DO) UseDB(db *gorm.DB) {
-	s.db = db.Session(new(gorm.Session))
+func (s *DO) UseDB(db *gorm.DB, opts ...doOptions) {
+	db = db.Session(new(gorm.Session))
+	for _, opt := range opts {
+		db = opt(db)
+	}
+	s.db = db
 }
 
 // UseModel specify a data model structure as a source for table name
