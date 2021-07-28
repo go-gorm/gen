@@ -36,7 +36,6 @@ func ({{.S}} {{.MethodStruct}}){{.MethodName}}({{range $index,$params:=.Params}}
 
 `
 
-// TODO fix New methond, initialize fields with table name
 const BaseStruct = `
 type {{.NewStructName}} struct {
 	gen.DO
@@ -46,12 +45,17 @@ type {{.NewStructName}} struct {
 }
 
 func New{{.StructName}}(db *gorm.DB) *{{.NewStructName}} {
-	_{{.NewStructName}} := &{{.NewStructName}}{
-		{{range $p :=.Members}}{{$p.Name}}:  field.New{{$p.NewType}}("{{$p.ColumnName}}"),
-		{{end}}
-	}
+	_{{.NewStructName}} := new({{.NewStructName}})
+
 	_{{.NewStructName}}.UseDB(db)
 	_{{.NewStructName}}.UseModel({{.StructInfo.Package}}.{{.StructInfo.Type}}{})
+
+
+	tableName := _{{.NewStructName}}.Table()
+	{{range $p :=.Members}}
+	_{{.NewStructName}}.{{$p.Name}} = field.New{{$p.NewType}}(tableName, "{{$p.ColumnName}}"),
+	{{end}}
+	
 	return _{{.NewStructName}}
 }
 
