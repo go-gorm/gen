@@ -26,8 +26,8 @@ type T interface{}
 
 // NewGenerator create a new generator
 func NewGenerator(cfg Config) *Generator {
-	if cfg.modelPkgName == "" {
-		cfg.modelPkgName = check.ModelPkg
+	if cfg.ModelPkgName == "" {
+		cfg.ModelPkgName = check.ModelPkg
 	}
 	return &Generator{
 		Config:           cfg,
@@ -41,21 +41,10 @@ type Config struct {
 	OutPath string
 	OutFile string
 
-	pkgName      string
-	modelPkgName string   //default model
-	db           *gorm.DB //nolint
-}
+	QueryPkgName string // generated query code's package name
+	ModelPkgName string // generated model code's package name
 
-func (c *Config) SetModelPkg(name string) {
-	c.modelPkgName = name
-}
-
-func (c *Config) SetPkg(name string) {
-	c.pkgName = name
-}
-
-func (c *Config) GetPkg() string {
-	return c.pkgName
+	db *gorm.DB //nolint
 }
 
 // genInfo info about generated code
@@ -93,7 +82,7 @@ func (g *Generator) Tables(models ...interface{}) {
 
 // TableNames collect table names
 func (g *Generator) TableNames(names ...string) {
-	structs, err := check.GenBaseStructs(g.db, g.Config.modelPkgName, names...)
+	structs, err := check.GenBaseStructs(g.db, g.Config.ModelPkgName, names...)
 	if err != nil {
 		log.Fatalf("check struct error: %s", err)
 	}
@@ -154,7 +143,7 @@ func (g *Generator) ApplyByModel(model interface{}, fc interface{}) {
 // ApplyByTable specifies table by table names
 // eg: g.ApplyByTable(func(model.Model){}, "user", "role")
 func (g *Generator) ApplyByTable(fc interface{}, tableNames ...string) {
-	structs, err := check.GenBaseStructs(g.db, g.Config.modelPkgName, tableNames...)
+	structs, err := check.GenBaseStructs(g.db, g.Config.ModelPkgName, tableNames...)
 	if err != nil {
 		log.Fatalf("gen struct error: %s", err)
 	}
@@ -175,7 +164,7 @@ func (g *Generator) Execute() {
 			log.Fatalf("mkdir failed: %s", err)
 		}
 	}
-	g.SetPkg(filepath.Base(g.OutPath))
+	g.QueryPkgName = filepath.Base(g.OutPath)
 
 	err = g.generatedBaseStruct()
 	if err != nil {
@@ -202,7 +191,7 @@ func (g *Generator) generatedToOutFile() (err error) {
 		return t.Execute(wr, data)
 	}
 
-	err = render(tmpl.HeaderTmpl, &buf, g.GetPkg())
+	err = render(tmpl.HeaderTmpl, &buf, g.QueryPkgName)
 	if err != nil {
 		return err
 	}
@@ -249,7 +238,7 @@ func (g *Generator) generatedBaseStruct() (err error) {
 	if err != nil {
 		return err
 	}
-	pkg := g.modelPkgName
+	pkg := g.ModelPkgName
 	if pkg == "" {
 		pkg = check.ModelPkg
 	}
