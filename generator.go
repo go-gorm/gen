@@ -38,13 +38,13 @@ func NewGenerator(cfg Config) *Generator {
 
 // Config generator's basic configuration
 type Config struct {
-	OutPath string
-	OutFile string
+	db *gorm.DB //nolint
 
-	QueryPkgName string // generated query code's package name
+	OutPath      string
+	OutFile      string
 	ModelPkgName string // generated model code's package name
 
-	db *gorm.DB //nolint
+	queryPkgName string // generated query code's package name
 }
 
 // genInfo info about generated code
@@ -164,7 +164,7 @@ func (g *Generator) Execute() {
 			log.Fatalf("mkdir failed: %s", err)
 		}
 	}
-	g.QueryPkgName = filepath.Base(g.OutPath)
+	g.queryPkgName = filepath.Base(g.OutPath)
 
 	err = g.generatedBaseStruct()
 	if err != nil {
@@ -191,7 +191,7 @@ func (g *Generator) generatedToOutFile() (err error) {
 		return t.Execute(wr, data)
 	}
 
-	err = render(tmpl.HeaderTmpl, &buf, g.QueryPkgName)
+	err = render(tmpl.HeaderTmpl, &buf, g.queryPkgName)
 	if err != nil {
 		return err
 	}
