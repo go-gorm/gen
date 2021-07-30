@@ -54,7 +54,7 @@ func (s *DO) UseTable(tableName string) {
 	s.db = s.db.Table(tableName).Session(new(gorm.Session))
 }
 
-// Table return table name
+// TableName return table name
 func (s *DO) TableName() string {
 	return s.db.Statement.Table
 }
