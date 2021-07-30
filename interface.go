@@ -9,7 +9,7 @@ import (
 	"gorm.io/gen/field"
 )
 
-var _ Condition = Dao(&Stage{})
+var _ Condition = Dao(&DO{})
 var _ Condition = field.Expr(field.NewField("", "field"))
 
 // Condition query condition
@@ -25,7 +25,7 @@ type subQuery interface {
 
 // Dao CRUD methods
 type Dao interface {
-	clause.Expression // 用于获取其中的WHERE condition
+	clause.Expression
 	subQuery
 
 	As(alias string) Dao

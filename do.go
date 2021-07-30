@@ -17,58 +17,69 @@ var (
 	deleteClauses = []string{"DELETE", "FROM", "WHERE"}
 )
 
-func NewStage(db *gorm.DB) *Stage { return &Stage{db: db} }
+func NewDO(db *gorm.DB) *DO { return &DO{db: db} }
 
-// Stage implement basic query methods
+// DO (data object): implement basic query methods
 // the structure embedded with a *gorm.DB, and has a element item "alias" will be used when used as a sub query
-type Stage struct {
+type DO struct {
 	db    *gorm.DB
 	alias string // for subquery
 }
 
+type doOptions func(*gorm.DB) *gorm.DB
+
+var (
+	// Debug use DB in debug mode
+	Debug = func(db *gorm.DB) *gorm.DB { return db.Debug() }
+)
+
 // UseDB specify a db connection(*gorm.DB)
-func (s *Stage) UseDB(db *gorm.DB) {
-	s.db = db.Session(new(gorm.Session))
+func (s *DO) UseDB(db *gorm.DB, opts ...doOptions) {
+	db = db.Session(new(gorm.Session))
+	for _, opt := range opts {
+		db = opt(db)
+	}
+	s.db = db
 }
 
 // UseModel specify a data model structure as a source for table name
-func (s *Stage) UseModel(model interface{}) {
+func (s *DO) UseModel(model interface{}) {
 	s.db = s.db.Model(model).Session(new(gorm.Session))
 	_ = s.db.Statement.Parse(model)
 }
 
 // UseTable specify table name
-func (s *Stage) UseTable(tableName string) {
+func (s *DO) UseTable(tableName string) {
 	s.db = s.db.Table(tableName).Session(new(gorm.Session))
 }
 
 // Table return table name
-func (s *Stage) Table() string {
+func (s *DO) Table() string {
 	return s.db.Statement.Table
 }
 
 // UnderlyingDB return the underlying database connection
-func (s *Stage) UnderlyingDB() *gorm.DB {
+func (s *DO) UnderlyingDB() *gorm.DB {
 	Emit(methodDiy)
 	return s.db
 }
 
 // Build implement the interface of claues.Expression
 // only call WHERE clause's Build
-func (s *Stage) Build(builder clause.Builder) {
+func (s *DO) Build(builder clause.Builder) {
 	for _, e := range s.buildWhere() {
 		e.Build(builder)
 	}
 }
 
-func (s *Stage) buildWhere() []clause.Expression {
+func (s *DO) buildWhere() []clause.Expression {
 	return s.db.Statement.BuildCondition(s.db)
 }
 
 type stmtOpt func(*gorm.Statement) *gorm.Statement
 
 var (
-	// withFROM 增加FROM子句
+	// withFROM add FROM clause
 	withFROM stmtOpt = func(stmt *gorm.Statement) *gorm.Statement {
 		if stmt.Table == "" {
 			_ = stmt.Parse(stmt.Model)
@@ -77,7 +88,7 @@ var (
 		return stmt
 	}
 
-	// // withSELECT 增加SELECT子句
+	// // withSELECT add SELECT clause
 	// withSELECT stmtOpt = func(stmt *gorm.Statement) *gorm.Statement {
 	// 	if _, ok := stmt.Clauses["SELECT"]; !ok {
 	// 		stmt.AddClause(clause.Select{})
@@ -87,7 +98,7 @@ var (
 )
 
 // buildStmt call statement.Build to combine all clauses in one statement
-func (s *Stage) buildStmt(opts ...stmtOpt) *gorm.Statement {
+func (s *DO) buildStmt(opts ...stmtOpt) *gorm.Statement {
 	stmt := s.db.Statement
 	for _, opt := range opts {
 		stmt = opt(stmt)
@@ -106,84 +117,83 @@ func (s *Stage) buildStmt(opts ...stmtOpt) *gorm.Statement {
 	return stmt
 }
 
-// func (s *Stage) subQueryExpr() clause.Expr {
+// func (s *DO) subQueryExpr() clause.Expr {
 // 	stmt := s.buildStmt(withFROM, withSELECT)
 // 	return clause.Expr{SQL: "(" + stmt.SQL.String() + ")", Vars: stmt.Vars}
 // }
 
-// As 指定的值不可继承，因此需要在结尾使用
-func (s *Stage) As(alias string) Dao {
-	return &Stage{db: s.db, alias: alias}
-}
-
-// ======================== 逻辑操作 ========================
-func (s *Stage) Not(conds ...Condition) Dao {
-	return NewStage(s.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Not(condToExpression(conds...)...)}}))
-}
-
-func (s *Stage) Or(conds ...Condition) Dao {
-	return NewStage(s.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Or(clause.And(condToExpression(conds...)...))}}))
+// As alias cannot be heired, As must used on tail
+func (s *DO) As(alias string) Dao {
+	return &DO{db: s.db, alias: alias}
 }
 
 // ======================== chainable api ========================
-func (s *Stage) Select(columns ...field.Expr) Dao {
-	Emit(methodSelect)
-	if len(columns) == 0 {
-		return NewStage(s.db.Clauses(clause.Select{}))
-	}
-	return NewStage(s.db.Clauses(clause.Select{Expression: CommaExpression{Exprs: toExpression(columns...)}}))
+func (s *DO) Not(conds ...Condition) Dao {
+	return NewDO(s.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Not(condToExpression(conds...)...)}}))
 }
 
-func (s *Stage) Where(conds ...Condition) Dao {
+func (s *DO) Or(conds ...Condition) Dao {
+	return NewDO(s.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Or(clause.And(condToExpression(conds...)...))}}))
+}
+
+func (s *DO) Select(columns ...field.Expr) Dao {
+	Emit(methodSelect)
+	if len(columns) == 0 {
+		return NewDO(s.db.Clauses(clause.Select{}))
+	}
+	return NewDO(s.db.Clauses(clause.Select{Expression: CommaExpression{Exprs: toExpression(columns...)}}))
+}
+
+func (s *DO) Where(conds ...Condition) Dao {
 	Emit(methodWhere)
 	var exprs = make([]clause.Expression, 0, len(conds))
 	for _, cond := range conds {
 		switch cond := cond.(type) {
-		case *Stage:
+		case *DO:
 			exprs = append(exprs, cond.buildWhere()...)
 		default:
 			exprs = append(exprs, cond)
 		}
 	}
-	return NewStage(s.db.Clauses(clause.Where{Exprs: exprs}))
+	return NewDO(s.db.Clauses(clause.Where{Exprs: exprs}))
 }
 
-func (s *Stage) Order(columns ...field.Expr) Dao {
+func (s *DO) Order(columns ...field.Expr) Dao {
 	Emit(methodOrder)
-	return NewStage(s.db.Clauses(clause.OrderBy{Expression: CommaExpression{Exprs: toExpression(columns...)}}))
+	return NewDO(s.db.Clauses(clause.OrderBy{Expression: CommaExpression{Exprs: toExpression(columns...)}}))
 }
 
-func (s *Stage) Distinct(columns ...field.Expr) Dao {
+func (s *DO) Distinct(columns ...field.Expr) Dao {
 	Emit(methodDistinct)
-	return NewStage(s.db.Distinct(toInterfaceSlice(toColNames(s.db.Statement, columns...))))
+	return NewDO(s.db.Distinct(toInterfaceSlice(toColNames(s.db.Statement, columns...))))
 }
 
-func (s *Stage) Omit(columns ...field.Expr) Dao {
+func (s *DO) Omit(columns ...field.Expr) Dao {
 	Emit(methodOmit)
-	return NewStage(s.db.Omit(toColNames(s.db.Statement, columns...)...))
+	return NewDO(s.db.Omit(toColNames(s.db.Statement, columns...)...))
 }
 
-func (s *Stage) Group(column field.Expr) Dao {
+func (s *DO) Group(column field.Expr) Dao {
 	Emit(methodGroup)
-	return NewStage(s.db.Group(column.Column().Name))
+	return NewDO(s.db.Group(column.Column().Name))
 }
 
-func (s *Stage) Having(conds ...Condition) Dao {
+func (s *DO) Having(conds ...Condition) Dao {
 	Emit(methodHaving)
-	return NewStage(s.db.Clauses(clause.GroupBy{Having: condToExpression(conds...)}))
+	return NewDO(s.db.Clauses(clause.GroupBy{Having: condToExpression(conds...)}))
 }
 
-func (s *Stage) Limit(limit int) Dao {
+func (s *DO) Limit(limit int) Dao {
 	Emit(methodLimit)
-	return NewStage(s.db.Limit(limit))
+	return NewDO(s.db.Limit(limit))
 }
 
-func (s *Stage) Offset(offset int) Dao {
+func (s *DO) Offset(offset int) Dao {
 	Emit(methodOffset)
-	return NewStage(s.db.Offset(offset))
+	return NewDO(s.db.Offset(offset))
 }
 
-func (s *Stage) Scopes(funcs ...func(Dao) Dao) Dao {
+func (s *DO) Scopes(funcs ...func(Dao) Dao) Dao {
 	Emit(methodScopes)
 	var result Dao = s
 	for _, f := range funcs {
@@ -192,63 +202,63 @@ func (s *Stage) Scopes(funcs ...func(Dao) Dao) Dao {
 	return result
 }
 
-func (s *Stage) Unscoped() Dao {
+func (s *DO) Unscoped() Dao {
 	Emit(methodUnscoped)
-	return NewStage(s.db.Unscoped())
+	return NewDO(s.db.Unscoped())
 }
 
 // ======================== finisher api ========================
-func (s *Stage) Create(value interface{}) error {
+func (s *DO) Create(value interface{}) error {
 	Emit(methodCreate)
 	return s.db.Create(value).Error
 }
 
-func (s *Stage) CreateInBatches(value interface{}, batchSize int) error {
+func (s *DO) CreateInBatches(value interface{}, batchSize int) error {
 	Emit(methodCreateInBatches)
 	return s.db.CreateInBatches(value, batchSize).Error
 }
 
-func (s *Stage) Save(value interface{}) error {
+func (s *DO) Save(value interface{}) error {
 	Emit(methodSave)
 	return s.db.Save(value).Error
 }
 
-func (s *Stage) First(dest interface{}, conds ...field.Expr) error {
+func (s *DO) First(dest interface{}, conds ...field.Expr) error {
 	Emit(methodFirst)
 	return s.db.Clauses(toExpression(conds...)...).First(dest).Error
 }
 
-func (s *Stage) Take(dest interface{}, conds ...field.Expr) error {
+func (s *DO) Take(dest interface{}, conds ...field.Expr) error {
 	Emit(methodTake)
 	return s.db.Clauses(toExpression(conds...)...).Take(dest).Error
 }
 
-func (s *Stage) Last(dest interface{}, conds ...field.Expr) error {
+func (s *DO) Last(dest interface{}, conds ...field.Expr) error {
 	Emit(methodLast)
 	return s.db.Clauses(toExpression(conds...)...).Last(dest).Error
 }
 
-func (s *Stage) Find(dest interface{}, conds ...field.Expr) error {
+func (s *DO) Find(dest interface{}, conds ...field.Expr) error {
 	Emit(methodFind)
 	return s.db.Clauses(toExpression(conds...)...).Find(dest).Error
 }
 
-func (s *Stage) FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error {
+func (s *DO) FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error {
 	Emit(methodFindInBatches)
-	return s.db.FindInBatches(dest, batchSize, func(tx *gorm.DB, batch int) error { return fc(NewStage(tx), batch) }).Error
+	return s.db.FindInBatches(dest, batchSize, func(tx *gorm.DB, batch int) error { return fc(NewDO(tx), batch) }).Error
 }
 
-func (s *Stage) FirstOrInit(dest interface{}, conds ...field.Expr) error {
+func (s *DO) FirstOrInit(dest interface{}, conds ...field.Expr) error {
 	Emit(methodFirstOrInit)
 	return s.db.Clauses(toExpression(conds...)...).FirstOrInit(dest).Error
 }
 
-func (s *Stage) FirstOrCreate(dest interface{}, conds ...field.Expr) error {
+func (s *DO) FirstOrCreate(dest interface{}, conds ...field.Expr) error {
 	Emit(methodFirstOrCreate)
 	return s.db.Clauses(toExpression(conds...)...).FirstOrCreate(dest).Error
 }
 
-func (s *Stage) Update(column field.Expr, value interface{}) error {
+func (s *DO) Update(column field.Expr, value interface{}) error {
 	Emit(methodUpdate)
 	switch expr := column.RawExpr().(type) {
 	case clause.Expression:
@@ -258,19 +268,19 @@ func (s *Stage) Update(column field.Expr, value interface{}) error {
 	switch value := value.(type) {
 	case field.Expr:
 		return s.db.Update(column.Column().Name, value.RawExpr()).Error
-	case *Stage:
+	case *DO:
 		return s.db.Update(column.Column().Name, value.db).Error
 	default:
 		return s.db.Update(column.Column().Name, value).Error
 	}
 }
 
-func (s *Stage) Updates(values interface{}) error {
+func (s *DO) Updates(values interface{}) error {
 	Emit(methodUpdates)
 	return s.db.Updates(values).Error
 }
 
-func (s *Stage) UpdateColumn(column field.Expr, value interface{}) error {
+func (s *DO) UpdateColumn(column field.Expr, value interface{}) error {
 	Emit(methodUpdateColumn)
 	switch expr := column.RawExpr().(type) {
 	case clause.Expression:
@@ -280,81 +290,81 @@ func (s *Stage) UpdateColumn(column field.Expr, value interface{}) error {
 	switch value := value.(type) {
 	case field.Expr:
 		return s.db.UpdateColumn(column.Column().Name, value.RawExpr()).Error
-	case *Stage:
+	case *DO:
 		return s.db.UpdateColumn(column.Column().Name, value.db).Error
 	default:
 		return s.db.UpdateColumn(column.Column().Name, value).Error
 	}
 }
 
-func (s *Stage) UpdateColumns(values interface{}) error {
+func (s *DO) UpdateColumns(values interface{}) error {
 	Emit(methodUpdateColumns)
 	return s.db.UpdateColumns(values).Error
 }
 
-func (s *Stage) Delete(value interface{}, conds ...field.Expr) error {
+func (s *DO) Delete(value interface{}, conds ...field.Expr) error {
 	Emit(methodDelete)
 	return s.db.Clauses(toExpression(conds...)...).Delete(value).Error
 }
 
-func (s *Stage) Count(count *int64) error {
+func (s *DO) Count(count *int64) error {
 	Emit(methodCount)
 	return s.db.Count(count).Error
 }
 
-func (s *Stage) Row() *sql.Row {
+func (s *DO) Row() *sql.Row {
 	Emit(methodRow)
 	return s.db.Row()
 }
 
-func (s *Stage) Rows() (*sql.Rows, error) {
+func (s *DO) Rows() (*sql.Rows, error) {
 	Emit(methodRows)
 	return s.db.Rows()
 }
 
-func (s *Stage) Scan(dest interface{}) error {
+func (s *DO) Scan(dest interface{}) error {
 	Emit(methodScan)
 	return s.db.Scan(dest).Error
 }
 
-func (s *Stage) Pluck(column field.Expr, dest interface{}) error {
+func (s *DO) Pluck(column field.Expr, dest interface{}) error {
 	Emit(methodPluck)
 	return s.db.Pluck(column.Column().Name, dest).Error
 }
 
-func (s *Stage) ScanRows(rows *sql.Rows, dest interface{}) error {
+func (s *DO) ScanRows(rows *sql.Rows, dest interface{}) error {
 	Emit(methodScanRows)
 	return s.db.ScanRows(rows, dest)
 }
 
-func (s *Stage) Transaction(fc func(Dao) error, opts ...*sql.TxOptions) error {
+func (s *DO) Transaction(fc func(Dao) error, opts ...*sql.TxOptions) error {
 	Emit(methodTransaction)
-	return s.db.Transaction(func(tx *gorm.DB) error { return fc(NewStage(tx)) }, opts...)
+	return s.db.Transaction(func(tx *gorm.DB) error { return fc(NewDO(tx)) }, opts...)
 }
 
-func (s *Stage) Begin(opts ...*sql.TxOptions) Dao {
+func (s *DO) Begin(opts ...*sql.TxOptions) Dao {
 	Emit(methodBegin)
-	return NewStage(s.db.Begin(opts...))
+	return NewDO(s.db.Begin(opts...))
 }
 
-func (s *Stage) Commit() Dao {
+func (s *DO) Commit() Dao {
 	Emit(methodCommit)
-	return NewStage(s.db.Commit())
+	return NewDO(s.db.Commit())
 }
 
-func (s *Stage) RollBack() Dao {
+func (s *DO) RollBack() Dao {
 	Emit(methodRollback)
-	return NewStage(s.db.Rollback())
+	return NewDO(s.db.Rollback())
 }
 
-func (s *Stage) SavePoint(name string) Dao {
+func (s *DO) SavePoint(name string) Dao {
 	Emit(methodSavePoint)
-	return NewStage(s.db.SavePoint(name))
+	return NewDO(s.db.SavePoint(name))
 }
 
-func (s *Stage) RollBackTo(name string) Dao {
+func (s *DO) RollBackTo(name string) Dao {
 	Emit(methodRollbackTo)
-	return NewStage(s.db.RollbackTo(name))
+	return NewDO(s.db.RollbackTo(name))
 }
 
 func toExpression(conds ...field.Expr) []clause.Expression {
@@ -396,8 +406,8 @@ func toInterfaceSlice(value interface{}) []interface{} {
 	}
 }
 
-// ======================== 临时数据结构 ========================
-// 逗号分割的表达式
+// ======================== temporary ========================
+// CommaExpression comma expression
 type CommaExpression struct {
 	Exprs []clause.Expression
 }
@@ -421,7 +431,7 @@ func (comma CommaExpression) Build(builder clause.Builder) {
 // 	SELECT * FROM (SELECT `id`, `name` FROM `users_info` WHERE `age` > ?)"
 func Table(subQueries ...Dao) Dao {
 	if len(subQueries) == 0 {
-		return NewStage(nil)
+		return NewDO(nil)
 	}
 
 	tablePlaceholder := make([]string, len(subQueries))
@@ -429,15 +439,15 @@ func Table(subQueries ...Dao) Dao {
 	for i, query := range subQueries {
 		tablePlaceholder[i] = "(?)"
 
-		stage := query.(*Stage)
-		tableExprs[i] = stage.db
-		if stage.alias != "" {
-			tablePlaceholder[i] += " AS " + stage.db.Statement.Quote(stage.alias)
+		do := query.(*DO)
+		tableExprs[i] = do.db
+		if do.alias != "" {
+			tablePlaceholder[i] += " AS " + do.db.Statement.Quote(do.alias)
 		}
 	}
 
-	db := subQueries[0].(*Stage).db
-	return NewStage(db.Session(&gorm.Session{NewDB: true}).Table(strings.Join(tablePlaceholder, ", "), tableExprs...))
+	db := subQueries[0].(*DO).db
+	return NewDO(db.Session(&gorm.Session{NewDB: true}).Table(strings.Join(tablePlaceholder, ", "), tableExprs...))
 }
 
 // ======================== sub query method ========================

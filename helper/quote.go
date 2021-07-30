@@ -10,7 +10,7 @@ func Quote(data string) string {
 }
 
 func escapeBackticks(data string) string {
-	buf := bytes.NewBuffer(nil)
+	var buf bytes.Buffer
 	for _, c := range data {
 		if c == '`' {
 			buf.WriteByte('`')
