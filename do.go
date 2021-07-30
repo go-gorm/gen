@@ -236,25 +236,23 @@ func (s *DO) join(table schema.Tabler, joinType clause.JoinType, conds ...Condit
 		Exprs: exprs,
 	}}
 	from := getFromClause(s.db)
-	if from == nil {
-		from = &clause.From{}
-	}
 	from.Joins = append(from.Joins, join)
 	return NewDO(s.db.Clauses(from))
 }
 
 func getFromClause(db *gorm.DB) *clause.From {
-	if db == nil {
-		return nil
+	if db == nil || db.Statement == nil {
+		return &clause.From{}
 	}
 	c, ok := db.Statement.Clauses[clause.From{}.Name()]
 	if !ok || c.Expression == nil {
-		return nil
+		return &clause.From{}
 	}
-	if from, ok := c.Expression.(clause.From); ok {
-		return &from
+	from, ok := c.Expression.(clause.From)
+	if !ok {
+		return &clause.From{}
 	}
-	return nil
+	return &from
 }
 
 // ======================== finisher api ========================

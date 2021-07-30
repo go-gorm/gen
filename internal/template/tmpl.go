@@ -49,7 +49,6 @@ func New{{.StructName}}(db *gorm.DB) *{{.NewStructName}} {
 	_{{.NewStructName}}.UseDB(db)
 	_{{.NewStructName}}.UseModel({{.StructInfo.Package}}.{{.StructInfo.Type}}{})
 
-
 	tableName := _{{.NewStructName}}.TableName()
 	{{range $p :=.Members}} _{{$.NewStructName}}.{{$p.Name}} = field.New{{$p.NewType}}(tableName, "{{$p.ColumnName}}")
 	{{end}}
