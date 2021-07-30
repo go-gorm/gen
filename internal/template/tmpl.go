@@ -10,8 +10,7 @@ package {{.}}
 import(
 	"gorm.io/gorm"
 
-	"gorm.io/gorm/gen/field"
-	"gorm.io/gorm/gen/helper"
+	"gorm.io/gen/field"
 )
 `
 
@@ -51,9 +50,8 @@ func New{{.StructName}}(db *gorm.DB) *{{.NewStructName}} {
 	_{{.NewStructName}}.UseModel({{.StructInfo.Package}}.{{.StructInfo.Type}}{})
 
 
-	tableName := _{{.NewStructName}}.Table()
-	{{range $p :=.Members}}
-	_{{.NewStructName}}.{{$p.Name}} = field.New{{$p.NewType}}(tableName, "{{$p.ColumnName}}"),
+	tableName := _{{.NewStructName}}.TableName()
+	{{range $p :=.Members}} _{{$.NewStructName}}.{{$p.Name}} = field.New{{$p.NewType}}(tableName, "{{$p.ColumnName}}")
 	{{end}}
 	
 	return _{{.NewStructName}}
@@ -62,6 +60,24 @@ func New{{.StructName}}(db *gorm.DB) *{{.NewStructName}} {
 `
 
 const BaseGormFunc = `
+func ({{.S}} {{.NewStructName}}) Join(table schema.Tabler, on ...gen.Condition) *{{.NewStructName}} {
+	next := {{.S}}
+	next.DO = *{{.S}}.DO.Join(table, on...).(*gen.DO)
+	return &next
+}
+
+func ({{.S}} {{.NewStructName}}) LeftJoin(table schema.Tabler, on ...gen.Condition) *{{.NewStructName}} {
+	next := {{.S}}
+	next.DO = *{{.S}}.DO.Join(table, on...).(*gen.DO)
+	return &next
+}
+
+func ({{.S}} {{.NewStructName}}) RightJoin(table schema.Tabler, on ...gen.Condition) *{{.NewStructName}} {
+	next := {{.S}}
+	next.DO = *{{.S}}.DO.Join(table, on...).(*gen.DO)
+	return &next
+}
+
 func ({{.S}} {{.NewStructName}}) Not(conds ...gen.Condition) *{{.NewStructName}} {
 	next := {{.S}}
 	next.DO = *{{.S}}.DO.Not(conds...).(*gen.DO)
