@@ -6,6 +6,7 @@ import (
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"gorm.io/gorm/schema"
 
 	"gorm.io/gen/field"
 )
@@ -53,8 +54,8 @@ func (s *DO) UseTable(tableName string) {
 	s.db = s.db.Table(tableName).Session(new(gorm.Session))
 }
 
-// Table return table name
-func (s *DO) Table() string {
+// TableName return table name
+func (s *DO) TableName() string {
 	return s.db.Statement.Table
 }
 
@@ -205,6 +206,53 @@ func (s *DO) Scopes(funcs ...func(Dao) Dao) Dao {
 func (s *DO) Unscoped() Dao {
 	Emit(methodUnscoped)
 	return NewDO(s.db.Unscoped())
+}
+
+func (s *DO) Join(table schema.Tabler, conds ...Condition) Dao {
+	return s.join(table, clause.InnerJoin, conds...)
+}
+
+func (s *DO) LeftJoin(table schema.Tabler, conds ...Condition) Dao {
+	return s.join(table, clause.LeftJoin, conds...)
+}
+
+func (s *DO) RightJoin(table schema.Tabler, conds ...Condition) Dao {
+	return s.join(table, clause.RightJoin, conds...)
+}
+
+func (s *DO) join(table schema.Tabler, joinType clause.JoinType, conds ...Condition) Dao {
+	Emit(methodJoin)
+	var exprs = make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		switch cond := cond.(type) {
+		case *DO:
+			exprs = append(exprs, cond.buildWhere()...)
+		default:
+			exprs = append(exprs, cond)
+		}
+	}
+
+	join := clause.Join{Type: joinType, Table: clause.Table{Name: table.TableName()}, ON: clause.Where{
+		Exprs: exprs,
+	}}
+	from := getFromClause(s.db)
+	from.Joins = append(from.Joins, join)
+	return NewDO(s.db.Clauses(from))
+}
+
+func getFromClause(db *gorm.DB) *clause.From {
+	if db == nil || db.Statement == nil {
+		return &clause.From{}
+	}
+	c, ok := db.Statement.Clauses[clause.From{}.Name()]
+	if !ok || c.Expression == nil {
+		return &clause.From{}
+	}
+	from, ok := c.Expression.(clause.From)
+	if !ok {
+		return &clause.From{}
+	}
+	return &from
 }
 
 // ======================== finisher api ========================
