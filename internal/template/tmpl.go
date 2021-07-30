@@ -10,8 +10,8 @@ package {{.}}
 import(
 	"gorm.io/gorm"
 
-	"gorm.io/gorm/gen/field"
-	"gorm.io/gorm/gen/helper"
+	"gorm.io/gen/field"
+	"gorm.io/gen/helper"
 )
 `
 
