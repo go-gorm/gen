@@ -11,6 +11,7 @@ import(
 	"gorm.io/gorm"
 
 	"gorm.io/gen/field"
+	"gorm.io/gen/helper"
 )
 `
 
