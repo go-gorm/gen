@@ -10,9 +10,9 @@ import (
 	"strings"
 	"text/template"
 
+	"golang.org/x/tools/imports"
 	"gorm.io/gorm"
 
-	"golang.org/x/tools/imports"
 	"gorm.io/gen/internal/check"
 	"gorm.io/gen/internal/parser"
 	tmpl "gorm.io/gen/internal/template"
