@@ -25,7 +25,7 @@ type subQuery interface {
 
 // Dao CRUD methods
 type Dao interface {
-	clause.Expression // 用于获取其中的WHERE condition
+	clause.Expression
 	subQuery
 
 	As(alias string) Dao

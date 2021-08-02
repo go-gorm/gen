@@ -6,6 +6,7 @@ import (
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"gorm.io/gorm/schema"
 
 	"gorm.io/gen/field"
 )
@@ -26,9 +27,20 @@ type DO struct {
 	alias string // for subquery
 }
 
+type doOptions func(*gorm.DB) *gorm.DB
+
+var (
+	// Debug use DB in debug mode
+	Debug = func(db *gorm.DB) *gorm.DB { return db.Debug() }
+)
+
 // UseDB specify a db connection(*gorm.DB)
-func (s *DO) UseDB(db *gorm.DB) {
-	s.db = db.Session(new(gorm.Session))
+func (s *DO) UseDB(db *gorm.DB, opts ...doOptions) {
+	db = db.Session(new(gorm.Session))
+	for _, opt := range opts {
+		db = opt(db)
+	}
+	s.db = db
 }
 
 // UseModel specify a data model structure as a source for table name
@@ -42,8 +54,8 @@ func (s *DO) UseTable(tableName string) {
 	s.db = s.db.Table(tableName).Session(new(gorm.Session))
 }
 
-// Table return table name
-func (s *DO) Table() string {
+// TableName return table name
+func (s *DO) TableName() string {
 	return s.db.Statement.Table
 }
 
@@ -68,7 +80,7 @@ func (s *DO) buildWhere() []clause.Expression {
 type stmtOpt func(*gorm.Statement) *gorm.Statement
 
 var (
-	// withFROM 增加FROM子句
+	// withFROM add FROM clause
 	withFROM stmtOpt = func(stmt *gorm.Statement) *gorm.Statement {
 		if stmt.Table == "" {
 			_ = stmt.Parse(stmt.Model)
@@ -77,7 +89,7 @@ var (
 		return stmt
 	}
 
-	// // withSELECT 增加SELECT子句
+	// // withSELECT add SELECT clause
 	// withSELECT stmtOpt = func(stmt *gorm.Statement) *gorm.Statement {
 	// 	if _, ok := stmt.Clauses["SELECT"]; !ok {
 	// 		stmt.AddClause(clause.Select{})
@@ -111,12 +123,12 @@ func (s *DO) buildStmt(opts ...stmtOpt) *gorm.Statement {
 // 	return clause.Expr{SQL: "(" + stmt.SQL.String() + ")", Vars: stmt.Vars}
 // }
 
-// As 指定的值不可继承，因此需要在结尾使用
+// As alias cannot be heired, As must used on tail
 func (s *DO) As(alias string) Dao {
 	return &DO{db: s.db, alias: alias}
 }
 
-// ======================== 逻辑操作 ========================
+// ======================== chainable api ========================
 func (s *DO) Not(conds ...Condition) Dao {
 	return NewDO(s.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Not(condToExpression(conds...)...)}}))
 }
@@ -125,13 +137,12 @@ func (s *DO) Or(conds ...Condition) Dao {
 	return NewDO(s.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Or(clause.And(condToExpression(conds...)...))}}))
 }
 
-// ======================== chainable api ========================
 func (s *DO) Select(columns ...field.Expr) Dao {
 	Emit(methodSelect)
 	if len(columns) == 0 {
 		return NewDO(s.db.Clauses(clause.Select{}))
 	}
-	return NewDO(s.db.Clauses(clause.Select{Expression: CommaExpression{Exprs: toExpression(columns...)}}))
+	return NewDO(s.db.Clauses(clause.Select{Expression: clause.CommaExpression{Exprs: toExpression(columns...)}}))
 }
 
 func (s *DO) Where(conds ...Condition) Dao {
@@ -150,7 +161,7 @@ func (s *DO) Where(conds ...Condition) Dao {
 
 func (s *DO) Order(columns ...field.Expr) Dao {
 	Emit(methodOrder)
-	return NewDO(s.db.Clauses(clause.OrderBy{Expression: CommaExpression{Exprs: toExpression(columns...)}}))
+	return NewDO(s.db.Clauses(clause.OrderBy{Expression: clause.CommaExpression{Exprs: toExpression(columns...)}}))
 }
 
 func (s *DO) Distinct(columns ...field.Expr) Dao {
@@ -195,6 +206,53 @@ func (s *DO) Scopes(funcs ...func(Dao) Dao) Dao {
 func (s *DO) Unscoped() Dao {
 	Emit(methodUnscoped)
 	return NewDO(s.db.Unscoped())
+}
+
+func (s *DO) Join(table schema.Tabler, conds ...Condition) Dao {
+	return s.join(table, clause.InnerJoin, conds...)
+}
+
+func (s *DO) LeftJoin(table schema.Tabler, conds ...Condition) Dao {
+	return s.join(table, clause.LeftJoin, conds...)
+}
+
+func (s *DO) RightJoin(table schema.Tabler, conds ...Condition) Dao {
+	return s.join(table, clause.RightJoin, conds...)
+}
+
+func (s *DO) join(table schema.Tabler, joinType clause.JoinType, conds ...Condition) Dao {
+	Emit(methodJoin)
+	var exprs = make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		switch cond := cond.(type) {
+		case *DO:
+			exprs = append(exprs, cond.buildWhere()...)
+		default:
+			exprs = append(exprs, cond)
+		}
+	}
+
+	join := clause.Join{Type: joinType, Table: clause.Table{Name: table.TableName()}, ON: clause.Where{
+		Exprs: exprs,
+	}}
+	from := getFromClause(s.db)
+	from.Joins = append(from.Joins, join)
+	return NewDO(s.db.Clauses(from))
+}
+
+func getFromClause(db *gorm.DB) *clause.From {
+	if db == nil || db.Statement == nil {
+		return &clause.From{}
+	}
+	c, ok := db.Statement.Clauses[clause.From{}.Name()]
+	if !ok || c.Expression == nil {
+		return &clause.From{}
+	}
+	from, ok := c.Expression.(clause.From)
+	if !ok {
+		return &clause.From{}
+	}
+	return &from
 }
 
 // ======================== finisher api ========================
@@ -393,21 +451,6 @@ func toInterfaceSlice(value interface{}) []interface{} {
 		return res
 	default:
 		return nil
-	}
-}
-
-// ======================== 临时数据结构 ========================
-// 逗号分割的表达式
-type CommaExpression struct {
-	Exprs []clause.Expression
-}
-
-func (comma CommaExpression) Build(builder clause.Builder) {
-	for idx, expr := range comma.Exprs {
-		if idx > 0 {
-			_, _ = builder.WriteString(", ")
-		}
-		expr.Build(builder)
 	}
 }
 
