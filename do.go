@@ -142,7 +142,7 @@ func (s *DO) Select(columns ...field.Expr) Dao {
 	if len(columns) == 0 {
 		return NewDO(s.db.Clauses(clause.Select{}))
 	}
-	return NewDO(s.db.Clauses(clause.Select{Expression: CommaExpression{Exprs: toExpression(columns...)}}))
+	return NewDO(s.db.Clauses(clause.Select{Expression: clause.CommaExpression{Exprs: toExpression(columns...)}}))
 }
 
 func (s *DO) Where(conds ...Condition) Dao {
@@ -161,7 +161,7 @@ func (s *DO) Where(conds ...Condition) Dao {
 
 func (s *DO) Order(columns ...field.Expr) Dao {
 	Emit(methodOrder)
-	return NewDO(s.db.Clauses(clause.OrderBy{Expression: CommaExpression{Exprs: toExpression(columns...)}}))
+	return NewDO(s.db.Clauses(clause.OrderBy{Expression: clause.CommaExpression{Exprs: toExpression(columns...)}}))
 }
 
 func (s *DO) Distinct(columns ...field.Expr) Dao {
@@ -451,21 +451,6 @@ func toInterfaceSlice(value interface{}) []interface{} {
 		return res
 	default:
 		return nil
-	}
-}
-
-// ======================== temporary ========================
-// CommaExpression comma expression
-type CommaExpression struct {
-	Exprs []clause.Expression
-}
-
-func (comma CommaExpression) Build(builder clause.Builder) {
-	for idx, expr := range comma.Exprs {
-		if idx > 0 {
-			_, _ = builder.WriteString(", ")
-		}
-		expr.Build(builder)
 	}
 }
 
