@@ -18,7 +18,7 @@ func CheckStructs(db *gorm.DB, structs ...interface{}) (bases []*BaseStruct, err
 
 	for _, st := range structs {
 		structType := reflect.TypeOf(st)
-		name := getTypeName(structType.String())
+		name := getStructName(structType.String())
 		base := &BaseStruct{
 			S:             GetSimpleName(name),
 			StructName:    name,

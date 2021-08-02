@@ -53,7 +53,7 @@ func (b *BaseStruct) check() (err error) {
 		if !allowType(m.Type) {
 			b.Members[index].Type = "field"
 		}
-		b.Members[index].NewType = getTypeName(m.Type)
+		b.Members[index].NewType = getNewTypeName(m.Type)
 	}
 	return nil
 }
