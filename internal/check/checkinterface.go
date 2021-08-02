@@ -120,7 +120,7 @@ func (f *InterfaceMethod) parseDocString() string {
 
 	// if wrapped by ", trim it
 	if strings.HasPrefix(docString, `"`) && strings.HasSuffix(docString, `"`) {
-		docString = docString[1 : len(f.SqlString)-1]
+		docString = docString[1 : len(docString)-1]
 	}
 	return docString
 }
