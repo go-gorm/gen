@@ -34,7 +34,7 @@ func GetInterfacePath(v interface{}) (paths []*InterfacePath, err error) {
 		}
 
 		if strings.Split(arg.String(), ".")[0] == "main" {
-			_, file, _, ok := runtime.Caller(2)
+			_, file, _, ok := runtime.Caller(3)
 			if ok {
 				path.Files = append(path.Files, file)
 			}
