@@ -123,6 +123,11 @@ func (s *DO) buildStmt(opts ...stmtOpt) *gorm.Statement {
 // 	return clause.Expr{SQL: "(" + stmt.SQL.String() + ")", Vars: stmt.Vars}
 // }
 
+// Debug return a DO with db in debug mode
+func (s *DO) Debug() Dao {
+	return NewDO(s.db.Debug())
+}
+
 // As alias cannot be heired, As must used on tail
 func (s *DO) As(alias string) Dao {
 	return &DO{db: s.db, alias: alias}
