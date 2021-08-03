@@ -120,6 +120,10 @@ func (p *Param) IsNull() bool {
 	return p.Package == "" && p.Type == "" && p.Name == ""
 }
 
+func (p *Param) InMainPkg() bool {
+	return p.Package == "main"
+}
+
 func (p *Param) IsTime() bool {
 	return p.Package == "time" && p.Type == "Time"
 }
