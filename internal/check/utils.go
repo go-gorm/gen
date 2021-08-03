@@ -79,10 +79,13 @@ func GetSimpleName(s string) string {
 	return string(strings.ToLower(DelPointerSym(s))[0])
 }
 
-func getTypeName(t string) string {
-	var res string
-	for _, s := range strings.Split(t, ".") {
-		res = s
-	}
-	return strings.Title(res)
+func getNewTypeName(t string) string {
+	list := strings.Split(t, ".")
+	return strings.Title(list[len(list)-1])
+}
+
+// not need capitalize
+func getStructName(t string) string {
+	list := strings.Split(t, ".")
+	return list[len(list)-1]
 }
