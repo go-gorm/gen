@@ -243,7 +243,7 @@ func (f *InterfaceMethod) methodParams(param string, s Status) (result slice, er
 				if p.Type != "string" {
 					err = fmt.Errorf("variable name must be string :%s type is %s", param, p.Type)
 				}
-				str = fmt.Sprintf("helper.Quote(%s)", param)
+				str = fmt.Sprintf("%s.Quote(%s)", f.S, param)
 			}
 			f.SqlData = append(f.SqlData, param)
 			result = slice{

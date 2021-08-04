@@ -35,46 +35,51 @@ var (
 )
 
 // UseDB specify a db connection(*gorm.DB)
-func (s *DO) UseDB(db *gorm.DB, opts ...doOptions) {
+func (d *DO) UseDB(db *gorm.DB, opts ...doOptions) {
 	db = db.Session(new(gorm.Session))
 	for _, opt := range opts {
 		db = opt(db)
 	}
-	s.db = db
+	d.db = db
 }
 
 // UseModel specify a data model structure as a source for table name
-func (s *DO) UseModel(model interface{}) {
-	s.db = s.db.Model(model).Session(new(gorm.Session))
-	_ = s.db.Statement.Parse(model)
+func (d *DO) UseModel(model interface{}) {
+	d.db = d.db.Model(model).Session(new(gorm.Session))
+	_ = d.db.Statement.Parse(model)
 }
 
 // UseTable specify table name
-func (s *DO) UseTable(tableName string) {
-	s.db = s.db.Table(tableName).Session(new(gorm.Session))
+func (d *DO) UseTable(tableName string) {
+	d.db = d.db.Table(tableName).Session(new(gorm.Session))
 }
 
 // TableName return table name
-func (s *DO) TableName() string {
-	return s.db.Statement.Table
+func (d *DO) TableName() string {
+	return d.db.Statement.Table
 }
 
 // UnderlyingDB return the underlying database connection
-func (s *DO) UnderlyingDB() *gorm.DB {
+func (d *DO) UnderlyingDB() *gorm.DB {
 	Emit(methodDiy)
-	return s.db
+	return d.db
+}
+
+// Quote return qutoed data
+func (d *DO) Quote(raw string) string {
+	return d.db.Statement.Quote(raw)
 }
 
 // Build implement the interface of claues.Expression
 // only call WHERE clause's Build
-func (s *DO) Build(builder clause.Builder) {
-	for _, e := range s.buildWhere() {
+func (d *DO) Build(builder clause.Builder) {
+	for _, e := range d.buildWhere() {
 		e.Build(builder)
 	}
 }
 
-func (s *DO) buildWhere() []clause.Expression {
-	return s.db.Statement.BuildCondition(s.db)
+func (d *DO) buildWhere() []clause.Expression {
+	return d.db.Statement.BuildCondition(d.db)
 }
 
 type stmtOpt func(*gorm.Statement) *gorm.Statement
@@ -99,8 +104,8 @@ var (
 )
 
 // buildStmt call statement.Build to combine all clauses in one statement
-func (s *DO) buildStmt(opts ...stmtOpt) *gorm.Statement {
-	stmt := s.db.Statement
+func (d *DO) buildStmt(opts ...stmtOpt) *gorm.Statement {
+	stmt := d.db.Statement
 	for _, opt := range opts {
 		stmt = opt(stmt)
 	}
@@ -124,33 +129,33 @@ func (s *DO) buildStmt(opts ...stmtOpt) *gorm.Statement {
 // }
 
 // Debug return a DO with db in debug mode
-func (s *DO) Debug() Dao {
-	return NewDO(s.db.Debug())
+func (d *DO) Debug() Dao {
+	return NewDO(d.db.Debug())
 }
 
 // As alias cannot be heired, As must used on tail
-func (s *DO) As(alias string) Dao {
-	return &DO{db: s.db, alias: alias}
+func (d *DO) As(alias string) Dao {
+	return &DO{db: d.db, alias: alias}
 }
 
 // ======================== chainable api ========================
-func (s *DO) Not(conds ...Condition) Dao {
-	return NewDO(s.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Not(condToExpression(conds...)...)}}))
+func (d *DO) Not(conds ...Condition) Dao {
+	return NewDO(d.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Not(condToExpression(conds...)...)}}))
 }
 
-func (s *DO) Or(conds ...Condition) Dao {
-	return NewDO(s.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Or(clause.And(condToExpression(conds...)...))}}))
+func (d *DO) Or(conds ...Condition) Dao {
+	return NewDO(d.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Or(clause.And(condToExpression(conds...)...))}}))
 }
 
-func (s *DO) Select(columns ...field.Expr) Dao {
+func (d *DO) Select(columns ...field.Expr) Dao {
 	Emit(methodSelect)
 	if len(columns) == 0 {
-		return NewDO(s.db.Clauses(clause.Select{}))
+		return NewDO(d.db.Clauses(clause.Select{}))
 	}
-	return NewDO(s.db.Clauses(clause.Select{Expression: clause.CommaExpression{Exprs: toExpression(columns...)}}))
+	return NewDO(d.db.Clauses(clause.Select{Expression: clause.CommaExpression{Exprs: toExpression(columns...)}}))
 }
 
-func (s *DO) Where(conds ...Condition) Dao {
+func (d *DO) Where(conds ...Condition) Dao {
 	Emit(methodWhere)
 	var exprs = make([]clause.Expression, 0, len(conds))
 	for _, cond := range conds {
@@ -161,71 +166,71 @@ func (s *DO) Where(conds ...Condition) Dao {
 			exprs = append(exprs, cond)
 		}
 	}
-	return NewDO(s.db.Clauses(clause.Where{Exprs: exprs}))
+	return NewDO(d.db.Clauses(clause.Where{Exprs: exprs}))
 }
 
-func (s *DO) Order(columns ...field.Expr) Dao {
+func (d *DO) Order(columns ...field.Expr) Dao {
 	Emit(methodOrder)
-	return NewDO(s.db.Clauses(clause.OrderBy{Expression: clause.CommaExpression{Exprs: toExpression(columns...)}}))
+	return NewDO(d.db.Clauses(clause.OrderBy{Expression: clause.CommaExpression{Exprs: toExpression(columns...)}}))
 }
 
-func (s *DO) Distinct(columns ...field.Expr) Dao {
+func (d *DO) Distinct(columns ...field.Expr) Dao {
 	Emit(methodDistinct)
-	return NewDO(s.db.Distinct(toInterfaceSlice(toColNames(s.db.Statement, columns...))))
+	return NewDO(d.db.Distinct(toInterfaceSlice(toColNames(d.db.Statement, columns...))))
 }
 
-func (s *DO) Omit(columns ...field.Expr) Dao {
+func (d *DO) Omit(columns ...field.Expr) Dao {
 	Emit(methodOmit)
-	return NewDO(s.db.Omit(toColNames(s.db.Statement, columns...)...))
+	return NewDO(d.db.Omit(toColNames(d.db.Statement, columns...)...))
 }
 
-func (s *DO) Group(column field.Expr) Dao {
+func (d *DO) Group(column field.Expr) Dao {
 	Emit(methodGroup)
-	return NewDO(s.db.Group(column.Column().Name))
+	return NewDO(d.db.Group(column.Column().Name))
 }
 
-func (s *DO) Having(conds ...Condition) Dao {
+func (d *DO) Having(conds ...Condition) Dao {
 	Emit(methodHaving)
-	return NewDO(s.db.Clauses(clause.GroupBy{Having: condToExpression(conds...)}))
+	return NewDO(d.db.Clauses(clause.GroupBy{Having: condToExpression(conds...)}))
 }
 
-func (s *DO) Limit(limit int) Dao {
+func (d *DO) Limit(limit int) Dao {
 	Emit(methodLimit)
-	return NewDO(s.db.Limit(limit))
+	return NewDO(d.db.Limit(limit))
 }
 
-func (s *DO) Offset(offset int) Dao {
+func (d *DO) Offset(offset int) Dao {
 	Emit(methodOffset)
-	return NewDO(s.db.Offset(offset))
+	return NewDO(d.db.Offset(offset))
 }
 
-func (s *DO) Scopes(funcs ...func(Dao) Dao) Dao {
+func (d *DO) Scopes(funcs ...func(Dao) Dao) Dao {
 	Emit(methodScopes)
-	var result Dao = s
+	var result Dao = d
 	for _, f := range funcs {
 		result = f(result)
 	}
 	return result
 }
 
-func (s *DO) Unscoped() Dao {
+func (d *DO) Unscoped() Dao {
 	Emit(methodUnscoped)
-	return NewDO(s.db.Unscoped())
+	return NewDO(d.db.Unscoped())
 }
 
-func (s *DO) Join(table schema.Tabler, conds ...Condition) Dao {
-	return s.join(table, clause.InnerJoin, conds...)
+func (d *DO) Join(table schema.Tabler, conds ...Condition) Dao {
+	return d.join(table, clause.InnerJoin, conds...)
 }
 
-func (s *DO) LeftJoin(table schema.Tabler, conds ...Condition) Dao {
-	return s.join(table, clause.LeftJoin, conds...)
+func (d *DO) LeftJoin(table schema.Tabler, conds ...Condition) Dao {
+	return d.join(table, clause.LeftJoin, conds...)
 }
 
-func (s *DO) RightJoin(table schema.Tabler, conds ...Condition) Dao {
-	return s.join(table, clause.RightJoin, conds...)
+func (d *DO) RightJoin(table schema.Tabler, conds ...Condition) Dao {
+	return d.join(table, clause.RightJoin, conds...)
 }
 
-func (s *DO) join(table schema.Tabler, joinType clause.JoinType, conds ...Condition) Dao {
+func (d *DO) join(table schema.Tabler, joinType clause.JoinType, conds ...Condition) Dao {
 	Emit(methodJoin)
 	var exprs = make([]clause.Expression, 0, len(conds))
 	for _, cond := range conds {
@@ -240,9 +245,9 @@ func (s *DO) join(table schema.Tabler, joinType clause.JoinType, conds ...Condit
 	join := clause.Join{Type: joinType, Table: clause.Table{Name: table.TableName()}, ON: clause.Where{
 		Exprs: exprs,
 	}}
-	from := getFromClause(s.db)
+	from := getFromClause(d.db)
 	from.Joins = append(from.Joins, join)
-	return NewDO(s.db.Clauses(from))
+	return NewDO(d.db.Clauses(from))
 }
 
 func getFromClause(db *gorm.DB) *clause.From {
@@ -261,163 +266,163 @@ func getFromClause(db *gorm.DB) *clause.From {
 }
 
 // ======================== finisher api ========================
-func (s *DO) Create(value interface{}) error {
+func (d *DO) Create(value interface{}) error {
 	Emit(methodCreate)
-	return s.db.Create(value).Error
+	return d.db.Create(value).Error
 }
 
-func (s *DO) CreateInBatches(value interface{}, batchSize int) error {
+func (d *DO) CreateInBatches(value interface{}, batchSize int) error {
 	Emit(methodCreateInBatches)
-	return s.db.CreateInBatches(value, batchSize).Error
+	return d.db.CreateInBatches(value, batchSize).Error
 }
 
-func (s *DO) Save(value interface{}) error {
+func (d *DO) Save(value interface{}) error {
 	Emit(methodSave)
-	return s.db.Save(value).Error
+	return d.db.Save(value).Error
 }
 
-func (s *DO) First(dest interface{}, conds ...field.Expr) error {
+func (d *DO) First(dest interface{}, conds ...field.Expr) error {
 	Emit(methodFirst)
-	return s.db.Clauses(toExpression(conds...)...).First(dest).Error
+	return d.db.Clauses(toExpression(conds...)...).First(dest).Error
 }
 
-func (s *DO) Take(dest interface{}, conds ...field.Expr) error {
+func (d *DO) Take(dest interface{}, conds ...field.Expr) error {
 	Emit(methodTake)
-	return s.db.Clauses(toExpression(conds...)...).Take(dest).Error
+	return d.db.Clauses(toExpression(conds...)...).Take(dest).Error
 }
 
-func (s *DO) Last(dest interface{}, conds ...field.Expr) error {
+func (d *DO) Last(dest interface{}, conds ...field.Expr) error {
 	Emit(methodLast)
-	return s.db.Clauses(toExpression(conds...)...).Last(dest).Error
+	return d.db.Clauses(toExpression(conds...)...).Last(dest).Error
 }
 
-func (s *DO) Find(dest interface{}, conds ...field.Expr) error {
+func (d *DO) Find(dest interface{}, conds ...field.Expr) error {
 	Emit(methodFind)
-	return s.db.Clauses(toExpression(conds...)...).Find(dest).Error
+	return d.db.Clauses(toExpression(conds...)...).Find(dest).Error
 }
 
-func (s *DO) FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error {
+func (d *DO) FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error {
 	Emit(methodFindInBatches)
-	return s.db.FindInBatches(dest, batchSize, func(tx *gorm.DB, batch int) error { return fc(NewDO(tx), batch) }).Error
+	return d.db.FindInBatches(dest, batchSize, func(tx *gorm.DB, batch int) error { return fc(NewDO(tx), batch) }).Error
 }
 
-func (s *DO) FirstOrInit(dest interface{}, conds ...field.Expr) error {
+func (d *DO) FirstOrInit(dest interface{}, conds ...field.Expr) error {
 	Emit(methodFirstOrInit)
-	return s.db.Clauses(toExpression(conds...)...).FirstOrInit(dest).Error
+	return d.db.Clauses(toExpression(conds...)...).FirstOrInit(dest).Error
 }
 
-func (s *DO) FirstOrCreate(dest interface{}, conds ...field.Expr) error {
+func (d *DO) FirstOrCreate(dest interface{}, conds ...field.Expr) error {
 	Emit(methodFirstOrCreate)
-	return s.db.Clauses(toExpression(conds...)...).FirstOrCreate(dest).Error
+	return d.db.Clauses(toExpression(conds...)...).FirstOrCreate(dest).Error
 }
 
-func (s *DO) Update(column field.Expr, value interface{}) error {
+func (d *DO) Update(column field.Expr, value interface{}) error {
 	Emit(methodUpdate)
 	switch expr := column.RawExpr().(type) {
 	case clause.Expression:
-		return s.db.Update(column.Column().Name, expr).Error
+		return d.db.Update(column.Column().Name, expr).Error
 	}
 
 	switch value := value.(type) {
 	case field.Expr:
-		return s.db.Update(column.Column().Name, value.RawExpr()).Error
+		return d.db.Update(column.Column().Name, value.RawExpr()).Error
 	case *DO:
-		return s.db.Update(column.Column().Name, value.db).Error
+		return d.db.Update(column.Column().Name, value.db).Error
 	default:
-		return s.db.Update(column.Column().Name, value).Error
+		return d.db.Update(column.Column().Name, value).Error
 	}
 }
 
-func (s *DO) Updates(values interface{}) error {
+func (d *DO) Updates(values interface{}) error {
 	Emit(methodUpdates)
-	return s.db.Updates(values).Error
+	return d.db.Updates(values).Error
 }
 
-func (s *DO) UpdateColumn(column field.Expr, value interface{}) error {
+func (d *DO) UpdateColumn(column field.Expr, value interface{}) error {
 	Emit(methodUpdateColumn)
 	switch expr := column.RawExpr().(type) {
 	case clause.Expression:
-		return s.db.UpdateColumn(column.Column().Name, expr).Error
+		return d.db.UpdateColumn(column.Column().Name, expr).Error
 	}
 
 	switch value := value.(type) {
 	case field.Expr:
-		return s.db.UpdateColumn(column.Column().Name, value.RawExpr()).Error
+		return d.db.UpdateColumn(column.Column().Name, value.RawExpr()).Error
 	case *DO:
-		return s.db.UpdateColumn(column.Column().Name, value.db).Error
+		return d.db.UpdateColumn(column.Column().Name, value.db).Error
 	default:
-		return s.db.UpdateColumn(column.Column().Name, value).Error
+		return d.db.UpdateColumn(column.Column().Name, value).Error
 	}
 }
 
-func (s *DO) UpdateColumns(values interface{}) error {
+func (d *DO) UpdateColumns(values interface{}) error {
 	Emit(methodUpdateColumns)
-	return s.db.UpdateColumns(values).Error
+	return d.db.UpdateColumns(values).Error
 }
 
-func (s *DO) Delete(value interface{}, conds ...field.Expr) error {
+func (d *DO) Delete(value interface{}, conds ...field.Expr) error {
 	Emit(methodDelete)
-	return s.db.Clauses(toExpression(conds...)...).Delete(value).Error
+	return d.db.Clauses(toExpression(conds...)...).Delete(value).Error
 }
 
-func (s *DO) Count(count *int64) error {
+func (d *DO) Count(count *int64) error {
 	Emit(methodCount)
-	return s.db.Count(count).Error
+	return d.db.Count(count).Error
 }
 
-func (s *DO) Row() *sql.Row {
+func (d *DO) Row() *sql.Row {
 	Emit(methodRow)
-	return s.db.Row()
+	return d.db.Row()
 }
 
-func (s *DO) Rows() (*sql.Rows, error) {
+func (d *DO) Rows() (*sql.Rows, error) {
 	Emit(methodRows)
-	return s.db.Rows()
+	return d.db.Rows()
 }
 
-func (s *DO) Scan(dest interface{}) error {
+func (d *DO) Scan(dest interface{}) error {
 	Emit(methodScan)
-	return s.db.Scan(dest).Error
+	return d.db.Scan(dest).Error
 }
 
-func (s *DO) Pluck(column field.Expr, dest interface{}) error {
+func (d *DO) Pluck(column field.Expr, dest interface{}) error {
 	Emit(methodPluck)
-	return s.db.Pluck(column.Column().Name, dest).Error
+	return d.db.Pluck(column.Column().Name, dest).Error
 }
 
-func (s *DO) ScanRows(rows *sql.Rows, dest interface{}) error {
+func (d *DO) ScanRows(rows *sql.Rows, dest interface{}) error {
 	Emit(methodScanRows)
-	return s.db.ScanRows(rows, dest)
+	return d.db.ScanRows(rows, dest)
 }
 
-func (s *DO) Transaction(fc func(Dao) error, opts ...*sql.TxOptions) error {
+func (d *DO) Transaction(fc func(Dao) error, opts ...*sql.TxOptions) error {
 	Emit(methodTransaction)
-	return s.db.Transaction(func(tx *gorm.DB) error { return fc(NewDO(tx)) }, opts...)
+	return d.db.Transaction(func(tx *gorm.DB) error { return fc(NewDO(tx)) }, opts...)
 }
 
-func (s *DO) Begin(opts ...*sql.TxOptions) Dao {
+func (d *DO) Begin(opts ...*sql.TxOptions) Dao {
 	Emit(methodBegin)
-	return NewDO(s.db.Begin(opts...))
+	return NewDO(d.db.Begin(opts...))
 }
 
-func (s *DO) Commit() Dao {
+func (d *DO) Commit() Dao {
 	Emit(methodCommit)
-	return NewDO(s.db.Commit())
+	return NewDO(d.db.Commit())
 }
 
-func (s *DO) RollBack() Dao {
+func (d *DO) RollBack() Dao {
 	Emit(methodRollback)
-	return NewDO(s.db.Rollback())
+	return NewDO(d.db.Rollback())
 }
 
-func (s *DO) SavePoint(name string) Dao {
+func (d *DO) SavePoint(name string) Dao {
 	Emit(methodSavePoint)
-	return NewDO(s.db.SavePoint(name))
+	return NewDO(d.db.SavePoint(name))
 }
 
-func (s *DO) RollBackTo(name string) Dao {
+func (d *DO) RollBackTo(name string) Dao {
 	Emit(methodRollbackTo)
-	return NewDO(s.db.RollbackTo(name))
+	return NewDO(d.db.RollbackTo(name))
 }
 
 func toExpression(conds ...field.Expr) []clause.Expression {
