@@ -485,7 +485,7 @@ func Table(subQueries ...Dao) Dao {
 		do := query.(*DO)
 		tableExprs[i] = do.db
 		if do.alias != "" {
-			tablePlaceholder[i] += " AS " + do.db.Statement.Quote(do.alias)
+			tablePlaceholder[i] += " AS " + do.Quote(do.alias)
 		}
 	}
 
