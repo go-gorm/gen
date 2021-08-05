@@ -42,10 +42,15 @@ func (b *BaseStruct) getTableName(st interface{}) {
 	b.TableName = stmt.Table
 }
 
-// check if struct is exportable and if member's type is regular
+// check if struct is exportable and if struct in main package and if member's type is regular
 func (b *BaseStruct) check() (err error) {
+	if b.StructInfo.InMainPkg() {
+		err = fmt.Errorf("can't generated data object for struct in main package,ignored:%s", b.StructName)
+		log.Println(err)
+		return
+	}
 	if !isCapitalize(b.StructName) {
-		err = fmt.Errorf("ignoring non exportable struct name:%s", b.NewStructName)
+		err = fmt.Errorf("can't generated data object for non-exportable struct,ignore:%s", b.NewStructName)
 		log.Println(err)
 		return
 	}
@@ -53,7 +58,7 @@ func (b *BaseStruct) check() (err error) {
 		if !allowType(m.Type) {
 			b.Members[index].Type = "field"
 		}
-		b.Members[index].NewType = getTypeName(m.Type)
+		b.Members[index].NewType = getNewTypeName(m.Type)
 	}
 	return nil
 }

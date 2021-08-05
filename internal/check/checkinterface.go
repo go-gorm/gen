@@ -120,7 +120,7 @@ func (f *InterfaceMethod) parseDocString() string {
 
 	// if wrapped by ", trim it
 	if strings.HasPrefix(docString, `"`) && strings.HasSuffix(docString, `"`) {
-		docString = docString[1 : len(f.SqlString)-1]
+		docString = docString[1 : len(docString)-1]
 	}
 	return docString
 }
@@ -243,7 +243,7 @@ func (f *InterfaceMethod) methodParams(param string, s Status) (result slice, er
 				if p.Type != "string" {
 					err = fmt.Errorf("variable name must be string :%s type is %s", param, p.Type)
 				}
-				str = fmt.Sprintf("helper.Quote(%s)", param)
+				str = fmt.Sprintf("%s.Quote(%s)", f.S, param)
 			}
 			f.SqlData = append(f.SqlData, param)
 			result = slice{

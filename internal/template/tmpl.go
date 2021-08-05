@@ -60,21 +60,9 @@ func New{{.StructName}}(db *gorm.DB) *{{.NewStructName}} {
 `
 
 const BaseGormFunc = `
-func ({{.S}} {{.NewStructName}}) Join(table schema.Tabler, on ...gen.Condition) *{{.NewStructName}} {
+func ({{.S}} {{.NewStructName}}) Debug() *{{.NewStructName}} {
 	next := {{.S}}
-	next.DO = *{{.S}}.DO.Join(table, on...).(*gen.DO)
-	return &next
-}
-
-func ({{.S}} {{.NewStructName}}) LeftJoin(table schema.Tabler, on ...gen.Condition) *{{.NewStructName}} {
-	next := {{.S}}
-	next.DO = *{{.S}}.DO.Join(table, on...).(*gen.DO)
-	return &next
-}
-
-func ({{.S}} {{.NewStructName}}) RightJoin(table schema.Tabler, on ...gen.Condition) *{{.NewStructName}} {
-	next := {{.S}}
-	next.DO = *{{.S}}.DO.Join(table, on...).(*gen.DO)
+	next.DO = *{{.S}}.DO.Debug().(*gen.DO)
 	return &next
 }
 
@@ -105,6 +93,24 @@ func ({{.S}} {{.NewStructName}}) Where(conds ...gen.Condition) *{{.NewStructName
 func ({{.S}} {{.NewStructName}}) Order(conds ...field.Expr) *{{.NewStructName}} {
 	next := {{.S}}
 	next.DO = *{{.S}}.DO.Order(conds...).(*gen.DO)
+	return &next
+}
+
+func ({{.S}} {{.NewStructName}}) Join(table schema.Tabler, on ...gen.Condition) *{{.NewStructName}} {
+	next := {{.S}}
+	next.DO = *{{.S}}.DO.Join(table, on...).(*gen.DO)
+	return &next
+}
+
+func ({{.S}} {{.NewStructName}}) LeftJoin(table schema.Tabler, on ...gen.Condition) *{{.NewStructName}} {
+	next := {{.S}}
+	next.DO = *{{.S}}.DO.Join(table, on...).(*gen.DO)
+	return &next
+}
+
+func ({{.S}} {{.NewStructName}}) RightJoin(table schema.Tabler, on ...gen.Condition) *{{.NewStructName}} {
+	next := {{.S}}
+	next.DO = *{{.S}}.DO.Join(table, on...).(*gen.DO)
 	return &next
 }
 
