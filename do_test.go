@@ -37,6 +37,28 @@ func (UserRaw) TableName() string {
 	return "users_info"
 }
 
+// StudentRaw student data struct
+type StudentRaw struct {
+	ID         int64 `gorm:"primary_key"`
+	Name       string
+	Age        int
+	Instructor int64 //导师
+}
+
+func (StudentRaw) TableName() string {
+	return "student"
+}
+
+// Teacher teacher data struct
+type TeacherRaw struct {
+	ID   int64 `gorm:"primary_key"`
+	Name string
+}
+
+func (TeacherRaw) TableName() string {
+	return "teacher"
+}
+
 type User struct {
 	DO
 
@@ -62,6 +84,44 @@ var u = func() User {
 	u.UseDB(db.Session(&gorm.Session{DryRun: true}))
 	u.UseModel(UserRaw{})
 	return u
+}()
+
+type Student struct {
+	DO
+
+	ID         field.Int64
+	Name       field.String
+	Age        field.Int
+	Instructor field.Int64
+}
+
+var student = func() *Student {
+	s := Student{
+		ID:         field.NewInt64("student", "id"),
+		Name:       field.NewString("student", "name"),
+		Age:        field.NewInt("student", "age"),
+		Instructor: field.NewInt64("student", "instructor"),
+	}
+	s.UseDB(db.Session(&gorm.Session{DryRun: true}))
+	s.UseModel(StudentRaw{})
+	return &s
+}()
+
+type Teacher struct {
+	DO
+
+	ID   field.Int64
+	Name field.String
+}
+
+var teacher = func() *Teacher {
+	t := Teacher{
+		ID:   field.NewInt64("teacher", "id"),
+		Name: field.NewString("teacher", "name"),
+	}
+	t.UseDB(db.Session(&gorm.Session{DryRun: true}))
+	t.UseModel(TeacherRaw{})
+	return &t
 }()
 
 func checkBuildExpr(t *testing.T, e Dao, opts []stmtOpt, result string, vars []interface{}) {
@@ -218,6 +278,27 @@ func TestDO_methods(t *testing.T) {
 			Opts:         []stmtOpt{withFROM},
 			ExpectedVars: []interface{}{18, 100.0},
 			Result:       "SELECT * FROM (SELECT * FROM `users_info` WHERE `age` > ?) AS `a`, (SELECT * FROM `users_info` WHERE `score` >= ?) AS `b`",
+		},
+
+		// ======================== join subquery ========================
+		{
+			Expr:   student.Join(teacher, student.Instructor.EqCol(teacher.ID)).Select(),
+			Result: "SELECT * FROM `student` INNER JOIN `teacher` ON `student`.`instructor` = `teacher`.`id`",
+		},
+		{
+			Expr:         student.LeftJoin(teacher, student.Instructor.EqCol(teacher.ID)).Where(teacher.ID.Gt(0)).Select(student.Name, teacher.Name),
+			Result:       "SELECT `student`.`name`, `teacher`.`name` FROM `student` LEFT JOIN `teacher` ON `student`.`instructor` = `teacher`.`id` WHERE `teacher`.`id` > ?",
+			ExpectedVars: []interface{}{int64(0)},
+		},
+		{
+			Expr:         student.RightJoin(teacher, student.Instructor.EqCol(teacher.ID), student.ID.Eq(666)).Select(),
+			Result:       "SELECT * FROM `student` RIGHT JOIN `teacher` ON `student`.`instructor` = `teacher`.`id` AND `student`.`id` = ?",
+			ExpectedVars: []interface{}{int64(666)},
+		},
+		{
+			Expr:         student.Join(teacher, student.Instructor.EqCol(teacher.ID)).LeftJoin(teacher, student.ID.Gt(100)).Select(student.ID, student.Name, teacher.Name.As("teacher_name")),
+			Result:       "SELECT `student`.`id`, `student`.`name`, `teacher`.`name` AS `teacher_name` FROM `student` INNER JOIN `teacher` ON `student`.`instructor` = `teacher`.`id` LEFT JOIN `teacher` ON `student`.`id` > ?",
+			ExpectedVars: []interface{}{int64(100)},
 		},
 	}
 
