@@ -470,7 +470,7 @@ func toInterfaceSlice(value interface{}) []interface{} {
 // the return value has to be used as root node
 //
 // 	Table(u.Select(u.ID, u.Name).Where(u.Age.Gt(18))).Select()
-// the above usage is equaivalent to SQL statement:
+// the above usage is equivalent to SQL statement:
 // 	SELECT * FROM (SELECT `id`, `name` FROM `users_info` WHERE `age` > ?)"
 func Table(subQueries ...Dao) Dao {
 	if len(subQueries) == 0 {

@@ -5,6 +5,7 @@ import (
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"gorm.io/gorm/schema"
 
 	"gorm.io/gen/field"
 )
@@ -39,6 +40,9 @@ type Dao interface {
 	Distinct(columns ...field.Expr) Dao
 	Omit(columns ...field.Expr) Dao
 	// Joins(cond field.Expr) Dao
+	Join(table schema.Tabler, conds ...Condition) Dao
+	LeftJoin(table schema.Tabler, conds ...Condition) Dao
+	RightJoin(table schema.Tabler, conds ...Condition) Dao
 	Group(columns field.Expr) Dao
 	Having(conds ...Condition) Dao
 	Limit(limit int) Dao

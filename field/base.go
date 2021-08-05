@@ -150,7 +150,8 @@ func (e expr) As(alias string) Expr {
 	if e.expression != nil {
 		return &expr{Col: e.Col, expression: clause.Expr{SQL: "? AS ?", Vars: []interface{}{e.expression, clause.Column{Name: alias}}}}
 	}
-	return &expr{Col: e.Col, expression: clause.Expr{SQL: "?", Vars: []interface{}{clause.Column{Name: e.Col.Name, Alias: alias}}}}
+	e.Col.Alias = alias
+	return e
 }
 
 func (e expr) Desc() Expr {
