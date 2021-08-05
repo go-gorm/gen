@@ -311,3 +311,11 @@ func TestExpr_Build(t *testing.T) {
 		checkBuildExpr(t, testcase.Expr, testcase.Result, testcase.ExpectedVars)
 	}
 }
+
+func BenchmarkExpr_Count(b *testing.B) {
+	id := field.NewUint("", "id")
+	for i := 0; i < b.N; i++ {
+		n := id.Count()
+		_ = n
+	}
+}
