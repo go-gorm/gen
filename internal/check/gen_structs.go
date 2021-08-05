@@ -5,8 +5,10 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/jinzhu/inflection"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 
 	"gorm.io/gen/internal/parser"
 )
@@ -62,6 +64,7 @@ func GenBaseStructs(db *gorm.DB, pkg string, tableName ...string) (bases []*Base
 	if pkg == "" {
 		pkg = ModelPkg
 	}
+	singular := singularModel(db.Config)
 	dbName := getSchemaName(db)
 	for _, tb := range tableName {
 		columns, err := getTbColumns(db, dbName, tb)
@@ -71,7 +74,7 @@ func GenBaseStructs(db *gorm.DB, pkg string, tableName ...string) (bases []*Base
 		var base BaseStruct
 		base.GenBaseStruct = true
 		base.TableName = tb
-		base.StructName = nameToCamelCase(tb)
+		base.StructName = convertToModelName(singular, tb)
 		base.StructInfo = parser.Param{Type: base.StructName, Package: pkg}
 		for _, field := range columns {
 			mt := dataType[field.DataType]
@@ -122,4 +125,22 @@ func nameToCamelCase(name string) string {
 		return name
 	}
 	return strings.ReplaceAll(strings.Title(strings.ReplaceAll(name, "_", " ")), " ", "")
+}
+
+func convertToModelName(singular bool, name string) string {
+	cc := nameToCamelCase(name)
+	if singular {
+		return inflection.Singular(cc)
+	}
+	return cc
+}
+
+func singularModel(conf *gorm.Config) bool {
+	if conf == nil || conf.NamingStrategy == nil {
+		return false
+	}
+	if ns, ok := conf.NamingStrategy.(schema.NamingStrategy); ok && !ns.SingularTable {
+		return true
+	}
+	return false
 }

@@ -15,7 +15,6 @@ func CheckStructs(db *gorm.DB, structs ...interface{}) (bases []*BaseStruct, err
 	if isDBUndefined(db) {
 		return nil, fmt.Errorf("gen config db is undefined")
 	}
-
 	for _, st := range structs {
 		structType := reflect.TypeOf(st)
 		name := getStructName(structType.String())
