@@ -16,6 +16,11 @@ func CheckStructs(db *gorm.DB, structs ...interface{}) (bases []*BaseStruct, err
 		return nil, fmt.Errorf("gen config db is undefined")
 	}
 	for _, st := range structs {
+		if base, ok := st.(BaseStruct); ok {
+			bases = append(bases, &base)
+			continue
+		}
+
 		structType := reflect.TypeOf(st)
 		name := getStructName(structType.String())
 		base := &BaseStruct{
@@ -23,6 +28,7 @@ func CheckStructs(db *gorm.DB, structs ...interface{}) (bases []*BaseStruct, err
 			StructName:    name,
 			NewStructName: strings.ToLower(name),
 			StructInfo:    parser.Param{Type: name, Package: getPackageName(structType.String())},
+			Source:        Struct,
 			db:            db,
 		}
 		base.getMembers(st)

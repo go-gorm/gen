@@ -275,6 +275,9 @@ func (s *Slices) parseIF() (res IfClause, err error) {
 			return
 		}
 	}
+	if s.Current().Type == END {
+		return
+	}
 	err = fmt.Errorf("incomplete SQL,if not end")
 	return
 }
@@ -349,6 +352,9 @@ func (s *Slices) parseWhere() (res WhereClause, err error) {
 			return
 		}
 	}
+	if s.Current().Type == END {
+		return
+	}
 	err = fmt.Errorf("incomplete SQL,where not end")
 	return
 }
@@ -382,6 +388,9 @@ func (s *Slices) parseSet() (res SetClause, err error) {
 			err = fmt.Errorf("unknow clause : %s", n.Origin)
 			return
 		}
+	}
+	if s.Current().Type == END {
+		return
 	}
 	err = fmt.Errorf("incomplete SQL,set not end")
 	return
@@ -480,12 +489,12 @@ func splitTemplate(tmpl string, params []parser.Param) (fragList []fragment, err
 	for i := 0; !strOutrange(i, tmpl); i++ {
 		switch tmpl[i] {
 		case '"':
-			buf.WriteByte(tmpl[i])
+			_ = buf.WriteByte(tmpl[i])
 			for i++; ; i++ {
 				if strOutrange(i, tmpl) {
 					return nil, fmt.Errorf("incomplete code:%s", tmpl)
 				}
-				buf.WriteByte(tmpl[i])
+				_ = buf.WriteByte(tmpl[i])
 
 				if tmpl[i] == '"' && tmpl[i-1] != '\\' {
 					fragList = append(fragList, fragment{Type: STRING, Value: buf.Dump()})
@@ -509,13 +518,13 @@ func splitTemplate(tmpl string, params []parser.Param) (fragList []fragment, err
 				fragList = append(fragList, f)
 			}
 
-			buf.WriteByte(tmpl[i])
+			_ = buf.WriteByte(tmpl[i])
 
 			if strOutrange(i+1, tmpl) {
 				return nil, fmt.Errorf("incomplete code:%s", tmpl)
 			}
 			if tmpl[i+1] == '=' {
-				buf.WriteByte(tmpl[i+1])
+				_ = buf.WriteByte(tmpl[i+1])
 				i++
 			}
 
@@ -547,7 +556,7 @@ func splitTemplate(tmpl string, params []parser.Param) (fragList []fragment, err
 				})
 			}
 		default:
-			buf.WriteByte(tmpl[i])
+			_ = buf.WriteByte(tmpl[i])
 		}
 	}
 

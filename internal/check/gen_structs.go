@@ -72,6 +72,7 @@ func GenBaseStructs(db *gorm.DB, pkg string, tableName ...string) (bases []*Base
 			return nil, err
 		}
 		var base BaseStruct
+		base.Source = TableName
 		base.GenBaseStruct = true
 		base.TableName = tb
 		base.StructName = convertToModelName(singular, tb)
