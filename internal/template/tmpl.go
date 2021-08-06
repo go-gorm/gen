@@ -81,32 +81,32 @@ func ({{.S}} {{.NewStructName}}) Select(conds ...field.Expr) *{{.NewStructName}}
 }
 
 func ({{.S}} {{.NewStructName}}) Where(conds ...gen.Condition) *{{.NewStructName}} {
-	{{.S}} = *{{.S}}.DO.Where(conds...).(*gen.DO)
+	{{.S}}.DO = *{{.S}}.DO.Where(conds...).(*gen.DO)
 	return &{{.S}}
 }
 
 func ({{.S}} {{.NewStructName}}) Order(conds ...field.Expr) *{{.NewStructName}} {
-	{{.S}} = *{{.S}}.DO.Order(conds...).(*gen.DO)
+	{{.S}}.DO = *{{.S}}.DO.Order(conds...).(*gen.DO)
 	return &{{.S}}
 }
 
 func ({{.S}} {{.NewStructName}}) Distinct(conds ...field.Expr) *{{.NewStructName}} {
-	{{.S}} = *{{.S}}.DO.Distinct(conds...).(*gen.DO)
+	{{.S}}.DO = *{{.S}}.DO.Distinct(conds...).(*gen.DO)
 	return &{{.S}}
 }
 
 func ({{.S}} {{.NewStructName}}) Join(table schema.Tabler, on ...gen.Condition) *{{.NewStructName}} {
-	{{.S}} = *{{.S}}.DO.Join(table, on...).(*gen.DO)
+	{{.S}}.DO = *{{.S}}.DO.Join(table, on...).(*gen.DO)
 	return &{{.S}}
 }
 
 func ({{.S}} {{.NewStructName}}) LeftJoin(table schema.Tabler, on ...gen.Condition) *{{.NewStructName}} {
-	{{.S}} = *{{.S}}.DO.Join(table, on...).(*gen.DO)
+	{{.S}}.DO = *{{.S}}.DO.Join(table, on...).(*gen.DO)
 	return &{{.S}}
 }
 
 func ({{.S}} {{.NewStructName}}) RightJoin(table schema.Tabler, on ...gen.Condition) *{{.NewStructName}} {
-	{{.S}} = *{{.S}}.DO.Join(table, on...).(*gen.DO)
+	{{.S}}.DO = *{{.S}}.DO.Join(table, on...).(*gen.DO)
 	return &{{.S}}
 }
 
