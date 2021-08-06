@@ -101,12 +101,12 @@ func ({{.S}} {{.NewStructName}}) Join(table schema.Tabler, on ...gen.Condition) 
 }
 
 func ({{.S}} {{.NewStructName}}) LeftJoin(table schema.Tabler, on ...gen.Condition) *{{.NewStructName}} {
-	{{.S}}.DO = *{{.S}}.DO.Join(table, on...).(*gen.DO)
+	{{.S}}.DO = *{{.S}}.DO.LeftJoin(table, on...).(*gen.DO)
 	return &{{.S}}
 }
 
 func ({{.S}} {{.NewStructName}}) RightJoin(table schema.Tabler, on ...gen.Condition) *{{.NewStructName}} {
-	{{.S}}.DO = *{{.S}}.DO.Join(table, on...).(*gen.DO)
+	{{.S}}.DO = *{{.S}}.DO.RightJoin(table, on...).(*gen.DO)
 	return &{{.S}}
 }
 
