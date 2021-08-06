@@ -57,43 +57,46 @@ var dataType = map[string]string{
 }
 
 // GenBaseStructs generate db model by table name
-func GenBaseStructs(db *gorm.DB, pkg string, tableName ...string) (bases []*BaseStruct, err error) {
+func GenBaseStructs(db *gorm.DB, pkg string, tableName, modelName string) (bases *BaseStruct, err error) {
 	if isDBUndefined(db) {
 		return nil, fmt.Errorf("gen config db is undefined")
+	}
+	if !isModelNameValid(modelName) {
+		return nil, fmt.Errorf("model name %q is invalid", modelName)
 	}
 	if pkg == "" {
 		pkg = ModelPkg
 	}
 	singular := singularModel(db.Config)
 	dbName := getSchemaName(db)
-	for _, tb := range tableName {
-		columns, err := getTbColumns(db, dbName, tb)
-		if err != nil {
-			return nil, err
-		}
-		var base BaseStruct
-		base.Source = TableName
-		base.GenBaseStruct = true
-		base.TableName = tb
-		base.StructName = convertToModelName(singular, tb)
-		base.StructInfo = parser.Param{Type: base.StructName, Package: pkg}
-		for _, field := range columns {
-			mt := dataType[field.DataType]
-			base.Members = append(base.Members, &Member{
-				Name:          nameToCamelCase(field.ColumnName),
-				Type:          mt,
-				ModelType:     mt,
-				ColumnName:    field.ColumnName,
-				ColumnComment: field.ColumnComment,
-			})
-		}
-
-		base.NewStructName = strings.ToLower(base.StructName)
-		base.S = string(base.NewStructName[0])
-		_ = base.check()
-		bases = append(bases, &base)
+	columns, err := getTbColumns(db, dbName, tableName)
+	if err != nil {
+		return nil, err
 	}
-	return
+	var base BaseStruct
+	base.Source = TableName
+	base.GenBaseStruct = true
+	base.TableName = tableName
+	base.StructName = convertToModelName(singular, tableName)
+	if modelName != "" {
+		base.StructName = captialize(modelName)
+	}
+	base.NewStructName = uncaptialize(base.StructName)
+	base.S = string(base.NewStructName[0])
+	base.StructInfo = parser.Param{Type: base.StructName, Package: pkg}
+	for _, field := range columns {
+		mt := dataType[field.DataType]
+		base.Members = append(base.Members, &Member{
+			Name:          nameToCamelCase(field.ColumnName),
+			Type:          mt,
+			ModelType:     mt,
+			ColumnName:    field.ColumnName,
+			ColumnComment: field.ColumnComment,
+		})
+	}
+
+	_ = base.check()
+	return &base, nil
 }
 
 //Mysql
@@ -144,4 +147,17 @@ func singularModel(conf *gorm.Config) bool {
 		return true
 	}
 	return false
+}
+
+// get mysql db' name
+var modelNameReg = regexp.MustCompile(`^\w+$`)
+
+func isModelNameValid(name string) bool {
+	if name == "" {
+		return true
+	}
+	if !modelNameReg.MatchString(name) {
+		return false
+	}
+	return (name[0] > '9' || name[0] < '0') && name[0] != '_'
 }

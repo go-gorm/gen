@@ -3,7 +3,6 @@ package check
 import (
 	"fmt"
 	"reflect"
-	"strings"
 
 	"gorm.io/gorm"
 
@@ -31,7 +30,7 @@ func CheckStructs(db *gorm.DB, structs ...interface{}) (bases []*BaseStruct, err
 		base := &BaseStruct{
 			S:             GetSimpleName(name),
 			StructName:    name,
-			NewStructName: strings.ToLower(name),
+			NewStructName: uncaptialize(name),
 			StructInfo:    parser.Param{Type: name, Package: getPackageName(structType.String())},
 			Source:        Struct,
 			db:            db,

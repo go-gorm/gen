@@ -79,12 +79,12 @@ func (g *Generator) UseDB(db *gorm.DB) {
 }
 
 // GenerateModel catch table info from db, return a BaseStruct
-func (g *Generator) GenerateModel(tableName string) *check.BaseStruct {
-	structs, err := check.GenBaseStructs(g.db, g.Config.ModelPkgName, tableName)
+func (g *Generator) GenerateModel(tableName string, modelName string) *check.BaseStruct {
+	s, err := check.GenBaseStructs(g.db, g.Config.ModelPkgName, tableName, modelName)
 	if err != nil {
 		log.Fatalf("check struct error: %s", err)
 	}
-	return structs[0]
+	return s
 }
 
 // ApplyBasic specify models which will implement basic method
