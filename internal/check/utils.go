@@ -89,3 +89,19 @@ func getStructName(t string) string {
 	list := strings.Split(t, ".")
 	return list[len(list)-1]
 }
+
+func uncaptialize(s string) string {
+	if s == "" {
+		return ""
+	}
+
+	return strings.ToLower(s[:1]) + s[1:]
+}
+
+func captialize(s string) string {
+	if s == "" {
+		return ""
+	}
+
+	return strings.ToUpper(s[:1]) + s[1:]
+}
