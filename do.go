@@ -176,7 +176,7 @@ func (d *DO) Order(columns ...field.Expr) Dao {
 
 func (d *DO) Distinct(columns ...field.Expr) Dao {
 	Emit(methodDistinct)
-	return NewDO(d.db.Distinct(toInterfaceSlice(toColNames(d.db.Statement, columns...))))
+	return NewDO(d.db.Distinct(toInterfaceSlice(toColNames(d.db.Statement, columns...))...))
 }
 
 func (d *DO) Omit(columns ...field.Expr) Dao {
