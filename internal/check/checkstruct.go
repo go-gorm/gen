@@ -44,6 +44,11 @@ func (b *BaseStruct) getTableName(st interface{}) {
 	b.TableName = stmt.Table
 }
 
+// HasMember check if BaseStruct has members
+func (b *BaseStruct) HasMember() bool {
+	return len(b.Members) > 0
+}
+
 // check if struct is exportable and if struct in main package and if member's type is regular
 func (b *BaseStruct) check() (err error) {
 	if b.StructInfo.InMainPkg() {
