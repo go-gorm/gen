@@ -96,6 +96,12 @@ func ({{.S}} {{.NewStructName}}) Order(conds ...field.Expr) *{{.NewStructName}} 
 	return &next
 }
 
+func ({{.S}} {{.NewStructName}}) Distinct(conds ...field.Expr) *{{.NewStructName}} {
+	next := {{.S}}
+	next.DO = *{{.S}}.DO.Distinct(conds...).(*gen.DO)
+	return &next
+}
+
 func ({{.S}} {{.NewStructName}}) Join(table schema.Tabler, on ...gen.Condition) *{{.NewStructName}} {
 	next := {{.S}}
 	next.DO = *{{.S}}.DO.Join(table, on...).(*gen.DO)
@@ -141,7 +147,6 @@ func ({{.S}} {{.NewStructName}}) Last() (*{{.StructInfo.Package}}.{{.StructInfo.
 func ({{.S}} {{.NewStructName}}) Find() (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}},err error) {
 	return result, {{.S}}.DO.Find(&result)
 }
-
 
 func ({{.S}} {{.NewStructName}}) Create(info *{{.StructInfo.Package}}.{{.StructInfo.Type}}) error {
 	return {{.S}}.DO.Create(info)
