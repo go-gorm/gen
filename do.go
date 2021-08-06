@@ -176,7 +176,7 @@ func (d *DO) Order(columns ...field.Expr) Dao {
 
 func (d *DO) Distinct(columns ...field.Expr) Dao {
 	Emit(methodDistinct)
-	return NewDO(d.db.Distinct(toInterfaceSlice(toColNames(d.db.Statement, columns...))...))
+	return NewDO(d.db.Distinct(toInterfaceSlice(toColumns(columns...))...))
 }
 
 func (d *DO) Omit(columns ...field.Expr) Dao {
@@ -439,6 +439,14 @@ func condToExpression(conds ...Condition) []clause.Expression {
 		exprs[i] = cond
 	}
 	return exprs
+}
+
+func toColumns(columns ...field.Expr) []clause.Column {
+	cols := make([]clause.Column, len(columns))
+	for i, col := range columns {
+		cols[i] = col.Column()
+	}
+	return cols
 }
 
 func toColNames(stmt *gorm.Statement, columns ...field.Expr) []string {
