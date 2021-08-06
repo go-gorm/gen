@@ -56,11 +56,8 @@ type genInfo struct {
 func (i *genInfo) AppendMethods(methods []*check.InterfaceMethod) error {
 	for _, newMethod := range methods {
 		for _, infoMethod := range i.Interfaces {
-			if infoMethod.MethodName == newMethod.MethodName {
-				if infoMethod.InterfaceName != newMethod.InterfaceName {
-					return fmt.Errorf("can't generate method with the same name from different interface:%s.%s and %s.%s", infoMethod.InterfaceName, infoMethod.MethodName, newMethod.InterfaceName, newMethod.MethodName)
-				}
-				continue
+			if infoMethod.MethodName == newMethod.MethodName && infoMethod.InterfaceName != newMethod.InterfaceName {
+				return fmt.Errorf("can't generate method with the same name from different interface:%s.%s and %s.%s", infoMethod.InterfaceName, infoMethod.MethodName, newMethod.InterfaceName, newMethod.MethodName)
 			}
 		}
 		i.Interfaces = append(i.Interfaces, newMethod)
