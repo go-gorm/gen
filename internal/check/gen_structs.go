@@ -56,8 +56,10 @@ var dataType = map[string]string{
 	"integer":             "int32",
 }
 
+type SchemaNameOpt func(db *gorm.DB) string
+
 // GenBaseStructs generate db model by table name
-func GenBaseStructs(db *gorm.DB, pkg string, tableName, modelName string) (bases *BaseStruct, err error) {
+func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt ...SchemaNameOpt) (bases *BaseStruct, err error) {
 	if isDBUndefined(db) {
 		return nil, fmt.Errorf("gen config db is undefined")
 	}
@@ -68,7 +70,7 @@ func GenBaseStructs(db *gorm.DB, pkg string, tableName, modelName string) (bases
 		pkg = ModelPkg
 	}
 	singular := singularModel(db.Config)
-	dbName := getSchemaName(db)
+	dbName := getSchemaName(db, schemaNameOpt...)
 	columns, err := getTbColumns(db, dbName, tableName)
 	if err != nil {
 		return nil, err
@@ -108,7 +110,13 @@ func getTbColumns(db *gorm.DB, schemaName string, tableName string) (result []*C
 // get mysql db' name
 var dbNameReg = regexp.MustCompile(`/\w+\?`)
 
-func getSchemaName(db *gorm.DB) string {
+func getSchemaName(db *gorm.DB, opts ...SchemaNameOpt, ) string {
+	for _, opt := range opts {
+		name := opt(db)
+		if name != "" {
+			return name
+		}
+	}
 	if db == nil || db.Dialector == nil {
 		return ""
 	}
