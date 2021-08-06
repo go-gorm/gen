@@ -61,57 +61,53 @@ func New{{.StructName}}(db *gorm.DB) *{{.NewStructName}} {
 
 const BaseGormFunc = `
 func ({{.S}} {{.NewStructName}}) Debug() *{{.NewStructName}} {
-	next := {{.S}}
-	next.DO = *{{.S}}.DO.Debug().(*gen.DO)
-	return &next
+	{{.S}}.DO = *{{.S}}.DO.Debug().(*gen.DO)
+	return &{{.S}}
 }
 
 func ({{.S}} {{.NewStructName}}) Not(conds ...gen.Condition) *{{.NewStructName}} {
-	next := {{.S}}
-	next.DO = *{{.S}}.DO.Not(conds...).(*gen.DO)
-	return &next
+	{{.S}}.DO = *{{.S}}.DO.Not(conds...).(*gen.DO)
+	return &{{.S}}
 }
 
 func ({{.S}} {{.NewStructName}}) Or(conds ...gen.Condition) *{{.NewStructName}} {
-	next := {{.S}}
-	next.DO = *{{.S}}.DO.Or(conds...).(*gen.DO)
-	return &next
+	{{.S}}.DO = *{{.S}}.DO.Or(conds...).(*gen.DO)
+	return &{{.S}}
 }
 
 func ({{.S}} {{.NewStructName}}) Select(conds ...field.Expr) *{{.NewStructName}} {
-	next := {{.S}}
-	next.DO = *{{.S}}.DO.Select(conds...).(*gen.DO)
-	return &next
+	{{.S}}.DO = *{{.S}}.DO.Select(conds...).(*gen.DO)
+	return &{{.S}}
 }
 
 func ({{.S}} {{.NewStructName}}) Where(conds ...gen.Condition) *{{.NewStructName}} {
-	next := {{.S}}
-	next.DO = *{{.S}}.DO.Where(conds...).(*gen.DO)
-	return &next
+	{{.S}}.DO = *{{.S}}.DO.Where(conds...).(*gen.DO)
+	return &{{.S}}
 }
 
 func ({{.S}} {{.NewStructName}}) Order(conds ...field.Expr) *{{.NewStructName}} {
-	next := {{.S}}
-	next.DO = *{{.S}}.DO.Order(conds...).(*gen.DO)
-	return &next
+	{{.S}}.DO = *{{.S}}.DO.Order(conds...).(*gen.DO)
+	return &{{.S}}
+}
+
+func ({{.S}} {{.NewStructName}}) Distinct(conds ...field.Expr) *{{.NewStructName}} {
+	{{.S}}.DO = *{{.S}}.DO.Distinct(conds...).(*gen.DO)
+	return &{{.S}}
 }
 
 func ({{.S}} {{.NewStructName}}) Join(table schema.Tabler, on ...gen.Condition) *{{.NewStructName}} {
-	next := {{.S}}
-	next.DO = *{{.S}}.DO.Join(table, on...).(*gen.DO)
-	return &next
+	{{.S}}.DO = *{{.S}}.DO.Join(table, on...).(*gen.DO)
+	return &{{.S}}
 }
 
 func ({{.S}} {{.NewStructName}}) LeftJoin(table schema.Tabler, on ...gen.Condition) *{{.NewStructName}} {
-	next := {{.S}}
-	next.DO = *{{.S}}.DO.Join(table, on...).(*gen.DO)
-	return &next
+	{{.S}}.DO = *{{.S}}.DO.Join(table, on...).(*gen.DO)
+	return &{{.S}}
 }
 
 func ({{.S}} {{.NewStructName}}) RightJoin(table schema.Tabler, on ...gen.Condition) *{{.NewStructName}} {
-	next := {{.S}}
-	next.DO = *{{.S}}.DO.Join(table, on...).(*gen.DO)
-	return &next
+	{{.S}}.DO = *{{.S}}.DO.Join(table, on...).(*gen.DO)
+	return &{{.S}}
 }
 
 func ({{.S}} {{.NewStructName}}) Take() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
@@ -141,7 +137,6 @@ func ({{.S}} {{.NewStructName}}) Last() (*{{.StructInfo.Package}}.{{.StructInfo.
 func ({{.S}} {{.NewStructName}}) Find() (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}},err error) {
 	return result, {{.S}}.DO.Find(&result)
 }
-
 
 func ({{.S}} {{.NewStructName}}) Create(info *{{.StructInfo.Package}}.{{.StructInfo.Type}}) error {
 	return {{.S}}.DO.Create(info)

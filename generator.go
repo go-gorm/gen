@@ -229,15 +229,22 @@ func (g *Generator) generatedBaseStruct() (err error) {
 		pkg = check.ModelPkg
 	}
 	outPath = fmt.Sprint(filepath.Dir(outPath), "/", pkg, "/")
-	if _, err := os.Stat(outPath); err != nil {
-		if err := os.Mkdir(outPath, os.ModePerm); err != nil {
-			log.Fatalf("mkdir failed: %s", err)
-		}
-	}
+
+	_, err = os.Stat(outPath)
+	created := err == nil
+
 	for _, data := range g.Data {
 		if data.BaseStruct == nil || !data.BaseStruct.GenBaseStruct {
 			continue
 		}
+
+		if !created {
+			if err := os.Mkdir(outPath, os.ModePerm); err != nil {
+				log.Fatalf("mkdir failed: %s", err)
+			}
+			created = true
+		}
+
 		var buf bytes.Buffer
 		err = render(tmpl.ModelTemplate, &buf, data.BaseStruct)
 		if err != nil {
