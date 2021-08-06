@@ -176,7 +176,7 @@ func (d *DO) Order(columns ...field.Expr) Dao {
 
 func (d *DO) Distinct(columns ...field.Expr) Dao {
 	Emit(methodDistinct)
-	return NewDO(d.db.Distinct(toInterfaceSlice(toColumns(columns...))...))
+	return NewDO(d.db.Distinct(toInterfaceSlice(toColumnFullName(d.db.Statement, columns...))...))
 }
 
 func (d *DO) Omit(columns ...field.Expr) Dao {
@@ -441,20 +441,20 @@ func condToExpression(conds ...Condition) []clause.Expression {
 	return exprs
 }
 
-func toColumns(columns ...field.Expr) []clause.Column {
-	cols := make([]clause.Column, len(columns))
-	for i, col := range columns {
-		cols[i] = col.Column()
-	}
-	return cols
+func toColumnFullName(stmt *gorm.Statement, columns ...field.Expr) []string {
+	return buildColumn(stmt, columns, field.WithAll)
 }
 
 func toColNames(stmt *gorm.Statement, columns ...field.Expr) []string {
-	names := make([]string, len(columns))
-	for i, col := range columns {
-		names[i] = col.BuildColumn(stmt)
+	return buildColumn(stmt, columns)
+}
+
+func buildColumn(stmt *gorm.Statement, cols []field.Expr, opts ...field.BuildOpt) []string {
+	results := make([]string, len(cols))
+	for i, c := range cols {
+		results[i] = c.BuildColumn(stmt, opts...)
 	}
-	return names
+	return results
 }
 
 func toInterfaceSlice(value interface{}) []interface{} {
