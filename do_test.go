@@ -16,6 +16,8 @@ import (
 var db, _ = gorm.Open(tests.DummyDialector{}, nil)
 
 func init() {
+	db = db.Debug()
+
 	callbacks.RegisterDefaultCallbacks(db, &callbacks.Config{
 		UpdateClauses: []string{"UPDATE", "SET", "WHERE", "ORDER BY", "LIMIT"},
 		DeleteClauses: []string{"DELETE", "FROM", "WHERE", "ORDER BY", "LIMIT"},
@@ -71,7 +73,7 @@ type User struct {
 	RegisterAt field.Time
 }
 
-var u = func() User {
+var u = func() *User {
 	u := User{
 		ID:         field.NewUint("", "id"),
 		Name:       field.NewString("", "name"),
@@ -83,7 +85,7 @@ var u = func() User {
 	}
 	u.UseDB(db.Session(&gorm.Session{DryRun: true}))
 	u.UseModel(UserRaw{})
-	return u
+	return &u
 }()
 
 type Student struct {
@@ -145,14 +147,32 @@ func TestDO_methods(t *testing.T) {
 		Result       string
 	}{
 		{
-			Expr:         u.Select(),
-			ExpectedVars: nil,
-			Result:       "SELECT *",
+			Expr:   u.Select(),
+			Result: "SELECT *",
 		},
 		{
-			Expr:         u.Select(u.ID, u.Name),
-			ExpectedVars: nil,
-			Result:       "SELECT `id`, `name`",
+			Expr:   u.Select(u.ID, u.Name),
+			Result: "SELECT `id`, `name`",
+		},
+		{
+			Expr:   u.Distinct(u.Name),
+			Result: "SELECT `name`",
+		},
+		{
+			Expr:   teacher.Distinct(teacher.ID, teacher.Name),
+			Result: "SELECT `teacher`.`id`, `teacher`.`name`",
+		},
+		{
+			Expr:   teacher.Select(teacher.ID, teacher.Name).Distinct(),
+			Result: "SELECT `teacher`.`id`, `teacher`.`name`",
+		},
+		{
+			Expr:   teacher.Select(teacher.Name.As("n")).Distinct(),
+			Result: "SELECT `teacher`.`name` AS `n`",
+		},
+		{
+			Expr:   teacher.Select(teacher.ID.As("i"), teacher.Name.As("n")).Distinct(),
+			Result: "SELECT `teacher`.`id` AS `i`, `teacher`.`name` AS `n`",
 		},
 		{
 			Expr:         u.Where(u.ID.Eq(10)),

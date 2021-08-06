@@ -176,7 +176,10 @@ func (d *DO) Order(columns ...field.Expr) Dao {
 
 func (d *DO) Distinct(columns ...field.Expr) Dao {
 	Emit(methodDistinct)
-	return NewDO(d.db.Distinct(toInterfaceSlice(toColumnFullName(d.db.Statement, columns...))...))
+	if len(columns) == 0 {
+		return NewDO(d.db.Distinct())
+	}
+	return NewDO(d.db.Clauses(clause.Select{Distinct: true, Expression: clause.CommaExpression{Exprs: toExpression(columns...)}}))
 }
 
 func (d *DO) Omit(columns ...field.Expr) Dao {
@@ -441,10 +444,6 @@ func condToExpression(conds ...Condition) []clause.Expression {
 	return exprs
 }
 
-func toColumnFullName(stmt *gorm.Statement, columns ...field.Expr) []string {
-	return buildColumn(stmt, columns, field.WithAll)
-}
-
 func toColNames(stmt *gorm.Statement, columns ...field.Expr) []string {
 	return buildColumn(stmt, columns)
 }
@@ -455,27 +454,6 @@ func buildColumn(stmt *gorm.Statement, cols []field.Expr, opts ...field.BuildOpt
 		results[i] = c.BuildColumn(stmt, opts...)
 	}
 	return results
-}
-
-func toInterfaceSlice(value interface{}) []interface{} {
-	switch v := value.(type) {
-	case string:
-		return []interface{}{v}
-	case []string:
-		res := make([]interface{}, len(v))
-		for i, item := range v {
-			res[i] = item
-		}
-		return res
-	case []clause.Column:
-		res := make([]interface{}, len(v))
-		for i, item := range v {
-			res[i] = item
-		}
-		return res
-	default:
-		return nil
-	}
 }
 
 // ======================== New Table ========================
