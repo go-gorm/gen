@@ -2,6 +2,7 @@ package check
 
 import (
 	"fmt"
+	"reflect"
 
 	"gorm.io/gorm"
 
@@ -18,6 +19,7 @@ type BaseStruct struct {
 	TableName     string
 	StructInfo    parser.Param
 	Members       []*Member
+	Source        source
 	db            *gorm.DB
 }
 
@@ -42,6 +44,11 @@ func (b *BaseStruct) getTableName(st interface{}) {
 	b.TableName = stmt.Table
 }
 
+// HasMember check if BaseStruct has members
+func (b *BaseStruct) HasMember() bool {
+	return len(b.Members) > 0
+}
+
 // check if struct is exportable and if struct in main package and if member's type is regular
 func (b *BaseStruct) check() (err error) {
 	if b.StructInfo.InMainPkg() {
@@ -61,4 +68,9 @@ func (b *BaseStruct) check() (err error) {
 		b.Members[index].NewType = getNewTypeName(m.Type)
 	}
 	return nil
+}
+
+func isStructType(data reflect.Value) bool {
+	return data.Kind() == reflect.Struct ||
+		(data.Kind() == reflect.Ptr && data.Elem().Kind() == reflect.Struct)
 }

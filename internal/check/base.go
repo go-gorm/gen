@@ -24,6 +24,13 @@ const (
 	LOGICAL
 )
 
+type source int
+
+const (
+	Struct source = iota
+	TableName
+)
+
 // Member user input structures
 type Member struct {
 	Name          string
