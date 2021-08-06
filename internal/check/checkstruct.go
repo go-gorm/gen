@@ -2,6 +2,7 @@ package check
 
 import (
 	"fmt"
+	"reflect"
 
 	"gorm.io/gorm"
 
@@ -62,4 +63,9 @@ func (b *BaseStruct) check() (err error) {
 		b.Members[index].NewType = getNewTypeName(m.Type)
 	}
 	return nil
+}
+
+func isStructType(data reflect.Value) bool {
+	return data.Kind() == reflect.Struct ||
+		(data.Kind() == reflect.Ptr && data.Elem().Kind() == reflect.Struct)
 }

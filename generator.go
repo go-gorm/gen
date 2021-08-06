@@ -81,38 +81,23 @@ func (g *Generator) UseDB(db *gorm.DB) {
 	g.db = db
 }
 
-// ApplyBasic collect table model
-func (g *Generator) ApplyBasic(models ...interface{}) {
-	structs, err := check.CheckStructs(g.db, models...)
-	if err != nil {
-		log.Fatalf("gen struct error: %s", err)
-	}
-	for _, interfaceStruct := range structs {
-		_, err = g.pushBaseStruct(interfaceStruct)
-		if err != nil {
-			log.Fatalf("gen struct error: %s", err)
-		}
-	}
-}
-
-// TableNames collect table names
-func (g *Generator) TableNames(names ...string) {
-	structs, err := check.GenBaseStructs(g.db, g.Config.ModelPkgName, names...)
+// GenerateModel catch table info from db, return a BaseStruct
+func (g *Generator) GenerateModel(name string) *check.BaseStruct {
+	structs, err := check.GenBaseStructs(g.db, g.Config.ModelPkgName, name)
 	if err != nil {
 		log.Fatalf("check struct error: %s", err)
 	}
-	for _, interfaceStruct := range structs {
-		_, err = g.pushBaseStruct(interfaceStruct)
-		if err != nil {
-			log.Fatalf("gen struct error: %s", err)
-		}
-	}
+	return structs[0]
+}
+
+// ApplyBasic specify models which will implement basic method
+func (g *Generator) ApplyBasic(models ...interface{}) {
+	g.ApplyInterface(func() {}, models...)
 }
 
 // ApplyInterface specifies method interfaces on structures, implment codes will be generated after calling g.Execute()
 // eg: g.ApplyInterface(func(model.Method){}, model.User{}, model.Company{})
 func (g *Generator) ApplyInterface(fc interface{}, models ...interface{}) {
-
 	structs, err := check.CheckStructs(g.db, models...)
 	if err != nil {
 		log.Fatalf("check struct error: %s", err)
@@ -145,7 +130,6 @@ func (g *Generator) apply(fc interface{}, structs []*check.BaseStruct) {
 		if err != nil {
 			log.Fatalf("gen Interface error: %s", err)
 		}
-
 	}
 }
 
@@ -291,9 +275,7 @@ func (g *Generator) generatedBaseStruct() (err error) {
 func (g *Generator) pushBaseStruct(base *check.BaseStruct) (*genInfo, error) {
 	structName := base.StructName
 	if g.Data[structName] == nil {
-		newInfo := new(genInfo)
-		newInfo.BaseStruct = base
-		g.Data[structName] = newInfo
+		g.Data[structName] = &genInfo{BaseStruct: base}
 	}
 	if g.Data[structName].Source != base.Source {
 		return nil, fmt.Errorf("can't generate struct with the same name from different source:%s.%s and %s.%s", base.StructInfo.Package, base.StructName, g.Data[structName].StructInfo.Package, g.Data[structName].StructName)

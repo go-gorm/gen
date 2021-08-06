@@ -15,10 +15,15 @@ func CheckStructs(db *gorm.DB, structs ...interface{}) (bases []*BaseStruct, err
 	if isDBUndefined(db) {
 		return nil, fmt.Errorf("gen config db is undefined")
 	}
+
 	for _, st := range structs {
-		if base, ok := st.(BaseStruct); ok {
-			bases = append(bases, &base)
+		if base, ok := st.(*BaseStruct); ok {
+			bases = append(bases, base)
 			continue
+		}
+
+		if isStructType(reflect.ValueOf(st)) {
+			return nil, fmt.Errorf("%+v is not a struct", st)
 		}
 
 		structType := reflect.TypeOf(st)
@@ -33,7 +38,7 @@ func CheckStructs(db *gorm.DB, structs ...interface{}) (bases []*BaseStruct, err
 		}
 		base.getMembers(st)
 		base.getTableName(st)
-		if e := base.check(); e != nil {
+		if base.check() != nil {
 			continue
 		}
 
