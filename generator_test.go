@@ -1,6 +1,8 @@
 package gen
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestConfig(t *testing.T) {
 	_ = &Config{

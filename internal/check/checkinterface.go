@@ -275,14 +275,3 @@ func checkTemplate(tmpl string, params []parser.Param) (result slice, err error)
 	}
 	return fragmentToSLice(fragmentList)
 }
-
-// DupAppend append methon and duplicate
-func (f *InterfaceMethod) DupAppend(methods []*InterfaceMethod) []*InterfaceMethod {
-	for index, method := range methods {
-		if method.MethodName == f.MethodName {
-			methods[index] = f
-			return methods
-		}
-	}
-	return append(methods, f)
-}

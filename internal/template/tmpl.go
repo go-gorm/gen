@@ -50,7 +50,7 @@ func New{{.StructName}}(db *gorm.DB) *{{.NewStructName}} {
 	_{{.NewStructName}}.UseDB(db)
 	_{{.NewStructName}}.UseModel({{.StructInfo.Package}}.{{.StructInfo.Type}}{})
 
-	tableName := _{{.NewStructName}}.TableName()
+	{{if .HasMember}}tableName := _{{.NewStructName}}.TableName(){{end}}
 	{{range $p :=.Members}} _{{$.NewStructName}}.{{$p.Name}} = field.New{{$p.NewType}}(tableName, "{{$p.ColumnName}}")
 	{{end}}
 	
@@ -174,7 +174,7 @@ const UseTmpl = `
 type DB struct{
 	db *gorm.DB
 
-	{{range $name,$d :=.Data}}{{$d.StructName}} *{{$name}}
+	{{range $name,$d :=.Data}}{{$d.StructName}} *{{$d.NewStructName}}
 	{{end}}
 }
 

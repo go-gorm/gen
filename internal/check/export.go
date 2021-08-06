@@ -17,6 +17,15 @@ func CheckStructs(db *gorm.DB, structs ...interface{}) (bases []*BaseStruct, err
 	}
 
 	for _, st := range structs {
+		if base, ok := st.(*BaseStruct); ok {
+			bases = append(bases, base)
+			continue
+		}
+
+		if !isStructType(reflect.ValueOf(st)) {
+			return nil, fmt.Errorf("%s is not a struct", reflect.TypeOf(st).String())
+		}
+
 		structType := reflect.TypeOf(st)
 		name := getStructName(structType.String())
 		base := &BaseStruct{
@@ -24,11 +33,12 @@ func CheckStructs(db *gorm.DB, structs ...interface{}) (bases []*BaseStruct, err
 			StructName:    name,
 			NewStructName: strings.ToLower(name),
 			StructInfo:    parser.Param{Type: name, Package: getPackageName(structType.String())},
+			Source:        Struct,
 			db:            db,
 		}
 		base.getMembers(st)
 		base.getTableName(st)
-		if e := base.check(); e != nil {
+		if base.check() != nil {
 			continue
 		}
 
