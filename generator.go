@@ -136,16 +136,6 @@ func (g *Generator) ApplyByModel(model interface{}, fc interface{}) {
 	g.ApplyInterface(fc, model)
 }
 
-// ApplyByTable specifies table by table names
-// eg: g.ApplyByTable(func(model.Model){}, "user", "role")
-func (g *Generator) ApplyByTable(fc interface{}, tableNames ...string) {
-	structs, err := check.GenBaseStructs(g.db, g.Config.ModelPkgName, tableNames...)
-	if err != nil {
-		log.Fatalf("gen struct error: %s", err)
-	}
-	g.apply(fc, structs)
-}
-
 // Execute generate code to output path
 func (g *Generator) Execute() {
 	var err error
