@@ -467,6 +467,12 @@ func toInterfaceSlice(value interface{}) []interface{} {
 			res[i] = item
 		}
 		return res
+	case []clause.Column:
+		res := make([]interface{}, len(v))
+		for i, item := range v {
+			res[i] = item
+		}
+		return res
 	default:
 		return nil
 	}
