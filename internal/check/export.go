@@ -22,8 +22,8 @@ func CheckStructs(db *gorm.DB, structs ...interface{}) (bases []*BaseStruct, err
 			continue
 		}
 
-		if isStructType(reflect.ValueOf(st)) {
-			return nil, fmt.Errorf("%+v is not a struct", st)
+		if !isStructType(reflect.ValueOf(st)) {
+			return nil, fmt.Errorf("%s is not a struct", reflect.TypeOf(st).String())
 		}
 
 		structType := reflect.TypeOf(st)
