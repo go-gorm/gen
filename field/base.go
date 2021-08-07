@@ -19,6 +19,7 @@ type Expr interface {
 	Column() clause.Column
 	BuildColumn(*gorm.Statement, ...BuildOpt) string
 	RawExpr() interface{}
+	BuildExpr(stmt *gorm.Statement) string
 
 	// pirvate do nothing, prevent users from implementing interfaces outside the package
 	private()
@@ -84,6 +85,14 @@ func (e expr) BuildColumn(stmt *gorm.Statement, opts ...BuildOpt) string {
 		col = opt(e.Col)
 	}
 	return stmt.Quote(col)
+}
+
+func (e expr) BuildExpr(stmt *gorm.Statement) string {
+	if e.expression == nil {
+		return e.BuildColumn(stmt, WithAll)
+	}
+	e.expression.Build(stmt)
+	return stmt.SQL.String()
 }
 
 func (e expr) RawExpr() interface{} {

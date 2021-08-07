@@ -152,7 +152,8 @@ func (d *DO) Select(columns ...field.Expr) Dao {
 	if len(columns) == 0 {
 		return NewDO(d.db.Clauses(clause.Select{}))
 	}
-	return NewDO(d.db.Clauses(clause.Select{Expression: clause.CommaExpression{Exprs: toExpression(columns...)}}))
+	// return NewDO(d.db.Clauses(clause.Select{Expression: clause.CommaExpression{Exprs: toExpression(columns...)}}))
+	return NewDO(d.db.Select(buildExpr(d.db.Statement, columns...)))
 }
 
 func (d *DO) Where(conds ...Condition) Dao {
@@ -453,6 +454,14 @@ func buildColumn(stmt *gorm.Statement, cols []field.Expr, opts ...field.BuildOpt
 	results := make([]string, len(cols))
 	for i, c := range cols {
 		results[i] = c.BuildColumn(stmt, opts...)
+	}
+	return results
+}
+
+func buildExpr(stmt *gorm.Statement, exprs ...field.Expr) []string {
+	results := make([]string, len(exprs))
+	for i, e := range exprs {
+		results[i] = e.BuildExpr(stmt)
 	}
 	return results
 }
