@@ -97,17 +97,21 @@ var (
 	// // withSELECT add SELECT clause
 	// withSELECT stmtOpt = func(stmt *gorm.Statement) *gorm.Statement {
 	// 	if _, ok := stmt.Clauses["SELECT"]; !ok {
-	// 		stmt.AddClause(clause.Select{})
+	// 		stmt.AddClause(clause.Select{Distinct: stmt.Distinct})
 	// 	}
 	// 	return stmt
 	// }
 )
 
-// buildStmt call statement.Build to combine all clauses in one statement
-func (d *DO) buildStmt(opts ...stmtOpt) *gorm.Statement {
+// build FOR TEST. call statement.Build to combine all clauses in one statement
+func (d *DO) build(opts ...stmtOpt) *gorm.Statement {
 	stmt := d.db.Statement
 	for _, opt := range opts {
 		stmt = opt(stmt)
+	}
+
+	if _, ok := stmt.Clauses["SELECT"]; !ok && len(stmt.Selects) > 0 {
+		stmt.AddClause(clause.Select{Distinct: stmt.Distinct, Expression: clause.Expr{SQL: strings.Join(stmt.Selects, ",")}})
 	}
 
 	findClauses := func() []string {
@@ -122,11 +126,6 @@ func (d *DO) buildStmt(opts ...stmtOpt) *gorm.Statement {
 	stmt.Build(findClauses()...)
 	return stmt
 }
-
-// func (s *DO) subQueryExpr() clause.Expr {
-// 	stmt := s.buildStmt(withFROM, withSELECT)
-// 	return clause.Expr{SQL: "(" + stmt.SQL.String() + ")", Vars: stmt.Vars}
-// }
 
 // Debug return a DO with db in debug mode
 func (d *DO) Debug() Dao {
@@ -152,7 +151,7 @@ func (d *DO) Select(columns ...field.Expr) Dao {
 	if len(columns) == 0 {
 		return NewDO(d.db.Clauses(clause.Select{}))
 	}
-	return NewDO(d.db.Clauses(clause.Select{Expression: clause.CommaExpression{Exprs: toExpression(columns...)}}))
+	return NewDO(d.db.Select(buildExpr(d.db.Statement, columns...)))
 }
 
 func (d *DO) Where(conds ...Condition) Dao {
@@ -176,7 +175,7 @@ func (d *DO) Order(columns ...field.Expr) Dao {
 
 func (d *DO) Distinct(columns ...field.Expr) Dao {
 	Emit(methodDistinct)
-	return NewDO(d.db.Distinct(toInterfaceSlice(toColNames(d.db.Statement, columns...))...))
+	return NewDO(d.db.Distinct(toInterfaceSlice(toColumnFullName(d.db.Statement, columns...))...))
 }
 
 func (d *DO) Omit(columns ...field.Expr) Dao {
@@ -441,12 +440,28 @@ func condToExpression(conds ...Condition) []clause.Expression {
 	return exprs
 }
 
+func toColumnFullName(stmt *gorm.Statement, columns ...field.Expr) []string {
+	return buildColumn(stmt, columns, field.WithAll)
+}
+
 func toColNames(stmt *gorm.Statement, columns ...field.Expr) []string {
-	names := make([]string, len(columns))
-	for i, col := range columns {
-		names[i] = col.BuildColumn(stmt)
+	return buildColumn(stmt, columns)
+}
+
+func buildColumn(stmt *gorm.Statement, cols []field.Expr, opts ...field.BuildOpt) []string {
+	results := make([]string, len(cols))
+	for i, c := range cols {
+		results[i] = c.BuildColumn(stmt, opts...)
 	}
-	return names
+	return results
+}
+
+func buildExpr(stmt *gorm.Statement, exprs ...field.Expr) []string {
+	results := make([]string, len(exprs))
+	for i, e := range exprs {
+		results[i] = e.BuildExpr(stmt)
+	}
+	return results
 }
 
 func toInterfaceSlice(value interface{}) []interface{} {
@@ -454,6 +469,12 @@ func toInterfaceSlice(value interface{}) []interface{} {
 	case string:
 		return []interface{}{v}
 	case []string:
+		res := make([]interface{}, len(v))
+		for i, item := range v {
+			res[i] = item
+		}
+		return res
+	case []clause.Column:
 		res := make([]interface{}, len(v))
 		for i, item := range v {
 			res[i] = item
