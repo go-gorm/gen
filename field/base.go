@@ -91,8 +91,9 @@ func (e expr) BuildExpr(stmt *gorm.Statement) string {
 	if e.expression == nil {
 		return e.BuildColumn(stmt, WithAll)
 	}
-	e.expression.Build(stmt)
-	return stmt.SQL.String()
+	newStmt := &gorm.Statement{DB: stmt.DB, Table: stmt.Table, Schema: stmt.Schema}
+	e.expression.Build(newStmt)
+	return newStmt.SQL.String()
 }
 
 func (e expr) RawExpr() interface{} {

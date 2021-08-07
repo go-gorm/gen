@@ -94,20 +94,24 @@ var (
 		return stmt
 	}
 
-	// // withSELECT add SELECT clause
-	// withSELECT stmtOpt = func(stmt *gorm.Statement) *gorm.Statement {
-	// 	if _, ok := stmt.Clauses["SELECT"]; !ok {
-	// 		stmt.AddClause(clause.Select{})
-	// 	}
-	// 	return stmt
-	// }
+	// withSELECT add SELECT clause
+	withSELECT stmtOpt = func(stmt *gorm.Statement) *gorm.Statement {
+		if _, ok := stmt.Clauses["SELECT"]; !ok {
+			stmt.AddClause(clause.Select{})
+		}
+		return stmt
+	}
 )
 
-// buildStmt call statement.Build to combine all clauses in one statement
-func (d *DO) buildStmt(opts ...stmtOpt) *gorm.Statement {
+// build FOR TEST. call statement.Build to combine all clauses in one statement
+func (d *DO) build(opts ...stmtOpt) *gorm.Statement {
 	stmt := d.db.Statement
 	for _, opt := range opts {
 		stmt = opt(stmt)
+	}
+
+	if len(stmt.Selects) > 0 {
+		stmt = withSELECT(stmt)
 	}
 
 	findClauses := func() []string {
@@ -122,11 +126,6 @@ func (d *DO) buildStmt(opts ...stmtOpt) *gorm.Statement {
 	stmt.Build(findClauses()...)
 	return stmt
 }
-
-// func (s *DO) subQueryExpr() clause.Expr {
-// 	stmt := s.buildStmt(withFROM, withSELECT)
-// 	return clause.Expr{SQL: "(" + stmt.SQL.String() + ")", Vars: stmt.Vars}
-// }
 
 // Debug return a DO with db in debug mode
 func (d *DO) Debug() Dao {

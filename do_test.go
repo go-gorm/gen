@@ -127,7 +127,7 @@ var teacher = func() *Teacher {
 }()
 
 func checkBuildExpr(t *testing.T, e Dao, opts []stmtOpt, result string, vars []interface{}) {
-	stmt := e.(*DO).buildStmt(opts...)
+	stmt := e.(*DO).build(opts...)
 
 	sql := strings.TrimSpace(stmt.SQL.String())
 	if sql != result {

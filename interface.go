@@ -21,7 +21,7 @@ type Condition interface {
 
 type subQuery interface {
 	UnderlyingDB() *gorm.DB
-	buildStmt(opts ...stmtOpt) *gorm.Statement
+	build(opts ...stmtOpt) *gorm.Statement
 }
 
 // Dao CRUD methods
