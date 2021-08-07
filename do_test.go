@@ -167,6 +167,10 @@ func TestDO_methods(t *testing.T) {
 			Result: "SELECT DISTINCT `teacher`.`id`,`teacher`.`name`",
 		},
 		{
+			Expr:   teacher.Distinct().Select(teacher.ID, teacher.Name),
+			Result: "SELECT DISTINCT `teacher`.`id`,`teacher`.`name`",
+		},
+		{
 			Expr:   teacher.Select(teacher.Name.As("n")).Distinct(),
 			Result: "SELECT DISTINCT `teacher`.`name` AS `n`",
 		},
