@@ -94,13 +94,13 @@ var (
 		return stmt
 	}
 
-	// withSELECT add SELECT clause
-	withSELECT stmtOpt = func(stmt *gorm.Statement) *gorm.Statement {
-		if _, ok := stmt.Clauses["SELECT"]; !ok {
-			stmt.AddClause(clause.Select{})
-		}
-		return stmt
-	}
+	// // withSELECT add SELECT clause
+	// withSELECT stmtOpt = func(stmt *gorm.Statement) *gorm.Statement {
+	// 	if _, ok := stmt.Clauses["SELECT"]; !ok {
+	// 		stmt.AddClause(clause.Select{Distinct: stmt.Distinct})
+	// 	}
+	// 	return stmt
+	// }
 )
 
 // build FOR TEST. call statement.Build to combine all clauses in one statement
@@ -110,8 +110,8 @@ func (d *DO) build(opts ...stmtOpt) *gorm.Statement {
 		stmt = opt(stmt)
 	}
 
-	if len(stmt.Selects) > 0 {
-		stmt = withSELECT(stmt)
+	if _, ok := stmt.Clauses["SELECT"]; !ok && len(stmt.Selects) > 0 {
+		stmt.AddClause(clause.Select{Distinct: stmt.Distinct, Expression: clause.Expr{SQL: strings.Join(stmt.Selects, ",")}})
 	}
 
 	findClauses := func() []string {
@@ -151,7 +151,6 @@ func (d *DO) Select(columns ...field.Expr) Dao {
 	if len(columns) == 0 {
 		return NewDO(d.db.Clauses(clause.Select{}))
 	}
-	// return NewDO(d.db.Clauses(clause.Select{Expression: clause.CommaExpression{Exprs: toExpression(columns...)}}))
 	return NewDO(d.db.Select(buildExpr(d.db.Statement, columns...)))
 }
 
