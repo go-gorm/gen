@@ -61,24 +61,28 @@ func TestExpr_Build(t *testing.T) {
 	}{
 		// ======================== generic ========================
 		{
-			Expr:         field.NewField("", "id").EqCol(field.NewField("", "new_id")),
-			ExpectedVars: nil,
-			Result:       "`id` = `new_id`",
+			Expr:   field.NewField("", "id").EqCol(field.NewField("", "new_id")),
+			Result: "`id` = `new_id`",
 		},
 		{
-			Expr:         field.NewField("", "id").EqCol(field.NewField("", "new_id").Avg()),
-			ExpectedVars: nil,
-			Result:       "`id` = AVG(`new_id`)",
+			Expr:   field.NewField("", "id").EqCol(field.NewField("", "new_id").Avg()),
+			Result: "`id` = AVG(`new_id`)",
 		},
 		{
-			Expr:         field.NewField("", "id").EqCol(field.NewField("", "new_id").WithTable("tableB")),
-			ExpectedVars: nil,
-			Result:       "`id` = `tableB`.`new_id`",
+			Expr:   field.NewField("", "id").EqCol(field.NewField("", "new_id").WithTable("tableB")),
+			Result: "`id` = `tableB`.`new_id`",
 		},
 		{
-			Expr:         field.NewField("", "id").EqCol(field.NewField("", "new_id").WithTable("tableB")),
-			ExpectedVars: nil,
-			Result:       "`id` = `tableB`.`new_id`",
+			Expr:   field.NewField("", "id").EqCol(field.NewField("", "new_id").WithTable("tableB")),
+			Result: "`id` = `tableB`.`new_id`",
+		},
+		{
+			Expr:   field.NewField("", "id").IsNull(),
+			Result: "`id` IS NULL",
+		},
+		{
+			Expr:   field.NewField("", "id").IsNotNull(),
+			Result: "`id` IS NOT NULL",
 		},
 		// ======================== integer ========================
 		{
