@@ -12,6 +12,15 @@ func NewField(table, column string, opts ...FieldOption) Field {
 	return Field{expr: expr{Col: toColumn(table, column, opts...)}}
 }
 
+func NewModel(table string, opts ...FieldOption) Model {
+	return Model{
+		ID:        NewUint(table, "id"),
+		CreatedAt: NewTime(table, "created_at"),
+		UpdatedAt: NewTime(table, "updated_at"),
+		DeletedAt: NewTime(table, "deleted_at"),
+	}
+}
+
 // ======================== integer =======================
 
 func NewInt(table, column string, opts ...FieldOption) Int {

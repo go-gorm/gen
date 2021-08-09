@@ -45,6 +45,13 @@ func toExpression(conds ...Expr) []clause.Expression {
 	return exprs
 }
 
+type Model struct {
+	ID        Uint
+	CreatedAt Time
+	UpdatedAt Time
+	DeletedAt Time
+}
+
 // Field a standard field struct
 type Field struct {
 	expr
