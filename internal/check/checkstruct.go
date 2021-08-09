@@ -29,12 +29,25 @@ func (b *BaseStruct) getMembers(st interface{}) {
 	_ = stmt.Parse(st)
 
 	for _, field := range stmt.Schema.Fields {
+		if b.isMemberInBaseStruct(field.Name) {
+			continue
+		}
 		b.Members = append(b.Members, &Member{
 			Name:       field.Name,
 			Type:       DelPointerSym(field.FieldType.String()),
 			ColumnName: field.DBName,
 		})
 	}
+}
+
+// check member is duplicate
+func (b *BaseStruct) isMemberInBaseStruct(name string) bool {
+	for _, m := range b.Members {
+		if m.Name == name {
+			return true
+		}
+	}
+	return false
 }
 
 // getTableName get table name with gorm's Parse
