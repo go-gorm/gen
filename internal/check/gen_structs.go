@@ -108,7 +108,7 @@ func getTbColumns(db *gorm.DB, schemaName string, tableName string) (result []*C
 }
 
 // get mysql db' name
-var dbNameReg = regexp.MustCompile(`/\w+\?`)
+var dbNameReg = regexp.MustCompile(`/\w+\??`)
 
 func getSchemaName(db *gorm.DB, opts ...SchemaNameOpt, ) string {
 	for _, opt := range opts {
@@ -128,7 +128,11 @@ func getSchemaName(db *gorm.DB, opts ...SchemaNameOpt, ) string {
 	if len(dbName) < 3 {
 		return ""
 	}
-	return dbName[1 : len(dbName)-1]
+	end := len(dbName)
+	if strings.HasSuffix(dbName, "?") {
+		end--
+	}
+	return dbName[1:end]
 }
 
 // convert Table name or column name to camel case
