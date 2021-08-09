@@ -29,12 +29,23 @@ func (b *BaseStruct) getMembers(st interface{}) {
 	_ = stmt.Parse(st)
 
 	for _, field := range stmt.Schema.Fields {
-		b.Members = append(b.Members, &Member{
+		b.appendOrUpdateMember(&Member{
 			Name:       field.Name,
 			Type:       DelPointerSym(field.FieldType.String()),
 			ColumnName: field.DBName,
 		})
 	}
+}
+
+// check member if in BaseStruct update else append
+func (b *BaseStruct) appendOrUpdateMember(member *Member) {
+	for index, m := range b.Members {
+		if m.Name == member.Name {
+			b.Members[index] = member
+			return
+		}
+	}
+	b.Members = append(b.Members, member)
 }
 
 // getTableName get table name with gorm's Parse
