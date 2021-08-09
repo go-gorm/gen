@@ -16,6 +16,8 @@ import (
 var db, _ = gorm.Open(tests.DummyDialector{}, nil)
 
 func init() {
+	db = db.Debug()
+
 	callbacks.RegisterDefaultCallbacks(db, &callbacks.Config{
 		UpdateClauses: []string{"UPDATE", "SET", "WHERE", "ORDER BY", "LIMIT"},
 		DeleteClauses: []string{"DELETE", "FROM", "WHERE", "ORDER BY", "LIMIT"},
@@ -71,7 +73,7 @@ type User struct {
 	RegisterAt field.Time
 }
 
-var u = func() User {
+var u = func() *User {
 	u := User{
 		ID:         field.NewUint("", "id"),
 		Name:       field.NewString("", "name"),
@@ -83,7 +85,7 @@ var u = func() User {
 	}
 	u.UseDB(db.Session(&gorm.Session{DryRun: true}))
 	u.UseModel(UserRaw{})
-	return u
+	return &u
 }()
 
 type Student struct {
@@ -125,7 +127,7 @@ var teacher = func() *Teacher {
 }()
 
 func checkBuildExpr(t *testing.T, e Dao, opts []stmtOpt, result string, vars []interface{}) {
-	stmt := e.(*DO).buildStmt(opts...)
+	stmt := e.(*DO).build(opts...)
 
 	sql := strings.TrimSpace(stmt.SQL.String())
 	if sql != result {
@@ -145,14 +147,36 @@ func TestDO_methods(t *testing.T) {
 		Result       string
 	}{
 		{
-			Expr:         u.Select(),
-			ExpectedVars: nil,
-			Result:       "SELECT *",
+			Expr:   u.Select(),
+			Result: "SELECT *",
 		},
 		{
-			Expr:         u.Select(u.ID, u.Name),
-			ExpectedVars: nil,
-			Result:       "SELECT `id`, `name`",
+			Expr:   u.Select(u.ID, u.Name),
+			Result: "SELECT `id`,`name`",
+		},
+		{
+			Expr:   u.Distinct(u.Name),
+			Result: "SELECT DISTINCT `name`",
+		},
+		{
+			Expr:   teacher.Distinct(teacher.ID, teacher.Name),
+			Result: "SELECT DISTINCT `teacher`.`id`,`teacher`.`name`",
+		},
+		{
+			Expr:   teacher.Select(teacher.ID, teacher.Name).Distinct(),
+			Result: "SELECT DISTINCT `teacher`.`id`,`teacher`.`name`",
+		},
+		{
+			Expr:   teacher.Distinct().Select(teacher.ID, teacher.Name),
+			Result: "SELECT DISTINCT `teacher`.`id`,`teacher`.`name`",
+		},
+		{
+			Expr:   teacher.Select(teacher.Name.As("n")).Distinct(),
+			Result: "SELECT DISTINCT `teacher`.`name` AS `n`",
+		},
+		{
+			Expr:   teacher.Select(teacher.ID.As("i"), teacher.Name.As("n")).Distinct(),
+			Result: "SELECT DISTINCT `teacher`.`id` AS `i`,`teacher`.`name` AS `n`",
 		},
 		{
 			Expr:         u.Where(u.ID.Eq(10)),
@@ -220,7 +244,7 @@ func TestDO_methods(t *testing.T) {
 		{
 			Expr:         u.Select(u.ID, u.Name).Where(u.Age.Gt(18), u.Score.Gte(100)),
 			ExpectedVars: []interface{}{18, 100.0},
-			Result:       "SELECT `id`, `name` WHERE `age` > ? AND `score` >= ?",
+			Result:       "SELECT `id`,`name` WHERE `age` > ? AND `score` >= ?",
 		},
 		// ======================== subquery ========================
 		{
@@ -236,7 +260,7 @@ func TestDO_methods(t *testing.T) {
 		{
 			Expr:         u.Select(u.ID, u.Name).Where(Lte(u.Score, u.Select(u.Score.Avg()).Where(u.Age.Gte(18)))),
 			ExpectedVars: []interface{}{18},
-			Result:       "SELECT `id`, `name` WHERE `score` <= (SELECT AVG(`score`) FROM `users_info` WHERE `age` >= ?)",
+			Result:       "SELECT `id`,`name` WHERE `score` <= (SELECT AVG(`score`) FROM `users_info` WHERE `age` >= ?)",
 		},
 		{
 			Expr:         u.Select(u.ID).Where(In(u.Score, u.Select(u.Score).Where(u.Age.Gte(18)))),
@@ -246,7 +270,7 @@ func TestDO_methods(t *testing.T) {
 		{
 			Expr:         u.Select(u.ID).Where(In(u.ID, u.Age, u.Select(u.ID, u.Age).Where(u.Score.Eq(100)))),
 			ExpectedVars: []interface{}{100.0},
-			Result:       "SELECT `id` WHERE (`id`, `age`) IN (SELECT `id`, `age` FROM `users_info` WHERE `score` = ?)",
+			Result:       "SELECT `id` WHERE (`id`, `age`) IN (SELECT `id`,`age` FROM `users_info` WHERE `score` = ?)",
 		},
 		{
 			Expr:         u.Select(u.Age.Avg().As("avgage")).Group(u.Name).Having(Gt(u.Age.Avg(), u.Select(u.Age.Avg()).Where(u.Name.Like("name%")))),
@@ -259,7 +283,7 @@ func TestDO_methods(t *testing.T) {
 			Expr:         Table(u.Select(u.ID, u.Name).Where(u.Age.Gt(18))).Select(),
 			Opts:         []stmtOpt{withFROM},
 			ExpectedVars: []interface{}{18},
-			Result:       "SELECT * FROM (SELECT `id`, `name` FROM `users_info` WHERE `age` > ?)",
+			Result:       "SELECT * FROM (SELECT `id`,`name` FROM `users_info` WHERE `age` > ?)",
 		},
 		{
 			Expr:         Table(u.Select(u.ID).Where(u.Age.Gt(18)), u.Select(u.ID).Where(u.Score.Gte(100))).Select(),
@@ -287,7 +311,7 @@ func TestDO_methods(t *testing.T) {
 		},
 		{
 			Expr:         student.LeftJoin(teacher, student.Instructor.EqCol(teacher.ID)).Where(teacher.ID.Gt(0)).Select(student.Name, teacher.Name),
-			Result:       "SELECT `student`.`name`, `teacher`.`name` FROM `student` LEFT JOIN `teacher` ON `student`.`instructor` = `teacher`.`id` WHERE `teacher`.`id` > ?",
+			Result:       "SELECT `student`.`name`,`teacher`.`name` FROM `student` LEFT JOIN `teacher` ON `student`.`instructor` = `teacher`.`id` WHERE `teacher`.`id` > ?",
 			ExpectedVars: []interface{}{int64(0)},
 		},
 		{
@@ -297,7 +321,7 @@ func TestDO_methods(t *testing.T) {
 		},
 		{
 			Expr:         student.Join(teacher, student.Instructor.EqCol(teacher.ID)).LeftJoin(teacher, student.ID.Gt(100)).Select(student.ID, student.Name, teacher.Name.As("teacher_name")),
-			Result:       "SELECT `student`.`id`, `student`.`name`, `teacher`.`name` AS `teacher_name` FROM `student` INNER JOIN `teacher` ON `student`.`instructor` = `teacher`.`id` LEFT JOIN `teacher` ON `student`.`id` > ?",
+			Result:       "SELECT `student`.`id`,`student`.`name`,`teacher`.`name` AS `teacher_name` FROM `student` INNER JOIN `teacher` ON `student`.`instructor` = `teacher`.`id` LEFT JOIN `teacher` ON `student`.`id` > ?",
 			ExpectedVars: []interface{}{int64(100)},
 		},
 	}
