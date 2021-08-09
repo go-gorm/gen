@@ -45,6 +45,17 @@ type Config struct {
 	ModelPkgName string // generated model code's package name
 
 	queryPkgName string // generated query code's package name
+	dbNameOpts   []check.SchemaNameOpt
+}
+
+// WithDbNameOpts set get database name function
+func (cfg *Config) WithDbNameOpts(opts ...check.SchemaNameOpt) {
+	if cfg.dbNameOpts == nil {
+		cfg.dbNameOpts = make([]check.SchemaNameOpt, 0, len(opts))
+	}
+	for _, opt := range opts {
+		cfg.dbNameOpts = append(cfg.dbNameOpts, opt)
+	}
 }
 
 // genInfo info about generated code
@@ -80,7 +91,7 @@ func (g *Generator) UseDB(db *gorm.DB) {
 
 // GenerateModel catch table info from db, return a BaseStruct
 func (g *Generator) GenerateModel(tableName string, modelName string) *check.BaseStruct {
-	s, err := check.GenBaseStructs(g.db, g.Config.ModelPkgName, tableName, modelName)
+	s, err := check.GenBaseStructs(g.db, g.Config.ModelPkgName, tableName, modelName, g.dbNameOpts...)
 	if err != nil {
 		log.Fatalf("check struct error: %s", err)
 	}
