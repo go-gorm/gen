@@ -103,6 +103,12 @@ func (g *Generator) ApplyBasic(models ...interface{}) {
 	g.ApplyInterface(func() {}, models...)
 }
 
+// ApplyInterfaces specifies one method interface on several model structures
+// eg: g.ApplyInterfaces(model.User{}, func(model.Method1, model.Method2){})
+func (g *Generator) ApplyInterfaces(model interface{}, fc interface{}) {
+	g.ApplyInterface(fc, model)
+}
+
 // ApplyInterface specifies method interfaces on structures, implment codes will be generated after calling g.Execute()
 // eg: g.ApplyInterface(func(model.Method){}, model.User{}, model.Company{})
 func (g *Generator) ApplyInterface(fc interface{}, models ...interface{}) {
@@ -139,12 +145,6 @@ func (g *Generator) apply(fc interface{}, structs []*check.BaseStruct) {
 			log.Fatalf("gen Interface error: %s", err)
 		}
 	}
-}
-
-// ApplyByModel specifies one method interface on several model structures
-// eg: g.ApplyByModel(model.User{}, func(model.Method1, model.Method2){})
-func (g *Generator) ApplyByModel(model interface{}, fc interface{}) {
-	g.ApplyInterface(fc, model)
 }
 
 // Execute generate code to output path
