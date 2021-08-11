@@ -5,10 +5,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/jinzhu/inflection"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"gorm.io/gorm/schema"
 
 	"gorm.io/gen/internal/parser"
 )
@@ -69,23 +67,20 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 	if pkg == "" {
 		pkg = ModelPkg
 	}
-	singular := singularModel(db.Config)
 	dbName := getSchemaName(db, schemaNameOpt...)
 	columns, err := getTbColumns(db, dbName, tableName)
 	if err != nil {
 		return nil, err
 	}
-	var base BaseStruct
-	base.Source = TableName
-	base.GenBaseStruct = true
-	base.TableName = tableName
-	base.StructName = convertToModelName(singular, tableName)
-	if modelName != "" {
-		base.StructName = captialize(modelName)
+	base := BaseStruct{
+		Source:        TableName,
+		GenBaseStruct: true,
+		TableName:     tableName,
+		StructName:    modelName,
+		NewStructName: uncaptialize(modelName),
+		S:             strings.ToLower(modelName[0:1]),
+		StructInfo:    parser.Param{Type: modelName, Package: pkg},
 	}
-	base.NewStructName = uncaptialize(base.StructName)
-	base.S = string(base.NewStructName[0])
-	base.StructInfo = parser.Param{Type: base.StructName, Package: pkg}
 	for _, field := range columns {
 		mt := dataType[field.DataType]
 		base.Members = append(base.Members, &Member{
@@ -110,7 +105,7 @@ func getTbColumns(db *gorm.DB, schemaName string, tableName string) (result []*C
 // get mysql db' name
 var dbNameReg = regexp.MustCompile(`/\w+\??`)
 
-func getSchemaName(db *gorm.DB, opts ...SchemaNameOpt, ) string {
+func getSchemaName(db *gorm.DB, opts ...SchemaNameOpt) string {
 	for _, opt := range opts {
 		name := opt(db)
 		if name != "" {
@@ -141,24 +136,6 @@ func nameToCamelCase(name string) string {
 		return name
 	}
 	return strings.ReplaceAll(strings.Title(strings.ReplaceAll(name, "_", " ")), " ", "")
-}
-
-func convertToModelName(singular bool, name string) string {
-	cc := nameToCamelCase(name)
-	if singular {
-		return inflection.Singular(cc)
-	}
-	return cc
-}
-
-func singularModel(conf *gorm.Config) bool {
-	if conf == nil || conf.NamingStrategy == nil {
-		return false
-	}
-	if ns, ok := conf.NamingStrategy.(schema.NamingStrategy); ok && !ns.SingularTable {
-		return true
-	}
-	return false
 }
 
 // get mysql db' name

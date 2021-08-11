@@ -90,7 +90,12 @@ func (g *Generator) UseDB(db *gorm.DB) {
 }
 
 // GenerateModel catch table info from db, return a BaseStruct
-func (g *Generator) GenerateModel(tableName string, modelName string) *check.BaseStruct {
+func (g *Generator) GenerateModel(tableName string) *check.BaseStruct {
+	return g.GenerateModelAs(tableName, g.db.Config.NamingStrategy.SchemaName(tableName))
+}
+
+// GenerateModel catch table info from db, return a BaseStruct
+func (g *Generator) GenerateModelAs(tableName string, modelName string) *check.BaseStruct {
 	s, err := check.GenBaseStructs(g.db, g.Config.ModelPkgName, tableName, modelName, g.dbNameOpts...)
 	if err != nil {
 		log.Fatalf("check struct error: %s", err)
