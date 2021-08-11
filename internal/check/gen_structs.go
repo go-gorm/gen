@@ -61,8 +61,8 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 	if isDBUndefined(db) {
 		return nil, fmt.Errorf("gen config db is undefined")
 	}
-	if !isModelNameValid(modelName) {
-		return nil, fmt.Errorf("model name %q is invalid", modelName)
+	if err = checkModelName(modelName); err != nil {
+		return nil, fmt.Errorf("model name %q is invalid: %w", modelName, err)
 	}
 	if pkg == "" {
 		pkg = ModelPkg
@@ -141,13 +141,15 @@ func nameToCamelCase(name string) string {
 // get mysql db' name
 var modelNameReg = regexp.MustCompile(`^\w+$`)
 
-func isModelNameValid(name string) bool {
+func checkModelName(name string) error {
 	if name == "" {
-		return true
+		return nil
 	}
 	if !modelNameReg.MatchString(name) {
-		return false
+		return fmt.Errorf("model name cannot contains invalid character")
 	}
-	// must be captialize
-	return name[0] >= 'A' && name[0] <= 'Z'
+	if name[0] < 'A' && name[0] > 'Z' {
+		return fmt.Errorf("model name must be initial capital")
+	}
+	return nil
 }
