@@ -278,6 +278,7 @@ func (g *Generator) generatedBaseStruct() (err error) {
 		if err != nil {
 			return nil
 		}
+		log.Printf("Generated struct [%s.%s] from table [%s]\n", data.StructInfo.Package, data.StructInfo.Type, data.TableName)
 	}
 	return nil
 }
