@@ -148,5 +148,6 @@ func isModelNameValid(name string) bool {
 	if !modelNameReg.MatchString(name) {
 		return false
 	}
-	return (name[0] > '9' || name[0] < '0') && name[0] != '_'
+	// must be captialize
+	return name[0] >= 'A' && name[0] <= 'Z'
 }
