@@ -148,7 +148,7 @@ func checkModelName(name string) error {
 	if !modelNameReg.MatchString(name) {
 		return fmt.Errorf("model name cannot contains invalid character")
 	}
-	if name[0] < 'A' && name[0] > 'Z' {
+	if name[0] < 'A' || name[0] > 'Z' {
 		return fmt.Errorf("model name must be initial capital")
 	}
 	return nil
