@@ -61,7 +61,6 @@ func (d *DO) TableName() string {
 
 // UnderlyingDB return the underlying database connection
 func (d *DO) UnderlyingDB() *gorm.DB {
-	Emit(methodDiy)
 	return d.db
 }
 
@@ -147,7 +146,6 @@ func (d *DO) Or(conds ...Condition) Dao {
 }
 
 func (d *DO) Select(columns ...field.Expr) Dao {
-	Emit(methodSelect)
 	if len(columns) == 0 {
 		return NewDO(d.db.Clauses(clause.Select{}))
 	}
@@ -155,47 +153,38 @@ func (d *DO) Select(columns ...field.Expr) Dao {
 }
 
 func (d *DO) Where(conds ...Condition) Dao {
-	Emit(methodWhere)
 	return NewDO(d.db.Clauses(clause.Where{Exprs: condToExpression(conds...)}))
 }
 
 func (d *DO) Order(columns ...field.Expr) Dao {
-	Emit(methodOrder)
 	return NewDO(d.db.Clauses(clause.OrderBy{Expression: clause.CommaExpression{Exprs: toExpression(columns...)}}))
 }
 
 func (d *DO) Distinct(columns ...field.Expr) Dao {
-	Emit(methodDistinct)
 	return NewDO(d.db.Distinct(toInterfaceSlice(toColumnFullName(d.db.Statement, columns...))...))
 }
 
 func (d *DO) Omit(columns ...field.Expr) Dao {
-	Emit(methodOmit)
 	return NewDO(d.db.Omit(toColNames(d.db.Statement, columns...)...))
 }
 
 func (d *DO) Group(column field.Expr) Dao {
-	Emit(methodGroup)
 	return NewDO(d.db.Group(column.Column().Name))
 }
 
 func (d *DO) Having(conds ...Condition) Dao {
-	Emit(methodHaving)
 	return NewDO(d.db.Clauses(clause.GroupBy{Having: condToExpression(conds...)}))
 }
 
 func (d *DO) Limit(limit int) Dao {
-	Emit(methodLimit)
 	return NewDO(d.db.Limit(limit))
 }
 
 func (d *DO) Offset(offset int) Dao {
-	Emit(methodOffset)
 	return NewDO(d.db.Offset(offset))
 }
 
 func (d *DO) Scopes(funcs ...func(Dao) Dao) Dao {
-	Emit(methodScopes)
 	var result Dao = d
 	for _, f := range funcs {
 		result = f(result)
@@ -204,7 +193,6 @@ func (d *DO) Scopes(funcs ...func(Dao) Dao) Dao {
 }
 
 func (d *DO) Unscoped() Dao {
-	Emit(methodUnscoped)
 	return NewDO(d.db.Unscoped())
 }
 
@@ -221,7 +209,6 @@ func (d *DO) RightJoin(table schema.Tabler, conds ...Condition) Dao {
 }
 
 func (d *DO) join(table schema.Tabler, joinType clause.JoinType, conds ...Condition) Dao {
-	Emit(methodJoin)
 	from := getFromClause(d.db)
 	from.Joins = append(from.Joins, clause.Join{
 		Type:  joinType,
@@ -248,57 +235,46 @@ func getFromClause(db *gorm.DB) *clause.From {
 
 // ======================== finisher api ========================
 func (d *DO) Create(value interface{}) error {
-	Emit(methodCreate)
 	return d.db.Create(value).Error
 }
 
 func (d *DO) CreateInBatches(value interface{}, batchSize int) error {
-	Emit(methodCreateInBatches)
 	return d.db.CreateInBatches(value, batchSize).Error
 }
 
 func (d *DO) Save(value interface{}) error {
-	Emit(methodSave)
 	return d.db.Save(value).Error
 }
 
 func (d *DO) First(dest interface{}, conds ...field.Expr) error {
-	Emit(methodFirst)
 	return d.db.Clauses(toExpression(conds...)...).First(dest).Error
 }
 
 func (d *DO) Take(dest interface{}, conds ...field.Expr) error {
-	Emit(methodTake)
 	return d.db.Clauses(toExpression(conds...)...).Take(dest).Error
 }
 
 func (d *DO) Last(dest interface{}, conds ...field.Expr) error {
-	Emit(methodLast)
 	return d.db.Clauses(toExpression(conds...)...).Last(dest).Error
 }
 
 func (d *DO) Find(dest interface{}, conds ...field.Expr) error {
-	Emit(methodFind)
 	return d.db.Clauses(toExpression(conds...)...).Find(dest).Error
 }
 
 func (d *DO) FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error {
-	Emit(methodFindInBatches)
 	return d.db.FindInBatches(dest, batchSize, func(tx *gorm.DB, batch int) error { return fc(NewDO(tx), batch) }).Error
 }
 
 func (d *DO) FirstOrInit(dest interface{}, conds ...field.Expr) error {
-	Emit(methodFirstOrInit)
 	return d.db.Clauses(toExpression(conds...)...).FirstOrInit(dest).Error
 }
 
 func (d *DO) FirstOrCreate(dest interface{}, conds ...field.Expr) error {
-	Emit(methodFirstOrCreate)
 	return d.db.Clauses(toExpression(conds...)...).FirstOrCreate(dest).Error
 }
 
 func (d *DO) Update(column field.Expr, value interface{}) error {
-	Emit(methodUpdate)
 	switch expr := column.RawExpr().(type) {
 	case clause.Expression:
 		return d.db.Update(column.Column().Name, expr).Error
@@ -315,12 +291,10 @@ func (d *DO) Update(column field.Expr, value interface{}) error {
 }
 
 func (d *DO) Updates(values interface{}) error {
-	Emit(methodUpdates)
 	return d.db.Updates(values).Error
 }
 
 func (d *DO) UpdateColumn(column field.Expr, value interface{}) error {
-	Emit(methodUpdateColumn)
 	switch expr := column.RawExpr().(type) {
 	case clause.Expression:
 		return d.db.UpdateColumn(column.Column().Name, expr).Error
@@ -337,72 +311,58 @@ func (d *DO) UpdateColumn(column field.Expr, value interface{}) error {
 }
 
 func (d *DO) UpdateColumns(values interface{}) error {
-	Emit(methodUpdateColumns)
 	return d.db.UpdateColumns(values).Error
 }
 
 func (d *DO) Delete(value interface{}, conds ...field.Expr) error {
-	Emit(methodDelete)
 	return d.db.Clauses(toExpression(conds...)...).Delete(value).Error
 }
 
 func (d *DO) Count(count *int64) error {
-	Emit(methodCount)
 	return d.db.Count(count).Error
 }
 
 func (d *DO) Row() *sql.Row {
-	Emit(methodRow)
 	return d.db.Row()
 }
 
 func (d *DO) Rows() (*sql.Rows, error) {
-	Emit(methodRows)
 	return d.db.Rows()
 }
 
 func (d *DO) Scan(dest interface{}) error {
-	Emit(methodScan)
 	return d.db.Scan(dest).Error
 }
 
 func (d *DO) Pluck(column field.Expr, dest interface{}) error {
-	Emit(methodPluck)
 	return d.db.Pluck(column.Column().Name, dest).Error
 }
 
 func (d *DO) ScanRows(rows *sql.Rows, dest interface{}) error {
-	Emit(methodScanRows)
 	return d.db.ScanRows(rows, dest)
 }
 
 func (d *DO) Transaction(fc func(Dao) error, opts ...*sql.TxOptions) error {
-	Emit(methodTransaction)
 	return d.db.Transaction(func(tx *gorm.DB) error { return fc(NewDO(tx)) }, opts...)
 }
 
 func (d *DO) Begin(opts ...*sql.TxOptions) Dao {
-	Emit(methodBegin)
 	return NewDO(d.db.Begin(opts...))
 }
 
 func (d *DO) Commit() Dao {
-	Emit(methodCommit)
 	return NewDO(d.db.Commit())
 }
 
 func (d *DO) RollBack() Dao {
-	Emit(methodRollback)
 	return NewDO(d.db.Rollback())
 }
 
 func (d *DO) SavePoint(name string) Dao {
-	Emit(methodSavePoint)
 	return NewDO(d.db.SavePoint(name))
 }
 
 func (d *DO) RollBackTo(name string) Dao {
-	Emit(methodRollbackTo)
 	return NewDO(d.db.RollbackTo(name))
 }
 

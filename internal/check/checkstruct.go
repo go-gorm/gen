@@ -2,12 +2,12 @@ package check
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 
 	"gorm.io/gorm"
 
 	"gorm.io/gen/internal/parser"
-	"gorm.io/gen/log"
 )
 
 // BaseStruct struct info in generated code

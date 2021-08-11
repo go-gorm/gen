@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -16,7 +17,6 @@ import (
 	"gorm.io/gen/internal/check"
 	"gorm.io/gen/internal/parser"
 	tmpl "gorm.io/gen/internal/template"
-	"gorm.io/gen/log"
 )
 
 // TODO implement some unit tests
@@ -51,10 +51,9 @@ type Config struct {
 // WithDbNameOpts set get database name function
 func (cfg *Config) WithDbNameOpts(opts ...check.SchemaNameOpt) {
 	if cfg.dbNameOpts == nil {
-		cfg.dbNameOpts = make([]check.SchemaNameOpt, 0, len(opts))
-	}
-	for _, opt := range opts {
-		cfg.dbNameOpts = append(cfg.dbNameOpts, opt)
+		cfg.dbNameOpts = opts
+	} else {
+		cfg.dbNameOpts = append(cfg.dbNameOpts, opts...)
 	}
 }
 
