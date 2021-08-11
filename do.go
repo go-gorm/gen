@@ -73,12 +73,12 @@ func (d *DO) Quote(raw string) string {
 // Build implement the interface of claues.Expression
 // only call WHERE clause's Build
 func (d *DO) Build(builder clause.Builder) {
-	for _, e := range d.buildWhere() {
+	for _, e := range d.buildCondition() {
 		e.Build(builder)
 	}
 }
 
-func (d *DO) buildWhere() []clause.Expression {
+func (d *DO) buildCondition() []clause.Expression {
 	return d.db.Statement.BuildCondition(d.db)
 }
 
@@ -156,16 +156,7 @@ func (d *DO) Select(columns ...field.Expr) Dao {
 
 func (d *DO) Where(conds ...Condition) Dao {
 	Emit(methodWhere)
-	var exprs = make([]clause.Expression, 0, len(conds))
-	for _, cond := range conds {
-		switch cond := cond.(type) {
-		case *DO:
-			exprs = append(exprs, cond.buildWhere()...)
-		default:
-			exprs = append(exprs, cond)
-		}
-	}
-	return NewDO(d.db.Clauses(clause.Where{Exprs: exprs}))
+	return NewDO(d.db.Clauses(clause.Where{Exprs: condToExpression(conds...)}))
 }
 
 func (d *DO) Order(columns ...field.Expr) Dao {
@@ -231,21 +222,12 @@ func (d *DO) RightJoin(table schema.Tabler, conds ...Condition) Dao {
 
 func (d *DO) join(table schema.Tabler, joinType clause.JoinType, conds ...Condition) Dao {
 	Emit(methodJoin)
-	var exprs = make([]clause.Expression, 0, len(conds))
-	for _, cond := range conds {
-		switch cond := cond.(type) {
-		case *DO:
-			exprs = append(exprs, cond.buildWhere()...)
-		default:
-			exprs = append(exprs, cond)
-		}
-	}
-
-	join := clause.Join{Type: joinType, Table: clause.Table{Name: table.TableName()}, ON: clause.Where{
-		Exprs: exprs,
-	}}
 	from := getFromClause(d.db)
-	from.Joins = append(from.Joins, join)
+	from.Joins = append(from.Joins, clause.Join{
+		Type:  joinType,
+		Table: clause.Table{Name: table.TableName()},
+		ON:    clause.Where{Exprs: condToExpression(conds...)},
+	})
 	return NewDO(d.db.Clauses(from))
 }
 
@@ -433,9 +415,14 @@ func toExpression(conds ...field.Expr) []clause.Expression {
 }
 
 func condToExpression(conds ...Condition) []clause.Expression {
-	exprs := make([]clause.Expression, len(conds))
-	for i, cond := range conds {
-		exprs[i] = cond
+	exprs := make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		switch cond := cond.(type) {
+		case *DO:
+			exprs = append(exprs, cond.buildCondition()...)
+		default:
+			exprs = append(exprs, cond)
+		}
 	}
 	return exprs
 }
