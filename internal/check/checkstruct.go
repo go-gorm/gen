@@ -2,12 +2,12 @@ package check
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 
 	"gorm.io/gorm"
 
 	"gorm.io/gen/internal/parser"
-	"gorm.io/gen/log"
 )
 
 // BaseStruct struct info in generated code
@@ -63,12 +63,12 @@ func (b *BaseStruct) HasMember() bool {
 // check if struct is exportable and if struct in main package and if member's type is regular
 func (b *BaseStruct) check() (err error) {
 	if b.StructInfo.InMainPkg() {
-		err = fmt.Errorf("can't generated data object for struct in main package,ignored:%s", b.StructName)
+		err = fmt.Errorf("can't generated data object for struct in main package, ignored:%s", b.StructName)
 		log.Println(err)
 		return
 	}
 	if !isCapitalize(b.StructName) {
-		err = fmt.Errorf("can't generated data object for non-exportable struct,ignore:%s", b.NewStructName)
+		err = fmt.Errorf("can't generated data object for non-exportable struct, ignore:%s", b.NewStructName)
 		log.Println(err)
 		return
 	}

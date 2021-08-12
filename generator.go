@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -16,7 +17,6 @@ import (
 	"gorm.io/gen/internal/check"
 	"gorm.io/gen/internal/parser"
 	tmpl "gorm.io/gen/internal/template"
-	"gorm.io/gen/log"
 )
 
 // TODO implement some unit tests
@@ -51,10 +51,9 @@ type Config struct {
 // WithDbNameOpts set get database name function
 func (cfg *Config) WithDbNameOpts(opts ...check.SchemaNameOpt) {
 	if cfg.dbNameOpts == nil {
-		cfg.dbNameOpts = make([]check.SchemaNameOpt, 0, len(opts))
-	}
-	for _, opt := range opts {
-		cfg.dbNameOpts = append(cfg.dbNameOpts, opt)
+		cfg.dbNameOpts = opts
+	} else {
+		cfg.dbNameOpts = append(cfg.dbNameOpts, opts...)
 	}
 }
 
@@ -90,7 +89,12 @@ func (g *Generator) UseDB(db *gorm.DB) {
 }
 
 // GenerateModel catch table info from db, return a BaseStruct
-func (g *Generator) GenerateModel(tableName string, modelName string) *check.BaseStruct {
+func (g *Generator) GenerateModel(tableName string) *check.BaseStruct {
+	return g.GenerateModelAs(tableName, g.db.Config.NamingStrategy.SchemaName(tableName))
+}
+
+// GenerateModel catch table info from db, return a BaseStruct
+func (g *Generator) GenerateModelAs(tableName string, modelName string) *check.BaseStruct {
 	s, err := check.GenBaseStructs(g.db, g.Config.ModelPkgName, tableName, modelName, g.dbNameOpts...)
 	if err != nil {
 		log.Fatalf("check struct error: %s", err)
@@ -273,6 +277,7 @@ func (g *Generator) generatedBaseStruct() (err error) {
 		if err != nil {
 			return nil
 		}
+		log.Printf("Generate struct [%s.%s] from table [%s]\n", data.StructInfo.Package, data.StructInfo.Type, data.TableName)
 	}
 	return nil
 }
