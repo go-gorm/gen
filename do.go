@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/schema"
+	"gorm.io/hints"
 
 	"gorm.io/gen/field"
 )
@@ -129,6 +130,10 @@ func (d *DO) build(opts ...stmtOpt) *gorm.Statement {
 // Debug return a DO with db in debug mode
 func (d *DO) Debug() Dao {
 	return NewDO(d.db.Debug())
+}
+
+func (d *DO) Hints(hs ...hints.Hints) Dao {
+	return NewDO(d.db.Clauses(hintToExpression(hs)...))
 }
 
 // As alias cannot be heired, As must used on tail
@@ -370,6 +375,14 @@ func toExpression(conds ...field.Expr) []clause.Expression {
 	exprs := make([]clause.Expression, len(conds))
 	for i, cond := range conds {
 		exprs[i] = cond
+	}
+	return exprs
+}
+
+func hintToExpression(hs []hints.Hints) []clause.Expression {
+	exprs := make([]clause.Expression, len(hs))
+	for i, hint := range hs {
+		exprs[i] = hint
 	}
 	return exprs
 }
