@@ -9,6 +9,8 @@ package {{.}}
 
 import(
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
+	"gorm.io/hints"
 
 	"gorm.io/gen/field"
 	"gorm.io/gen/helper"
@@ -62,6 +64,11 @@ func New{{.StructName}}(db *gorm.DB) *{{.NewStructName}} {
 const BaseGormFunc = `
 func ({{.S}} {{.NewStructName}}) Debug() *{{.NewStructName}} {
 	{{.S}}.DO = *{{.S}}.DO.Debug().(*gen.DO)
+	return &{{.S}}
+}
+
+func ({{.S}} {{.NewStructName}}) Hints(hs ...hints.Hints) *{{.NewStructName}} {
+	{{.S}}.DO = *{{.S}}.DO.Hints(hs...).(*gen.DO)
 	return &{{.S}}
 }
 
