@@ -143,11 +143,11 @@ func (d *DO) As(alias string) Dao {
 
 // ======================== chainable api ========================
 func (d *DO) Not(conds ...Condition) Dao {
-	return NewDO(d.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Not(condToExpression(conds...)...)}}))
+	return NewDO(d.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Not(condToExpression(conds)...)}}))
 }
 
 func (d *DO) Or(conds ...Condition) Dao {
-	return NewDO(d.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Or(clause.And(condToExpression(conds...)...))}}))
+	return NewDO(d.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Or(clause.And(condToExpression(conds)...))}}))
 }
 
 func (d *DO) Select(columns ...field.Expr) Dao {
@@ -158,11 +158,11 @@ func (d *DO) Select(columns ...field.Expr) Dao {
 }
 
 func (d *DO) Where(conds ...Condition) Dao {
-	return NewDO(d.db.Clauses(clause.Where{Exprs: condToExpression(conds...)}))
+	return NewDO(d.db.Clauses(clause.Where{Exprs: condToExpression(conds)}))
 }
 
 func (d *DO) Order(columns ...field.Expr) Dao {
-	return NewDO(d.db.Clauses(clause.OrderBy{Expression: clause.CommaExpression{Exprs: toExpression(columns...)}}))
+	return NewDO(d.db.Clauses(clause.OrderBy{Expression: clause.CommaExpression{Exprs: toExpression(columns)}}))
 }
 
 func (d *DO) Distinct(columns ...field.Expr) Dao {
@@ -178,7 +178,7 @@ func (d *DO) Group(column field.Expr) Dao {
 }
 
 func (d *DO) Having(conds ...Condition) Dao {
-	return NewDO(d.db.Clauses(clause.GroupBy{Having: condToExpression(conds...)}))
+	return NewDO(d.db.Clauses(clause.GroupBy{Having: condToExpression(conds)}))
 }
 
 func (d *DO) Limit(limit int) Dao {
@@ -218,7 +218,7 @@ func (d *DO) join(table schema.Tabler, joinType clause.JoinType, conds ...Condit
 	from.Joins = append(from.Joins, clause.Join{
 		Type:  joinType,
 		Table: clause.Table{Name: table.TableName()},
-		ON:    clause.Where{Exprs: condToExpression(conds...)},
+		ON:    clause.Where{Exprs: condToExpression(conds)},
 	})
 	return NewDO(d.db.Clauses(from))
 }
@@ -252,19 +252,19 @@ func (d *DO) Save(value interface{}) error {
 }
 
 func (d *DO) First(dest interface{}, conds ...field.Expr) error {
-	return d.db.Clauses(toExpression(conds...)...).First(dest).Error
+	return d.db.Clauses(toExpression(conds)...).First(dest).Error
 }
 
 func (d *DO) Take(dest interface{}, conds ...field.Expr) error {
-	return d.db.Clauses(toExpression(conds...)...).Take(dest).Error
+	return d.db.Clauses(toExpression(conds)...).Take(dest).Error
 }
 
 func (d *DO) Last(dest interface{}, conds ...field.Expr) error {
-	return d.db.Clauses(toExpression(conds...)...).Last(dest).Error
+	return d.db.Clauses(toExpression(conds)...).Last(dest).Error
 }
 
 func (d *DO) Find(dest interface{}, conds ...field.Expr) error {
-	return d.db.Clauses(toExpression(conds...)...).Find(dest).Error
+	return d.db.Clauses(toExpression(conds)...).Find(dest).Error
 }
 
 func (d *DO) FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error {
@@ -272,11 +272,11 @@ func (d *DO) FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batc
 }
 
 func (d *DO) FirstOrInit(dest interface{}, conds ...field.Expr) error {
-	return d.db.Clauses(toExpression(conds...)...).FirstOrInit(dest).Error
+	return d.db.Clauses(toExpression(conds)...).FirstOrInit(dest).Error
 }
 
 func (d *DO) FirstOrCreate(dest interface{}, conds ...field.Expr) error {
-	return d.db.Clauses(toExpression(conds...)...).FirstOrCreate(dest).Error
+	return d.db.Clauses(toExpression(conds)...).FirstOrCreate(dest).Error
 }
 
 func (d *DO) Update(column field.Expr, value interface{}) error {
@@ -320,7 +320,7 @@ func (d *DO) UpdateColumns(values interface{}) error {
 }
 
 func (d *DO) Delete(value interface{}, conds ...field.Expr) error {
-	return d.db.Clauses(toExpression(conds...)...).Delete(value).Error
+	return d.db.Clauses(toExpression(conds)...).Delete(value).Error
 }
 
 func (d *DO) Count(count *int64) error {
@@ -371,7 +371,7 @@ func (d *DO) RollBackTo(name string) Dao {
 	return NewDO(d.db.RollbackTo(name))
 }
 
-func toExpression(conds ...field.Expr) []clause.Expression {
+func toExpression(conds []field.Expr) []clause.Expression {
 	exprs := make([]clause.Expression, len(conds))
 	for i, cond := range conds {
 		exprs[i] = cond
@@ -387,7 +387,7 @@ func hintToExpression(hs []hints.Hints) []clause.Expression {
 	return exprs
 }
 
-func condToExpression(conds ...Condition) []clause.Expression {
+func condToExpression(conds []Condition) []clause.Expression {
 	exprs := make([]clause.Expression, 0, len(conds))
 	for _, cond := range conds {
 		switch cond := cond.(type) {
