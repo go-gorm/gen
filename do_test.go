@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/callbacks"
 	"gorm.io/gorm/utils/tests"
+	"gorm.io/hints"
 
 	"gorm.io/gen/field"
 )
@@ -189,19 +190,55 @@ func TestDO_methods(t *testing.T) {
 			Result:       "WHERE `name` = ? AND `age` > ?",
 		},
 		{
-			Expr:         u.Order(u.ID),
-			ExpectedVars: nil,
-			Result:       "ORDER BY `id`",
+			Expr:   u.Order(u.ID),
+			Result: "ORDER BY `id`",
 		},
 		{
-			Expr:         u.Order(u.ID.Desc()),
-			ExpectedVars: nil,
-			Result:       "ORDER BY `id` DESC",
+			Expr:   u.Order(u.ID.Desc()),
+			Result: "ORDER BY `id` DESC",
 		},
 		{
-			Expr:         u.Order(u.ID.Desc(), u.Age),
-			ExpectedVars: nil,
-			Result:       "ORDER BY `id` DESC, `age`",
+			Expr:   u.Order(u.ID.Desc(), u.Age),
+			Result: "ORDER BY `id` DESC, `age`",
+		},
+		{
+			Expr:   u.Hints(hints.New("hint")).Select(),
+			Result: "SELECT /*+ hint */ *",
+		},
+		{
+			Expr:   u.Hints(hints.Comment("select", "hint")).Select(),
+			Result: "SELECT /* hint */ *",
+		},
+		{
+			Expr:   u.Hints(hints.CommentBefore("select", "hint")).Select(),
+			Result: "/* hint */ SELECT *",
+		},
+		{
+			Expr:   u.Hints(hints.CommentAfter("select", "hint")).Select(),
+			Result: "SELECT * /* hint */",
+		},
+		{
+			Expr:         u.Hints(hints.CommentAfter("where", "hint")).Select().Where(u.ID.Gt(0)),
+			ExpectedVars: []interface{}{uint(0)},
+			Result:       "SELECT * WHERE `id` > ? /* hint */",
+		},
+		{
+			Expr:   u.Hints(hints.UseIndex("user_name")).Select(),
+			Opts:   []stmtOpt{withFROM},
+			Result: "SELECT * FROM `users_info` USE INDEX (`user_name`)",
+		},
+		{
+			Expr:   u.Hints(hints.ForceIndex("user_name", "user_id").ForJoin()).Select(),
+			Opts:   []stmtOpt{withFROM},
+			Result: "SELECT * FROM `users_info` FORCE INDEX FOR JOIN (`user_name`,`user_id`)",
+		},
+		{
+			Expr: u.Hints(
+				hints.ForceIndex("user_name", "user_id").ForJoin(),
+				hints.IgnoreIndex("user_name").ForGroupBy(),
+			).Select(),
+			Opts:   []stmtOpt{withFROM},
+			Result: "SELECT * FROM `users_info` FORCE INDEX FOR JOIN (`user_name`,`user_id`) IGNORE INDEX FOR GROUP BY (`user_name`)",
 		},
 		// ======================== where conditions ========================
 		{
