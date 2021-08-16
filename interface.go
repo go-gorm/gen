@@ -13,11 +13,14 @@ import (
 var _ Condition = Dao(&DO{})
 var _ Condition = field.Expr(field.NewField("", "field"))
 
-// Condition query condition
-// field.Expr and subquery(Dao) are expect valued
-type Condition interface {
-	clause.Expression
-}
+type (
+	// Condition query condition
+	// field.Expr and subquery(Dao) are expect value
+	Condition clause.Expression
+
+	// Hint hints.Hints and hints.IndexHint are expect value
+	Hint clause.Expression
+)
 
 type subQuery interface {
 	UnderlyingDB() *gorm.DB
