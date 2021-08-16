@@ -193,7 +193,7 @@ func ({{.S}} {{.NewStructName}}) Find(conds ...field.Expr) (result []*{{.StructI
 	return result, {{.S}}.DO.Find(&result, conds...)
 }
 
-func ({{.S}} {{.NewStructName}}) FindInBatches(batchSize int, fc func(tx *{{.NewStructName}}), batch int) error) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}},err error) {
+func ({{.S}} {{.NewStructName}}) FindInBatches(batchSize int, fc func(tx *{{.NewStructName}}, batch int) error) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}},err error) {
 	return result, {{.S}}.DO.FindInBatches(&result, batchSize, fc)
 }
 
