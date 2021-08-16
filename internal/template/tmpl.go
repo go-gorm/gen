@@ -13,6 +13,7 @@ import(
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 
+	"gorm.io/gen"
 	"gorm.io/gen/field"
 	"gorm.io/gen/helper"
 )
