@@ -7,7 +7,6 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/schema"
-	"gorm.io/hints"
 
 	"gorm.io/gen/field"
 )
@@ -132,7 +131,7 @@ func (d *DO) Debug() Dao {
 	return NewDO(d.db.Debug())
 }
 
-func (d *DO) Hints(hs ...hints.Hints) Dao {
+func (d *DO) Hints(hs ...Hint) Dao {
 	return NewDO(d.db.Clauses(hintToExpression(hs)...))
 }
 
@@ -379,7 +378,7 @@ func toExpression(conds []field.Expr) []clause.Expression {
 	return exprs
 }
 
-func hintToExpression(hs []hints.Hints) []clause.Expression {
+func hintToExpression(hs []Hint) []clause.Expression {
 	exprs := make([]clause.Expression, len(hs))
 	for i, hint := range hs {
 		exprs[i] = hint
