@@ -8,6 +8,8 @@ const HeaderTmpl = `
 package {{.}}
 
 import(
+	"database/sql"
+
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 
@@ -96,8 +98,13 @@ func ({{.S}} {{.NewStructName}}) Order(conds ...field.Expr) *{{.NewStructName}} 
 	return &{{.S}}
 }
 
-func ({{.S}} {{.NewStructName}}) Distinct(conds ...field.Expr) *{{.NewStructName}} {
-	{{.S}}.DO = *{{.S}}.DO.Distinct(conds...).(*gen.DO)
+func ({{.S}} {{.NewStructName}}) Distinct(cols ...field.Expr) *{{.NewStructName}} {
+	{{.S}}.DO = *{{.S}}.DO.Distinct(cols...).(*gen.DO)
+	return &{{.S}}
+}
+
+func ({{.S}} {{.NewStructName}}) Omit(cols ...field.Expr) *{{.NewStructName}} {
+	{{.S}}.DO = *{{.S}}.DO.Omit(cols...).(*gen.DO)
 	return &{{.S}}
 }
 
@@ -116,44 +123,86 @@ func ({{.S}} {{.NewStructName}}) RightJoin(table schema.Tabler, on ...gen.Condit
 	return &{{.S}}
 }
 
-func ({{.S}} {{.NewStructName}}) Take() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
+func ({{.S}} {{.NewStructName}}) Group(col field.Expr) *{{.NewStructName}} {
+	{{.S}}.DO = *{{.S}}.DO.Group(col).(*gen.DO)
+	return &{{.S}}
+}
+
+func ({{.S}} {{.NewStructName}}) Having(conds ...gen.Condition) *{{.NewStructName}} {
+	{{.S}}.DO = *{{.S}}.DO.Having(conds...).(*gen.DO)
+	return &{{.S}}
+}
+
+func ({{.S}} {{.NewStructName}}) Limit(limit int) *{{.NewStructName}} {
+	{{.S}}.DO = *{{.S}}.DO.Limit(limit).(*gen.DO)
+	return &{{.S}}
+}
+
+func ({{.S}} {{.NewStructName}}) Offset(offset int) *{{.NewStructName}} {
+	{{.S}}.DO = *{{.S}}.DO.Offset(offset).(*gen.DO)
+	return &{{.S}}
+}
+
+func ({{.S}} {{.NewStructName}}) Scopes(funcs ...func(gen.Dao) gen.Dao) *{{.NewStructName}} {
+	{{.S}}.DO = *{{.S}}.DO.Scopes(funcs...).(*gen.DO)
+	return &{{.S}}
+}
+
+func ({{.S}} {{.NewStructName}}) Unscoped() *{{.NewStructName}} {
+	{{.S}}.DO = *{{.S}}.DO.Unscoped().(*gen.DO)
+	return &{{.S}}
+}
+
+func ({{.S}} {{.NewStructName}}) Create(value *{{.StructInfo.Package}}.{{.StructInfo.Type}}) error {
+	return {{.S}}.DO.Create(value)
+}
+
+func ({{.S}} {{.NewStructName}}) CreateInBatches(values []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, batchSize int) error {
+	return {{.S}}.DO.CreateInBatches(values, batchSize)
+}
+
+func ({{.S}} {{.NewStructName}}) Save(value *{{.StructInfo.Package}}.{{.StructInfo.Type}}) error {
+	return {{.S}}.DO.Save(value)
+}
+
+func ({{.S}} {{.NewStructName}}) First(conds ...field.Expr) (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
 	result := new({{.StructInfo.Package}}.{{.StructInfo.Type}})
-	if err := {{.S}}.DO.Take(result); err != nil {
+	if err := {{.S}}.DO.First(result, conds...); err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func ({{.S}} {{.NewStructName}}) First() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
+func ({{.S}} {{.NewStructName}}) Last(conds ...field.Expr) (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
 	result := new({{.StructInfo.Package}}.{{.StructInfo.Type}})
-	if err := {{.S}}.DO.First(result); err != nil {
+	if err := {{.S}}.DO.Last(result, conds...); err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func ({{.S}} {{.NewStructName}}) Last() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
+func ({{.S}} {{.NewStructName}}) Take(conds ...field.Expr) (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
 	result := new({{.StructInfo.Package}}.{{.StructInfo.Type}})
-	if err := {{.S}}.DO.Last(result); err != nil {
+	if err := {{.S}}.DO.Take(result, conds...); err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func ({{.S}} {{.NewStructName}}) Find() (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}},err error) {
-	return result, {{.S}}.DO.Find(&result)
+func ({{.S}} {{.NewStructName}}) Find(conds ...field.Expr) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}},err error) {
+	return result, {{.S}}.DO.Find(&result, conds...)
 }
 
-func ({{.S}} {{.NewStructName}}) Create(info *{{.StructInfo.Package}}.{{.StructInfo.Type}}) error {
-	return {{.S}}.DO.Create(info)
+func ({{.S}} {{.NewStructName}}) FindInBatches(batchSize int, fc func(tx gen.Dao, batch int) error) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}},err error) {
+	return result, {{.S}}.DO.FindInBatches(&result, batchSize, fc)
 }
 
-func ({{.S}} {{.NewStructName}}) BathCreate(infos []*{{.StructInfo.Package}}.{{.StructInfo.Type}}) error {
-	return {{.S}}.DO.CreateInBatches(infos, len(infos))
+func ({{.S}} {{.NewStructName}}) FirstOrInit(conds ...field.Expr) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}},err error) {
+	return result, {{.S}}.DO.FirstOrInit(&result, conds...)
 }
 
-func ({{.S}} {{.NewStructName}}) Update(updates map[string]interface{}) error {
-	return {{.S}}.DO.Updates(updates)
+func ({{.S}} {{.NewStructName}}) FirstOrCreate(conds ...field.Expr) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}},err error) {
+	return result, {{.S}}.DO.FirstOrCreate(&result, conds...)
 }
 
 func ({{.S}} {{.NewStructName}}) FindByPage(offset int, limit int) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, count int64, err error) {
@@ -165,9 +214,78 @@ func ({{.S}} {{.NewStructName}}) FindByPage(offset int, limit int) (result []*{{
 	return
 }
 
+func ({{.S}} {{.NewStructName}}) Update(col field.Expr, value interface{}) error {
+	return {{.S}}.DO.Update(col, value)
+}
+
+func ({{.S}} {{.NewStructName}}) Updates(values interface{}) error {
+	return {{.S}}.DO.Updates(values)
+}
+
+func ({{.S}} {{.NewStructName}}) UpdateColumn(col field.Expr, value interface{}) error {
+	return {{.S}}.DO.UpdateColumn(col, value)
+}
+
+func ({{.S}} {{.NewStructName}}) UpdateColumns(values interface{}) error {
+	return {{.S}}.DO.UpdateColumns(values)
+}
+
 func ({{.S}} {{.NewStructName}}) Delete(conds ...field.Expr) error {
 	result := new({{.StructInfo.Package}}.{{.StructInfo.Type}})
 	return {{.S}}.DO.Delete(result, conds...)
+}
+
+func ({{.S}} {{.NewStructName}}) Count(count *int64) error {
+	return {{.S}}.DO.Count(count)
+}
+
+func ({{.S}} {{.NewStructName}}) Row() *sql.Row {
+	return {{.S}}.DO.Row()
+}
+
+func ({{.S}} {{.NewStructName}}) Rows() (*sql.Rows, error) {
+	return {{.S}}.DO.Rows()
+}
+
+func ({{.S}} {{.NewStructName}}) Scan(dest interface{}) error {
+	return {{.S}}.DO.Scan(dest)
+}
+
+func ({{.S}} {{.NewStructName}}) Pluck(col field.Expr, dest interface{}) error {
+	return {{.S}}.DO.Pluck(col, dest)
+}
+
+func ({{.S}} {{.NewStructName}}) ScanRows(rows *sql.Rows, dest interface{}) error {
+	return {{.S}}.DO.ScanRows(rows, dest)
+}
+
+func ({{.S}} {{.NewStructName}}) Transaction(fc func(tx gen.Dao) error, opts ...*sql.TxOptions) error {
+	return {{.S}}.DO.Transaction(fc, opts...)
+}
+
+func ({{.S}} {{.NewStructName}}) Begin(opts ...*sql.TxOptions) *{{.NewStructName}} {
+	{{.S}}.DO = *{{.S}}.DO.Begin(opts...).(*gen.DO)
+	return &{{.S}}
+}
+
+func ({{.S}} {{.NewStructName}}) Commit() *{{.NewStructName}} {
+	{{.S}}.DO = *{{.S}}.DO.Commit().(*gen.DO)
+	return &{{.S}}
+}
+
+func ({{.S}} {{.NewStructName}}) RollBack() *{{.NewStructName}} {
+	{{.S}}.DO = *{{.S}}.DO.Commit().(*gen.DO)
+	return &{{.S}}
+}
+
+func ({{.S}} {{.NewStructName}}) SavePoint(name string) *{{.NewStructName}} {
+	{{.S}}.DO = *{{.S}}.DO.SavePoint(name).(*gen.DO)
+	return &{{.S}}
+}
+
+func ({{.S}} {{.NewStructName}}) RollBackTo(name string) *{{.NewStructName}} {
+	{{.S}}.DO = *{{.S}}.DO.RollBackTo(name).(*gen.DO)
+	return &{{.S}}
 }
 `
 
