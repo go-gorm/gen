@@ -189,7 +189,7 @@ func (d *DO) Offset(offset int) Dao {
 }
 
 func (d *DO) Scopes(funcs ...func(Dao) Dao) Dao {
-	fcs := make([]func(*gorm.DB) *gorm.DB, 0, len(funcs))
+	fcs := make([]func(*gorm.DB) *gorm.DB, len(funcs))
 	for i, f := range funcs {
 		fcs[i] = func(tx *gorm.DB) *gorm.DB { return f(NewDO(tx)).(*DO).db }
 	}

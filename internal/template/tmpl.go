@@ -143,7 +143,7 @@ func ({{.S}} {{.NewStructName}}) Offset(offset int) *{{.NewStructName}} {
 	return &{{.S}}
 }
 
-func ({{.S}} {{.NewStructName}}) Scopes(funcs ...func(*{{.NewStructName}}) *{{.NewStructName}}) *{{.NewStructName}} {
+func ({{.S}} {{.NewStructName}}) Scopes(funcs ...func(gen.Dao) gen.Dao) *{{.NewStructName}} {
 	{{.S}}.DO = *{{.S}}.DO.Scopes(funcs...).(*gen.DO)
 	return &{{.S}}
 }
@@ -193,12 +193,8 @@ func ({{.S}} {{.NewStructName}}) Find(conds ...field.Expr) (result []*{{.StructI
 	return result, {{.S}}.DO.Find(&result, conds...)
 }
 
-func ({{.S}} {{.NewStructName}}) FindInBatches(batchSize int, fc func(tx *{{.NewStructName}}, batch int) error) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}},err error) {
-	return result, {{.S}}.DO.FindInBatches(&result, batchSize, func(tx gen.Dao, batch int) error {
-		newItem := {{.S}}
-		newItem.DO = *tx.(*gen.DO)
-		return fc(&newItem, batch)
-	})
+func ({{.S}} {{.NewStructName}}) FindInBatches(batchSize int, fc func(tx gen.Dao, batch int) error) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}},err error) {
+	return result, {{.S}}.DO.FindInBatches(&result, batchSize, fc)
 }
 
 func ({{.S}} {{.NewStructName}}) FirstOrInit(conds ...field.Expr) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}},err error) {
@@ -263,12 +259,8 @@ func ({{.S}} {{.NewStructName}}) ScanRows(rows *sql.Rows, dest interface{}) erro
 	return {{.S}}.DO.ScanRows(rows, dest)
 }
 
-func ({{.S}} {{.NewStructName}}) Transaction(fc func(tx *{{.NewStructName}}) error, opts ...*sql.TxOptions) error {
-	return {{.S}}.DO.Transaction(func(tx gen.Dao) error {
-		newItem := p
-		newItem.DO = *tx.(*gen.DO)
-		return fc(&newItem)
-	}, opts...)
+func ({{.S}} {{.NewStructName}}) Transaction(fc func(tx gen.Dao) error, opts ...*sql.TxOptions) error {
+	return {{.S}}.DO.Transaction(fc, opts...)
 }
 
 func ({{.S}} {{.NewStructName}}) Begin(opts ...*sql.TxOptions) *{{.NewStructName}} {
