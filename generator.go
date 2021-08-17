@@ -24,6 +24,9 @@ import (
 // T genric type
 type T interface{}
 
+// M map[string]interface{}
+type M map[string]interface{}
+
 // NewGenerator create a new generator
 func NewGenerator(cfg Config) *Generator {
 	if cfg.ModelPkgName == "" {
