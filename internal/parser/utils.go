@@ -17,6 +17,7 @@ func getParamList(fields *ast.FieldList) []Param {
 			pars = append(pars, par)
 			continue
 		}
+
 		for _, name := range field.Names {
 			par := Param{
 				Name: name.Name,
