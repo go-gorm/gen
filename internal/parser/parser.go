@@ -182,9 +182,10 @@ func (p *Param) astGetParamType(param *ast.Field) {
 		p.astGetMapType(v)
 	case *ast.InterfaceType:
 		p.Type = "interface{}"
+	case *ast.StarExpr:
+		p.astGetEltType(v.X)
 	default:
 		log.Fatalf("unknow param type")
-
 	}
 }
 
