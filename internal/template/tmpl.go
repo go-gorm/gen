@@ -26,11 +26,8 @@ func ({{.S}} {{.MethodStruct}}){{.MethodName}}({{.GetParamInTmpl}})({{.GetResult
 	{{if .HasSqlData}}params := map[string]interface{}{ {{range $index,$data:=.SqlData}}
 		"{{$data}}":{{$data}},{{end}}
 	}
-	{{end}}
-	{{if eq .Table "_"}}table:={{.S}}.UnderlyingDB().Statement.Table{{end}}
 
-	var generateSQL string
-	{{range $line:=.SqlTmplList}}{{$line}}
+	{{end}}var generateSQL string{{range $line:=.SqlTmplList}}{{$line}}
 	{{end}}
 
 	{{if .HasNeedNewResult}}result ={{if .ResultData.IsMap}}make{{else}}new{{end}}({{if ne .ResultData.Package ""}}{{.ResultData.Package}}.{{end}}{{.ResultData.Type}}){{end}}

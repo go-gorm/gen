@@ -31,6 +31,7 @@ type InterfaceMethod struct {
 	GormOption    string
 	Table         string // specified by user. if empty, generate it with gorm
 	InterfaceName string
+	Package       string
 }
 
 // HasSqlData has variable or not
@@ -97,31 +98,48 @@ func (f *InterfaceMethod) checkParams(params []parser.Param) (err error) {
 // checkResult check all parameters and replace gen.T by target structure. Parameters must be one of int/string/struct/map
 func (f *InterfaceMethod) checkResult(result []parser.Param) (err error) {
 	resList := make([]parser.Param, len(result))
+	var hasError bool
 	for i, param := range result {
 		if param.Package == "UNDEFINED" {
-			param.Package = f.OriginStruct.Package
+			param.Package = f.Package
 		}
 		if param.IsGenM() {
 			param.Type = "map[string]interface{}"
 			param.Package = ""
 		}
+		if param.InMainPkg() {
+			return fmt.Errorf("query method cannot return struct of main package in [%s.%s]", f.InterfaceName, f.MethodName)
+		}
 		switch {
 		case param.IsError():
+			if hasError {
+				return fmt.Errorf("query method cannot return more than 1 error value in [%s.%s]", f.InterfaceName, f.MethodName)
+			}
 			param.SetName("err")
 			f.ExecuteResult = "err"
+			hasError = true
 		case param.Eq(f.OriginStruct) || param.IsGenT():
+			if !f.ResultData.IsNull() {
+				return fmt.Errorf("query method cannot return more than 1 data value in [%s.%s]", f.InterfaceName, f.MethodName)
+			}
 			param.SetName("result")
 			param.Type = f.OriginStruct.Type
 			param.Package = f.OriginStruct.Package
 			param.IsPointer = true
 			f.ResultData = param
-		case param.AllowType(), param.IsTime(), param.IsMap():
+		case param.IsInterface():
+			return fmt.Errorf("query method can not return interface in [%s.%s]", f.InterfaceName, f.MethodName)
+		default:
+			if !f.ResultData.IsNull() {
+				return fmt.Errorf("query method cannot return more than 1 data value in [%s.%s]", f.InterfaceName, f.MethodName)
+			}
+			if param.Package == "" && !(param.AllowType() || param.IsMap() || param.IsTime()) {
+				param.Package = f.Package
+			}
+
 			param.SetName("result")
 			f.ResultData = param
-		case param.IsInterface():
-			return fmt.Errorf("result parameter can not be interface in method %s", f.MethodName)
-		default:
-			return fmt.Errorf("illegal parameter：%s.%s on struct %s.%s generated method %s", param.Package, param.Type, f.OriginStruct.Package, f.OriginStruct.Type, f.MethodName)
+			//return fmt.Errorf("illegal parameter：%s.%s on struct %s.%s generated method %s", param.Package, param.Type, f.OriginStruct.Package, f.OriginStruct.Type, f.MethodName)
 		}
 		resList[i] = param
 	}

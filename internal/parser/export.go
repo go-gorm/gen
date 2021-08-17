@@ -13,6 +13,7 @@ type InterfacePath struct {
 	Name     string
 	FullName string
 	Files    []string
+	Package  string
 }
 
 // GetInterfacePath get interface's directory path and all files it contains
