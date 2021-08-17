@@ -133,6 +133,10 @@ func (f *InterfaceMethod) checkResult(result []parser.Param) (err error) {
 			if !f.ResultData.IsNull() {
 				return fmt.Errorf("query method cannot return more than 1 data value in [%s.%s]", f.InterfaceName, f.MethodName)
 			}
+			if param.Package == "" && !(param.AllowType() || param.IsMap() || param.IsTime()) {
+				param.Package = f.Package
+			}
+
 			param.SetName("result")
 			f.ResultData = param
 			//return fmt.Errorf("illegal parameter：%s.%s on struct %s.%s generated method %s", param.Package, param.Type, f.OriginStruct.Package, f.OriginStruct.Type, f.MethodName)

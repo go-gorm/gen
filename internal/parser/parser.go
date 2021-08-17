@@ -40,7 +40,7 @@ func (i *InterfaceSet) ParseFile(paths []*InterfacePath) error {
 				return fmt.Errorf("file not found：%s", file)
 			}
 
-			err = i.getInterfaceFromFile(absFilePath, path.Name, path.Package)
+			err = i.getInterfaceFromFile(absFilePath, path.Name, path.FullName)
 			if err != nil {
 				return fmt.Errorf("can't get interface from %s:%s", path.FullName, err)
 			}

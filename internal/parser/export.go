@@ -29,8 +29,6 @@ func GetInterfacePath(v interface{}) (paths []*InterfacePath, err error) {
 		arg := value.Type().In(i)
 		path.FullName = arg.String()
 
-		path.Package = arg.String()
-
 		// keep the last model
 		for _, n := range strings.Split(arg.String(), ".") {
 			path.Name = n
