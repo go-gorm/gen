@@ -60,6 +60,7 @@ func CheckInterface(f *parser.InterfaceSet, s *BaseStruct) (checkResults []*Inte
 				ExecuteResult: "_",
 				Table:         s.TableName,
 				InterfaceName: interfaceInfo.Name,
+				Package:       getPackageName(interfaceInfo.Package),
 			}
 			if err = t.checkParams(method.Params); err != nil {
 				return

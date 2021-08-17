@@ -13,6 +13,7 @@ type InterfacePath struct {
 	Name     string
 	FullName string
 	Files    []string
+	Package  string
 }
 
 // GetInterfacePath get interface's directory path and all files it contains
@@ -27,6 +28,8 @@ func GetInterfacePath(v interface{}) (paths []*InterfacePath, err error) {
 		var path InterfacePath
 		arg := value.Type().In(i)
 		path.FullName = arg.String()
+
+		path.Package = strings.Split(arg.String(), ".")[0]
 
 		// keep the last model
 		for _, n := range strings.Split(arg.String(), ".") {
