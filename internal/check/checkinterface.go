@@ -31,6 +31,7 @@ type InterfaceMethod struct {
 	GormOption    string
 	Table         string // specified by user. if empty, generate it with gorm
 	InterfaceName string
+	Package       string
 }
 
 // HasSqlData has variable or not
@@ -45,7 +46,37 @@ func (f *InterfaceMethod) HasGotPoint() bool {
 
 // HasNeedNewResult need pointer or not
 func (f *InterfaceMethod) HasNeedNewResult() bool {
-	return !f.ResultData.IsArray && f.ResultData.IsNull() && f.ResultData.IsTime()
+	return !f.ResultData.IsArray && ((f.ResultData.IsNull() && f.ResultData.IsTime()) || f.ResultData.IsMap())
+}
+
+//GetParamInTmpl return param list
+func (f *InterfaceMethod) GetParamInTmpl() string {
+	return paramToString(f.Params)
+}
+
+// GetResultParamInTmpl return result list
+func (f *InterfaceMethod) GetResultParamInTmpl() string {
+	return paramToString(f.Result)
+}
+
+// paramToString param list to string used in tmpl
+func paramToString(params []parser.Param) string {
+	var res []string
+	for _, param := range params {
+		tmplString := fmt.Sprintf("%s ", param.Name)
+		if param.IsArray {
+			tmplString += "[]"
+		}
+		if param.IsPointer {
+			tmplString += "*"
+		}
+		if param.Package != "" {
+			tmplString += fmt.Sprintf("%s.", param.Package)
+		}
+		tmplString += param.Type
+		res = append(res, tmplString)
+	}
+	return strings.Join(res, ",")
 }
 
 // checkParams check all parameters
@@ -55,34 +86,60 @@ func (f *InterfaceMethod) checkParams(params []parser.Param) (err error) {
 		if r.Package == "UNDEFINED" {
 			r.Package = f.OriginStruct.Package
 		}
+		if r.IsMap() || r.IsGenM() || r.IsError() || r.IsNull() {
+			return fmt.Errorf("type error on interface [%s] param: [%s]", f.InterfaceName, r.Name)
+		}
 		paramList[i] = r
 	}
 	f.Params = paramList
 	return
 }
 
-// checkResult check all parameters and replace gen.T by target structure. Parameters must be one of int/string/struct
+// checkResult check all parameters and replace gen.T by target structure. Parameters must be one of int/string/struct/map
 func (f *InterfaceMethod) checkResult(result []parser.Param) (err error) {
 	resList := make([]parser.Param, len(result))
+	var hasError bool
 	for i, param := range result {
 		if param.Package == "UNDEFINED" {
-			param.Package = f.OriginStruct.Package
+			param.Package = f.Package
+		}
+		if param.IsGenM() {
+			param.Type = "map[string]interface{}"
+			param.Package = ""
+		}
+		if param.InMainPkg() {
+			return fmt.Errorf("query method cannot return struct of main package in [%s.%s]", f.InterfaceName, f.MethodName)
 		}
 		switch {
 		case param.IsError():
+			if hasError {
+				return fmt.Errorf("query method cannot return more than 1 error value in [%s.%s]", f.InterfaceName, f.MethodName)
+			}
 			param.SetName("err")
 			f.ExecuteResult = "err"
+			hasError = true
 		case param.Eq(f.OriginStruct) || param.IsGenT():
+			if !f.ResultData.IsNull() {
+				return fmt.Errorf("query method cannot return more than 1 data value in [%s.%s]", f.InterfaceName, f.MethodName)
+			}
 			param.SetName("result")
 			param.Type = f.OriginStruct.Type
 			param.Package = f.OriginStruct.Package
 			param.IsPointer = true
 			f.ResultData = param
-		case param.AllowType(), param.IsTime():
+		case param.IsInterface():
+			return fmt.Errorf("query method can not return interface in [%s.%s]", f.InterfaceName, f.MethodName)
+		default:
+			if !f.ResultData.IsNull() {
+				return fmt.Errorf("query method cannot return more than 1 data value in [%s.%s]", f.InterfaceName, f.MethodName)
+			}
+			if param.Package == "" && !(param.AllowType() || param.IsMap() || param.IsTime()) {
+				param.Package = f.Package
+			}
+
 			param.SetName("result")
 			f.ResultData = param
-		default:
-			return fmt.Errorf("illegal parameter：%s.%s on struct %s.%s generated method %s", param.Package, param.Type, f.OriginStruct.Package, f.OriginStruct.Type, f.MethodName)
+			//return fmt.Errorf("illegal parameter：%s.%s on struct %s.%s generated method %s", param.Package, param.Type, f.OriginStruct.Package, f.OriginStruct.Type, f.MethodName)
 		}
 		resList[i] = param
 	}

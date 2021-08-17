@@ -581,7 +581,7 @@ func checkTempleFragmentValid(list []fragment) error {
 				if list[i+1].Type == EXPRESSION && list[i+2].Type == list[i].Type {
 					i += 2
 				} else {
-					return fmt.Errorf("condition type not match：%s", fragmentToString(list[i:i+2]))
+					return fmt.Errorf("condition type not match：%s", fragmentToString(list[i:i+3]))
 				}
 			}
 		default:
