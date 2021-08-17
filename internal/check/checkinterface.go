@@ -63,13 +63,14 @@ func paramToString(params []parser.Param) string {
 	var res []string
 	for _, param := range params {
 		tmplString := fmt.Sprintf("%s ", param.Name)
-		switch {
-		case param.IsArray:
+		if param.IsArray {
 			tmplString += "[]"
-		case param.IsPointer:
+		}
+		if param.IsPointer {
 			tmplString += "*"
-		case param.Package != "":
-			tmplString += param.Package
+		}
+		if param.Package != "" {
+			tmplString += fmt.Sprintf("%s.", param.Package)
 		}
 		tmplString += param.Type
 		res = append(res, tmplString)
