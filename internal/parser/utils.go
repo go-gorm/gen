@@ -2,15 +2,15 @@ package parser
 
 import "go/ast"
 
-func getParamList(field *ast.FieldList) []Param {
-	if field == nil {
+func getParamList(fields *ast.FieldList) []Param {
+	if fields == nil {
 		return nil
 	}
 	var pars []Param
-	if len(field.List) < 1 {
+	if len(fields.List) < 1 {
 		return nil
 	}
-	for _, field := range field.List {
+	for _, field := range fields.List {
 		if field.Names == nil {
 			par := Param{}
 			par.astGetParamType(field)

@@ -18,7 +18,7 @@ import(
 const FuncTmpl = `
 /*
 {{.Doc}}*/
-func ({{.S}} {{.MethodStruct}}){{.MethodName}}({{range $index,$params:=.Params}}{{if ne $index 0}},{{end}}{{$params.Name}} {{if ne $params.Package ""}}{{$params.Package}}.{{end}}{{$params.Type}}{{end}})({{range $index,$params:=.Result}}{{if ne $index 0}},{{end}}{{$params.Name}} {{if $params.IsArray}}[]{{end}}{{if $params.IsPointer}}*{{end}}{{if ne $params.Package ""}}{{$params.Package}}.{{end}}{{$params.Type}}{{end}}){
+func ({{.S}} {{.MethodStruct}}){{.MethodName}}({{.GetParamInTmpl}})({{.GetResultParamInTmpl}}){
 	{{if .HasSqlData}}params := map[string]interface{}{ {{range $index,$data:=.SqlData}}
 		"{{$data}}":{{$data}},{{end}}
 	}
@@ -29,7 +29,7 @@ func ({{.S}} {{.MethodStruct}}){{.MethodName}}({{range $index,$params:=.Params}}
 	{{range $line:=.SqlTmplList}}{{$line}}
 	{{end}}
 
-	{{if .HasNeedNewResult}}result =new({{if ne .ResultData.Package ""}}{{.ResultData.Package}}.{{end}}{{.ResultData.Type}}){{end}}
+	{{if .HasNeedNewResult}}result ={{if .ResultData.IsMap}}make{{else}}new{{end}}({{if ne .ResultData.Package ""}}{{.ResultData.Package}}.{{end}}{{.ResultData.Type}}){{end}}
 	{{.ExecuteResult}} = {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL{{if .HasSqlData}},params{{end}}){{if not .ResultData.IsNull}}.Find({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}.Error
 	return
 }

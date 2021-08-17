@@ -5,7 +5,9 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"log"
 	"path/filepath"
+	"strings"
 )
 
 // InterfaceSet ...
@@ -112,8 +114,20 @@ func (p *Param) IsError() bool {
 	return p.Type == "error"
 }
 
+func (p *Param) IsGenM() bool {
+	return p.Package == "gen" && p.Type == "M"
+}
+
+func (p *Param) IsMap() bool {
+	return strings.HasPrefix(p.Type, "map[")
+}
+
 func (p *Param) IsGenT() bool {
 	return p.Package == "gen" && p.Type == "T"
+}
+
+func (p *Param) IsInterface() bool {
+	return p.Type == "interface{}"
 }
 
 func (p *Param) IsNull() bool {
@@ -164,6 +178,13 @@ func (p *Param) astGetParamType(param *ast.Field) {
 	case *ast.Ellipsis:
 		p.astGetEltType(v.Elt)
 		p.IsArray = true
+	case *ast.MapType:
+		p.astGetMapType(v)
+	case *ast.InterfaceType:
+		p.Type = "interface{}"
+	default:
+		log.Fatalf("unknow param type")
+
 	}
 }
 
@@ -178,6 +199,24 @@ func (p *Param) astGetEltType(expr ast.Expr) string {
 		temp := new(Param)
 		p.Type = v.Sel.Name
 		p.Package = temp.astGetEltType(v.X)
+	case *ast.MapType:
+		p.astGetMapType(v)
 	}
 	return p.Type
+}
+
+func (p *Param) astGetMapType(expr *ast.MapType) string {
+	p.Type = fmt.Sprintf("map[%s]%s", astGetType(expr.Key), astGetType(expr.Value))
+	return ""
+}
+
+func astGetType(expr ast.Expr) string {
+	switch v := expr.(type) {
+	case *ast.Ident:
+		return v.Name
+	case *ast.InterfaceType:
+		return "interface{}"
+	}
+	return ""
+
 }
