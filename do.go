@@ -161,7 +161,23 @@ func (d *DO) Where(conds ...Condition) Dao {
 }
 
 func (d *DO) Order(columns ...field.Expr) Dao {
-	return NewDO(d.db.Clauses(clause.OrderBy{Expression: clause.CommaExpression{Exprs: toExpression(columns)}}))
+	// lazy build Columns
+	// if c, ok := d.db.Statement.Clauses[clause.OrderBy{}.Name()]; ok {
+	// 	if order, ok := c.Expression.(clause.OrderBy); ok {
+	// 		if expr, ok := order.Expression.(clause.CommaExpression); ok {
+	// 			expr.Exprs = append(expr.Exprs, toExpression(columns)...)
+	// 			return NewDO(d.db.Clauses(clause.OrderBy{Expression: expr}))
+	// 		}
+	// 	}
+	// }
+	// return NewDO(d.db.Clauses(clause.OrderBy{Expression: clause.CommaExpression{Exprs: toExpression(columns)}}))
+
+	// eager build Columns
+	orderArray := make([]string, len(columns))
+	for i, c := range columns {
+		orderArray[i] = c.BuildExpr(d.db.Statement)
+	}
+	return NewDO(d.db.Order(strings.Join(orderArray, ",")))
 }
 
 func (d *DO) Distinct(columns ...field.Expr) Dao {
