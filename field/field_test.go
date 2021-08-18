@@ -91,6 +91,11 @@ func TestExpr_Build(t *testing.T) {
 			Result:       "`id`",
 		},
 		{
+			Expr:         field.NewUint("user", "id").Sum().Gt(100),
+			ExpectedVars: []interface{}{float64(100)},
+			Result:       "SUM(`user`.`id`) > ?",
+		},
+		{
 			Expr:         field.NewUint("", "i`d"),
 			ExpectedVars: nil,
 			Result:       "`i`d`", // should be `i``d`
