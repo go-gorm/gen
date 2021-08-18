@@ -5,7 +5,9 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"log"
 	"path/filepath"
+	"strings"
 )
 
 // InterfaceSet ...
@@ -18,6 +20,7 @@ type InterfaceInfo struct {
 	Name    string
 	Doc     string
 	Methods []*Method
+	Package string
 }
 
 // Method interface's method
@@ -37,7 +40,7 @@ func (i *InterfaceSet) ParseFile(paths []*InterfacePath) error {
 				return fmt.Errorf("file not found：%s", file)
 			}
 
-			err = i.getInterfaceFromFile(absFilePath, path.Name)
+			err = i.getInterfaceFromFile(absFilePath, path.Name, path.FullName)
 			if err != nil {
 				return fmt.Errorf("can't get interface from %s:%s", path.FullName, err)
 			}
@@ -57,6 +60,7 @@ func (i *InterfaceSet) Visit(n ast.Node) (w ast.Visitor) {
 			methods := data.Methods.List
 			r.Name = n.Name.Name
 			r.Doc = n.Doc.Text()
+
 			for _, m := range methods {
 				for _, name := range m.Names {
 					r.Methods = append(r.Methods, &Method{
@@ -76,7 +80,7 @@ func (i *InterfaceSet) Visit(n ast.Node) (w ast.Visitor) {
 
 // getInterfaceFromFile get interfaces
 // get all interfaces from file and compare with specified name
-func (i *InterfaceSet) getInterfaceFromFile(filename string, name string) error {
+func (i *InterfaceSet) getInterfaceFromFile(filename string, name, Package string) error {
 	fileset := token.NewFileSet()
 	f, err := parser.ParseFile(fileset, filename, nil, parser.ParseComments)
 	if err != nil {
@@ -88,6 +92,7 @@ func (i *InterfaceSet) getInterfaceFromFile(filename string, name string) error 
 
 	for _, info := range astResult.Interfaces {
 		if name == info.Name {
+			info.Package = Package
 			i.Interfaces = append(i.Interfaces, info)
 		}
 	}
@@ -112,8 +117,20 @@ func (p *Param) IsError() bool {
 	return p.Type == "error"
 }
 
+func (p *Param) IsGenM() bool {
+	return p.Package == "gen" && p.Type == "M"
+}
+
+func (p *Param) IsMap() bool {
+	return strings.HasPrefix(p.Type, "map[")
+}
+
 func (p *Param) IsGenT() bool {
 	return p.Package == "gen" && p.Type == "T"
+}
+
+func (p *Param) IsInterface() bool {
+	return p.Type == "interface{}"
 }
 
 func (p *Param) IsNull() bool {
@@ -164,6 +181,14 @@ func (p *Param) astGetParamType(param *ast.Field) {
 	case *ast.Ellipsis:
 		p.astGetEltType(v.Elt)
 		p.IsArray = true
+	case *ast.MapType:
+		p.astGetMapType(v)
+	case *ast.InterfaceType:
+		p.Type = "interface{}"
+	case *ast.StarExpr:
+		p.astGetEltType(v.X)
+	default:
+		log.Fatalf("unknow param type")
 	}
 }
 
@@ -178,6 +203,24 @@ func (p *Param) astGetEltType(expr ast.Expr) string {
 		temp := new(Param)
 		p.Type = v.Sel.Name
 		p.Package = temp.astGetEltType(v.X)
+	case *ast.MapType:
+		p.astGetMapType(v)
 	}
 	return p.Type
+}
+
+func (p *Param) astGetMapType(expr *ast.MapType) string {
+	p.Type = fmt.Sprintf("map[%s]%s", astGetType(expr.Key), astGetType(expr.Value))
+	return ""
+}
+
+func astGetType(expr ast.Expr) string {
+	switch v := expr.(type) {
+	case *ast.Ident:
+		return v.Name
+	case *ast.InterfaceType:
+		return "interface{}"
+	}
+	return ""
+
 }
