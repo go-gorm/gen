@@ -341,8 +341,8 @@ func (d *DO) Delete(value interface{}, conds ...field.Expr) error {
 	return d.db.Clauses(toExpression(conds)...).Delete(value).Error
 }
 
-func (d *DO) Count(count *int64) error {
-	return d.db.Count(count).Error
+func (d *DO) Count() (count int64, err error) {
+	return count, d.db.Count(&count).Error
 }
 
 func (d *DO) Row() *sql.Row {

@@ -71,7 +71,7 @@ type Dao interface {
 	UpdateColumn(column field.Expr, value interface{}) error
 	UpdateColumns(values interface{}) error
 	Delete(value interface{}, conds ...field.Expr) error
-	Count(count *int64) error
+	Count() (int64, error)
 	Row() *sql.Row
 	Rows() (*sql.Rows, error)
 	Scan(dest interface{}) error

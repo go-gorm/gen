@@ -223,7 +223,7 @@ func (u user) FindInBatches(batchSize int, fc func(tx Dao, batch int) error) (re
 }
 
 func (u user) FindByPage(offset int, limit int) (result []*user, count int64, err error) {
-	err = u.DO.Count(&count)
+	count, err = u.DO.Count()
 	if err != nil {
 		return
 	}
@@ -252,8 +252,8 @@ func (u user) Delete(conds ...field.Expr) error {
 	return u.DO.Delete(result, conds...)
 }
 
-func (u user) Count(count *int64) error {
-	return u.DO.Count(count)
+func (u user) Count() (int64, error) {
+	return u.DO.Count()
 }
 
 func (u user) Row() *sql.Row {

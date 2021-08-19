@@ -196,7 +196,7 @@ func ({{.S}} {{.NewStructName}}) FindInBatches(result []*{{.StructInfo.Package}}
 }
 
 func ({{.S}} {{.NewStructName}}) FindByPage(offset int, limit int) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, count int64, err error) {
-	err = {{.S}}.DO.Count(&count)
+	count, err = {{.S}}.DO.Count()
 	if err != nil {
 		return
 	}
@@ -225,8 +225,8 @@ func ({{.S}} {{.NewStructName}}) Delete(conds ...field.Expr) error {
 	return {{.S}}.DO.Delete(result, conds...)
 }
 
-func ({{.S}} {{.NewStructName}}) Count(count *int64) error {
-	return {{.S}}.DO.Count(count)
+func ({{.S}} {{.NewStructName}}) Count() (int64, error) {
+	return {{.S}}.DO.Count()
 }
 
 func ({{.S}} {{.NewStructName}}) Row() *sql.Row {
