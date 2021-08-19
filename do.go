@@ -306,8 +306,8 @@ func (d *DO) Update(column field.Expr, value interface{}) error {
 	switch value := value.(type) {
 	case field.Expr:
 		return d.db.Update(column.Column().Name, value.RawExpr()).Error
-	case *DO:
-		return d.db.Update(column.Column().Name, value.db).Error
+	case subQuery:
+		return d.db.Update(column.Column().Name, value.UnderlyingDB()).Error
 	default:
 		return d.db.Update(column.Column().Name, value).Error
 	}
@@ -326,8 +326,8 @@ func (d *DO) UpdateColumn(column field.Expr, value interface{}) error {
 	switch value := value.(type) {
 	case field.Expr:
 		return d.db.UpdateColumn(column.Column().Name, value.RawExpr()).Error
-	case *DO:
-		return d.db.UpdateColumn(column.Column().Name, value.db).Error
+	case subQuery:
+		return d.db.UpdateColumn(column.Column().Name, value.UnderlyingDB()).Error
 	default:
 		return d.db.UpdateColumn(column.Column().Name, value).Error
 	}
