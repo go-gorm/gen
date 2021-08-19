@@ -53,8 +53,6 @@ func main() {
 	
   // apply diy interfaces on structs or table models
 	g.ApplyInterface(func(method model.Method) {}, model.User{}, g.GenerateModel("company"))
-  // apply several interface on one struct or table models
-	g.ApplyInterfaces(model.User{}, func(model.Method, model.Method_another) {})
 
 	// execute the action of code generation
 	g.Execute()
@@ -316,24 +314,18 @@ users, err := u.Where(u.Birthday.Between(lastWeek, today)).Find()
 ###### Inline Condition
 
 ```go
+u := query.Query.User
+
 // Get by primary key if it were a non-integer type
-db.First(&user, "id = ?", "string_primary_key")
+user, err := u.First(u.ID.Eq("string_primary_key"))
 // SELECT * FROM users WHERE id = 'string_primary_key';
 
 // Plain SQL
-db.Find(&user, "name = ?", "jinzhu")
-// SELECT * FROM users WHERE name = "jinzhu";
+users, err := u.Find(u.Name.Eq("modi"))
+// SELECT * FROM users WHERE name = "modi";
 
-db.Find(&users, "name <> ? AND age > ?", "jinzhu", 20)
-// SELECT * FROM users WHERE name <> "jinzhu" AND age > 20;
-
-// Struct
-db.Find(&users, User{Age: 20})
-// SELECT * FROM users WHERE age = 20;
-
-// Map
-db.Find(&users, map[string]interface{}{"age": 20})
-// SELECT * FROM users WHERE age = 20;
+users, err := u.Find(u.Name.Neq("modi"), u.Age.Gt(17))
+// SELECT * FROM users WHERE name <> "modi" AND age > 17;
 ```
 
 ###### Not Conditions
@@ -341,35 +333,27 @@ db.Find(&users, map[string]interface{}{"age": 20})
 Build NOT conditions, works similar to `Where`
 
 ```go
-db.Not("name = ?", "jinzhu").First(&user)
-// SELECT * FROM users WHERE NOT name = "jinzhu" ORDER BY id LIMIT 1;
+u := query.Query.User
+
+user, err := u.Not(u.Name.Eq("modi")).First()
+// SELECT * FROM users WHERE NOT name = "modi" ORDER BY id LIMIT 1;
 
 // Not In
-db.Not(map[string]interface{}{"name": []string{"jinzhu", "jinzhu 2"}}).Find(&users)
-// SELECT * FROM users WHERE name NOT IN ("jinzhu", "jinzhu 2");
-
-// Struct
-db.Not(User{Name: "jinzhu", Age: 18}).First(&user)
-// SELECT * FROM users WHERE name <> "jinzhu" AND age <> 18 ORDER BY id LIMIT 1;
+users, err := u.Not(u.Name.In("modi", "zhangqiang")).Find()
+// SELECT * FROM users WHERE name NOT IN ("modi", "zhangqiang");
 
 // Not In slice of primary keys
-db.Not([]int64{1,2,3}).First(&user)
+user, err := u.Not(u.ID.In(1,2,3)).First()
 // SELECT * FROM users WHERE id NOT IN (1,2,3) ORDER BY id LIMIT 1;
 ```
 
 ###### Or Conditions
 
 ```go
-db.Where("role = ?", "admin").Or("role = ?", "super_admin").Find(&users)
+u := query.Query.User
+
+users, err := u.Where(u.Role.Eq("admin")).Or(u.Role.Eq("super_admin")).Find()
 // SELECT * FROM users WHERE role = 'admin' OR role = 'super_admin';
-
-// Struct
-db.Where("name = 'jinzhu'").Or(User{Name: "jinzhu 2", Age: 18}).Find(&users)
-// SELECT * FROM users WHERE name = 'jinzhu' OR (name = 'jinzhu 2' AND age = 18);
-
-// Map
-db.Where("name = 'jinzhu'").Or(map[string]interface{}{"name": "jinzhu 2", "age": 18}).Find(&users)
-// SELECT * FROM users WHERE name = 'jinzhu' OR (name = 'jinzhu 2' AND age = 18);
 ```
 
 ###### Group Conditions
@@ -377,11 +361,13 @@ db.Where("name = 'jinzhu'").Or(map[string]interface{}{"name": "jinzhu 2", "age":
 Easier to write complicated SQL query with Group Conditions
 
 ```go
-db.Where(
-  db.Where("pizza = ?", "pepperoni").Where(db.Where("size = ?", "small").Or("size = ?", "medium")),
+p := query.Query.Pizza
+
+pizzas, err := p.Where(
+  p.Where(p.Pizza.Eq("pepperoni")).Where(p.Where(p.Size.Eq("small")).Or(p.Size.Eq("medium"))),
 ).Or(
-  db.Where("pizza = ?", "hawaiian").Where("size = ?", "xlarge"),
-).Find(&Pizza{}).Statement
+  p.Where(p.Pizza.Eq("hawaiian")).Where(p.Size.Eq("xlarge")),
+).Find()
 
 // SELECT * FROM `pizzas` WHERE (pizza = "pepperoni" AND (size = "small" OR size = "medium")) OR (pizza = "hawaiian" AND size = "xlarge")
 ```
@@ -391,14 +377,13 @@ db.Where(
 `Select` allows you to specify the fields that you want to retrieve from database. Otherwise, GORM will select all fields by default.
 
 ```go
-db.Select("name", "age").Find(&users)
+u := query.Query.User
+
+users, err := u.Select(u.Name, u.Age).Find()
 // SELECT name, age FROM users;
 
-db.Select([]string{"name", "age"}).Find(&users)
-// SELECT name, age FROM users;
-
-db.Table("users").Select("COALESCE(age,?)", 42).Rows()
-// SELECT COALESCE(age,'42') FROM users;
+u.Select(u.Age.Avg()).Rows()
+// SELECT Avg(age) FROM users;
 ```
 
 ###### Order
@@ -406,17 +391,14 @@ db.Table("users").Select("COALESCE(age,?)", 42).Rows()
 Specify order when retrieving records from the database
 
 ```go
-db.Order("age desc, name").Find(&users)
-// SELECT * FROM users ORDER BY age desc, name;
+u := query.Query.User
+
+users, err := u.Order(u.Age.Desc(), u.Name).Find()
+// SELECT * FROM users ORDER BY age DESC, name;
 
 // Multiple orders
-db.Order("age desc").Order("name").Find(&users)
-// SELECT * FROM users ORDER BY age desc, name;
-
-db.Clauses(clause.OrderBy{
-  Expression: clause.Expr{SQL: "FIELD(id,?)", Vars: []interface{}{[]int{1, 2, 3}}, WithoutParentheses: true},
-}).Find(&User{})
-// SELECT * FROM users ORDER BY FIELD(id,1,2,3)
+users, err := u.Order(u.Age.Desc()).Order(u.Name).Find()
+// SELECT * FROM users ORDER BY age DESC, name;
 ```
 
 ###### Limit & Offset
@@ -425,56 +407,59 @@ db.Clauses(clause.OrderBy{
 `Offset` specify the number of records to skip before starting to return the records
 
 ```go
-db.Limit(3).Find(&users)
+u := query.Query.User
+
+urers, err := u.Limit(3).Find()
 // SELECT * FROM users LIMIT 3;
 
 // Cancel limit condition with -1
-db.Limit(10).Find(&users1).Limit(-1).Find(&users2)
-// SELECT * FROM users LIMIT 10; (users1)
-// SELECT * FROM users; (users2)
+users, err := u.Limit(10).Limit(-1).Find()
+// SELECT * FROM users;
 
-db.Offset(3).Find(&users)
+users, err := u.Offset(3).Find()
 // SELECT * FROM users OFFSET 3;
 
-db.Limit(10).Offset(5).Find(&users)
+users, err := u.Limit(10).Offset(5).Find()
 // SELECT * FROM users OFFSET 5 LIMIT 10;
 
 // Cancel offset condition with -1
-db.Offset(10).Find(&users1).Offset(-1).Find(&users2)
-// SELECT * FROM users OFFSET 10; (users1)
-// SELECT * FROM users; (users2)
+users, err := u.Offset(10).Offset(-1).Find()
+// SELECT * FROM users;
 ```
 
 ###### Group By & Having
 
 ```go
-type result struct {
+u := query.Query.User
+
+type Result struct {
   Date  time.Time
   Total int
 }
 
-db.Model(&User{}).Select("name, sum(age) as total").Where("name LIKE ?", "group%").Group("name").First(&result)
+var result Result
+
+err := u.Select(u.Name, u.Age.Sum().As("total")).Where(u.Name.Like("%modi%")).Group(u.Name).Scan(&result)
 // SELECT name, sum(age) as total FROM `users` WHERE name LIKE "group%" GROUP BY `name`
 
-
-db.Model(&User{}).Select("name, sum(age) as total").Group("name").Having("name = ?", "group").Find(&result)
+err := u.Select(u.Name, u.Age.Sum().As("total")).Group(u.Name).Having(u.Name.Eq("group")).Scan(&result)
 // SELECT name, sum(age) as total FROM `users` GROUP BY `name` HAVING name = "group"
 
-rows, err := db.Table("orders").Select("date(created_at) as date, sum(amount) as total").Group("date(created_at)").Rows()
+rows, err := u.Select(u.Birthday.As("date"), u.Age.Sum().As("total")).Group(u.Birthday).Rows()
 for rows.Next() {
   ...
 }
 
-rows, err := db.Table("orders").Select("date(created_at) as date, sum(amount) as total").Group("date(created_at)").Having("sum(amount) > ?", 100).Rows()
+o := query.Query.Order
+
+rows, err := o.Select(o.CreateAt.Date().As("date"), o.Amount.Sum().As("total")).Group(o.CreateAt.Date()).Having(u.Amount.Sum().Gt(100)).Rows()
 for rows.Next() {
   ...
 }
 
-type Result struct {
-  Date  time.Time
-  Total int64
-}
-db.Table("orders").Select("date(created_at) as date, sum(amount) as total").Group("date(created_at)").Having("sum(amount) > ?", 100).Scan(&results)
+var results []Result
+
+o.Select(o.CreateAt.Date().As("date"), o.Amount.Sum().As("total")).Group(o.CreateAt.Date()).Having(u.Amount.Sum().Gt(100)).Scan(&results)
 ```
 
 ###### Distinct
@@ -482,7 +467,9 @@ db.Table("orders").Select("date(created_at) as date, sum(amount) as total").Grou
 Selecting distinct values from the model
 
 ```go
-db.Distinct("name", "age").Order("name, age desc").Find(&results)
+u := query.Query.User
+
+users, err := u.Distinct(u.Name, u.Age).Order(u.Name, u.Age.Desc()).Find()
 ```
 
 `Distinct` works with `Pluck` and `Count` too
@@ -492,38 +479,79 @@ db.Distinct("name", "age").Order("name, age desc").Find(&results)
 Specify Joins conditions
 
 ```go
-type result struct {
+u := query.Query.User
+e := query.Query.Email
+c := query.Query.CreditCard
+
+type Result struct {
   Name  string
   Email string
 }
-db.Model(&User{}).Select("users.name, emails.email").Joins("left join emails on emails.user_id = users.id").Scan(&result{})
+
+var result Result
+
+err := u.Select(u.Name, e.Email).LeftJoin(e, e.UserId.EqCol(u.ID)).Scan(&result)
 // SELECT users.name, emails.email FROM `users` left join emails on emails.user_id = users.id
 
-rows, err := db.Table("users").Select("users.name, emails.email").Joins("left join emails on emails.user_id = users.id").Rows()
+rows, err := u.Select(u.Name, e.Email).LeftJoin(e, e.UserId.EqCol(u.ID)).Rows()
 for rows.Next() {
   ...
 }
 
-db.Table("users").Select("users.name, emails.email").Joins("left join emails on emails.user_id = users.id").Scan(&results)
+var results []Result
+
+err := u.Select(u.Name, e.Email).LeftJoin(e, e.UserId.EqCol(u.ID)).Scan(&results)
 
 // multiple joins with parameter
-db.Joins("JOIN emails ON emails.user_id = users.id AND emails.email = ?", "jinzhu@example.org").Joins("JOIN credit_cards ON cre
+users := u.Join(e, e.UserId.EqCol(u.id), e.Email.Eq("modi@example.org")).Join(c, c.UserId.EqCol(u.ID)).Where(c.Number.Eq("411111111111")).Find()
 ```
 
 ##### SubQuery
 
-```go
+A subquery can be nested within a query, GEN can generate subquery when using a `Dao` object as param
 
+```go
+o := query.Query.Order
+u := query.Query.User
+
+orders, err := o.Where(gen.Gt(o.Amount, o.Select(u.Amount.Avg())).Find()
+// SELECT * FROM "orders" WHERE amount > (SELECT AVG(amount) FROM "orders");
+
+subQuery := u.Select(u.Age.Avg()).Where(u.Name.Like("name%"))
+users, err := u.Select(u.Age.Avg().As("avgage")).Group(u.Name).Having(gen.Gt(u.Age.Avg(), subQuery).Find()
+// SELECT AVG(age) as avgage FROM `users` GROUP BY `name` HAVING AVG(age) > (SELECT AVG(age) FROM `users` WHERE name LIKE "name%")
 ```
 
 ###### From SubQuery
 
+GORM allows you using subquery in FROM clause with method `Table`, for example:
+
 ```go
+u := query.Query.User
+p := query.Query.Pet
+
+users, err := gen.Table(u.Select(u.Name, u.Age).As("u")).Where(u.Age.Eq(18)).Find()
+// SELECT * FROM (SELECT `name`,`age` FROM `users`) as u WHERE `age` = 18
+
+subQuery1 := u.Select(u.Name)
+subQuery2 := p.Select(p.Name)
+users, err := gen.Table(subQuery1.As("u"), subQuery2.As("p")).Find()
+db.Table("(?) as u, (?) as p", subQuery1, subQuery2).Find(&User{})
+// SELECT * FROM (SELECT `name` FROM `users`) as u, (SELECT `name` FROM `pets`) as p
 ```
 
-###### Table SubQuery
+###### Update from SubQuery
+
+Update a table by using SubQuery
 
 ```go
+u := query.Query.User
+c := query.Query.Company
+
+u.Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqCol(u.CompanyId)))
+// UPDATE "users" SET "company_name" = (SELECT name FROM companies WHERE companies.id = users.company_id);
+
+u.Where(u.Name.Eq("modi")).Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqCol(u.CompanyId)))
 ```
 
 ##### Advanced Query
@@ -552,11 +580,24 @@ db.Joins("JOIN emails ON emails.user_id = users.id AND emails.email = ?", "jinzh
 
 #### Method interface
 
+```go
+```
+
+
+
 #### Smart Select Fields
+
+```go
+```
+
+
 
 ### Advanced Topics
 
-- Hints
+#### Hints
+
+```go
+```
 
 
 
