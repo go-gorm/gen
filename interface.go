@@ -24,6 +24,7 @@ type (
 
 type subQuery interface {
 	UnderlyingDB() *gorm.DB
+	underlyingDO() *DO
 	build(opts ...stmtOpt) *gorm.Statement
 }
 
@@ -42,7 +43,6 @@ type Dao interface {
 	Order(columns ...field.Expr) Dao
 	Distinct(columns ...field.Expr) Dao
 	Omit(columns ...field.Expr) Dao
-	// Joins(cond field.Expr) Dao
 	Join(table schema.Tabler, conds ...Condition) Dao
 	LeftJoin(table schema.Tabler, conds ...Condition) Dao
 	RightJoin(table schema.Tabler, conds ...Condition) Dao
