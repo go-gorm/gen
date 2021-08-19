@@ -126,6 +126,9 @@ func (d *DO) build(opts ...stmtOpt) *gorm.Statement {
 	return stmt
 }
 
+// underlyingDO return self
+func (d *DO) underlyingDO() *DO { return d }
+
 // Debug return a DO with db in debug mode
 func (d *DO) Debug() Dao {
 	return NewDO(d.db.Debug())
@@ -161,7 +164,23 @@ func (d *DO) Where(conds ...Condition) Dao {
 }
 
 func (d *DO) Order(columns ...field.Expr) Dao {
-	return NewDO(d.db.Clauses(clause.OrderBy{Expression: clause.CommaExpression{Exprs: toExpression(columns)}}))
+	// lazy build Columns
+	// if c, ok := d.db.Statement.Clauses[clause.OrderBy{}.Name()]; ok {
+	// 	if order, ok := c.Expression.(clause.OrderBy); ok {
+	// 		if expr, ok := order.Expression.(clause.CommaExpression); ok {
+	// 			expr.Exprs = append(expr.Exprs, toExpression(columns)...)
+	// 			return NewDO(d.db.Clauses(clause.OrderBy{Expression: expr}))
+	// 		}
+	// 	}
+	// }
+	// return NewDO(d.db.Clauses(clause.OrderBy{Expression: clause.CommaExpression{Exprs: toExpression(columns)}}))
+
+	// eager build Columns
+	orderArray := make([]string, len(columns))
+	for i, c := range columns {
+		orderArray[i] = c.BuildExpr(d.db.Statement)
+	}
+	return NewDO(d.db.Order(strings.Join(orderArray, ",")))
 }
 
 func (d *DO) Distinct(columns ...field.Expr) Dao {
@@ -270,13 +289,13 @@ func (d *DO) FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batc
 	return d.db.FindInBatches(dest, batchSize, func(tx *gorm.DB, batch int) error { return fc(NewDO(tx), batch) }).Error
 }
 
-func (d *DO) FirstOrInit(dest interface{}, conds ...field.Expr) error {
-	return d.db.Clauses(toExpression(conds)...).FirstOrInit(dest).Error
-}
+// func (d *DO) FirstOrInit(dest interface{}, conds ...field.Expr) error {
+// 	return d.db.Clauses(toExpression(conds)...).FirstOrInit(dest).Error
+// }
 
-func (d *DO) FirstOrCreate(dest interface{}, conds ...field.Expr) error {
-	return d.db.Clauses(toExpression(conds)...).FirstOrCreate(dest).Error
-}
+// func (d *DO) FirstOrCreate(dest interface{}, conds ...field.Expr) error {
+// 	return d.db.Clauses(toExpression(conds)...).FirstOrCreate(dest).Error
+// }
 
 func (d *DO) Update(column field.Expr, value interface{}) error {
 	switch expr := column.RawExpr().(type) {
@@ -287,8 +306,8 @@ func (d *DO) Update(column field.Expr, value interface{}) error {
 	switch value := value.(type) {
 	case field.Expr:
 		return d.db.Update(column.Column().Name, value.RawExpr()).Error
-	case *DO:
-		return d.db.Update(column.Column().Name, value.db).Error
+	case subQuery:
+		return d.db.Update(column.Column().Name, value.UnderlyingDB()).Error
 	default:
 		return d.db.Update(column.Column().Name, value).Error
 	}
@@ -307,8 +326,8 @@ func (d *DO) UpdateColumn(column field.Expr, value interface{}) error {
 	switch value := value.(type) {
 	case field.Expr:
 		return d.db.UpdateColumn(column.Column().Name, value.RawExpr()).Error
-	case *DO:
-		return d.db.UpdateColumn(column.Column().Name, value.db).Error
+	case subQuery:
+		return d.db.UpdateColumn(column.Column().Name, value.UnderlyingDB()).Error
 	default:
 		return d.db.UpdateColumn(column.Column().Name, value).Error
 	}
@@ -322,8 +341,8 @@ func (d *DO) Delete(value interface{}, conds ...field.Expr) error {
 	return d.db.Clauses(toExpression(conds)...).Delete(value).Error
 }
 
-func (d *DO) Count(count *int64) error {
-	return d.db.Count(count).Error
+func (d *DO) Count() (count int64, err error) {
+	return count, d.db.Count(&count).Error
 }
 
 func (d *DO) Row() *sql.Row {
@@ -390,8 +409,8 @@ func condToExpression(conds []Condition) []clause.Expression {
 	exprs := make([]clause.Expression, 0, len(conds))
 	for _, cond := range conds {
 		switch cond := cond.(type) {
-		case *DO:
-			exprs = append(exprs, cond.buildCondition()...)
+		case subQuery:
+			exprs = append(exprs, cond.underlyingDO().buildCondition()...)
 		default:
 			exprs = append(exprs, cond)
 		}
@@ -452,7 +471,7 @@ func toInterfaceSlice(value interface{}) []interface{} {
 // 	Table(u.Select(u.ID, u.Name).Where(u.Age.Gt(18))).Select()
 // the above usage is equivalent to SQL statement:
 // 	SELECT * FROM (SELECT `id`, `name` FROM `users_info` WHERE `age` > ?)"
-func Table(subQueries ...Dao) Dao {
+func Table(subQueries ...subQuery) Dao {
 	if len(subQueries) == 0 {
 		return NewDO(nil)
 	}
@@ -462,15 +481,16 @@ func Table(subQueries ...Dao) Dao {
 	for i, query := range subQueries {
 		tablePlaceholder[i] = "(?)"
 
-		do := query.(*DO)
+		do := query.underlyingDO()
 		tableExprs[i] = do.db
 		if do.alias != "" {
 			tablePlaceholder[i] += " AS " + do.Quote(do.alias)
 		}
 	}
 
-	db := subQueries[0].(*DO).db
-	return NewDO(db.Session(&gorm.Session{NewDB: true}).Table(strings.Join(tablePlaceholder, ", "), tableExprs...))
+	return NewDO(subQueries[0].underlyingDO().db.
+		Session(&gorm.Session{NewDB: true}).
+		Table(strings.Join(tablePlaceholder, ", "), tableExprs...))
 }
 
 // ======================== sub query method ========================
