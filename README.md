@@ -556,25 +556,265 @@ u.Where(u.Name.Eq("modi")).Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqC
 
 ##### Advanced Query
 
-###### FirstOrInit
-
-###### FirstOrCreate
-
-###### Optimizer/Index Hints
-
 ###### Iteration
+
+GEN supports iterating through Rows
+
+```go
+rows, err := query.Query.User.Where("name = ?", "modi").Rows()
+defer rows.Close()
+
+for rows.Next() {
+  var user User
+  // ScanRows is a method of `gorm.DB`, it can be used to scan a row into a struct
+  db.ScanRows(rows, &user)
+
+  // do something
+}
+```
 
 ###### FindInBatches
 
+Query and process records in batch
+
+```go
+u := query.Query.User
+
+// batch size 100
+err := u.Where(u.ID.Gt(9)).FindInBatches(&results, 100, func(tx gen.Dao, batch int) error {
+  for _, result := range results {
+    // batch processing found records
+  }
+  
+  // build a new `u` to use it's api
+ 	// queryUsery := query.NewUser(tx.UnderlyingDB())
+
+  tx.Save(&results)
+
+  batch // Batch 1, 2, 3
+
+  // returns error will stop future batches
+  return nil
+})
+```
+
 ###### Pluck
+
+Query single column from database and scan into a slice, if you want to query multiple columns, use `Select` with `Scan` instead
+
+```go
+u := query.Query.User
+
+var ages []int64
+u.Pluck(u.Age, &ages)
+
+var names []string
+u.Pluck(u.Name, &names)
+
+// Distinct Pluck
+u.Distinct().Pluck(u.Name, &names)
+// SELECT DISTINCT `name` FROM `users`
+
+// Requesting more than one column, use `Scan` or `Find` like this:
+db.Select(u.Name, u.Age).Scan(&users)
+users, err := db.Select(u.Name, u.Age).Find()
+```
 
 ###### Scopes
 
+`Scopes` allows you to specify commonly-used queries which can be referenced as method calls
+
+```go
+o := query.Query.Order
+
+func AmountGreaterThan1000(tx gen.Dao) gen.Dao {
+  return tx.Where(o.Amount.Gt(1000))
+}
+
+func PaidWithCreditCard(tx gen.Dao) gen.Dao {
+  return tx.Where(o.PayModeSign.Eq("C"))
+}
+
+func PaidWithCod(tx gen.Dao) gen.Dao {
+  return tx.Where(o.PayModeSign.Eq("C"))
+}
+
+func OrderStatus(status []string) func (tx gen.Dao) gen.Dao {
+  return func (tx gen.Dao) gen.Dao {
+    return tx.Where(o.Status.In(status...))
+  }
+}
+
+orders, err := o.Scopes(AmountGreaterThan1000, PaidWithCreditCard).Find()
+// Find all credit card orders and amount greater than 1000
+
+orders, err := o.Scopes(AmountGreaterThan1000, PaidWithCod).Find()
+// Find all COD orders and amount greater than 1000
+
+orders, err := o.Scopes(AmountGreaterThan1000, OrderStatus([]string{"paid", "shipped"})).Find()
+// Find all paid, shipped orders that amount greater than 1000
+```
+
 ###### Count
 
-#### Uqdate
+Get matched records count
+
+```go
+u := query.Query.User
+
+count, err := u.Where(u.Name.Eq("modi")).Or(u.Name.Eq("zhangqiang")).Count()
+// SELECT count(1) FROM users WHERE name = 'modi' OR name = 'zhangqiang'
+
+count, err := u.Where(u.Name.Eq("modi")).Count()
+// SELECT count(1) FROM users WHERE name = 'modi'; (count)
+
+// Count with Distinct
+u.Distinct(u.Name).Count()
+// SELECT COUNT(DISTINCT(`name`)) FROM `users`
+```
+
+#### Update
+
+##### Update single column
+
+When updating a single column with `Update`, it needs to have any conditions or it will raise error `ErrMissingWhereClause`, for example:
+
+```go
+u := query.Query.User
+
+// Update with conditions
+u.Where(u.Activate.Is(true)).Update(u.Name, "hello")
+// UPDATE users SET name='hello', updated_at='2013-11-17 21:34:10' WHERE active=true;
+
+// Update with conditions
+u.Where(u.Activate.Is(true)).Update(u.Age, u.Age.Add(1))
+// UPDATE users SET age=age+1, updated_at='2013-11-17 21:34:10' WHERE active=true;
+```
+
+##### Updates multiple columns
+
+`Updates` supports update with `struct` or `map[string]interface{}`, when updating with `struct` it will only update non-zero fields by default
+
+```go
+u := query.Query.User
+
+// Update attributes with `struct`, will only update non-zero fields
+u.Updates(User{Name: "hello", Age: 18, Active: false})
+// UPDATE users SET name='hello', age=18, updated_at = '2013-11-17 21:34:10' WHERE id = 111;
+
+// Update attributes with `map`
+u).Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
+// UPDATE users SET name='hello', age=18, active=false, updated_at='2013-11-17 21:34:10' WHERE id=111;
+```
+
+> **NOTE** When update with struct, GEN will only update non-zero fields, you might want to use `map` to update attributes or use `Select` to specify fields to update
+
+##### Update Selected Fields
+
+If you want to update selected fields or ignore some fields when updating, you can use `Select`, `Omit`
+
+```go
+// Select with Map
+// User's ID is `111`:
+db.Model(&user).Select("name").Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
+// UPDATE users SET name='hello' WHERE id=111;
+
+db.Model(&user).Omit("name").Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
+// UPDATE users SET age=18, active=false, updated_at='2013-11-17 21:34:10' WHERE id=111;
+
+// Select with Struct (select zero value fields)
+db.Model(&user).Select("Name", "Age").Updates(User{Name: "new_name", Age: 0})
+// UPDATE users SET name='new_name', age=0 WHERE id=111;
+
+// Select all fields (select all fields include zero value fields)
+db.Model(&user).Select("*").Update(User{Name: "jinzhu", Role: "admin", Age: 0})
+
+// Select all fields but omit Role (select all fields include zero value fields)
+db.Model(&user).Select("*").Omit("Role").Update(User{Name: "jinzhu", Role: "admin", Age: 0})
+```
 
 #### Delete
+
+##### Delete a Record
+
+```go
+e := query.Query.Email
+
+// Email's ID is `10`
+e.Delete(e.ID.Eq(10))
+// DELETE from emails where id = 10;
+
+// Delete with additional conditions
+e.Where(e.Name.Eq("modi")).Delete(e.ID.Eq(10))
+// DELETE from emails where id = 10 AND name = "modi";
+```
+
+##### Delete with primary key
+
+GEN allows to delete objects using primary key(s) with inline condition, it works with numbers.
+
+```go
+u.Delete(u.ID.In(1,2,3))
+// DELETE FROM users WHERE id IN (1,2,3);
+```
+
+##### Batch Delete
+
+The specified value has no primary value, GEN will perform a batch delete, it will delete all matched records
+
+```go
+e := query.Query.Email
+
+err := e.Where(e.Name.Like("%modi%")).Delete()
+// DELETE from emails where email LIKE "%modi%";
+
+err := e.Delete(e.Name.Like("%modi%"))
+// DELETE from emails where email LIKE "%jinzhu%";
+```
+
+##### Soft Delete
+
+If your model includes a `gorm.DeletedAt` field (which is included in `gorm.Model`), it will get soft delete ability automatically!
+
+When calling `Delete`, the record WON’T be removed from the database, but GORM will set the `DeletedAt`‘s value to the current time, and the data is not findable with normal Query methods anymore.
+
+```go
+// Batch Delete
+u.Where(u.Age.Eq(20)).Delete()
+// UPDATE users SET deleted_at="2013-10-29 10:23" WHERE age = 20;
+
+// Soft deleted records will be ignored when querying
+u.Where(u.Age.Eq(20)).Delete()
+// SELECT * FROM users WHERE age = 20 AND deleted_at IS NULL;
+```
+
+If you don’t want to include `gorm.Model`, you can enable the soft delete feature like:
+
+```go
+type User struct {
+  ID      int
+  Deleted gorm.DeletedAt
+  Name    string
+}
+```
+
+##### Find soft deleted records
+
+You can find soft deleted records with `Unscoped`
+
+```go
+users, err := db.Unscoped().Where(u.Age.Eq(20)).Find()
+// SELECT * FROM users WHERE age = 20;
+```
+
+##### Delete permanently
+
+You can delete matched records permanently with `Unscoped`
+
+```go
+o.Unscoped().Delete(o.ID.Eq(10))
+// DELETE FROM orders WHERE id=10;
+```
 
 ### DIY method
 
@@ -587,7 +827,40 @@ u.Where(u.Name.Eq("modi")).Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqC
 
 #### Smart Select Fields
 
+GORM allows select specific fields with [`Select`](https://gorm.io/docs/query.html), if you often use this in your application, maybe you want to define a smaller struct for API usage which can select specific fields automatically, for example:
+
 ```go
+type User struct {
+  ID     uint
+  Name   string
+  Age    int
+  Gender string
+  // hundreds of fields
+}
+
+type APIUser struct {
+  ID   uint
+  Name string
+}
+
+// Select `id`, `name` automatically when querying
+db.Model(&User{}).Limit(10).Find(&APIUser{})
+// SELECT `id`, `name` FROM `users` LIMIT 10
+```
+
+> **NOTE** `QueryFields` mode will select by all fields’ name for current model
+
+```go
+db, err := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{
+  QueryFields: true,
+})
+
+db.Find(&user)
+// SELECT `users`.`name`, `users`.`age`, ... FROM `users` // with this option
+
+// Session Mode
+db.Session(&gorm.Session{QueryFields: true}).Find(&user)
+// SELECT `users`.`name`, `users`.`age`, ... FROM `users`
 ```
 
 
@@ -596,7 +869,29 @@ u.Where(u.Name.Eq("modi")).Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqC
 
 #### Hints
 
+Optimizer hints allow to control the query optimizer to choose a certain query execution plan, GORM supports it with `gorm.io/hints`, e.g:
+
 ```go
+import "gorm.io/hints"
+
+u := query.Query.User
+
+users, err := u.Hints(hints.New("MAX_EXECUTION_TIME(10000)")).Find()
+// SELECT * /*+ MAX_EXECUTION_TIME(10000) */ FROM `users`
+```
+
+Index hints allow passing index hints to the database in case the query planner gets confused.
+
+```go
+import "gorm.io/hints"
+
+u := query.Query.User
+
+users, err := u.Hints(hints.UseIndex("idx_user_name")).Find()
+// SELECT * FROM `users` USE INDEX (`idx_user_name`)
+
+users, err := u.Hints(hints.ForceIndex("idx_user_name", "idx_user_id").ForJoin()).Find()
+// SELECT * FROM `users` FORCE INDEX FOR JOIN (`idx_user_name`,`idx_user_id`)"
 ```
 
 
