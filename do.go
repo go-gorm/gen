@@ -289,13 +289,13 @@ func (d *DO) FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batc
 	return d.db.FindInBatches(dest, batchSize, func(tx *gorm.DB, batch int) error { return fc(NewDO(tx), batch) }).Error
 }
 
-func (d *DO) FirstOrInit(dest interface{}, conds ...field.Expr) error {
-	return d.db.Clauses(toExpression(conds)...).FirstOrInit(dest).Error
-}
+// func (d *DO) FirstOrInit(dest interface{}, conds ...field.Expr) error {
+// 	return d.db.Clauses(toExpression(conds)...).FirstOrInit(dest).Error
+// }
 
-func (d *DO) FirstOrCreate(dest interface{}, conds ...field.Expr) error {
-	return d.db.Clauses(toExpression(conds)...).FirstOrCreate(dest).Error
-}
+// func (d *DO) FirstOrCreate(dest interface{}, conds ...field.Expr) error {
+// 	return d.db.Clauses(toExpression(conds)...).FirstOrCreate(dest).Error
+// }
 
 func (d *DO) Update(column field.Expr, value interface{}) error {
 	switch expr := column.RawExpr().(type) {

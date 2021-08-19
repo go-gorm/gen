@@ -64,8 +64,8 @@ type Dao interface {
 	Take(dest interface{}, conds ...field.Expr) error
 	Find(dest interface{}, conds ...field.Expr) error
 	FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error
-	FirstOrInit(dest interface{}, conds ...field.Expr) error
-	FirstOrCreate(dest interface{}, conds ...field.Expr) error
+	// FirstOrInit(dest interface{}, conds ...field.Expr) error
+	// FirstOrCreate(dest interface{}, conds ...field.Expr) error
 	Update(column field.Expr, value interface{}) error
 	Updates(values interface{}) error
 	UpdateColumn(column field.Expr, value interface{}) error

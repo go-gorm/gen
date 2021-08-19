@@ -191,16 +191,8 @@ func ({{.S}} {{.NewStructName}}) Find(conds ...field.Expr) (result []*{{.StructI
 	return result, {{.S}}.DO.Find(&result, conds...)
 }
 
-func ({{.S}} {{.NewStructName}}) FindInBatches(batchSize int, fc func(tx gen.Dao, batch int) error) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}},err error) {
-	return result, {{.S}}.DO.FindInBatches(&result, batchSize, fc)
-}
-
-func ({{.S}} {{.NewStructName}}) FirstOrInit(conds ...field.Expr) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}},err error) {
-	return result, {{.S}}.DO.FirstOrInit(&result, conds...)
-}
-
-func ({{.S}} {{.NewStructName}}) FirstOrCreate(conds ...field.Expr) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}},err error) {
-	return result, {{.S}}.DO.FirstOrCreate(&result, conds...)
+func ({{.S}} {{.NewStructName}}) FindInBatches(result []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, batchSize int, fc func(tx gen.Dao, batch int) error) error {
+	return {{.S}}.DO.FindInBatches(&result, batchSize, fc)
 }
 
 func ({{.S}} {{.NewStructName}}) FindByPage(offset int, limit int) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, count int64, err error) {

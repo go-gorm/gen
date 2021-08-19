@@ -222,14 +222,6 @@ func (u user) FindInBatches(batchSize int, fc func(tx Dao, batch int) error) (re
 	return result, u.DO.FindInBatches(&result, batchSize, fc)
 }
 
-func (u user) FirstOrInit(conds ...field.Expr) (result []*user, err error) {
-	return result, u.DO.FirstOrInit(&result, conds...)
-}
-
-func (u user) FirstOrCreate(conds ...field.Expr) (result []*user, err error) {
-	return result, u.DO.FirstOrCreate(&result, conds...)
-}
-
 func (u user) FindByPage(offset int, limit int) (result []*user, count int64, err error) {
 	err = u.DO.Count(&count)
 	if err != nil {
