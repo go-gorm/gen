@@ -2,6 +2,7 @@ package gen
 
 import (
 	"database/sql"
+	"reflect"
 	"strings"
 
 	"gorm.io/gorm"
@@ -269,16 +270,24 @@ func (d *DO) Save(value interface{}) error {
 	return d.db.Save(value).Error
 }
 
-func (d *DO) First(dest interface{}) error {
-	return d.db.First(dest).Error
+func (d *DO) First() (result interface{}, err error) {
+	return d.singleQuery(d.db.First)
 }
 
-func (d *DO) Take(dest interface{}) error {
-	return d.db.Take(dest).Error
+func (d *DO) Take() (result interface{}, err error) {
+	return d.singleQuery(d.db.Take)
 }
 
-func (d *DO) Last(dest interface{}) error {
-	return d.db.Last(dest).Error
+func (d *DO) Last() (result interface{}, err error) {
+	return d.singleQuery(d.db.Last)
+}
+
+func (d *DO) singleQuery(query func(dest interface{}, conds ...interface{}) *gorm.DB) (result interface{}, err error) {
+	result = d.newResult()
+	if err := query(result).Error; err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func (d *DO) Find(dest interface{}) error {
@@ -389,12 +398,12 @@ func (d *DO) RollBackTo(name string) Dao {
 	return NewDO(d.db.RollbackTo(name))
 }
 
-func toExpression(conds []field.Expr) []clause.Expression {
-	exprs := make([]clause.Expression, len(conds))
-	for i, cond := range conds {
-		exprs[i] = cond
+func (d *DO) newResult() interface{} {
+	model := reflect.ValueOf(d.db.Statement.Model)
+	if model.Kind() == reflect.Ptr {
+		model = model.Elem()
 	}
-	return exprs
+	return reflect.New(model.Type()).Interface()
 }
 
 func hintToExpression(hs []Hint) []clause.Expression {

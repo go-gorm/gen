@@ -164,27 +164,27 @@ func ({{.S}} {{.NewStructName}}) Save(value *{{.StructInfo.Package}}.{{.StructIn
 }
 
 func ({{.S}} {{.NewStructName}}) First() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
-	result := new({{.StructInfo.Package}}.{{.StructInfo.Type}})
-	if err := {{.S}}.DO.First(result); err != nil {
+	if result, err := {{.S}}.DO.First(); err != nil {
 		return nil, err
+	} else {
+		return result.(*{{.StructInfo.Package}}.{{.StructInfo.Type}}), nil
 	}
-	return result, nil
-}
-
-func ({{.S}} {{.NewStructName}}) Last() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
-	result := new({{.StructInfo.Package}}.{{.StructInfo.Type}})
-	if err := {{.S}}.DO.Last(result); err != nil {
-		return nil, err
-	}
-	return result, nil
 }
 
 func ({{.S}} {{.NewStructName}}) Take() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
-	result := new({{.StructInfo.Package}}.{{.StructInfo.Type}})
-	if err := {{.S}}.DO.Take(result); err != nil {
+	if result, err := {{.S}}.DO.Take(); err != nil {
 		return nil, err
+	} else {
+		return result.(*{{.StructInfo.Package}}.{{.StructInfo.Type}}), nil
 	}
-	return result, nil
+}
+
+func ({{.S}} {{.NewStructName}}) Last() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
+	if result, err := {{.S}}.DO.Last(); err != nil {
+		return nil, err
+	} else {
+		return result.(*{{.StructInfo.Package}}.{{.StructInfo.Type}}), nil
+	}
 }
 
 func ({{.S}} {{.NewStructName}}) Find() (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}},err error) {
