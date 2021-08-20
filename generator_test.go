@@ -39,8 +39,8 @@ func init() {
 	})
 }
 
-// UserRaw user data struct
-type UserRaw struct {
+// User user data struct
+type User struct {
 	ID         uint `gorm:"primary_key"`
 	Name       string
 	Age        int
@@ -50,7 +50,7 @@ type UserRaw struct {
 	RegisterAt time.Time
 }
 
-func (UserRaw) TableName() string {
+func (User) TableName() string {
 	return "users_info"
 }
 
@@ -178,51 +178,51 @@ func (u user) Unscoped() *user {
 	return &u
 }
 
-func (u user) Create(value *user) error {
+func (u user) Create(value *User) error {
 	return u.DO.Create(value)
 }
 
-func (u user) CreateInBatches(values []*user, batchSize int) error {
+func (u user) CreateInBatches(values []*User, batchSize int) error {
 	return u.DO.CreateInBatches(values, batchSize)
 }
 
-func (u user) Save(value *user) error {
+func (u user) Save(value *User) error {
 	return u.DO.Save(value)
 }
 
-func (u user) First(conds ...field.Expr) (*user, error) {
-	result := new(user)
+func (u user) First(conds ...field.Expr) (*User, error) {
+	result := new(User)
 	if err := u.DO.First(result, conds...); err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func (u user) Last(conds ...field.Expr) (*user, error) {
-	result := new(user)
+func (u user) Last(conds ...field.Expr) (*User, error) {
+	result := new(User)
 	if err := u.DO.Last(result, conds...); err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func (u user) Take(conds ...field.Expr) (*user, error) {
-	result := new(user)
+func (u user) Take(conds ...field.Expr) (*User, error) {
+	result := new(User)
 	if err := u.DO.Take(result, conds...); err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func (u user) Find(conds ...field.Expr) (result []*user, err error) {
+func (u user) Find(conds ...field.Expr) (result []*User, err error) {
 	return result, u.DO.Find(&result, conds...)
 }
 
-func (u user) FindInBatches(batchSize int, fc func(tx Dao, batch int) error) (result []*user, err error) {
-	return result, u.DO.FindInBatches(&result, batchSize, fc)
+func (u user) FindInBatches(result []*User, batchSize int, fc func(tx Dao, batch int) error) error {
+	return u.DO.FindInBatches(&result, batchSize, fc)
 }
 
-func (u user) FindByPage(offset int, limit int) (result []*user, count int64, err error) {
+func (u user) FindByPage(offset int, limit int) (result []*User, count int64, err error) {
 	count, err = u.DO.Count()
 	if err != nil {
 		return
@@ -231,53 +231,8 @@ func (u user) FindByPage(offset int, limit int) (result []*user, count int64, er
 	return
 }
 
-func (u user) Update(col field.Expr, value interface{}) error {
-	return u.DO.Update(col, value)
-}
-
-func (u user) Updates(values interface{}) error {
-	return u.DO.Updates(values)
-}
-
-func (u user) UpdateColumn(col field.Expr, value interface{}) error {
-	return u.DO.UpdateColumn(col, value)
-}
-
-func (u user) UpdateColumns(values interface{}) error {
-	return u.DO.UpdateColumns(values)
-}
-
 func (u user) Delete(conds ...field.Expr) error {
-	result := new(user)
-	return u.DO.Delete(result, conds...)
-}
-
-func (u user) Count() (int64, error) {
-	return u.DO.Count()
-}
-
-func (u user) Row() *sql.Row {
-	return u.DO.Row()
-}
-
-func (u user) Rows() (*sql.Rows, error) {
-	return u.DO.Rows()
-}
-
-func (u user) Scan(dest interface{}) error {
-	return u.DO.Scan(dest)
-}
-
-func (u user) Pluck(col field.Expr, dest interface{}) error {
-	return u.DO.Pluck(col, dest)
-}
-
-func (u user) ScanRows(rows *sql.Rows, dest interface{}) error {
-	return u.DO.ScanRows(rows, dest)
-}
-
-func (u user) Transaction(fc func(tx Dao) error, opts ...*sql.TxOptions) error {
-	return u.DO.Transaction(fc, opts...)
+	return u.DO.Delete(conds...)
 }
 
 func (u user) Begin(opts ...*sql.TxOptions) *user {
@@ -316,7 +271,7 @@ var u = func() *user {
 		RegisterAt: field.NewTime("", "register_at"),
 	}
 	u.UseDB(db.Session(&gorm.Session{DryRun: true}))
-	u.UseModel(UserRaw{})
+	u.UseModel(User{})
 	return &u
 }()
 
