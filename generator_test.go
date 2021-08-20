@@ -231,8 +231,8 @@ func (u user) FindByPage(offset int, limit int) (result []*User, count int64, er
 	return
 }
 
-func (u user) Delete(conds ...field.Expr) error {
-	return u.DO.Delete(conds...)
+func (u user) Delete() error {
+	return u.DO.Delete()
 }
 
 func (u user) Begin(opts ...*sql.TxOptions) *user {

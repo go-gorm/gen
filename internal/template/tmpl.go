@@ -204,8 +204,8 @@ func ({{.S}} {{.NewStructName}}) FindByPage(offset int, limit int) (result []*{{
 	return
 }
 
-func ({{.S}} {{.NewStructName}}) Delete(conds ...field.Expr) error {
-	return {{.S}}.DO.Delete(conds...)
+func ({{.S}} {{.NewStructName}}) Delete() error {
+	return {{.S}}.DO.Delete()
 }
 
 func ({{.S}} {{.NewStructName}}) Begin(opts ...*sql.TxOptions) *{{.NewStructName}} {
