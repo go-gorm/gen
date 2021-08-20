@@ -239,7 +239,7 @@ user, err := u.Take()
 // SELECT * FROM users LIMIT 1;
 
 // Get last record, ordered by primary key desc
-user, err := db.Last()
+user, err := u.Last()
 // SELECT * FROM users ORDER BY id DESC LIMIT 1;
 
 // check error ErrRecordNotFound
@@ -251,17 +251,17 @@ errors.Is(err, gorm.ErrRecordNotFound)
 ```go
 u := query.Query.User
 
-user, err := u.First(u.ID.Eq(10))
+user, err := u.Where(u.ID.Eq(10)).First()
 // SELECT * FROM users WHERE id = 10;
 
-users, err := u.Find(u.ID.In(1,2,3))
+users, err := u.Where(u.ID.In(1,2,3)).Find()
 // SELECT * FROM users WHERE id IN (1,2,3);
 ```
 
 If the primary key is a string (for example, like a uuid), the query will be written as follows:
 
 ```go
-user, err := db.First(u.ID.Eq("1b74413f-f3b8-409f-ac47-e8c062e3472a"))
+user, err := u.Where(u.ID.Eq("1b74413f-f3b8-409f-ac47-e8c062e3472a")).First()
 // SELECT * FROM users WHERE id = "1b74413f-f3b8-409f-ac47-e8c062e3472a";
 ```
 
@@ -317,14 +317,14 @@ users, err := u.Where(u.Birthday.Between(lastWeek, today)).Find()
 u := query.Query.User
 
 // Get by primary key if it were a non-integer type
-user, err := u.First(u.ID.Eq("string_primary_key"))
+user, err := u.Where(u.ID.Eq("string_primary_key")).First()
 // SELECT * FROM users WHERE id = 'string_primary_key';
 
 // Plain SQL
-users, err := u.Find(u.Name.Eq("modi"))
+users, err := u.Where(u.Name.Eq("modi")).Find()
 // SELECT * FROM users WHERE name = "modi";
 
-users, err := u.Find(u.Name.Neq("modi"), u.Age.Gt(17))
+users, err := u.Where(u.Name.Neq("modi"), u.Age.Gt(17)).Find()
 // SELECT * FROM users WHERE name <> "modi" AND age > 17;
 ```
 
@@ -561,7 +561,7 @@ u.Where(u.Name.Eq("modi")).Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqC
 GEN supports iterating through Rows
 
 ```go
-rows, err := query.Query.User.Where("name = ?", "modi").Rows()
+rows, err := query.Query.User.Where(u.Name.Eq("modi")).Rows()
 defer rows.Close()
 
 for rows.Next() {
@@ -698,10 +698,6 @@ u.Where(u.Activate.Is(true)).Update(u.Age, u.Age.Add(1))
 ```go
 u := query.Query.User
 
-// Update attributes with `struct`, will only update non-zero fields
-u.Updates(User{Name: "hello", Age: 18, Active: false})
-// UPDATE users SET name='hello', age=18, updated_at = '2013-11-17 21:34:10' WHERE id = 111;
-
 // Update attributes with `map`
 u).Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
 // UPDATE users SET name='hello', age=18, active=false, updated_at='2013-11-17 21:34:10' WHERE id=111;
@@ -714,23 +710,15 @@ u).Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
 If you want to update selected fields or ignore some fields when updating, you can use `Select`, `Omit`
 
 ```go
+u := query.Query.User
+
 // Select with Map
 // User's ID is `111`:
-db.Model(&user).Select("name").Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
+u.Select(u.Name).Where(u.ID.Eq(111)).Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
 // UPDATE users SET name='hello' WHERE id=111;
 
-db.Model(&user).Omit("name").Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
+u.Omit(u.Name).Where(u.ID.Eq(111)).Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
 // UPDATE users SET age=18, active=false, updated_at='2013-11-17 21:34:10' WHERE id=111;
-
-// Select with Struct (select zero value fields)
-db.Model(&user).Select("Name", "Age").Updates(User{Name: "new_name", Age: 0})
-// UPDATE users SET name='new_name', age=0 WHERE id=111;
-
-// Select all fields (select all fields include zero value fields)
-db.Model(&user).Select("*").Update(User{Name: "jinzhu", Role: "admin", Age: 0})
-
-// Select all fields but omit Role (select all fields include zero value fields)
-db.Model(&user).Select("*").Omit("Role").Update(User{Name: "jinzhu", Role: "admin", Age: 0})
 ```
 
 #### Delete
@@ -741,11 +729,11 @@ db.Model(&user).Select("*").Omit("Role").Update(User{Name: "jinzhu", Role: "admi
 e := query.Query.Email
 
 // Email's ID is `10`
-e.Delete(e.ID.Eq(10))
+e.Where(e.ID.Eq(10)).Delete()
 // DELETE from emails where id = 10;
 
 // Delete with additional conditions
-e.Where(e.Name.Eq("modi")).Delete(e.ID.Eq(10))
+e.Where(e.ID.Eq(10), e.Name.Eq("modi")).Delete()
 // DELETE from emails where id = 10 AND name = "modi";
 ```
 
@@ -754,7 +742,7 @@ e.Where(e.Name.Eq("modi")).Delete(e.ID.Eq(10))
 GEN allows to delete objects using primary key(s) with inline condition, it works with numbers.
 
 ```go
-u.Delete(u.ID.In(1,2,3))
+u.Where(u.ID.In(1,2,3)).Delete()
 // DELETE FROM users WHERE id IN (1,2,3);
 ```
 
@@ -767,9 +755,6 @@ e := query.Query.Email
 
 err := e.Where(e.Name.Like("%modi%")).Delete()
 // DELETE from emails where email LIKE "%modi%";
-
-err := e.Delete(e.Name.Like("%modi%"))
-// DELETE from emails where email LIKE "%jinzhu%";
 ```
 
 ##### Soft Delete
@@ -780,11 +765,11 @@ When calling `Delete`, the record WON’T be removed from the database, but GORM
 
 ```go
 // Batch Delete
-u.Where(u.Age.Eq(20)).Delete()
+err := u.Where(u.Age.Eq(20)).Delete()
 // UPDATE users SET deleted_at="2013-10-29 10:23" WHERE age = 20;
 
 // Soft deleted records will be ignored when querying
-u.Where(u.Age.Eq(20)).Delete()
+users, err := u.Where(u.Age.Eq(20)).Find()
 // SELECT * FROM users WHERE age = 20 AND deleted_at IS NULL;
 ```
 
@@ -812,7 +797,7 @@ users, err := db.Unscoped().Where(u.Age.Eq(20)).Find()
 You can delete matched records permanently with `Unscoped`
 
 ```go
-o.Unscoped().Delete(o.ID.Eq(10))
+o.Unscoped().Where(o.ID.Eq(10)).Delete()
 // DELETE FROM orders WHERE id=10;
 ```
 
