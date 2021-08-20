@@ -190,32 +190,32 @@ func (u user) Save(value *User) error {
 	return u.DO.Save(value)
 }
 
-func (u user) First(conds ...field.Expr) (*User, error) {
+func (u user) First() (*User, error) {
 	result := new(User)
-	if err := u.DO.First(result, conds...); err != nil {
+	if err := u.DO.First(result); err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func (u user) Last(conds ...field.Expr) (*User, error) {
+func (u user) Last() (*User, error) {
 	result := new(User)
-	if err := u.DO.Last(result, conds...); err != nil {
+	if err := u.DO.Last(result); err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func (u user) Take(conds ...field.Expr) (*User, error) {
+func (u user) Take() (*User, error) {
 	result := new(User)
-	if err := u.DO.Take(result, conds...); err != nil {
+	if err := u.DO.Take(result); err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func (u user) Find(conds ...field.Expr) (result []*User, err error) {
-	return result, u.DO.Find(&result, conds...)
+func (u user) Find() (result []*User, err error) {
+	return result, u.DO.Find(&result)
 }
 
 func (u user) FindInBatches(result []*User, batchSize int, fc func(tx Dao, batch int) error) error {

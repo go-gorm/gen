@@ -163,32 +163,32 @@ func ({{.S}} {{.NewStructName}}) Save(value *{{.StructInfo.Package}}.{{.StructIn
 	return {{.S}}.DO.Save(value)
 }
 
-func ({{.S}} {{.NewStructName}}) First(conds ...field.Expr) (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
+func ({{.S}} {{.NewStructName}}) First() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
 	result := new({{.StructInfo.Package}}.{{.StructInfo.Type}})
-	if err := {{.S}}.DO.First(result, conds...); err != nil {
+	if err := {{.S}}.DO.First(result); err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func ({{.S}} {{.NewStructName}}) Last(conds ...field.Expr) (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
+func ({{.S}} {{.NewStructName}}) Last() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
 	result := new({{.StructInfo.Package}}.{{.StructInfo.Type}})
-	if err := {{.S}}.DO.Last(result, conds...); err != nil {
+	if err := {{.S}}.DO.Last(result); err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func ({{.S}} {{.NewStructName}}) Take(conds ...field.Expr) (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
+func ({{.S}} {{.NewStructName}}) Take() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
 	result := new({{.StructInfo.Package}}.{{.StructInfo.Type}})
-	if err := {{.S}}.DO.Take(result, conds...); err != nil {
+	if err := {{.S}}.DO.Take(result); err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func ({{.S}} {{.NewStructName}}) Find(conds ...field.Expr) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}},err error) {
-	return result, {{.S}}.DO.Find(&result, conds...)
+func ({{.S}} {{.NewStructName}}) Find() (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}},err error) {
+	return result, {{.S}}.DO.Find(&result)
 }
 
 func ({{.S}} {{.NewStructName}}) FindInBatches(result []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, batchSize int, fc func(tx gen.Dao, batch int) error) error {

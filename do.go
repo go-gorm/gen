@@ -269,20 +269,20 @@ func (d *DO) Save(value interface{}) error {
 	return d.db.Save(value).Error
 }
 
-func (d *DO) First(dest interface{}, conds ...field.Expr) error {
-	return d.db.Clauses(toExpression(conds)...).First(dest).Error
+func (d *DO) First(dest interface{}) error {
+	return d.db.First(dest).Error
 }
 
-func (d *DO) Take(dest interface{}, conds ...field.Expr) error {
-	return d.db.Clauses(toExpression(conds)...).Take(dest).Error
+func (d *DO) Take(dest interface{}) error {
+	return d.db.Take(dest).Error
 }
 
-func (d *DO) Last(dest interface{}, conds ...field.Expr) error {
-	return d.db.Clauses(toExpression(conds)...).Last(dest).Error
+func (d *DO) Last(dest interface{}) error {
+	return d.db.Last(dest).Error
 }
 
-func (d *DO) Find(dest interface{}, conds ...field.Expr) error {
-	return d.db.Clauses(toExpression(conds)...).Find(dest).Error
+func (d *DO) Find(dest interface{}) error {
+	return d.db.Find(dest).Error
 }
 
 func (d *DO) FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error {
