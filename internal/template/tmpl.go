@@ -204,53 +204,8 @@ func ({{.S}} {{.NewStructName}}) FindByPage(offset int, limit int) (result []*{{
 	return
 }
 
-func ({{.S}} {{.NewStructName}}) Update(col field.Expr, value interface{}) error {
-	return {{.S}}.DO.Update(col, value)
-}
-
-func ({{.S}} {{.NewStructName}}) Updates(values interface{}) error {
-	return {{.S}}.DO.Updates(values)
-}
-
-func ({{.S}} {{.NewStructName}}) UpdateColumn(col field.Expr, value interface{}) error {
-	return {{.S}}.DO.UpdateColumn(col, value)
-}
-
-func ({{.S}} {{.NewStructName}}) UpdateColumns(values interface{}) error {
-	return {{.S}}.DO.UpdateColumns(values)
-}
-
 func ({{.S}} {{.NewStructName}}) Delete(conds ...field.Expr) error {
-	result := new({{.StructInfo.Package}}.{{.StructInfo.Type}})
-	return {{.S}}.DO.Delete(result, conds...)
-}
-
-func ({{.S}} {{.NewStructName}}) Count() (int64, error) {
-	return {{.S}}.DO.Count()
-}
-
-func ({{.S}} {{.NewStructName}}) Row() *sql.Row {
-	return {{.S}}.DO.Row()
-}
-
-func ({{.S}} {{.NewStructName}}) Rows() (*sql.Rows, error) {
-	return {{.S}}.DO.Rows()
-}
-
-func ({{.S}} {{.NewStructName}}) Scan(dest interface{}) error {
-	return {{.S}}.DO.Scan(dest)
-}
-
-func ({{.S}} {{.NewStructName}}) Pluck(col field.Expr, dest interface{}) error {
-	return {{.S}}.DO.Pluck(col, dest)
-}
-
-func ({{.S}} {{.NewStructName}}) ScanRows(rows *sql.Rows, dest interface{}) error {
-	return {{.S}}.DO.ScanRows(rows, dest)
-}
-
-func ({{.S}} {{.NewStructName}}) Transaction(fc func(tx gen.Dao) error, opts ...*sql.TxOptions) error {
-	return {{.S}}.DO.Transaction(fc, opts...)
+	return {{.S}}.DO.Delete(conds...)
 }
 
 func ({{.S}} {{.NewStructName}}) Begin(opts ...*sql.TxOptions) *{{.NewStructName}} {

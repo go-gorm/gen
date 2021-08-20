@@ -40,22 +40,22 @@ import "gorm.io/gen"
 
 // generate code
 func main() {
-  // specify the output directory (default: "./query")
-	g := gen.NewGenerator(gen.Config{OutPath: "../dal/query"})
+    // specify the output directory (default: "./query")
+    g := gen.NewGenerator(gen.Config{OutPath: "../dal/query"})
   
-  // reuse the database connection in Project or create a connection here
-	// db, _ := gorm.Open(mysql.Open("root:@(127.0.0.1:3306)/demo?charset=utf8mb4&parseTime=True&loc=Local"))
-	g.UseDB(db)
+    // reuse the database connection in Project or create a connection here
+    // db, _ := gorm.Open(mysql.Open("root:@(127.0.0.1:3306)/demo?charset=utf8mb4&parseTime=True&loc=Local"))
+    g.UseDB(db)
   
-  // apply basic crud api on structs or table models which is specified by table name with function
-  // GenerateModel/GenerateModelAs. And generator will generate table models' code when calling Excute.
-	g.ApplyBasic(model.User{}, g.GenerateModel("company"), g.GenerateModelAs("people", "Person"),)
-	
-  // apply diy interfaces on structs or table models
-	g.ApplyInterface(func(method model.Method) {}, model.User{}, g.GenerateModel("company"))
+    // apply basic crud api on structs or table models which is specified by table name with function
+    // GenerateModel/GenerateModelAs. And generator will generate table models' code when calling Excute.
+    g.ApplyBasic(model.User{}, g.GenerateModel("company"), g.GenerateModelAs("people", "Person"),)
+    
+    // apply diy interfaces on structs or table models
+    g.ApplyInterface(func(method model.Method) {}, model.User{}, g.GenerateModel("company"))
 
-	// execute the action of code generation
-	g.Execute()
+    // execute the action of code generation
+    g.Execute()
 }
 ```
 
@@ -71,8 +71,8 @@ demo
 ├── dal
 │   ├── dal.go # create connections with database server here
 │   └── model
-│       ├── method.go # DIY method interfaces
-│       └── model.go  # store struct which corresponding to the database table
+│   │   ├── method.go # DIY method interfaces
+│   │   └── model.go  # store struct which corresponding to the database table
 │   └── query  # generated code's directory
 │       └── gorm_generated.go # generated code
 ├── biz
@@ -135,18 +135,18 @@ import "gorm.io/gen"
 
 // struct map to table `users` 
 type user struct {
-	gen.DO
-	ID       field.Uint
-	Name     field.String
-	Age      field.Int
-	Address  field.Field
-  Birthday field.Time
+    gen.DO
+    ID       field.Uint
+    Name     field.String
+    Age      field.Int
+    Address  field.Field
+    Birthday field.Time
 }
 
 // struct collection
 type DB struct {
-	db 			 *gorm.DB
-	User     *user
+    db       *gorm.DB
+    User     *user
 }
 ```
 
@@ -191,7 +191,7 @@ var users = []model.User{{Name: "modi"}, {Name: "zhangqiang"}, {Name: "songyuan"
 query.Query.User.Create(&users)
 
 for _, user := range users {
-  user.ID // 1,2,3
+    user.ID // 1,2,3
 }
 ```
 
@@ -208,7 +208,7 @@ It will works if you set `CreateBatchSize` in `gorm.Config` / `gorm.Session`
 
 ```go
 db, err := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{
-  CreateBatchSize: 1000,
+    CreateBatchSize: 1000,
 })
 // OR
 db = db.Session(&gorm.Session{CreateBatchSize: 1000})
@@ -364,9 +364,9 @@ Easier to write complicated SQL query with Group Conditions
 p := query.Query.Pizza
 
 pizzas, err := p.Where(
-  p.Where(p.Pizza.Eq("pepperoni")).Where(p.Where(p.Size.Eq("small")).Or(p.Size.Eq("medium"))),
+    p.Where(p.Pizza.Eq("pepperoni")).Where(p.Where(p.Size.Eq("small")).Or(p.Size.Eq("medium"))),
 ).Or(
-  p.Where(p.Pizza.Eq("hawaiian")).Where(p.Size.Eq("xlarge")),
+    p.Where(p.Pizza.Eq("hawaiian")).Where(p.Size.Eq("xlarge")),
 ).Find()
 
 // SELECT * FROM `pizzas` WHERE (pizza = "pepperoni" AND (size = "small" OR size = "medium")) OR (pizza = "hawaiian" AND size = "xlarge")
@@ -433,8 +433,8 @@ users, err := u.Offset(10).Offset(-1).Find()
 u := query.Query.User
 
 type Result struct {
-  Date  time.Time
-  Total int
+    Date  time.Time
+    Total int
 }
 
 var result Result
@@ -484,8 +484,8 @@ e := query.Query.Email
 c := query.Query.CreditCard
 
 type Result struct {
-  Name  string
-  Email string
+    Name  string
+    Email string
 }
 
 var result Result
@@ -565,11 +565,11 @@ rows, err := query.Query.User.Where("name = ?", "modi").Rows()
 defer rows.Close()
 
 for rows.Next() {
-  var user User
-  // ScanRows is a method of `gorm.DB`, it can be used to scan a row into a struct
-  db.ScanRows(rows, &user)
+    var user User
+    // ScanRows is a method of `gorm.DB`, it can be used to scan a row into a struct
+    db.ScanRows(rows, &user)
 
-  // do something
+    // do something
 }
 ```
 
@@ -582,19 +582,19 @@ u := query.Query.User
 
 // batch size 100
 err := u.Where(u.ID.Gt(9)).FindInBatches(&results, 100, func(tx gen.Dao, batch int) error {
-  for _, result := range results {
-    // batch processing found records
-  }
+    for _, result := range results {
+      // batch processing found records
+    }
   
-  // build a new `u` to use it's api
- 	// queryUsery := query.NewUser(tx.UnderlyingDB())
+    // build a new `u` to use it's api
+    // queryUsery := query.NewUser(tx.UnderlyingDB())
 
-  tx.Save(&results)
+    tx.Save(&results)
 
-  batch // Batch 1, 2, 3
+    batch // Batch 1, 2, 3
 
-  // returns error will stop future batches
-  return nil
+    // returns error will stop future batches
+    return nil
 })
 ```
 
@@ -628,21 +628,21 @@ users, err := db.Select(u.Name, u.Age).Find()
 o := query.Query.Order
 
 func AmountGreaterThan1000(tx gen.Dao) gen.Dao {
-  return tx.Where(o.Amount.Gt(1000))
+    return tx.Where(o.Amount.Gt(1000))
 }
 
 func PaidWithCreditCard(tx gen.Dao) gen.Dao {
-  return tx.Where(o.PayModeSign.Eq("C"))
+    return tx.Where(o.PayModeSign.Eq("C"))
 }
 
 func PaidWithCod(tx gen.Dao) gen.Dao {
-  return tx.Where(o.PayModeSign.Eq("C"))
+    return tx.Where(o.PayModeSign.Eq("C"))
 }
 
 func OrderStatus(status []string) func (tx gen.Dao) gen.Dao {
-  return func (tx gen.Dao) gen.Dao {
-    return tx.Where(o.Status.In(status...))
-  }
+    return func (tx gen.Dao) gen.Dao {
+      return tx.Where(o.Status.In(status...))
+    }
 }
 
 orders, err := o.Scopes(AmountGreaterThan1000, PaidWithCreditCard).Find()
@@ -792,9 +792,9 @@ If you don’t want to include `gorm.Model`, you can enable the soft delete feat
 
 ```go
 type User struct {
-  ID      int
-  Deleted gorm.DeletedAt
-  Name    string
+    ID      int
+    Deleted gorm.DeletedAt
+    Name    string
 }
 ```
 
@@ -820,14 +820,71 @@ o.Unscoped().Delete(o.ID.Eq(10))
 
 #### Method interface
 
+Method interface is a abstraction of query methods, all functions it contains are query methods and above comments describe the specific query conditions or logic.
+
 ```go
+type Model interface {
+    // Where("name=@name and age=@age")
+    FindByNameAndAge(name string, age int) (gen.T, error)
+    
+    // sql(select * from user where name=@name)
+    FindByName(name string) ([]gen.T, error)
+   
+    // select * from user where name=@id
+    FindByAge(age int) ([]gen.T, error)
+  
+    // select * from user limit 1
+    FindOne() (gen.M, error)
+  
+    // select * from user
+    FindAll() ([]gen.M, error)
+    
+    // select * from @@table 
+    //   {{where}}
+    //        {{if cond}}id=@id {{end}}
+    //        {{if name != ""}}@@key=@value{{end}}
+    //    {{end}}
+    FindByIDOrKey(cond bool, id int, key, value string) (gen.T, error)
+}
 ```
 
+Return values must contains less than 1 `gen.T`/`gen.M` and less than 1 error.
 
+##### Syntax of template
+
+###### placeholder
+
+- `gen.T` represents specified `struct` or `table`
+- `gen.M` represents `map[string]interface`
+- `@@table` represents table's name
+- `@name` represents variable
+
+###### Where
+
+```sql
+{{where}}{{end}}
+```
+
+###### Raw
+
+```go
+// select * from user
+methond() error
+```
+
+###### Raw template
+
+```sql
+select * from @@table 
+{{where}}
+    {{if cond}}id=@id {{end}}
+    {{if name != ""}}@@key=@value{{end}}
+{{end}}
+```
 
 #### Smart Select Fields
 
-GORM allows select specific fields with [`Select`](https://gorm.io/docs/query.html), if you often use this in your application, maybe you want to define a smaller struct for API usage which can select specific fields automatically, for example:
+GEN allows select specific fields with `Select`, if you often use this in your application, maybe you want to define a smaller struct for API usage which can select specific fields automatically, for example:
 
 ```go
 type User struct {
@@ -843,27 +900,14 @@ type APIUser struct {
   Name string
 }
 
-// Select `id`, `name` automatically when querying
-db.Model(&User{}).Limit(10).Find(&APIUser{})
+type Method interface{
+    // select * from user
+    FindSome() ([]APIUser, error)
+}
+
+apiusers, err := u.Limit(10).FindSome()
 // SELECT `id`, `name` FROM `users` LIMIT 10
 ```
-
-> **NOTE** `QueryFields` mode will select by all fields’ name for current model
-
-```go
-db, err := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{
-  QueryFields: true,
-})
-
-db.Find(&user)
-// SELECT `users`.`name`, `users`.`age`, ... FROM `users` // with this option
-
-// Session Mode
-db.Session(&gorm.Session{QueryFields: true}).Find(&user)
-// SELECT `users`.`name`, `users`.`age`, ... FROM `users`
-```
-
-
 
 ### Advanced Topics
 

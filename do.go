@@ -337,8 +337,8 @@ func (d *DO) UpdateColumns(values interface{}) error {
 	return d.db.UpdateColumns(values).Error
 }
 
-func (d *DO) Delete(value interface{}, conds ...field.Expr) error {
-	return d.db.Clauses(toExpression(conds)...).Delete(value).Error
+func (d *DO) Delete(conds ...field.Expr) error {
+	return d.db.Clauses(toExpression(conds)...).Delete(d.db.Statement.Model).Error
 }
 
 func (d *DO) Count() (count int64, err error) {
