@@ -59,10 +59,10 @@ type Dao interface {
 	Create(value interface{}) error
 	CreateInBatches(value interface{}, batchSize int) error
 	Save(value interface{}) error
-	First(dest interface{}) error
-	Last(dest interface{}) error
-	Take(dest interface{}) error
-	Find(dest interface{}) error
+	First() (result interface{}, err error)
+	Take() (result interface{}, err error)
+	Last() (result interface{}, err error)
+	Find() (results interface{}, err error)
 	FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error
 	// FirstOrInit(dest interface{}) error
 	// FirstOrCreate(dest interface{}) error

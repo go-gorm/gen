@@ -164,31 +164,32 @@ func ({{.S}} {{.NewStructName}}) Save(value *{{.StructInfo.Package}}.{{.StructIn
 }
 
 func ({{.S}} {{.NewStructName}}) First() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
-	result := new({{.StructInfo.Package}}.{{.StructInfo.Type}})
-	if err := {{.S}}.DO.First(result); err != nil {
+	if result, err := {{.S}}.DO.First(); err != nil {
 		return nil, err
+	} else {
+		return result.(*{{.StructInfo.Package}}.{{.StructInfo.Type}}), nil
 	}
-	return result, nil
-}
-
-func ({{.S}} {{.NewStructName}}) Last() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
-	result := new({{.StructInfo.Package}}.{{.StructInfo.Type}})
-	if err := {{.S}}.DO.Last(result); err != nil {
-		return nil, err
-	}
-	return result, nil
 }
 
 func ({{.S}} {{.NewStructName}}) Take() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
-	result := new({{.StructInfo.Package}}.{{.StructInfo.Type}})
-	if err := {{.S}}.DO.Take(result); err != nil {
+	if result, err := {{.S}}.DO.Take(); err != nil {
 		return nil, err
+	} else {
+		return result.(*{{.StructInfo.Package}}.{{.StructInfo.Type}}), nil
 	}
-	return result, nil
 }
 
-func ({{.S}} {{.NewStructName}}) Find() (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}},err error) {
-	return result, {{.S}}.DO.Find(&result)
+func ({{.S}} {{.NewStructName}}) Last() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
+	if result, err := {{.S}}.DO.Last(); err != nil {
+		return nil, err
+	} else {
+		return result.(*{{.StructInfo.Package}}.{{.StructInfo.Type}}), nil
+	}
+}
+
+func ({{.S}} {{.NewStructName}}) Find() ([]*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
+	result, err := {{.S}}.DO.Find()
+	return result.([]*{{.StructInfo.Package}}.{{.StructInfo.Type}}), err
 }
 
 func ({{.S}} {{.NewStructName}}) FindInBatches(result []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, batchSize int, fc func(tx gen.Dao, batch int) error) error {
@@ -196,11 +197,12 @@ func ({{.S}} {{.NewStructName}}) FindInBatches(result []*{{.StructInfo.Package}}
 }
 
 func ({{.S}} {{.NewStructName}}) FindByPage(offset int, limit int) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, count int64, err error) {
-	count, err = {{.S}}.DO.Count()
+	count, err = {{.S}}.Count()
 	if err != nil {
 		return
 	}
-	err = {{.S}}.DO.Offset(offset).Limit(limit).Find(&result)
+
+	result, err = {{.S}}.Offset(offset).Limit(limit).Find()
 	return
 }
 

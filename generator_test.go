@@ -191,31 +191,32 @@ func (u user) Save(value *User) error {
 }
 
 func (u user) First() (*User, error) {
-	result := new(User)
-	if err := u.DO.First(result); err != nil {
+	if resultPtr, err := u.DO.First(); err != nil {
 		return nil, err
+	} else {
+		return resultPtr.(*User), nil
 	}
-	return result, nil
 }
 
 func (u user) Last() (*User, error) {
-	result := new(User)
-	if err := u.DO.Last(result); err != nil {
+	if resultPtr, err := u.DO.Last(); err != nil {
 		return nil, err
+	} else {
+		return resultPtr.(*User), nil
 	}
-	return result, nil
 }
 
 func (u user) Take() (*User, error) {
-	result := new(User)
-	if err := u.DO.Take(result); err != nil {
+	if resultPtr, err := u.DO.Take(); err != nil {
 		return nil, err
+	} else {
+		return resultPtr.(*User), nil
 	}
-	return result, nil
 }
 
-func (u user) Find() (result []*User, err error) {
-	return result, u.DO.Find(&result)
+func (u user) Find() ([]*User, error) {
+	result, err := u.DO.Find()
+	return result.([]*User), err
 }
 
 func (u user) FindInBatches(result []*User, batchSize int, fc func(tx Dao, batch int) error) error {
@@ -223,11 +224,12 @@ func (u user) FindInBatches(result []*User, batchSize int, fc func(tx Dao, batch
 }
 
 func (u user) FindByPage(offset int, limit int) (result []*User, count int64, err error) {
-	count, err = u.DO.Count()
+	count, err = u.Count()
 	if err != nil {
 		return
 	}
-	err = u.DO.Offset(offset).Limit(limit).Find(&result)
+
+	result, err = u.Offset(offset).Limit(limit).Find()
 	return
 }
 
