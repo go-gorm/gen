@@ -805,35 +805,23 @@ o.Unscoped().Where(o.ID.Eq(10)).Delete()
 
 #### Method interface
 
-Method interface is a abstraction of query methods, all functions it contains are query methods and above comments describe the specific query conditions or logic.
+Method interface is an abstraction of query methods, all functions it contains are query methods and above comments describe the specific query conditions or logic.  
+SQL supports simple `where` query or execute complete SQL, simple query the condition is wrapped in `where()`, execute complete SQL is wrapped in `sql()`, or you can omit,  write the complete SQL directly.
 
 ```go
-type Model interface {
-    // Where("name=@name and age=@age")
-    FindByNameAndAge(name string, age int) (gen.T, error)
+type Method interface {
+    // where("name=@name and age=@age")
+    SimpleFindByNameAndAge(name string, age int) (gen.T, error)
     
-    // sql(select * from user where name=@name)
-    FindByName(name string) ([]gen.T, error)
-   
-    // select * from user where name=@id
-    FindByAge(age int) ([]gen.T, error)
-  
-    // select * from user limit 1
-    FindOne() (gen.M, error)
-  
-    // select * from user
-    FindAll() ([]gen.M, error)
+    // sql(select * from users where id=@id)
+    FindUserToMap(id int) (gen.M, error)
     
-    // select * from @@table 
-    //   {{where}}
-    //        {{if cond}}id=@id {{end}}
-    //        {{if name != ""}}@@key=@value{{end}}
-    //    {{end}}
-    FindByIDOrKey(cond bool, id int, key, value string) (gen.T, error)
+    // insert into users (name,age) values (@name,@age)
+    InsertValue(age int, name string) error
 }
 ```
 
-Return values must contains less than 1 `gen.T`/`gen.M` and less than 1 error.
+Return values must contains less than 1 `gen.T`/`gen.M` and less than 1 error. You can also use the basic field(like `string` `int`) as the return parameter，`gen.T` represents return a single result, `[]gen.T` represents return an array of multiple results，
 
 ##### Syntax of template
 
@@ -841,10 +829,50 @@ Return values must contains less than 1 `gen.T`/`gen.M` and less than 1 error.
 
 - `gen.T` represents specified `struct` or `table`
 - `gen.M` represents `map[string]interface`
-- `@@table` represents table's name
-- `@name` represents variable
+- `@@table`  represents table's name(if method's parameter doesn't contains variable `table`, GEN will generate `table` from model struct)
+- `@<columnName>` represents column's name or table's name
+- `@<name>` represents variable
 
-###### Where
+###### template
+Logical operations must be wrapped in `{{}}`,and end must used `{{end}}`, All templates support nesting
+- `if` `else if` `else` the condition supports a bool parameter or operation expression. The expression support go syntax 
+- `where` The where element inserts  `where` clause only if the child element returns anything. It will be removed if clause starts with `and` or `or`, where element removes them. If there is no connector between clauses,GEN will be automatically add `and`
+- `Set` The set element inserts  `set` clause only if the child element returns anything. It will be removed if clause starts with `,`, where element removes them. If there is no connector between clauses,GEN will be automatically add `,`
+- `...` Coming soon
+
+###### `If` clause
+
+```sql
+{{if cond1}}{{else if cond2}}{{else}}{{end}}
+```
+
+###### Raw
+
+```go
+// select * from users where {{if name !=""}} name=@name{{end}}
+methond(name string)(gen.T,error) 
+```
+
+###### Raw template
+
+```sql
+select * from @@table where
+{{if age>60}}
+    status="older"
+{{else if age>30}}
+    status="middle-ager"
+{{else if age>18}}
+    status="younger"
+{{else}}
+    {{if sex=="male"}}
+        status="boys"
+    {{else}}
+        status="girls"
+    {{end}}
+{{end}}
+```
+
+###### `Where` clause
 
 ```sql
 {{where}}{{end}}
@@ -853,8 +881,8 @@ Return values must contains less than 1 `gen.T`/`gen.M` and less than 1 error.
 ###### Raw
 
 ```go
-// select * from user
-methond() error
+// select * from {{where}}id=@id{{end}}
+methond(id int) error
 ```
 
 ###### Raw template
@@ -867,6 +895,66 @@ select * from @@table
 {{end}}
 ```
 
+###### `Set` clause
+
+```sql
+{{set}}{{end}}
+```
+
+###### Raw
+
+```go
+// update users {{set}}name=@name{{end}}
+methond() error
+```
+
+###### Raw template
+
+```sql
+update @@table 
+{{set}}
+    {{if name!=""}} name=@name {{end}}
+    {{if age>0}} age=@age {{end}}
+{{end}}
+where id=@id
+```
+
+##### Method example
+```go
+type Method interface {
+    // Where("name=@name and age=@age")
+    SimpleFindByNameAndAge(name string, age int) (gen.T, error)
+    
+    // select * from users where id=@id
+    FindUserToMap(id int) (gen.M, error)
+    
+    //sql(insert into @@table (name,age) values (@name,@age) )
+    InsertValue(age int, name string) error
+    
+    // select name from @@table where id=@id
+    FindNameById(id int) string
+    
+    //select * from @@table
+    //  {{where}}
+    //      id>0
+    //      {{if cond}}id=@id {{end}}
+    //      {{if key!="" && value != ""}} or @@key=@value{{end}}
+    //  {{end}}
+    FindByIDOrCustom(cond bool, id int, key, value string) ([]gen.T, error)
+    
+    //update @@table
+    //  {{set}}
+    //      update_time=now()
+    //      {{if name != ""}}
+    //          name=@name
+    //      {{end}}
+    //  {{end}}
+    //  {{where}}
+    //      id=@id
+    //  {{end}}
+    UpdateName(name string, id int) error
+}
+```
 #### Smart Select Fields
 
 GEN allows select specific fields with `Select`, if you often use this in your application, maybe you want to define a smaller struct for API usage which can select specific fields automatically, for example:
