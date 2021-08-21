@@ -214,8 +214,9 @@ func (u user) Take() (*User, error) {
 	}
 }
 
-func (u user) Find() (result []*User, err error) {
-	return result, u.DO.Find(&result)
+func (u user) Find() ([]*User, error) {
+	result, err := u.DO.Find()
+	return result.([]*User), err
 }
 
 func (u user) FindInBatches(result []*User, batchSize int, fc func(tx Dao, batch int) error) error {
@@ -223,11 +224,12 @@ func (u user) FindInBatches(result []*User, batchSize int, fc func(tx Dao, batch
 }
 
 func (u user) FindByPage(offset int, limit int) (result []*User, count int64, err error) {
-	count, err = u.DO.Count()
+	count, err = u.Count()
 	if err != nil {
 		return
 	}
-	err = u.DO.Offset(offset).Limit(limit).Find(&result)
+
+	result, err = u.Offset(offset).Limit(limit).Find()
 	return
 }
 

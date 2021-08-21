@@ -290,8 +290,14 @@ func (d *DO) singleQuery(query func(dest interface{}, conds ...interface{}) *gor
 	return result, nil
 }
 
-func (d *DO) Find(dest interface{}) error {
-	return d.db.Find(dest).Error
+func (d *DO) Find() (results interface{}, err error) {
+	return d.multiQuery(d.db.Find)
+}
+
+func (d *DO) multiQuery(query func(dest interface{}, conds ...interface{}) *gorm.DB) (results interface{}, err error) {
+	resultsPtr := d.newResultSlicePointer()
+	err = query(resultsPtr).Error
+	return reflect.Indirect(reflect.ValueOf(resultsPtr)).Interface(), err
 }
 
 func (d *DO) FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error {
@@ -399,11 +405,15 @@ func (d *DO) RollBackTo(name string) Dao {
 }
 
 func (d *DO) newResult() interface{} {
-	model := reflect.ValueOf(d.db.Statement.Model)
-	if model.Kind() == reflect.Ptr {
-		model = model.Elem()
-	}
-	return reflect.New(model.Type()).Interface()
+	return reflect.New(d.getModel()).Interface()
+}
+
+func (d *DO) newResultSlicePointer() interface{} {
+	return reflect.New(reflect.SliceOf(reflect.PtrTo(d.getModel()))).Interface()
+}
+
+func (d *DO) getModel() reflect.Type {
+	return reflect.Indirect(reflect.ValueOf(d.db.Statement.Model)).Type()
 }
 
 func hintToExpression(hs []Hint) []clause.Expression {

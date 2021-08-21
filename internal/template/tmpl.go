@@ -187,8 +187,9 @@ func ({{.S}} {{.NewStructName}}) Last() (*{{.StructInfo.Package}}.{{.StructInfo.
 	}
 }
 
-func ({{.S}} {{.NewStructName}}) Find() (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}},err error) {
-	return result, {{.S}}.DO.Find(&result)
+func ({{.S}} {{.NewStructName}}) Find() ([]*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
+	result, err := {{.S}}.DO.Find()
+	return result.([]*{{.StructInfo.Package}}.{{.StructInfo.Type}}), err
 }
 
 func ({{.S}} {{.NewStructName}}) FindInBatches(result []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, batchSize int, fc func(tx gen.Dao, batch int) error) error {
@@ -196,11 +197,12 @@ func ({{.S}} {{.NewStructName}}) FindInBatches(result []*{{.StructInfo.Package}}
 }
 
 func ({{.S}} {{.NewStructName}}) FindByPage(offset int, limit int) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, count int64, err error) {
-	count, err = {{.S}}.DO.Count()
+	count, err = {{.S}}.Count()
 	if err != nil {
 		return
 	}
-	err = {{.S}}.DO.Offset(offset).Limit(limit).Find(&result)
+
+	result, err = {{.S}}.Offset(offset).Limit(limit).Find()
 	return
 }
 
