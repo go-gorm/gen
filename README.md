@@ -805,8 +805,8 @@ o.Unscoped().Where(o.ID.Eq(10)).Delete()
 
 #### Method interface
 
-Method interface is an abstraction of query methods, all functions it contains are query methods and above comments describe the specific query conditions or logic.  
-SQL supports simple `where` query or execute complete SQL, simple query the condition is wrapped in `where()`, execute complete SQL is wrapped in `sql()`, or you can omit,  write the complete SQL directly.
+Method interface is an abstraction of query methods, all functions it contains are query methods and above comments describe the specific query conditions or logic.
+SQL supports simple `where` query or execute raw SQL. Simple query conditions wrapped by `where()`, and raw SQL wrapped by `sql()`（not required）
 
 ```go
 type Method interface {
@@ -821,7 +821,7 @@ type Method interface {
 }
 ```
 
-Return values must contains less than 1 `gen.T`/`gen.M` and less than 1 error. You can also use the basic field(like `string` `int`) as the return parameter，`gen.T` represents return a single result, `[]gen.T` represents return an array of multiple results，
+Return values must contains less than 1 `gen.T`/`gen.M` and less than 1 error. You can also use bulitin type (like `string`/ `int`) as the return parameter，`gen.T` represents return a single result struct's pointer, `[]gen.T` represents return an array of result structs' pointer，
 
 ##### Syntax of template
 
@@ -829,15 +829,15 @@ Return values must contains less than 1 `gen.T`/`gen.M` and less than 1 error. Y
 
 - `gen.T` represents specified `struct` or `table`
 - `gen.M` represents `map[string]interface`
-- `@@table`  represents table's name(if method's parameter doesn't contains variable `table`, GEN will generate `table` from model struct)
+- `@@table`  represents table's name (if method's parameter doesn't contains variable `table`, GEN will generate `table` from model struct)
 - `@<columnName>` represents column's name or table's name
-- `@<name>` represents variable
+- `@<name>` represents normal query variable
 
 ###### template
 Logical operations must be wrapped in `{{}}`,and end must used `{{end}}`, All templates support nesting
-- `if` `else if` `else` the condition supports a bool parameter or operation expression. The expression support go syntax 
-- `where` The where element inserts  `where` clause only if the child element returns anything. It will be removed if clause starts with `and` or `or`, where element removes them. If there is no connector between clauses,GEN will be automatically add `and`
-- `Set` The set element inserts  `set` clause only if the child element returns anything. It will be removed if clause starts with `,`, where element removes them. If there is no connector between clauses,GEN will be automatically add `,`
+- `if`/`else if`/`else` the condition accept a bool parameter or operation expression which conforms to Golang syntax.
+- `where` The `where` clause will be inserted only if the child elements return something. The key word  `and` or `or`  in front of clause will be removed. And `and` will be added automatically when there is no junction keyword between query condition clause. 
+- `Set` The  `set` clause will be inserted only if the child elements return something. The `,` in front of columns array will be removed.And `,` will be added automatically when there is no junction keyword between query coulmns.
 - `...` Coming soon
 
 ###### `If` clause
@@ -846,14 +846,14 @@ Logical operations must be wrapped in `{{}}`,and end must used `{{end}}`, All te
 {{if cond1}}{{else if cond2}}{{else}}{{end}}
 ```
 
-###### Raw
+Usage in raw SQL
 
 ```go
 // select * from users where {{if name !=""}} name=@name{{end}}
 methond(name string)(gen.T,error) 
 ```
 
-###### Raw template
+Usage in raw SQL template
 
 ```sql
 select * from @@table where
@@ -878,14 +878,14 @@ select * from @@table where
 {{where}}{{end}}
 ```
 
-###### Raw
+Usage in raw SQL
 
 ```go
 // select * from {{where}}id=@id{{end}}
 methond(id int) error
 ```
 
-###### Raw template
+Usage in raw SQL template
 
 ```sql
 select * from @@table 
@@ -901,14 +901,14 @@ select * from @@table
 {{set}}{{end}}
 ```
 
-###### Raw
+Usage in raw SQL
 
 ```go
 // update users {{set}}name=@name{{end}}
 methond() error
 ```
 
-###### Raw template
+Usage in raw SQL template
 
 ```sql
 update @@table 
@@ -919,7 +919,8 @@ update @@table
 where id=@id
 ```
 
-##### Method example
+##### Method Interface Example
+
 ```go
 type Method interface {
     // Where("name=@name and age=@age")
@@ -955,6 +956,7 @@ type Method interface {
     UpdateName(name string, id int) error
 }
 ```
+
 #### Smart Select Fields
 
 GEN allows select specific fields with `Select`, if you often use this in your application, maybe you want to define a smaller struct for API usage which can select specific fields automatically, for example:
