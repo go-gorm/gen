@@ -4,131 +4,12 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-	"time"
 
-	"gorm.io/gorm"
-	"gorm.io/gorm/callbacks"
-	"gorm.io/gorm/utils/tests"
 	"gorm.io/hints"
-
-	"gorm.io/gen/field"
 )
 
-var db, _ = gorm.Open(tests.DummyDialector{}, nil)
-
-func init() {
-	db = db.Debug()
-
-	callbacks.RegisterDefaultCallbacks(db, &callbacks.Config{
-		UpdateClauses: []string{"UPDATE", "SET", "WHERE", "ORDER BY", "LIMIT"},
-		DeleteClauses: []string{"DELETE", "FROM", "WHERE", "ORDER BY", "LIMIT"},
-	})
-}
-
-// UserRaw user data struct
-type UserRaw struct {
-	ID         uint `gorm:"primary_key"`
-	Name       string
-	Age        int
-	Score      float64
-	Address    string
-	Famous     bool
-	RegisterAt time.Time
-}
-
-func (UserRaw) TableName() string {
-	return "users_info"
-}
-
-// StudentRaw student data struct
-type StudentRaw struct {
-	ID         int64 `gorm:"primary_key"`
-	Name       string
-	Age        int
-	Instructor int64 //导师
-}
-
-func (StudentRaw) TableName() string {
-	return "student"
-}
-
-// Teacher teacher data struct
-type TeacherRaw struct {
-	ID   int64 `gorm:"primary_key"`
-	Name string
-}
-
-func (TeacherRaw) TableName() string {
-	return "teacher"
-}
-
-type User struct {
-	DO
-
-	ID         field.Uint
-	Name       field.String
-	Age        field.Int
-	Score      field.Float64
-	Address    field.String
-	Famous     field.Bool
-	RegisterAt field.Time
-}
-
-var u = func() *User {
-	u := User{
-		ID:         field.NewUint("", "id"),
-		Name:       field.NewString("", "name"),
-		Age:        field.NewInt("", "age"),
-		Score:      field.NewFloat64("", "score"),
-		Address:    field.NewString("", "address"),
-		Famous:     field.NewBool("", "famous"),
-		RegisterAt: field.NewTime("", "register_at"),
-	}
-	u.UseDB(db.Session(&gorm.Session{DryRun: true}))
-	u.UseModel(UserRaw{})
-	return &u
-}()
-
-type Student struct {
-	DO
-
-	ID         field.Int64
-	Name       field.String
-	Age        field.Int
-	Instructor field.Int64
-}
-
-var student = func() *Student {
-	s := Student{
-		ID:         field.NewInt64("student", "id"),
-		Name:       field.NewString("student", "name"),
-		Age:        field.NewInt("student", "age"),
-		Instructor: field.NewInt64("student", "instructor"),
-	}
-	s.UseDB(db.Session(&gorm.Session{DryRun: true}))
-	s.UseModel(StudentRaw{})
-	return &s
-}()
-
-type Teacher struct {
-	DO
-
-	ID   field.Int64
-	Name field.String
-}
-
-var teacher = func() *Teacher {
-	t := Teacher{
-		ID:   field.NewInt64("teacher", "id"),
-		Name: field.NewString("teacher", "name"),
-	}
-	t.UseDB(db.Session(&gorm.Session{DryRun: true}))
-	t.UseModel(TeacherRaw{})
-	return &t
-}()
-
-func checkBuildExpr(t *testing.T, e Dao, opts []stmtOpt, result string, vars []interface{}) {
-	stmt := e.(*DO).build(opts...)
+func checkBuildExpr(t *testing.T, e subQuery, opts []stmtOpt, result string, vars []interface{}) {
+	stmt := e.underlyingDO().build(opts...)
 
 	sql := strings.TrimSpace(stmt.SQL.String())
 	if sql != result {
@@ -142,7 +23,7 @@ func checkBuildExpr(t *testing.T, e Dao, opts []stmtOpt, result string, vars []i
 
 func TestDO_methods(t *testing.T) {
 	testcases := []struct {
-		Expr         Dao
+		Expr         subQuery
 		Opts         []stmtOpt
 		ExpectedVars []interface{}
 		Result       string
@@ -199,7 +80,11 @@ func TestDO_methods(t *testing.T) {
 		},
 		{
 			Expr:   u.Order(u.ID.Desc(), u.Age),
-			Result: "ORDER BY `id` DESC, `age`",
+			Result: "ORDER BY `id` DESC,`age`",
+		},
+		{
+			Expr:   u.Order(u.ID.Desc()).Order(u.Age),
+			Result: "ORDER BY `id` DESC,`age`",
 		},
 		{
 			Expr:   u.Hints(hints.New("hint")).Select(),

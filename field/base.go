@@ -117,28 +117,28 @@ func (e expr) IsNotNull() Expr {
 	return e.setExpression(clause.Expr{SQL: "? IS NOT NULL", Vars: []interface{}{e.RawExpr()}})
 }
 
-func (e expr) Count() Expr {
-	return e.setExpression(clause.Expr{SQL: "COUNT(?)", Vars: []interface{}{e.RawExpr()}})
+func (e expr) Count() Int {
+	return Int{e.setExpression(clause.Expr{SQL: "COUNT(?)", Vars: []interface{}{e.RawExpr()}})}
 }
 
-func (e expr) Length() Expr {
-	return e.setExpression(clause.Expr{SQL: "LENGTH(?)", Vars: []interface{}{e.RawExpr()}})
+func (e expr) Length() Int {
+	return Int{e.setExpression(clause.Expr{SQL: "LENGTH(?)", Vars: []interface{}{e.RawExpr()}})}
 }
 
-func (e expr) Max() Expr {
-	return e.setExpression(clause.Expr{SQL: "MAX(?)", Vars: []interface{}{e.RawExpr()}})
+func (e expr) Max() Float64 {
+	return Float64{e.setExpression(clause.Expr{SQL: "MAX(?)", Vars: []interface{}{e.RawExpr()}})}
 }
 
-func (e expr) Min() Expr {
-	return e.setExpression(clause.Expr{SQL: "MIN(?)", Vars: []interface{}{e.RawExpr()}})
+func (e expr) Min() Float64 {
+	return Float64{e.setExpression(clause.Expr{SQL: "MIN(?)", Vars: []interface{}{e.RawExpr()}})}
 }
 
-func (e expr) Avg() Expr {
-	return e.setExpression(clause.Expr{SQL: "AVG(?)", Vars: []interface{}{e.RawExpr()}})
+func (e expr) Avg() Float64 {
+	return Float64{e.setExpression(clause.Expr{SQL: "AVG(?)", Vars: []interface{}{e.RawExpr()}})}
 }
 
-func (e expr) Sum() Expr {
-	return e.setExpression(clause.Expr{SQL: "SUM(?)", Vars: []interface{}{e.RawExpr()}})
+func (e expr) Sum() Float64 {
+	return Float64{e.setExpression(clause.Expr{SQL: "SUM(?)", Vars: []interface{}{e.RawExpr()}})}
 }
 
 func (e expr) WithTable(table string) Expr {
@@ -181,11 +181,11 @@ func (e expr) Desc() Expr {
 }
 
 // ======================== general experssion ========================
-func (e expr) between(values []interface{}) Expr {
+func (e expr) between(values []interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "? BETWEEN ? AND ?", Vars: append([]interface{}{e.RawExpr()}, values...)})
 }
 
-func (e expr) add(value interface{}) Expr {
+func (e expr) add(value interface{}) expr {
 	switch v := value.(type) {
 	case time.Duration:
 		return e.setExpression(clause.Expr{SQL: "DATE_ADD(?, INTERVAL ? MICROSECOND)", Vars: []interface{}{e.RawExpr(), v.Microseconds()}})
@@ -194,7 +194,7 @@ func (e expr) add(value interface{}) Expr {
 	}
 }
 
-func (e expr) sub(value interface{}) Expr {
+func (e expr) sub(value interface{}) expr {
 	switch v := value.(type) {
 	case time.Duration:
 		return e.setExpression(clause.Expr{SQL: "DATE_SUB(?, INTERVAL ? MICROSECOND)", Vars: []interface{}{e.RawExpr(), v.Microseconds()}})
@@ -203,67 +203,71 @@ func (e expr) sub(value interface{}) Expr {
 	}
 }
 
-func (e expr) mul(value interface{}) Expr {
+func (e expr) mul(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "?*?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) div(value interface{}) Expr {
+func (e expr) div(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "?/?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) mod(value interface{}) Expr {
+func (e expr) mod(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "?%?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) floorDiv(value interface{}) Expr {
+func (e expr) floorDiv(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "? DIV ?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) rightShift(value interface{}) Expr {
+func (e expr) floor() expr {
+	return e.setExpression(clause.Expr{SQL: "FLOOR(?)", Vars: []interface{}{e.RawExpr()}})
+}
+
+func (e expr) rightShift(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "?>>?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) leftShift(value interface{}) Expr {
+func (e expr) leftShift(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "?<<?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) bitXor(value interface{}) Expr {
+func (e expr) bitXor(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "?^?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) bitAnd(value interface{}) Expr {
+func (e expr) bitAnd(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "?&?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) bitOr(value interface{}) Expr {
+func (e expr) bitOr(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "?|?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) bitFlip() Expr {
+func (e expr) bitFlip() expr {
 	return e.setExpression(clause.Expr{SQL: "~?", Vars: []interface{}{e.RawExpr()}})
 }
 
-func (e expr) regexp(value interface{}) Expr {
+func (e expr) regexp(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "? REGEXP ?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) not() Expr {
+func (e expr) not() expr {
 	return e.setExpression(clause.Expr{SQL: "NOT ?", Vars: []interface{}{e.RawExpr()}})
 }
 
-func (e expr) is(value interface{}) Expr {
+func (e expr) is(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "? IS ?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) and(value interface{}) Expr {
+func (e expr) and(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "? AND ?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) or(value interface{}) Expr {
+func (e expr) or(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "? OR ?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) xor(value interface{}) Expr {
+func (e expr) xor(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "? XOR ?", Vars: []interface{}{e.RawExpr(), value}})
 }
 

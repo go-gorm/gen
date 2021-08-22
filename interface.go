@@ -24,6 +24,7 @@ type (
 
 type subQuery interface {
 	UnderlyingDB() *gorm.DB
+	underlyingDO() *DO
 	build(opts ...stmtOpt) *gorm.Statement
 }
 
@@ -42,7 +43,6 @@ type Dao interface {
 	Order(columns ...field.Expr) Dao
 	Distinct(columns ...field.Expr) Dao
 	Omit(columns ...field.Expr) Dao
-	// Joins(cond field.Expr) Dao
 	Join(table schema.Tabler, conds ...Condition) Dao
 	LeftJoin(table schema.Tabler, conds ...Condition) Dao
 	RightJoin(table schema.Tabler, conds ...Condition) Dao
@@ -59,19 +59,19 @@ type Dao interface {
 	Create(value interface{}) error
 	CreateInBatches(value interface{}, batchSize int) error
 	Save(value interface{}) error
-	First(dest interface{}, conds ...field.Expr) error
-	Last(dest interface{}, conds ...field.Expr) error
-	Take(dest interface{}, conds ...field.Expr) error
-	Find(dest interface{}, conds ...field.Expr) error
+	First() (result interface{}, err error)
+	Take() (result interface{}, err error)
+	Last() (result interface{}, err error)
+	Find() (results interface{}, err error)
 	FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error
-	FirstOrInit(dest interface{}, conds ...field.Expr) error
-	FirstOrCreate(dest interface{}, conds ...field.Expr) error
+	// FirstOrInit(dest interface{}) error
+	// FirstOrCreate(dest interface{}) error
 	Update(column field.Expr, value interface{}) error
 	Updates(values interface{}) error
 	UpdateColumn(column field.Expr, value interface{}) error
 	UpdateColumns(values interface{}) error
-	Delete(value interface{}, conds ...field.Expr) error
-	Count(count *int64) error
+	Delete() error
+	Count() (int64, error)
 	Row() *sql.Row
 	Rows() (*sql.Rows, error)
 	Scan(dest interface{}) error
