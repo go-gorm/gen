@@ -2,13 +2,54 @@
 
 The code generator base on [GORM](https://github.com/go-gorm/gorm), aims to be developer friendly.
 
-## Overview
+***Overview***
 
 - CRUD or DIY query method code generation
 - Auto migration from database to code
 - Transactions, Nested Transactions, Save Point, RollbackTo to Saved Point
 - Competely compatible with GORM
 - Developer Friendly
+
+## Contents
+
+- [Installation](#intsallation)
+- [QuickStart](#quick-start)
+  - [Project Directory](#project-directory)
+- [API Examples](#api-examples)
+  - [Field Expression](#field-expression)
+    - [Create Field](#create-field)
+  - [CRUD API](#crud-api)
+    - [Create](#create)
+      - [Create Record](#create-record)
+      - [Create Record with Selected Fields](#create-record-with-selected-fields)
+      - [Batch Insert](#batch-insert)
+    - [Query](#query)
+      - [Retrieving a single object](#retrieving-a-single-object)
+      - [Retrieving objects with primary key](#retrieving-objects-with-primary-key)
+      - [Retrieving all objects](#retrieving-all-objects)
+      - [Conditions](#conditions)
+      - [SubQuery](#subquery)
+      - [Advanced Query](#advanced-query)
+    - [Update](#update)
+      - [Update single column](#update-single-column)
+      - [Update multiple columns](#update-multiple-columns)
+      - [Update selected fields](#update-selected-fields)
+    - [Delete](#delete)
+      - [Delete a record](#delete-a-record)
+      - [Delete with primary key](#delete-with-primary-key)
+      - [Batch Delete](#batch-delete)
+      - [Soft Delete](#soft-delete)
+      - [Find soft deleted records](#find-soft-deleted-records)
+      - [Delete permanently](#delete-permanently)
+  - [DIY Method](#diy-method)
+    - [Method interface](#method-interface)
+      - [Syntax of template](#syntax-of-template)
+      - [Method interface example](#method-interface-example)
+    - [Smart Select Fields](#smart-select-fields)
+  - [Advanced Topics](#advanced-topics)
+    - [Hints](#hints)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Installation
 
@@ -223,7 +264,7 @@ u.Create(&users)
 
 #### Query
 
-##### Retriving a single object
+##### Retrieving a single object
 
 Generated code provides `First`, `Take`, `Last` methods to retrieve a single object from the database, it adds `LIMIT 1` condition when querying the database, and it will return the error `ErrRecordNotFound` if no record is found.
 
