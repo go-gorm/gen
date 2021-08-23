@@ -10,17 +10,83 @@ The code generator base on [GORM](https://github.com/go-gorm/gorm), aims to be d
 - Competely compatible with GORM
 - Developer Friendly
 
+## Contents
+
+- [GORM/GEN](#gormgen)
+  - [Contents](#contents)
+  - [Installation](#installation)
+  - [Quick start](#quick-start)
+    - [Project Directory](#project-directory)
+  - [API Examples](#api-examples)
+    - [Field Expression](#field-expression)
+      - [Create Field](#create-field)
+    - [CRUD API](#crud-api)
+      - [Create](#create)
+        - [Create record](#create-record)
+        - [Create record with selected fields](#create-record-with-selected-fields)
+        - [Batch Insert](#batch-insert)
+      - [Query](#query)
+        - [Retrieving a single object](#retrieving-a-single-object)
+        - [Retrieving objects with primary key](#retrieving-objects-with-primary-key)
+        - [Retrieving all objects](#retrieving-all-objects)
+        - [Conditions](#conditions)
+          - [String Conditions](#string-conditions)
+          - [Inline Condition](#inline-condition)
+          - [Not Conditions](#not-conditions)
+          - [Or Conditions](#or-conditions)
+          - [Group Conditions](#group-conditions)
+          - [Selecting Specific Fields](#selecting-specific-fields)
+          - [Order](#order)
+          - [Limit & Offset](#limit--offset)
+          - [Group By & Having](#group-by--having)
+          - [Distinct](#distinct)
+          - [Joins](#joins)
+        - [SubQuery](#subquery)
+          - [From SubQuery](#from-subquery)
+          - [Update from SubQuery](#update-from-subquery)
+        - [Advanced Query](#advanced-query)
+          - [Iteration](#iteration)
+          - [FindInBatches](#findinbatches)
+          - [Pluck](#pluck)
+          - [Scopes](#scopes)
+          - [Count](#count)
+      - [Update](#update)
+        - [Update single column](#update-single-column)
+        - [Updates multiple columns](#updates-multiple-columns)
+        - [Update selected fields](#update-selected-fields)
+      - [Delete](#delete)
+        - [Delete record](#delete-record)
+        - [Delete with primary key](#delete-with-primary-key)
+        - [Batch Delete](#batch-delete)
+        - [Soft Delete](#soft-delete)
+        - [Find soft deleted records](#find-soft-deleted-records)
+        - [Delete permanently](#delete-permanently)
+    - [DIY method](#diy-method)
+      - [Method interface](#method-interface)
+        - [Syntax of template](#syntax-of-template)
+          - [placeholder](#placeholder)
+          - [template](#template)
+          - [`If` clause](#if-clause)
+          - [`Where` clause](#where-clause)
+          - [`Set` clause](#set-clause)
+        - [Method interface example](#method-interface-example)
+      - [Smart select fields](#smart-select-fields)
+    - [Advanced Topics](#advanced-topics)
+      - [Hints](#hints)
+  - [Contributing](#contributing)
+  - [License](#license)
+
 ## Installation
 
 To install Gen package, you need to install Go and set your Go workspace first.
 
-1. The first need Go installed(version 1.14+ is required), then you can use the below Go command to install Gen.
+1.The first need Go installed(version 1.14+ is required), then you can use the below Go command to install Gen.
 
 ```bash
 go get -u gorm.io/gen
 ```
 
-2. Import it in your code:
+2.Import it in your code:
 
 ```go
 import "gorm.io/gen"
@@ -87,7 +153,7 @@ demo
 
 ## API Examples
 
-### Field Expression 
+### Field Expression
 
 #### Create Field
 
@@ -123,7 +189,7 @@ t := field.NewTime("user", "create_time")
 
 ### CRUD API
 
-Here is a basic struct `user` and struct `DB`. 
+Here is a basic struct `user` and struct `DB`.
 
 ```go
 // generated code
@@ -152,7 +218,7 @@ type DB struct {
 
 #### Create
 
-##### Create Record
+##### Create record
 
 ```go
 // u refer to query.user
@@ -164,7 +230,7 @@ err := u.Create(&user) // pass pointer of data to Create
 err // returns error
 ```
 
-#####  Create Record With Selected Fields
+##### Create record with selected fields
 
 Create a record and assgin a value to the fields specified.
 
@@ -223,7 +289,7 @@ u.Create(&users)
 
 #### Query
 
-##### Retriving a single object
+##### Retrieving a single object
 
 Generated code provides `First`, `Take`, `Last` methods to retrieve a single object from the database, it adds `LIMIT 1` condition when querying the database, and it will return the error `ErrRecordNotFound` if no record is found.
 
@@ -705,7 +771,7 @@ u).Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
 
 > **NOTE** When update with struct, GEN will only update non-zero fields, you might want to use `map` to update attributes or use `Select` to specify fields to update
 
-##### Update Selected Fields
+##### Update selected fields
 
 If you want to update selected fields or ignore some fields when updating, you can use `Select`, `Omit`
 
@@ -723,7 +789,7 @@ u.Omit(u.Name).Where(u.ID.Eq(111)).Updates(map[string]interface{}{"name": "hello
 
 #### Delete
 
-##### Delete a Record
+##### Delete record
 
 ```go
 e := query.Query.Email
@@ -834,9 +900,11 @@ Return values must contains less than 1 `gen.T`/`gen.M` and less than 1 error. Y
 - `@<name>` represents normal query variable
 
 ###### template
+
 Logical operations must be wrapped in `{{}}`,and end must used `{{end}}`, All templates support nesting
+
 - `if`/`else if`/`else` the condition accept a bool parameter or operation expression which conforms to Golang syntax.
-- `where` The `where` clause will be inserted only if the child elements return something. The key word  `and` or `or`  in front of clause will be removed. And `and` will be added automatically when there is no junction keyword between query condition clause. 
+- `where` The `where` clause will be inserted only if the child elements return something. The key word  `and` or `or`  in front of clause will be removed. And `and` will be added automatically when there is no junction keyword between query condition clause.
 - `Set` The  `set` clause will be inserted only if the child elements return something. The `,` in front of columns array will be removed.And `,` will be added automatically when there is no junction keyword between query coulmns.
 - `...` Coming soon
 
@@ -929,7 +997,7 @@ update @@table
 where id=@id
 ```
 
-##### Method Interface Example
+##### Method interface example
 
 ```go
 type Method interface {
@@ -967,7 +1035,7 @@ type Method interface {
 }
 ```
 
-#### Smart Select Fields
+#### Smart select fields
 
 GEN allows select specific fields with `Select`, if you often use this in your application, maybe you want to define a smaller struct for API usage which can select specific fields automatically, for example:
 
@@ -1023,15 +1091,10 @@ users, err := u.Hints(hints.ForceIndex("idx_user_name", "idx_user_id").ForJoin()
 // SELECT * FROM `users` FORCE INDEX FOR JOIN (`idx_user_name`,`idx_user_id`)"
 ```
 
-
-
 ## Contributing
 
 You can help to deliver a better GORM/GEN
 
-
-
 ## License
 
 Released under the [MIT License](https://github.com/go-gorm/gen/blob/master/License)
-
