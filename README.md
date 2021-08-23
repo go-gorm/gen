@@ -136,7 +136,7 @@ demo
 │       └── generate.go # execute it will generate codes
 ├── dal
 │   ├── dal.go # create connections with database server here
-│   └── model
+│   ├── model
 │   │   ├── method.go # DIY method interfaces
 │   │   └── model.go  # store struct which corresponding to the database table
 │   └── query  # generated code's directory
