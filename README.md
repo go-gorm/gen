@@ -2,7 +2,7 @@
 
 The code generator base on [GORM](https://github.com/go-gorm/gorm), aims to be developer friendly.
 
-***Overview***
+## Overview
 
 - CRUD or DIY query method code generation
 - Auto migration from database to code
