@@ -283,7 +283,7 @@ func (d *DO) Last() (result interface{}, err error) {
 }
 
 func (d *DO) singleQuery(query func(dest interface{}, conds ...interface{}) *gorm.DB) (result interface{}, err error) {
-	result = d.newResult()
+	result = d.newResultPointer()
 	if err := query(result).Error; err != nil {
 		return nil, err
 	}
@@ -404,7 +404,7 @@ func (d *DO) RollBackTo(name string) Dao {
 	return NewDO(d.db.RollbackTo(name))
 }
 
-func (d *DO) newResult() interface{} {
+func (d *DO) newResultPointer() interface{} {
 	return reflect.New(d.getModel()).Interface()
 }
 
