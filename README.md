@@ -830,7 +830,7 @@ Return values must contains less than 1 `gen.T`/`gen.M` and less than 1 error. Y
 - `gen.T` represents specified `struct` or `table`
 - `gen.M` represents `map[string]interface`
 - `@@table`  represents table's name (if method's parameter doesn't contains variable `table`, GEN will generate `table` from model struct)
-- `@<columnName>` represents column's name or table's name
+- @@<columnName>` represents column's name or table's name
 - `@<name>` represents normal query variable
 
 ###### template
