@@ -1,6 +1,6 @@
 module gorm.io/gen
 
-go 1.16
+go 1.14
 
 require (
 	golang.org/x/tools v0.1.5
