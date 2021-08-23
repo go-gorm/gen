@@ -79,5 +79,5 @@ func whereValue(value string) string {
 }
 
 func setValue(value string) string {
-	return value
+	return strings.Trim(value, ", ")
 }
