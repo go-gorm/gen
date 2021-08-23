@@ -843,17 +843,23 @@ Logical operations must be wrapped in `{{}}`,and end must used `{{end}}`, All te
 ###### `If` clause
 
 ```sql
-{{if cond1}}{{else if cond2}}{{else}}{{end}}
+{{if cond1}}
+    // do something here
+{{else if cond2}}
+    // do something here
+{{else}}
+    // do something here
+{{end}}
 ```
 
-Usage in raw SQL
+Use case in raw SQL:
 
 ```go
 // select * from users where {{if name !=""}} name=@name{{end}}
-methond(name string)(gen.T,error) 
+methond(name string) (gen.T,error) 
 ```
 
-Usage in raw SQL template
+Use case in raw SQL template:
 
 ```sql
 select * from @@table where
@@ -875,17 +881,19 @@ select * from @@table where
 ###### `Where` clause
 
 ```sql
-{{where}}{{end}}
+{{where}}
+    // do something here
+{{end}}
 ```
 
-Usage in raw SQL
+Use case in raw SQL
 
 ```go
 // select * from {{where}}id=@id{{end}}
 methond(id int) error
 ```
 
-Usage in raw SQL template
+Use case in raw SQL template
 
 ```sql
 select * from @@table 
@@ -898,17 +906,19 @@ select * from @@table
 ###### `Set` clause
 
 ```sql
-{{set}}{{end}}
+{{set}}
+    // sepecify update expression here
+{{end}}
 ```
 
-Usage in raw SQL
+Use case in raw SQL
 
 ```go
 // update users {{set}}name=@name{{end}}
 methond() error
 ```
 
-Usage in raw SQL template
+Use case in raw SQL template
 
 ```sql
 update @@table 
@@ -929,13 +939,13 @@ type Method interface {
     // select * from users where id=@id
     FindUserToMap(id int) (gen.M, error)
     
-    //sql(insert into @@table (name,age) values (@name,@age) )
+    // sql(insert into @@table (name,age) values (@name,@age) )
     InsertValue(age int, name string) error
     
     // select name from @@table where id=@id
     FindNameById(id int) string
     
-    //select * from @@table
+    // select * from @@table
     //  {{where}}
     //      id>0
     //      {{if cond}}id=@id {{end}}
@@ -943,7 +953,7 @@ type Method interface {
     //  {{end}}
     FindByIDOrCustom(cond bool, id int, key, value string) ([]gen.T, error)
     
-    //update @@table
+    // update @@table
     //  {{set}}
     //      update_time=now()
     //      {{if name != ""}}
