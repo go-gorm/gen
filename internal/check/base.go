@@ -41,6 +41,29 @@ type Member struct {
 	ModelType     string
 }
 
+// AllowType check Member Type
+func (m *Member) AllowType() bool {
+	switch m.Type {
+	case "string", "bytes":
+		return true
+	case "int", "int8", "int16", "int32", "int64", "uint", "uint8", "uint16", "uint32", "uint64":
+		return true
+	case "float64", "float32":
+		return true
+	case "bool":
+		return true
+	case "time.Time":
+		return true
+	default:
+		return false
+	}
+}
+
+// IsGormDeleteAt Judge whether member is gorm.DeletedAt
+func (m *Member) IsGormDeleteAt() bool {
+	return m.Type == "gorm.DeletedAt"
+}
+
 // Column table column's info
 type Column struct {
 	TableName     string `gorm:"column:TABLE_NAME"`

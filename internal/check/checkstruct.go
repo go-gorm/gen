@@ -73,7 +73,10 @@ func (b *BaseStruct) check() (err error) {
 		return
 	}
 	for index, m := range b.Members {
-		if !allowType(m.Type) {
+		if m.IsGormDeleteAt() {
+			b.Members[index].Type = "time.Time"
+		}
+		if !m.AllowType() {
 			b.Members[index].Type = "field"
 		}
 		b.Members[index].NewType = getNewTypeName(m.Type)

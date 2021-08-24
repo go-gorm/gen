@@ -50,23 +50,6 @@ func isDigit(str string) bool {
 	return true
 }
 
-func allowType(typ string) bool {
-	switch typ {
-	case "string", "bytes":
-		return true
-	case "int", "int8", "int16", "int32", "int64", "uint", "uint8", "uint16", "uint32", "uint64":
-		return true
-	case "float64", "float32":
-		return true
-	case "bool":
-		return true
-	case "time.Time":
-		return true
-	default:
-		return false
-	}
-}
-
 func strOutrange(index int, str string) bool {
 	return index >= len(str)
 }
