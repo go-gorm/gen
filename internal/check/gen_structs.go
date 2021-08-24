@@ -2,6 +2,7 @@ package check
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 
@@ -82,18 +83,27 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 		StructInfo:    parser.Param{Type: modelName, Package: pkg},
 	}
 	for _, field := range columns {
-		mt := dataType[field.DataType]
-		base.Members = append(base.Members, &Member{
-			Name:          nameToCamelCase(field.ColumnName),
-			Type:          mt,
-			ModelType:     mt,
-			ColumnName:    field.ColumnName,
-			ColumnComment: field.ColumnComment,
-		})
+		base.Members = append(base.Members, toMember(field))
 	}
 
-	_ = base.check()
+	if err = base.checkOrFix(); err != nil {
+		log.Println(err)
+	}
 	return &base, nil
+}
+
+func toMember(field *Column) *Member {
+	mt := dataType[field.DataType]
+	if mt == "time.Time" && field.ColumnName == "deleted_at" {
+		mt = "gorm.DeletedAt"
+	}
+	return &Member{
+		Name:          nameToCamelCase(field.ColumnName),
+		Type:          mt,
+		ModelType:     mt,
+		ColumnName:    field.ColumnName,
+		ColumnComment: field.ColumnComment,
+	}
 }
 
 //Mysql

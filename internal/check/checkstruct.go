@@ -2,7 +2,6 @@ package check
 
 import (
 	"fmt"
-	"log"
 	"reflect"
 
 	"gorm.io/gorm"
@@ -61,25 +60,21 @@ func (b *BaseStruct) HasMember() bool {
 }
 
 // check if struct is exportable and if struct in main package and if member's type is regular
-func (b *BaseStruct) check() (err error) {
+func (b *BaseStruct) checkOrFix() (err error) {
 	if b.StructInfo.InMainPkg() {
-		err = fmt.Errorf("can't generated data object for struct in main package, ignored:%s", b.StructName)
-		log.Println(err)
-		return
+		return fmt.Errorf("can't generated data object for struct in main package, ignored:%s", b.StructName)
 	}
 	if !isCapitalize(b.StructName) {
-		err = fmt.Errorf("can't generated data object for non-exportable struct, ignore:%s", b.NewStructName)
-		log.Println(err)
-		return
+		return fmt.Errorf("can't generated data object for non-exportable struct, ignore:%s", b.NewStructName)
 	}
-	for index, m := range b.Members {
+	for _, m := range b.Members {
 		if m.IsGormDeleteAt() {
-			b.Members[index].Type = "time.Time"
+			m.Type = "time.Time"
 		}
 		if !m.AllowType() {
-			b.Members[index].Type = "field"
+			m.Type = "field"
 		}
-		b.Members[index].NewType = getNewTypeName(m.Type)
+		m.NewType = getNewTypeName(m.Type)
 	}
 	return nil
 }
