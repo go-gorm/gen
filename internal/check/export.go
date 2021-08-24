@@ -2,6 +2,7 @@ package check
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 
 	"gorm.io/gorm"
@@ -37,7 +38,8 @@ func CheckStructs(db *gorm.DB, structs ...interface{}) (bases []*BaseStruct, err
 		}
 		base.getMembers(st)
 		base.getTableName(st)
-		if base.check() != nil {
+		if err := base.checkOrFix(); err != nil {
+			log.Println(err)
 			continue
 		}
 
