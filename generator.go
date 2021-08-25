@@ -91,6 +91,9 @@ func (g *Generator) UseDB(db *gorm.DB) {
 	g.db = db
 }
 
+// TODO: add options to operate column
+// ignore fields, rename fields
+
 // GenerateModel catch table info from db, return a BaseStruct
 func (g *Generator) GenerateModel(tableName string) *check.BaseStruct {
 	return g.GenerateModelAs(tableName, g.db.Config.NamingStrategy.SchemaName(tableName))
