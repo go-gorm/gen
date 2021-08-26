@@ -6,6 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"gorm.io/gen/field"
 	"gorm.io/gen/internal/parser"
 )
 
@@ -29,17 +30,32 @@ func (b *BaseStruct) getMembers(st interface{}) {
 	stmt := gorm.Statement{DB: b.db}
 	_ = stmt.Parse(st)
 
-	for _, field := range stmt.Schema.Fields {
+	for _, f := range stmt.Schema.Fields {
 		b.appendOrUpdateMember(&Member{
-			Name:       field.Name,
-			Type:       DelPointerSym(field.FieldType.String()),
-			ColumnName: field.DBName,
+			Name:       f.Name,
+			Type:       b.getMemberRealType(f.FieldType),
+			ColumnName: f.DBName,
 		})
 	}
 }
 
+// getMemberRealType  get basic type of member
+func (b *BaseStruct) getMemberRealType(member reflect.Type) string {
+	if member.Implements(reflect.TypeOf((*field.ScanValuer)(nil)).Elem()) {
+		return "field"
+	}
+
+	if member.Kind() == reflect.Ptr {
+		member = member.Elem()
+	}
+	return member.Kind().String()
+}
+
 // check member if in BaseStruct update else append
 func (b *BaseStruct) appendOrUpdateMember(member *Member) {
+	if member.ColumnName == "" {
+		return
+	}
 	for index, m := range b.Members {
 		if m.Name == member.Name {
 			b.Members[index] = member

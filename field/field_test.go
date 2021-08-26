@@ -37,7 +37,7 @@ type User struct {
 	// Active    bool
 }
 
-var _ field.ScannerValuer = new(password)
+var _ field.ScanValuer = new(password)
 
 type password string
 

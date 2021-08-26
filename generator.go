@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"text/template"
@@ -197,7 +198,14 @@ func (g *Generator) generatedToOutFile() (err error) {
 		return err
 	}
 
-	for _, data := range g.Data {
+	var keys []string
+	for key := range g.Data {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		data := g.Data[key]
 		err = render(tmpl.BaseStruct, &buf, data.BaseStruct)
 		if err != nil {
 			return err
