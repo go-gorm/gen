@@ -1,6 +1,8 @@
 package field_test
 
 import (
+	"database/sql/driver"
+	"fmt"
 	"reflect"
 	"strings"
 	"sync"
@@ -35,6 +37,18 @@ type User struct {
 	// Active    bool
 }
 
+var _ field.ScannerValuer = new(password)
+
+type password string
+
+func (p *password) Scan(src interface{}) error {
+	*p = password(fmt.Sprintf("this is password {%q}", src))
+	return nil
+}
+func (p *password) Value() (driver.Value, error) {
+	return strings.TrimPrefix(strings.TrimSuffix(string(*p), "}"), "this is password {"), nil
+}
+
 func checkBuildExpr(t *testing.T, e field.Expr, result string, vars []interface{}) {
 	user, _ := schema.Parse(&User{}, &sync.Map{}, db.NamingStrategy)
 	stmt := &gorm.Statement{DB: db, Table: user.Table, Schema: user, Clauses: map[string]clause.Clause{}}
@@ -53,6 +67,7 @@ func checkBuildExpr(t *testing.T, e field.Expr, result string, vars []interface{
 
 func TestExpr_Build(t *testing.T) {
 	timeData, _ := time.Parse("2006-01-02 15:04:05", "2021-06-29 15:11:49")
+	p := password("i am password")
 
 	testcases := []struct {
 		Expr         field.Expr
@@ -60,6 +75,11 @@ func TestExpr_Build(t *testing.T) {
 		Result       string
 	}{
 		// ======================== generic ========================
+		{
+			Expr:         field.NewField("user", "password").Eq(&p),
+			ExpectedVars: []interface{}{&p},
+			Result:       "`user`.`password` = ?",
+		},
 		{
 			Expr:   field.NewField("", "id").EqCol(field.NewField("", "new_id")),
 			Result: "`id` = `new_id`",
