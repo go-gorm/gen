@@ -25,6 +25,8 @@ type BaseStruct struct {
 
 // getMembers get all elements of struct with gorm's Parse, ignore unexport elements
 func (b *BaseStruct) getMembers(st interface{}) {
+	// TODO find struct member's basic type
+
 	stmt := gorm.Statement{DB: b.db}
 	_ = stmt.Parse(st)
 
