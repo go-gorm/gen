@@ -256,7 +256,7 @@ func (g *Generator) generatedToOutFile() (err error) {
 		return err
 	}
 
-	var keys []string
+	keys := make([]string, 0, len(g.Data))
 	for key := range g.Data {
 		keys = append(keys, key)
 	}
