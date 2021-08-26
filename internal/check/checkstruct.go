@@ -2,11 +2,11 @@ package check
 
 import (
 	"fmt"
-	"log"
 	"reflect"
 
 	"gorm.io/gorm"
 
+	"gorm.io/gen/field"
 	"gorm.io/gen/internal/parser"
 )
 
@@ -25,20 +25,37 @@ type BaseStruct struct {
 
 // getMembers get all elements of struct with gorm's Parse, ignore unexport elements
 func (b *BaseStruct) getMembers(st interface{}) {
+	// TODO find struct member's basic type
+
 	stmt := gorm.Statement{DB: b.db}
 	_ = stmt.Parse(st)
 
-	for _, field := range stmt.Schema.Fields {
+	for _, f := range stmt.Schema.Fields {
 		b.appendOrUpdateMember(&Member{
-			Name:       field.Name,
-			Type:       DelPointerSym(field.FieldType.String()),
-			ColumnName: field.DBName,
+			Name:       f.Name,
+			Type:       b.getMemberRealType(f.FieldType),
+			ColumnName: f.DBName,
 		})
 	}
 }
 
+// getMemberRealType  get basic type of member
+func (b *BaseStruct) getMemberRealType(member reflect.Type) string {
+	if member.Implements(reflect.TypeOf((*field.ScanValuer)(nil)).Elem()) {
+		return "field"
+	}
+
+	if member.Kind() == reflect.Ptr {
+		member = member.Elem()
+	}
+	return member.Kind().String()
+}
+
 // check member if in BaseStruct update else append
 func (b *BaseStruct) appendOrUpdateMember(member *Member) {
+	if member.ColumnName == "" {
+		return
+	}
 	for index, m := range b.Members {
 		if m.Name == member.Name {
 			b.Members[index] = member
@@ -61,22 +78,21 @@ func (b *BaseStruct) HasMember() bool {
 }
 
 // check if struct is exportable and if struct in main package and if member's type is regular
-func (b *BaseStruct) check() (err error) {
+func (b *BaseStruct) checkOrFix() (err error) {
 	if b.StructInfo.InMainPkg() {
-		err = fmt.Errorf("can't generated data object for struct in main package, ignored:%s", b.StructName)
-		log.Println(err)
-		return
+		return fmt.Errorf("can't generated data object for struct in main package, ignored:%s", b.StructName)
 	}
 	if !isCapitalize(b.StructName) {
-		err = fmt.Errorf("can't generated data object for non-exportable struct, ignore:%s", b.NewStructName)
-		log.Println(err)
-		return
+		return fmt.Errorf("can't generated data object for non-exportable struct, ignore:%s", b.NewStructName)
 	}
-	for index, m := range b.Members {
-		if !allowType(m.Type) {
-			b.Members[index].Type = "field"
+	for _, m := range b.Members {
+		if m.IsGormDeleteAt() {
+			m.Type = "time.Time"
 		}
-		b.Members[index].NewType = getNewTypeName(m.Type)
+		if !m.AllowType() {
+			m.Type = "field"
+		}
+		m.NewType = getNewTypeName(m.Type)
 	}
 	return nil
 }

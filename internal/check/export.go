@@ -2,6 +2,7 @@ package check
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 
 	"gorm.io/gorm"
@@ -11,7 +12,7 @@ import (
 
 // CheckStructs check the legitimacy of structures
 func CheckStructs(db *gorm.DB, structs ...interface{}) (bases []*BaseStruct, err error) {
-	if isDBUndefined(db) {
+	if isDBUnset(db) {
 		return nil, fmt.Errorf("gen config db is undefined")
 	}
 
@@ -37,7 +38,8 @@ func CheckStructs(db *gorm.DB, structs ...interface{}) (bases []*BaseStruct, err
 		}
 		base.getMembers(st)
 		base.getTableName(st)
-		if base.check() != nil {
+		if err := base.checkOrFix(); err != nil {
+			log.Println(err)
 			continue
 		}
 

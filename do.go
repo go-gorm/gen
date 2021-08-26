@@ -32,7 +32,7 @@ type doOptions func(*gorm.DB) *gorm.DB
 
 var (
 	// Debug use DB in debug mode
-	Debug = func(db *gorm.DB) *gorm.DB { return db.Debug() }
+	Debug doOptions = func(db *gorm.DB) *gorm.DB { return db.Debug() }
 )
 
 // UseDB specify a db connection(*gorm.DB)
