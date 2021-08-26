@@ -55,10 +55,11 @@ var dataType = map[string]string{
 	"integer":             "int32",
 }
 
-type SchemaNameOpt func(db *gorm.DB) string
+type SchemaNameOpt func(*gorm.DB) string
+type MemberOpt func(*Member) *Member
 
 // GenBaseStructs generate db model by table name
-func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt ...SchemaNameOpt) (bases *BaseStruct, err error) {
+func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpts []SchemaNameOpt, memberOpts []MemberOpt) (bases *BaseStruct, err error) {
 	if isDBUnset(db) {
 		return nil, fmt.Errorf("gen config db is undefined")
 	}
@@ -68,7 +69,7 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 	if pkg == "" {
 		pkg = ModelPkg
 	}
-	dbName := getSchemaName(db, schemaNameOpt...)
+	dbName := getSchemaName(db, schemaNameOpts...)
 	columns, err := getTbColumns(db, dbName, tableName)
 	if err != nil {
 		return nil, err
@@ -84,7 +85,13 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 	}
 
 	for _, field := range columns {
-		base.Members = append(base.Members, toMember(db.NamingStrategy.SchemaName, field))
+		m := modifyMember(toMember(field), memberOpts)
+		if m == nil {
+			continue
+		}
+		m.Name = db.NamingStrategy.SchemaName(m.Name)
+
+		base.Members = append(base.Members, m)
 	}
 
 	if err = base.checkOrFix(); err != nil {
@@ -93,18 +100,30 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 	return &base, nil
 }
 
-func toMember(nameConvert func(string) string, field *Column) *Member {
-	mt := dataType[field.DataType]
-	if mt == "time.Time" && field.ColumnName == "deleted_at" {
-		mt = "gorm.DeletedAt"
+func toMember(field *Column) *Member {
+	memberType := dataType[field.DataType]
+	if memberType == "time.Time" && field.ColumnName == "deleted_at" {
+		memberType = "gorm.DeletedAt"
 	}
 	return &Member{
-		Name:          nameConvert(field.ColumnName),
-		Type:          mt,
-		ModelType:     mt,
+		Name:          field.ColumnName,
+		Type:          memberType,
+		ModelType:     memberType,
 		ColumnName:    field.ColumnName,
 		ColumnComment: field.ColumnComment,
+		GORMTag:       field.ColumnName,
+		JSONTag:       field.ColumnName,
 	}
+}
+
+func modifyMember(m *Member, opts []MemberOpt) *Member {
+	for _, opt := range opts {
+		m = opt(m)
+		if m == nil {
+			break
+		}
+	}
+	return m
 }
 
 //Mysql
@@ -118,8 +137,7 @@ var dbNameReg = regexp.MustCompile(`/\w+\??`)
 
 func getSchemaName(db *gorm.DB, opts ...SchemaNameOpt) string {
 	for _, opt := range opts {
-		name := opt(db)
-		if name != "" {
+		if name := opt(db); name != "" {
 			return name
 		}
 	}
@@ -139,14 +157,6 @@ func getSchemaName(db *gorm.DB, opts ...SchemaNameOpt) string {
 		end--
 	}
 	return dbName[1:end]
-}
-
-// convert Table name or column name to camel case
-func nameToCamelCase(name string) string {
-	if name == "" {
-		return name
-	}
-	return strings.ReplaceAll(strings.Title(strings.ReplaceAll(name, "_", " ")), " ", "")
 }
 
 // get mysql db' name

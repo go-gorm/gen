@@ -39,6 +39,8 @@ type Member struct {
 	ColumnName    string
 	ColumnComment string
 	ModelType     string
+	JSONTag       string
+	GORMTag       string
 }
 
 // AllowType check Member Type
