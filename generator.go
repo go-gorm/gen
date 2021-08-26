@@ -14,6 +14,7 @@ import (
 
 	"golang.org/x/tools/imports"
 	"gorm.io/gorm"
+	"gorm.io/gorm/utils/tests"
 
 	"gorm.io/gen/internal/check"
 	"gorm.io/gen/internal/parser"
@@ -32,6 +33,9 @@ type M map[string]interface{}
 func NewGenerator(cfg Config) *Generator {
 	if cfg.ModelPkgName == "" {
 		cfg.ModelPkgName = check.ModelPkg
+	}
+	if cfg.db == nil {
+		cfg.db, _ = gorm.Open(tests.DummyDialector{})
 	}
 	return &Generator{
 		Config:           cfg,
@@ -92,17 +96,80 @@ func (g *Generator) UseDB(db *gorm.DB) {
 	g.db = db
 }
 
-// TODO: add options to operate column
-// ignore fields, rename fields
+var (
+	// FieldIgnore ignore some columns by name
+	FieldIgnore = func(columnNames ...string) check.MemberOpt {
+		return func(m *check.Member) *check.Member {
+			for _, name := range columnNames {
+				if m.Name == name {
+					return nil
+				}
+			}
+			return m
+		}
+	}
+	// FieldRename specify field name in generated struct
+	FieldRename = func(columnName string, newName string) check.MemberOpt {
+		return func(m *check.Member) *check.Member {
+			if m.Name == columnName {
+				m.Name = newName
+			}
+			return m
+		}
+	}
+
+	// FieldTag specify json tag and gorm tag
+	FieldTag = func(columnName string, gormTag, jsonTag string) check.MemberOpt {
+		return func(m *check.Member) *check.Member {
+			if m.Name == columnName {
+				m.GORMTag, m.JSONTag = gormTag, jsonTag
+			}
+			return m
+		}
+	}
+	// FieldJSONTag specify json tag
+	FieldJSONTag = func(columnName string, jsonTag string) check.MemberOpt {
+		return func(m *check.Member) *check.Member {
+			if m.Name == columnName {
+				m.JSONTag = jsonTag
+			}
+			return m
+		}
+	}
+	// FieldGORMTag specify gorm tag
+	FieldGORMTag = func(columnName string, gormTag string) check.MemberOpt {
+		return func(m *check.Member) *check.Member {
+			if m.Name == columnName {
+				m.GORMTag = gormTag
+			}
+			return m
+		}
+	}
+	// FieldNewTag add new tag
+	FieldNewTag = func(columnName string, newTag string) check.MemberOpt {
+		return func(m *check.Member) *check.Member {
+			if m.Name == columnName {
+				m.NewTag += " " + newTag
+			}
+			return m
+		}
+	}
+)
 
 // GenerateModel catch table info from db, return a BaseStruct
-func (g *Generator) GenerateModel(tableName string) *check.BaseStruct {
-	return g.GenerateModelAs(tableName, g.db.Config.NamingStrategy.SchemaName(tableName))
+func (g *Generator) GenerateModel(tableName string, opts ...check.MemberOpt) *check.BaseStruct {
+	return g.GenerateModelAs(tableName, g.db.Config.NamingStrategy.SchemaName(tableName), opts...)
 }
 
 // GenerateModel catch table info from db, return a BaseStruct
-func (g *Generator) GenerateModelAs(tableName string, modelName string) *check.BaseStruct {
-	s, err := check.GenBaseStructs(g.db, g.Config.ModelPkgName, tableName, modelName, g.dbNameOpts...)
+func (g *Generator) GenerateModelAs(tableName string, modelName string, opts ...check.MemberOpt) *check.BaseStruct {
+	colNameOpts := make([]check.MemberOpt, len(opts))
+	for i, opt := range opts {
+		opt := opt
+		colNameOpts[i] = opt
+	}
+
+	s, err := check.GenBaseStructs(g.db, g.Config.ModelPkgName, tableName, modelName, g.dbNameOpts, colNameOpts)
 	if err != nil {
 		log.Fatalf("check struct error: %s", err)
 	}
@@ -198,7 +265,7 @@ func (g *Generator) generatedToOutFile() (err error) {
 		return err
 	}
 
-	var keys []string
+	keys := make([]string, 0, len(g.Data))
 	for key := range g.Data {
 		keys = append(keys, key)
 	}

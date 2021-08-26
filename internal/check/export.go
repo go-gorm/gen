@@ -12,7 +12,7 @@ import (
 
 // CheckStructs check the legitimacy of structures
 func CheckStructs(db *gorm.DB, structs ...interface{}) (bases []*BaseStruct, err error) {
-	if isDBUndefined(db) {
+	if isDBUnset(db) {
 		return nil, fmt.Errorf("gen config db is undefined")
 	}
 
