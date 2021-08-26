@@ -145,6 +145,15 @@ var (
 			return m
 		}
 	}
+	// FieldNewTag add new tag
+	FieldNewTag = func(columnName string, newTag string) check.MemberOpt {
+		return func(m *check.Member) *check.Member {
+			if m.Name == columnName {
+				m.NewTag += " " + newTag
+			}
+			return m
+		}
+	}
 )
 
 // GenerateModel catch table info from db, return a BaseStruct

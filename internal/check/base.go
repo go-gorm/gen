@@ -41,6 +41,7 @@ type Member struct {
 	ModelType     string
 	JSONTag       string
 	GORMTag       string
+	NewTag        string
 }
 
 // AllowType check Member Type

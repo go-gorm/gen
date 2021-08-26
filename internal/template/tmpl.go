@@ -301,7 +301,7 @@ const TableName{{.StructName}} = "{{.TableName}}"
 // {{.TableName}}
 type {{.StructName}} struct {
     {{range .Members}}
-    {{.Name}} {{.ModelType}} ` + "`json:\"{{.JSONTag}}\" gorm:\"column:{{.GORMTag}}\"` // {{.ColumnComment}}" +
+    {{.Name}} {{.ModelType}} ` + "`json:\"{{.JSONTag}}\" gorm:\"column:{{.GORMTag}}\"{{.NewTag}}` // {{.ColumnComment}}" +
 	`{{end}}
 }
 
