@@ -14,6 +14,7 @@ import (
 
 	"golang.org/x/tools/imports"
 	"gorm.io/gorm"
+	"gorm.io/gorm/utils/tests"
 
 	"gorm.io/gen/internal/check"
 	"gorm.io/gen/internal/parser"
@@ -32,6 +33,9 @@ type M map[string]interface{}
 func NewGenerator(cfg Config) *Generator {
 	if cfg.ModelPkgName == "" {
 		cfg.ModelPkgName = check.ModelPkg
+	}
+	if cfg.db == nil {
+		cfg.db, _ = gorm.Open(tests.DummyDialector{})
 	}
 	return &Generator{
 		Config:           cfg,
@@ -93,7 +97,9 @@ func (g *Generator) UseDB(db *gorm.DB) {
 }
 
 // TODO: add options to operate column
-// ignore fields, rename fields
+// ignore fields, rename fields, specify tag
+
+type ModelOption func()
 
 // GenerateModel catch table info from db, return a BaseStruct
 func (g *Generator) GenerateModel(tableName string) *check.BaseStruct {

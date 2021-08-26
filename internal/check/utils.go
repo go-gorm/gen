@@ -33,7 +33,7 @@ func isEnd(b byte) bool {
 	}
 }
 
-func isDBUndefined(db *gorm.DB) bool {
+func isDBUnset(db *gorm.DB) bool {
 	return db == nil
 }
 

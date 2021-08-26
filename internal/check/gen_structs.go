@@ -59,7 +59,7 @@ type SchemaNameOpt func(db *gorm.DB) string
 
 // GenBaseStructs generate db model by table name
 func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt ...SchemaNameOpt) (bases *BaseStruct, err error) {
-	if isDBUndefined(db) {
+	if isDBUnset(db) {
 		return nil, fmt.Errorf("gen config db is undefined")
 	}
 	if err = checkModelName(modelName); err != nil {
@@ -82,8 +82,9 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 		S:             strings.ToLower(modelName[0:1]),
 		StructInfo:    parser.Param{Type: modelName, Package: pkg},
 	}
+
 	for _, field := range columns {
-		base.Members = append(base.Members, toMember(field))
+		base.Members = append(base.Members, toMember(db.NamingStrategy.SchemaName, field))
 	}
 
 	if err = base.checkOrFix(); err != nil {
@@ -92,13 +93,13 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 	return &base, nil
 }
 
-func toMember(field *Column) *Member {
+func toMember(nameConvert func(string) string, field *Column) *Member {
 	mt := dataType[field.DataType]
 	if mt == "time.Time" && field.ColumnName == "deleted_at" {
 		mt = "gorm.DeletedAt"
 	}
 	return &Member{
-		Name:          nameToCamelCase(field.ColumnName),
+		Name:          nameConvert(field.ColumnName),
 		Type:          mt,
 		ModelType:     mt,
 		ColumnName:    field.ColumnName,
