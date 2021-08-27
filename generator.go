@@ -156,6 +156,11 @@ var (
 	}
 )
 
+/*
+** The feature map table's field from database to struct in Golang
+** Provided by @qqxhb
+ */
+
 // GenerateModel catch table info from db, return a BaseStruct
 func (g *Generator) GenerateModel(tableName string, opts ...check.MemberOpt) *check.BaseStruct {
 	return g.GenerateModelAs(tableName, g.db.Config.NamingStrategy.SchemaName(tableName), opts...)

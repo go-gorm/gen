@@ -12,6 +12,11 @@ import (
 	"gorm.io/gen/internal/parser"
 )
 
+/*
+** The feature map table's field from database to struct in Golang
+** Provided by @qqxhb
+ */
+
 const (
 	ModelPkg = "model"
 
