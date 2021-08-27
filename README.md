@@ -119,12 +119,13 @@ func main() {
     g := gen.NewGenerator(gen.Config{OutPath: "../dal/query"})
   
     // reuse the database connection in Project or create a connection here
+    // if you want to use GenerateModel/GenerateModelAs, UseDB is necessray or it will panic
     // db, _ := gorm.Open(mysql.Open("root:@(127.0.0.1:3306)/demo?charset=utf8mb4&parseTime=True&loc=Local"))
     g.UseDB(db)
   
     // apply basic crud api on structs or table models which is specified by table name with function
     // GenerateModel/GenerateModelAs. And generator will generate table models' code when calling Excute.
-    g.ApplyBasic(model.User{}, g.GenerateModel("company"), g.GenerateModelAs("people", "Person"),)
+    g.ApplyBasic(model.User{}, g.GenerateModel("company"), g.GenerateModelAs("people", "Person", gen.FieldIgnore("address")))
     
     // apply diy interfaces on structs or table models
     g.ApplyInterface(func(method model.Method) {}, model.User{}, g.GenerateModel("company"))
@@ -162,6 +163,32 @@ demo
 
 ## API Examples
 
+### Generate
+
+#### Generate Model
+
+```go
+// generate a model struct map to table `people` in database
+g.GenerateModel("people")
+
+// generate a struct and specify struct's name
+g.GenerateModelAs("people", "People")
+
+// add option to ignore field
+g.GenerateModel("people", gen.FieldIgnore("address"))
+```
+
+**Options**
+
+```go
+FieldIgnore // ignore field
+FieldRename // rename field in struct
+FieldTag // specify gorm and json tag
+FieldJSONTag // specify json tag
+FieldGORMTag // specify gorm tag
+FieldNewTag // append new tag
+```
+
 ### Field Expression
 
 #### Create Field
@@ -170,7 +197,7 @@ Actually, you're not supposed to create a new field variable, cause it will be a
 
 | Field Type | Detail Type           | Crerate Function               | Supported Query Method                                       |
 | ---------- | --------------------- | ------------------------------ | ------------------------------------------------------------ |
-| generic    | field                 | NewField                       | IsNull/IsNotNull/Count                                       |
+| generic    | field                 | NewField                       | IsNull/IsNotNull/Count/Eq/Neq/Gt/Gte/Lt/Lte/Like             |
 | int        | int/int8/.../int64    | NewInt/NewInt8/.../NewInt64    | Eq/Neq/Gt/Gte/Lt/Lte/In/NotIn/Between/NotBetween/Like/NotLike/Add/Sub/Mul/Div/Mod/FloorDiv/RightShift/LeftShift/BitXor/BitAnd/BitOr/BitFlip |
 | uint       | uint/uint8/.../uint64 | NewUint/NewUint8/.../NewUint64 | same with int                                                |
 | float      | float32/float64       | NewFloat32/NewFloat64          | Eq/Neq/Gt/Gte/Lt/Lte/In/NotIn/Between/NotBetween/Like/NotLike/Add/Sub/Mul/Div/FloorDiv |
@@ -565,20 +592,20 @@ type Result struct {
 
 var result Result
 
-err := u.Select(u.Name, e.Email).LeftJoin(e, e.UserId.EqCol(u.ID)).Scan(&result)
+err := u.Select(u.Name, e.Email).LeftJoin(e, e.UserID.EqCol(u.ID)).Scan(&result)
 // SELECT users.name, emails.email FROM `users` left join emails on emails.user_id = users.id
 
-rows, err := u.Select(u.Name, e.Email).LeftJoin(e, e.UserId.EqCol(u.ID)).Rows()
+rows, err := u.Select(u.Name, e.Email).LeftJoin(e, e.UserID.EqCol(u.ID)).Rows()
 for rows.Next() {
   ...
 }
 
 var results []Result
 
-err := u.Select(u.Name, e.Email).LeftJoin(e, e.UserId.EqCol(u.ID)).Scan(&results)
+err := u.Select(u.Name, e.Email).LeftJoin(e, e.UserID.EqCol(u.ID)).Scan(&results)
 
 // multiple joins with parameter
-users := u.Join(e, e.UserId.EqCol(u.id), e.Email.Eq("modi@example.org")).Join(c, c.UserId.EqCol(u.ID)).Where(c.Number.Eq("411111111111")).Find()
+users := u.Join(e, e.UserID.EqCol(u.id), e.Email.Eq("modi@example.org")).Join(c, c.UserID.EqCol(u.ID)).Where(c.Number.Eq("411111111111")).Find()
 ```
 
 ##### SubQuery
@@ -623,10 +650,10 @@ Update a table by using SubQuery
 u := query.Query.User
 c := query.Query.Company
 
-u.Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqCol(u.CompanyId)))
+u.Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqCol(u.CompanyID)))
 // UPDATE "users" SET "company_name" = (SELECT name FROM companies WHERE companies.id = users.company_id);
 
-u.Where(u.Name.Eq("modi")).Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqCol(u.CompanyId)))
+u.Where(u.Name.Eq("modi")).Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqCol(u.CompanyID)))
 ```
 
 ##### Advanced Query
@@ -1020,7 +1047,7 @@ type Method interface {
     InsertValue(age int, name string) error
     
     // select name from @@table where id=@id
-    FindNameById(id int) string
+    FindNameByID(id int) string
     
     // select * from @@table
     //  {{where}}

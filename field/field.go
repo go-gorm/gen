@@ -18,6 +18,10 @@ func (field Field) Eq(value ScanValuer) Expr {
 	return expr{expression: clause.Eq{Column: field.RawExpr(), Value: value}}
 }
 
+func (field Field) Neq(value ScanValuer) Expr {
+	return expr{expression: clause.Neq{Column: field.RawExpr(), Value: value}}
+}
+
 func (field Field) In(values ...ScanValuer) Expr {
 	return expr{expression: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
 }
