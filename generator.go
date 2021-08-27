@@ -157,7 +157,7 @@ var (
 )
 
 /*
-** The feature map table's field from database to struct in Golang
+** The feature of mapping table from database server to Golang struct
 ** Provided by @qqxhb
  */
 
