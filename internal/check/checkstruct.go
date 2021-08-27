@@ -41,7 +41,8 @@ func (b *BaseStruct) getMembers(st interface{}) {
 
 // getMemberRealType  get basic type of member
 func (b *BaseStruct) getMemberRealType(member reflect.Type) string {
-	if member.Implements(reflect.TypeOf((*field.ScanValuer)(nil)).Elem()) {
+	scanValuer := reflect.TypeOf((*field.ScanValuer)(nil)).Elem()
+	if member.Implements(scanValuer) || reflect.New(member).Type().Implements(scanValuer) {
 		return "field"
 	}
 
