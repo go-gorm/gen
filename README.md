@@ -84,6 +84,7 @@ The code generator base on [GORM](https://github.com/go-gorm/gorm), aims to be d
       - [Smart select fields](#smart-select-fields)
     - [Advanced Topics](#advanced-topics)
       - [Hints](#hints)
+  - [Maintainers](#maintainers)
   - [Contributing](#contributing)
   - [License](#license)
 
@@ -1128,6 +1129,12 @@ users, err := u.Hints(hints.UseIndex("idx_user_name")).Find()
 users, err := u.Hints(hints.ForceIndex("idx_user_name", "idx_user_id").ForJoin()).Find()
 // SELECT * FROM `users` FORCE INDEX FOR JOIN (`idx_user_name`,`idx_user_id`)"
 ```
+
+## Maintainers
+
+[@riverchu](https://github.com/riverchu) [@idersec](https://github.com/idersec) [@qqxhb](https://github.com/qqxhb)
+
+[@jinzhu](https://github.com/jinzhu)
 
 ## Contributing
 
