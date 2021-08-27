@@ -27,6 +27,8 @@ The code generator base on [GORM](https://github.com/go-gorm/gorm), aims to be d
   - [Quick start](#quick-start)
     - [Project Directory](#project-directory)
   - [API Examples](#api-examples)
+    - [Generate](#generate)
+      - [Generate Model](#generate-model)
     - [Field Expression](#field-expression)
       - [Create Field](#create-field)
     - [CRUD API](#crud-api)
