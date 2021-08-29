@@ -129,7 +129,7 @@ func ContainsSubQuery(columns []Expr, subQuery *gorm.DB) Expr {
 	case 1:
 		return expr{expression: clause.Expr{
 			SQL:  "? IN (?)",
-			Vars: append([]interface{}{columns[0].RawExpr()}, subQuery),
+			Vars: []interface{}{columns[0].RawExpr(), subQuery},
 		}}
 	default: // len(columns) > 0
 		vars := make([]string, len(columns))
@@ -157,6 +157,36 @@ const (
 func CompareSubQuery(op CompareOperate, column Expr, subQuery *gorm.DB) Expr {
 	return expr{expression: clause.Expr{
 		SQL:  fmt.Sprint("?", op, "(?)"),
-		Vars: append([]interface{}{column.RawExpr()}, subQuery),
+		Vars: []interface{}{column.RawExpr(), subQuery},
 	}}
+}
+
+func Value(value interface{}) clause.Expression {
+	return clause.Expr{
+		SQL:                "?",
+		Vars:               []interface{}{value},
+		WithoutParentheses: true,
+	}
+}
+
+func ContainsValue(columns []Expr, value clause.Expression) Expr {
+	switch len(columns) {
+	case 0:
+		return expr{expression: clause.Expr{}}
+	case 1:
+		return expr{expression: clause.Expr{
+			SQL:  "? IN (?)",
+			Vars: []interface{}{columns[0].RawExpr(), value},
+		}}
+	default: // len(columns) > 0
+		vars := make([]string, len(columns))
+		queryCols := make([]interface{}, len(columns))
+		for i, c := range columns {
+			vars[i], queryCols[i] = "?", c.RawExpr()
+		}
+		return expr{expression: clause.Expr{
+			SQL:  fmt.Sprintf("(%s) IN (?)", strings.Join(vars, ", ")),
+			Vars: append(queryCols, value),
+		}}
+	}
 }
