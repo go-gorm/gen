@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"gorm.io/hints"
+
+	"gorm.io/gen/field"
 )
 
 func checkBuildExpr(t *testing.T, e subQuery, opts []stmtOpt, result string, vars []interface{}) {
@@ -140,6 +142,16 @@ func TestDO_methods(t *testing.T) {
 			Expr:         u.Where(u.Age.Lte(18)).Or(u.Name.Eq("tom"), u.Famous.Is(true)),
 			ExpectedVars: []interface{}{18, "tom", true},
 			Result:       "WHERE `age` <= ? OR (`name` = ? AND `famous` IS ?)",
+		},
+		{
+			Expr:         u.Where(In(u.ID, u.Age, field.Value([][]int{{1, 18}, {2, 19}}))),
+			ExpectedVars: []interface{}{1, 18, 2, 19},
+			Result:       "WHERE (`id`, `age`) IN ((?,?),(?,?))",
+		},
+		{
+			Expr:         u.Where(In(u.ID, u.Name, field.Value([][]interface{}{{1, "modi"}, {2, "tom"}}))),
+			ExpectedVars: []interface{}{1, "modi", 2, "tom"},
+			Result:       "WHERE (`id`, `name`) IN ((?,?),(?,?))",
 		},
 		{
 			Expr:         u.Where(u.Where(u.Name.Eq("tom"), u.Famous.Is(true))).Or(u.Age.Lte(18)),

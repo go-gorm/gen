@@ -523,7 +523,10 @@ func In(conds ...Condition) field.Expr {
 		return field.ContainsSubQuery(nil, nil)
 	default:
 		columns := condToExpr(conds[:len(conds)-1]...)
-		query := conds[len(conds)-1].(subQuery)
+		query, ok := conds[len(conds)-1].(subQuery)
+		if !ok {
+			return field.ContainsValue(columns, conds[len(conds)-1])
+		}
 		return field.ContainsSubQuery(columns, query.UnderlyingDB())
 	}
 }
