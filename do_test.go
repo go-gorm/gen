@@ -149,6 +149,11 @@ func TestDO_methods(t *testing.T) {
 			Result:       "WHERE (`id`, `age`) IN ((?,?),(?,?))",
 		},
 		{
+			Expr:         u.Where(u.Columns(u.ID, u.Age).NotIn(field.Values([][]int{{1, 18}, {2, 19}}))),
+			ExpectedVars: []interface{}{1, 18, 2, 19},
+			Result:       "WHERE NOT (`id`, `age`) IN ((?,?),(?,?))",
+		},
+		{
 			Expr:         u.Where(u.Columns(u.ID, u.Name).In(field.Values([][]interface{}{{1, "modi"}, {2, "tom"}}))),
 			ExpectedVars: []interface{}{1, "modi", 2, "tom"},
 			Result:       "WHERE (`id`, `name`) IN ((?,?),(?,?))",
@@ -185,6 +190,11 @@ func TestDO_methods(t *testing.T) {
 			Expr:         u.Select().Where(u.Columns(u.ID).Eq(u.Select(u.ID.Max()))),
 			ExpectedVars: nil,
 			Result:       "SELECT * WHERE `id` = (SELECT MAX(`id`) FROM `users_info`)",
+		},
+		{
+			Expr:         u.Select().Where(u.Columns(u.ID).Neq(u.Select(u.ID.Max()))),
+			ExpectedVars: nil,
+			Result:       "SELECT * WHERE `id` <> (SELECT MAX(`id`) FROM `users_info`)",
 		},
 		{
 			Expr:         u.Select(u.ID).Where(u.Columns(u.Score.Mul(2)).Lte(u.Select(u.Score.Avg()))),

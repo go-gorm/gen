@@ -124,6 +124,10 @@ func (e expr) EqCol(col Expr) Expr {
 	return e.setExpression(clause.Expr{SQL: "? = ?", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})
 }
 
+func (e expr) NeqCol(col Expr) Expr {
+	return e.setExpression(clause.Expr{SQL: "? <> ?", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})
+}
+
 func (e expr) GtCol(col Expr) Expr {
 	return e.setExpression(clause.Expr{SQL: "? > ?", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})
 }

@@ -534,11 +534,22 @@ func (cs columns) In(queryOrValue Condition) field.Expr {
 	return field.ContainsSubQuery(cs, query.UnderlyingDB())
 }
 
+func (cs columns) NotIn(queryOrValue Condition) field.Expr {
+	return field.Not(cs.In(queryOrValue))
+}
+
 func (cs columns) Eq(query subQuery) field.Expr {
 	if len(cs) == 0 {
 		return field.EmptyExpr()
 	}
 	return field.CompareSubQuery(field.EqOp, cs[0], query.UnderlyingDB())
+}
+
+func (cs columns) Neq(query subQuery) field.Expr {
+	if len(cs) == 0 {
+		return field.EmptyExpr()
+	}
+	return field.CompareSubQuery(field.NeqOp, cs[0], query.UnderlyingDB())
 }
 
 func (cs columns) Gt(query subQuery) field.Expr {

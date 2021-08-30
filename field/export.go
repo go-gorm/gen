@@ -148,6 +148,7 @@ type CompareOperate string
 
 const (
 	EqOp  CompareOperate = " = "
+	NeqOp CompareOperate = " <> "
 	GtOp  CompareOperate = " > "
 	GteOp CompareOperate = " >= "
 	LtOp  CompareOperate = " < "
