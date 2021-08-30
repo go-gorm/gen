@@ -144,12 +144,12 @@ func TestDO_methods(t *testing.T) {
 			Result:       "WHERE `age` <= ? OR (`name` = ? AND `famous` IS ?)",
 		},
 		{
-			Expr:         u.Where(In(u.ID, u.Age, field.Value([][]int{{1, 18}, {2, 19}}))),
+			Expr:         u.Where(u.Columns(u.ID, u.Age).In(field.Values([][]int{{1, 18}, {2, 19}}))),
 			ExpectedVars: []interface{}{1, 18, 2, 19},
 			Result:       "WHERE (`id`, `age`) IN ((?,?),(?,?))",
 		},
 		{
-			Expr:         u.Where(In(u.ID, u.Name, field.Value([][]interface{}{{1, "modi"}, {2, "tom"}}))),
+			Expr:         u.Where(u.Columns(u.ID, u.Name).In(field.Values([][]interface{}{{1, "modi"}, {2, "tom"}}))),
 			ExpectedVars: []interface{}{1, "modi", 2, "tom"},
 			Result:       "WHERE (`id`, `name`) IN ((?,?),(?,?))",
 		},
@@ -182,32 +182,32 @@ func TestDO_methods(t *testing.T) {
 		},
 		// ======================== subquery ========================
 		{
-			Expr:         u.Select().Where(Eq(u.ID, u.Select(u.ID.Max()))),
+			Expr:         u.Select().Where(u.Columns(u.ID).Eq(u.Select(u.ID.Max()))),
 			ExpectedVars: nil,
 			Result:       "SELECT * WHERE `id` = (SELECT MAX(`id`) FROM `users_info`)",
 		},
 		{
-			Expr:         u.Select(u.ID).Where(Gt(u.Score, u.Select(u.Score.Avg()))),
+			Expr:         u.Select(u.ID).Where(u.Columns(u.Score).Gt(u.Select(u.Score.Avg()))),
 			ExpectedVars: nil,
 			Result:       "SELECT `id` WHERE `score` > (SELECT AVG(`score`) FROM `users_info`)",
 		},
 		{
-			Expr:         u.Select(u.ID, u.Name).Where(Lte(u.Score, u.Select(u.Score.Avg()).Where(u.Age.Gte(18)))),
+			Expr:         u.Select(u.ID, u.Name).Where(u.Columns(u.Score).Lte(u.Select(u.Score.Avg()).Where(u.Age.Gte(18)))),
 			ExpectedVars: []interface{}{18},
 			Result:       "SELECT `id`,`name` WHERE `score` <= (SELECT AVG(`score`) FROM `users_info` WHERE `age` >= ?)",
 		},
 		{
-			Expr:         u.Select(u.ID).Where(In(u.Score, u.Select(u.Score).Where(u.Age.Gte(18)))),
+			Expr:         u.Select(u.ID).Where(u.Columns(u.Score).In(u.Select(u.Score).Where(u.Age.Gte(18)))),
 			ExpectedVars: []interface{}{18},
 			Result:       "SELECT `id` WHERE `score` IN (SELECT `score` FROM `users_info` WHERE `age` >= ?)",
 		},
 		{
-			Expr:         u.Select(u.ID).Where(In(u.ID, u.Age, u.Select(u.ID, u.Age).Where(u.Score.Eq(100)))),
+			Expr:         u.Select(u.ID).Where(u.Columns(u.ID, u.Age).In(u.Select(u.ID, u.Age).Where(u.Score.Eq(100)))),
 			ExpectedVars: []interface{}{100.0},
 			Result:       "SELECT `id` WHERE (`id`, `age`) IN (SELECT `id`,`age` FROM `users_info` WHERE `score` = ?)",
 		},
 		{
-			Expr:         u.Select(u.Age.Avg().As("avgage")).Group(u.Name).Having(Gt(u.Age.Avg(), u.Select(u.Age.Avg()).Where(u.Name.Like("name%")))),
+			Expr:         u.Select(u.Age.Avg().As("avgage")).Group(u.Name).Having(u.Columns(u.Age.Avg()).Gt(u.Select(u.Age.Avg()).Where(u.Name.Like("name%")))),
 			Opts:         []stmtOpt{withFROM},
 			ExpectedVars: []interface{}{"name%"},
 			Result:       "SELECT AVG(`age`) AS `avgage` FROM `users_info` GROUP BY `name` HAVING AVG(`age`) > (SELECT AVG(`age`) FROM `users_info` WHERE `name` LIKE ?)",
