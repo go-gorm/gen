@@ -161,7 +161,7 @@ func CompareSubQuery(op CompareOperate, column Expr, subQuery *gorm.DB) Expr {
 	}}
 }
 
-func Value(value interface{}) clause.Expression {
+func Values(value interface{}) clause.Expression {
 	return clause.Expr{
 		SQL:                "?",
 		Vars:               []interface{}{value},
@@ -189,4 +189,8 @@ func ContainsValue(columns []Expr, value clause.Expression) Expr {
 			Vars: append(queryCols, value),
 		}}
 	}
+}
+
+func EmptyExpr() Expr {
+	return expr{expression: clause.Expr{}}
 }
