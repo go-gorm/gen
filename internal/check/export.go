@@ -1,8 +1,8 @@
 package check
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"reflect"
 
 	"gorm.io/gorm"
@@ -36,10 +36,12 @@ func CheckStructs(db *gorm.DB, structs ...interface{}) (bases []*BaseStruct, err
 			Source:        Struct,
 			db:            db,
 		}
-		base.getMembers(st)
-		base.getTableName(st)
-		if err := base.checkOrFix(); err != nil {
-			log.Println(err)
+		if err := base.transStruct(st); err != nil {
+			return nil, fmt.Errorf("transform struct [%s.%s] error:%s", base.StructInfo.Package, name, err)
+		}
+
+		if err := base.check(); err != nil {
+			db.Logger.Warn(context.Background(), err.Error())
 			continue
 		}
 

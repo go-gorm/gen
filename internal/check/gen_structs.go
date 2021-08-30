@@ -2,7 +2,6 @@ package check
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 
@@ -99,9 +98,8 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 		base.Members = append(base.Members, m)
 	}
 
-	if err = base.checkOrFix(); err != nil {
-		log.Println(err)
-	}
+	base.fixType()
+
 	return &base, nil
 }
 
