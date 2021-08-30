@@ -94,9 +94,6 @@ func (b *BaseStruct) check() (err error) {
 // fixType fix special type and get newType
 func (b *BaseStruct) fixType() {
 	for _, m := range b.Members {
-		if m.IsGormDeleteAt() {
-			m.Type = "time.Time"
-		}
 		if !m.AllowType() {
 			m.Type = "field"
 		}
