@@ -187,6 +187,11 @@ func TestDO_methods(t *testing.T) {
 			Result:       "SELECT * WHERE `id` = (SELECT MAX(`id`) FROM `users_info`)",
 		},
 		{
+			Expr:         u.Select(u.ID).Where(u.Columns(u.Score.Mul(2)).Lte(u.Select(u.Score.Avg()))),
+			ExpectedVars: []interface{}{2.0},
+			Result:       "SELECT `id` WHERE `score`*? <= (SELECT AVG(`score`) FROM `users_info`)",
+		},
+		{
 			Expr:         u.Select(u.ID).Where(u.Columns(u.Score).Gt(u.Select(u.Score.Avg()))),
 			ExpectedVars: nil,
 			Result:       "SELECT `id` WHERE `score` > (SELECT AVG(`score`) FROM `users_info`)",
