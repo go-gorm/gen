@@ -62,11 +62,6 @@ func (m *Member) AllowType() bool {
 	}
 }
 
-// IsGormDeleteAt Judge whether member is gorm.DeletedAt
-func (m *Member) IsGormDeleteAt() bool {
-	return m.Type == "gorm.DeletedAt"
-}
-
 // Column table column's info
 type Column struct {
 	TableName     string `gorm:"column:TABLE_NAME"`
