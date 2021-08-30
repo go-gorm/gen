@@ -491,6 +491,15 @@ u.Select(u.Age.Avg()).Rows()
 // SELECT Avg(age) FROM users;
 ```
 
+###### Tuple Query
+
+```go
+u := query.Query.User
+
+users, err := u.Where(u.Columns(u.ID, u.Name).In(field.Values([][]inferface{}{{1, "modi"}, {2, "zhangqiang"}}))).Find()
+// SELECT * FROM `users` WHERE (`id`, `name`) IN ((1,'humodi'),(2,'tom'));
+```
+
 ###### Order
 
 Specify order when retrieving records from the database
