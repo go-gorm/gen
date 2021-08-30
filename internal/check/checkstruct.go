@@ -54,6 +54,9 @@ func (b *BaseStruct) getMemberRealType(member reflect.Type) string {
 	if member.Kind() == reflect.Ptr {
 		member = member.Elem()
 	}
+	if member.String() == "time.Time" {
+		return "time.Time"
+	}
 	return member.Kind().String()
 }
 
