@@ -66,7 +66,7 @@ func (cfg *Config) WithDbNameOpts(opts ...check.SchemaNameOpt) {
 	}
 }
 
-// genInfo successInfo about generated code
+// genInfo info about generated code
 type genInfo struct {
 	*check.BaseStruct
 	Interfaces []*check.InterfaceMethod
@@ -162,12 +162,12 @@ var (
 ** Provided by @qqxhb
  */
 
-// GenerateModel catch table successInfo from db, return a BaseStruct
+// GenerateModel catch table info from db, return a BaseStruct
 func (g *Generator) GenerateModel(tableName string, opts ...check.MemberOpt) *check.BaseStruct {
 	return g.GenerateModelAs(tableName, g.db.Config.NamingStrategy.SchemaName(tableName), opts...)
 }
 
-// GenerateModel catch table successInfo from db, return a BaseStruct
+// GenerateModel catch table info from db, return a BaseStruct
 func (g *Generator) GenerateModelAs(tableName string, modelName string, opts ...check.MemberOpt) *check.BaseStruct {
 	colNameOpts := make([]check.MemberOpt, len(opts))
 	for i, opt := range opts {
