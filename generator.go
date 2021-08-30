@@ -280,14 +280,6 @@ func (g *Generator) successInfo(logInfos ...string) {
 func (g *Generator) generatedToOutFile() (err error) {
 	var buf bytes.Buffer
 
-	render := func(tmpl string, wr io.Writer, data interface{}) error {
-		t, err := template.New(tmpl).Parse(tmpl)
-		if err != nil {
-			return err
-		}
-		return t.Execute(wr, data)
-	}
-
 	err = render(tmpl.HeaderTmpl, &buf, g.queryPkgName)
 	if err != nil {
 		return err
