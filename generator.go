@@ -2,6 +2,7 @@ package gen
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -23,7 +24,7 @@ import (
 
 // TODO implement some unit tests
 
-// T genric type
+// T generic type
 type T interface{}
 
 // M map[string]interface{}
@@ -75,7 +76,7 @@ func (i *genInfo) AppendMethods(methods []*check.InterfaceMethod) error {
 	for _, newMethod := range methods {
 		for _, infoMethod := range i.Interfaces {
 			if infoMethod.MethodName == newMethod.MethodName && infoMethod.InterfaceName != newMethod.InterfaceName {
-				return fmt.Errorf("can't generate method with the same name from different interface:%s.%s and %s.%s", infoMethod.InterfaceName, infoMethod.MethodName, newMethod.InterfaceName, newMethod.MethodName)
+				return fmt.Errorf("can not generate method with the same name from different interface:%s.%s and %s.%s", infoMethod.InterfaceName, infoMethod.MethodName, newMethod.InterfaceName, newMethod.MethodName)
 			}
 		}
 		i.Interfaces = append(i.Interfaces, newMethod)
@@ -156,6 +157,11 @@ var (
 	}
 )
 
+/*
+** The feature of mapping table from database server to Golang struct
+** Provided by @qqxhb
+ */
+
 // GenerateModel catch table info from db, return a BaseStruct
 func (g *Generator) GenerateModel(tableName string, opts ...check.MemberOpt) *check.BaseStruct {
 	return g.GenerateModelAs(tableName, g.db.Config.NamingStrategy.SchemaName(tableName), opts...)
@@ -171,7 +177,8 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, opts ...
 
 	s, err := check.GenBaseStructs(g.db, g.Config.ModelPkgName, tableName, modelName, g.dbNameOpts, colNameOpts)
 	if err != nil {
-		log.Fatalf("check struct error: %s", err)
+		g.db.Logger.Error(context.Background(), "generated struct from table has error: %s", err)
+		panic("panic with generated struct error")
 	}
 	return s
 }
@@ -186,7 +193,8 @@ func (g *Generator) ApplyBasic(models ...interface{}) {
 func (g *Generator) ApplyInterface(fc interface{}, models ...interface{}) {
 	structs, err := check.CheckStructs(g.db, models...)
 	if err != nil {
-		log.Fatalf("check struct error: %s", err)
+		g.db.Logger.Error(context.Background(), "check struct error: %v", err)
+		panic("panic with check struct error")
 	}
 	g.apply(fc, structs)
 }
@@ -194,27 +202,33 @@ func (g *Generator) ApplyInterface(fc interface{}, models ...interface{}) {
 func (g *Generator) apply(fc interface{}, structs []*check.BaseStruct) {
 	interfacePaths, err := parser.GetInterfacePath(fc)
 	if err != nil {
-		log.Fatalf("can't get interface name or file: %s", err)
+		g.db.Logger.Error(context.Background(), "can not get interface name or file: %s", err)
+		panic("panic with check interface error")
 	}
 
 	err = g.readInterfaceSet.ParseFile(interfacePaths)
 	if err != nil {
-		log.Fatalf("parser file error: %s", err)
+		g.db.Logger.Error(context.Background(), "can not parser interface file: %s", err)
+		panic("panic with parser interface file error")
 	}
 
 	for _, interfaceStruct := range structs {
 		data, err := g.pushBaseStruct(interfaceStruct)
 		if err != nil {
-			log.Fatalf("gen struct error: %s", err)
+			g.db.Logger.Error(context.Background(), "gen struct error: %v", err)
+			panic("panic with gen struct error")
+
 		}
 
 		functions, err := check.CheckInterface(g.readInterfaceSet, interfaceStruct)
 		if err != nil {
-			log.Fatalf("check interface error: %s", err)
+			g.db.Logger.Error(context.Background(), "check interface error: %v", err)
+			panic("panic with check interface error")
 		}
 		err = data.AppendMethods(functions)
 		if err != nil {
-			log.Fatalf("gen Interface error: %s", err)
+			g.db.Logger.Error(context.Background(), "check interface error: %v", err)
+			panic("panic with check interface error")
 		}
 	}
 }
@@ -230,35 +244,41 @@ func (g *Generator) Execute() {
 	}
 	if _, err := os.Stat(g.OutPath); err != nil {
 		if err := os.Mkdir(g.OutPath, os.ModePerm); err != nil {
-			log.Fatalf("mkdir failed: %s", err)
+			g.db.Logger.Error(context.Background(), "mkdir failed: %s", err)
+			panic("panic with mkdir query dir error")
 		}
 	}
 	g.queryPkgName = filepath.Base(g.OutPath)
 
 	err = g.generatedBaseStruct()
 	if err != nil {
-		log.Fatalf("generate base struct fail: %s", err)
+		g.db.Logger.Error(context.Background(), "generate basic struct from table fail: %v", err)
+		panic("panic with generate basic struct from table error")
 	}
 	err = g.generatedToOutFile()
 	if err != nil {
-		log.Fatalf("generate to file fail: %s", err)
+		g.db.Logger.Error(context.Background(), "generate query to file: %v", err)
+		panic("panic with generate query to file error")
 	}
-	log.Println("Gorm generated query object file successful!")
-	log.Println("Generated path：", g.OutPath)
-	log.Println("Generated file：", g.OutFile)
+
+	g.successInfo(
+		"Gorm generated query object file successful!",
+		"Generated path："+g.OutPath,
+		"Generated file："+g.OutFile,
+	)
+}
+
+// successInfo logger
+func (g *Generator) successInfo(logInfos ...string) {
+	for _, l := range logInfos {
+		g.db.Logger.Info(context.Background(), l)
+		log.Println(l)
+	}
 }
 
 // generatedToOutFile save generate code to file
 func (g *Generator) generatedToOutFile() (err error) {
 	var buf bytes.Buffer
-
-	render := func(tmpl string, wr io.Writer, data interface{}) error {
-		t, err := template.New(tmpl).Parse(tmpl)
-		if err != nil {
-			return err
-		}
-		return t.Execute(wr, data)
-	}
 
 	err = render(tmpl.HeaderTmpl, &buf, g.queryPkgName)
 	if err != nil {
@@ -303,14 +323,15 @@ func (g *Generator) generatedToOutFile() (err error) {
 		for i := -3; i < 3; i++ {
 			fmt.Println(i+errLine, line[i+errLine])
 		}
-		return fmt.Errorf("can't format generated file: %w", err)
+		return fmt.Errorf("can not format query file: %w", err)
 	}
 	return outputFile(g.OutFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, result)
 }
 
 // generatedBaseStruct generate basic structures
 func (g *Generator) generatedBaseStruct() (err error) {
-	outPath, err := filepath.Abs(g.OutPath)
+	var outPath string
+	outPath, err = filepath.Abs(g.OutPath)
 	if err != nil {
 		return err
 	}
@@ -330,7 +351,8 @@ func (g *Generator) generatedBaseStruct() (err error) {
 
 		if !created {
 			if err := os.Mkdir(outPath, os.ModePerm); err != nil {
-				log.Fatalf("mkdir failed: %s", err)
+				g.db.Logger.Error(context.Background(), "mkdir failed: %s", err)
+				panic("panic with mkdir base struct dir error")
 			}
 			created = true
 		}
@@ -346,13 +368,13 @@ func (g *Generator) generatedBaseStruct() (err error) {
 			for i, line := range strings.Split(buf.String(), "\n") {
 				fmt.Println(i, line)
 			}
-			return fmt.Errorf("can't format generated file: %w", err)
+			return fmt.Errorf("can not format struct file: %w", err)
 		}
 		err = outputFile(modelFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, result)
 		if err != nil {
 			return nil
 		}
-		log.Printf("Generate struct [%s.%s] from table [%s]\n", data.StructInfo.Package, data.StructInfo.Type, data.TableName)
+		g.successInfo(fmt.Sprintf("Generate struct [%s.%s] from table [%s]", data.StructInfo.Package, data.StructInfo.Type, data.TableName))
 	}
 	return nil
 }
@@ -363,7 +385,7 @@ func (g *Generator) pushBaseStruct(base *check.BaseStruct) (*genInfo, error) {
 		g.Data[structName] = &genInfo{BaseStruct: base}
 	}
 	if g.Data[structName].Source != base.Source {
-		return nil, fmt.Errorf("can't generate struct with the same name from different source:%s.%s and %s.%s", base.StructInfo.Package, base.StructName, g.Data[structName].StructInfo.Package, g.Data[structName].StructName)
+		return nil, fmt.Errorf("can not generate struct with the same name from different source:%s.%s and %s.%s", base.StructInfo.Package, base.StructName, g.Data[structName].StructInfo.Package, g.Data[structName].StructName)
 	}
 	return g.Data[structName], nil
 }
@@ -371,7 +393,7 @@ func (g *Generator) pushBaseStruct(base *check.BaseStruct) (*genInfo, error) {
 func outputFile(filename string, flag int, data []byte) error {
 	out, err := os.OpenFile(filename, flag, 0640)
 	if err != nil {
-		return fmt.Errorf("can't open out file: %w", err)
+		return fmt.Errorf("can not open out file: %w", err)
 	}
 	return output(out, data)
 }
@@ -379,12 +401,12 @@ func outputFile(filename string, flag int, data []byte) error {
 func output(wr io.WriteCloser, data []byte) (err error) {
 	defer func() {
 		if e := wr.Close(); e != nil {
-			err = fmt.Errorf("can't close: %w", e)
+			err = fmt.Errorf("can not close: %w", e)
 		}
 	}()
 
 	if _, err = wr.Write(data); err != nil {
-		return fmt.Errorf("can't write: %w", err)
+		return fmt.Errorf("can not write: %w", err)
 	}
 	return nil
 }

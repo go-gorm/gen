@@ -84,6 +84,7 @@ The code generator base on [GORM](https://github.com/go-gorm/gorm), aims to be d
       - [Smart select fields](#smart-select-fields)
     - [Advanced Topics](#advanced-topics)
       - [Hints](#hints)
+  - [Maintainers](#maintainers)
   - [Contributing](#contributing)
   - [License](#license)
 
@@ -490,6 +491,15 @@ u.Select(u.Age.Avg()).Rows()
 // SELECT Avg(age) FROM users;
 ```
 
+###### Tuple Query
+
+```go
+u := query.Query.User
+
+users, err := u.Where(u.Columns(u.ID, u.Name).In(field.Values([][]inferface{}{{1, "modi"}, {2, "zhangqiang"}}))).Find()
+// SELECT * FROM `users` WHERE (`id`, `name`) IN ((1,'humodi'),(2,'tom'));
+```
+
 ###### Order
 
 Specify order when retrieving records from the database
@@ -618,11 +628,11 @@ A subquery can be nested within a query, GEN can generate subquery when using a 
 o := query.Query.Order
 u := query.Query.User
 
-orders, err := o.Where(gen.Gt(o.Amount, o.Select(u.Amount.Avg())).Find()
+orders, err := o.Where(u.Columns(o.Amount).Gt(o.Select(u.Amount.Avg())).Find()
 // SELECT * FROM "orders" WHERE amount > (SELECT AVG(amount) FROM "orders");
 
 subQuery := u.Select(u.Age.Avg()).Where(u.Name.Like("name%"))
-users, err := u.Select(u.Age.Avg().As("avgage")).Group(u.Name).Having(gen.Gt(u.Age.Avg(), subQuery).Find()
+users, err := u.Select(u.Age.Avg().As("avgage")).Group(u.Name).Having(u.Columns(u.Age.Avg()).Gt(subQuery).Find()
 // SELECT AVG(age) as avgage FROM `users` GROUP BY `name` HAVING AVG(age) > (SELECT AVG(age) FROM `users` WHERE name LIKE "name%")
 ```
 
@@ -1128,6 +1138,12 @@ users, err := u.Hints(hints.UseIndex("idx_user_name")).Find()
 users, err := u.Hints(hints.ForceIndex("idx_user_name", "idx_user_id").ForJoin()).Find()
 // SELECT * FROM `users` FORCE INDEX FOR JOIN (`idx_user_name`,`idx_user_id`)"
 ```
+
+## Maintainers
+
+[@riverchu](https://github.com/riverchu) [@idersec](https://github.com/idersec) [@qqxhb](https://github.com/qqxhb)
+
+[@jinzhu](https://github.com/jinzhu)
 
 ## Contributing
 

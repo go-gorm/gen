@@ -188,7 +188,7 @@ func (p *Param) astGetParamType(param *ast.Field) {
 	case *ast.StarExpr:
 		p.astGetEltType(v.X)
 	default:
-		log.Fatalf("unknow param type")
+		log.Fatalf("unknow param type: %+v", v)
 	}
 }
 

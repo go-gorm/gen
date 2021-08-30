@@ -2,7 +2,6 @@ package check
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 
@@ -11,6 +10,11 @@ import (
 
 	"gorm.io/gen/internal/parser"
 )
+
+/*
+** The feature of mapping table from database server to Golang struct
+** Provided by @qqxhb
+ */
 
 const (
 	ModelPkg = "model"
@@ -94,9 +98,8 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 		base.Members = append(base.Members, m)
 	}
 
-	if err = base.checkOrFix(); err != nil {
-		log.Println(err)
-	}
+	base.fixType()
+
 	return &base, nil
 }
 

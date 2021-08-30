@@ -23,12 +23,14 @@ type BaseStruct struct {
 	db            *gorm.DB
 }
 
-// getMembers get all elements of struct with gorm's Parse, ignore unexport elements
-func (b *BaseStruct) getMembers(st interface{}) {
-	// TODO find struct member's basic type
-
+// transStruct get all elements of struct with gorm's Parse, ignore unexported elements
+func (b *BaseStruct) transStruct(st interface{}) error {
 	stmt := gorm.Statement{DB: b.db}
-	_ = stmt.Parse(st)
+	err := stmt.Parse(st)
+	if err != nil {
+		return err
+	}
+	b.TableName = stmt.Table
 
 	for _, f := range stmt.Schema.Fields {
 		b.appendOrUpdateMember(&Member{
@@ -37,11 +39,15 @@ func (b *BaseStruct) getMembers(st interface{}) {
 			ColumnName: f.DBName,
 		})
 	}
+
+	b.fixType()
+	return nil
 }
 
 // getMemberRealType  get basic type of member
 func (b *BaseStruct) getMemberRealType(member reflect.Type) string {
-	if member.Implements(reflect.TypeOf((*field.ScanValuer)(nil)).Elem()) {
+	scanValuer := reflect.TypeOf((*field.ScanValuer)(nil)).Elem()
+	if member.Implements(scanValuer) || reflect.New(member).Type().Implements(scanValuer) {
 		return "field"
 	}
 
@@ -65,26 +71,25 @@ func (b *BaseStruct) appendOrUpdateMember(member *Member) {
 	b.Members = append(b.Members, member)
 }
 
-// getTableName get table name with gorm's Parse
-func (b *BaseStruct) getTableName(st interface{}) {
-	stmt := gorm.Statement{DB: b.db}
-	_ = stmt.Parse(st)
-	b.TableName = stmt.Table
-}
-
 // HasMember check if BaseStruct has members
 func (b *BaseStruct) HasMember() bool {
 	return len(b.Members) > 0
 }
 
 // check if struct is exportable and if struct in main package and if member's type is regular
-func (b *BaseStruct) checkOrFix() (err error) {
+func (b *BaseStruct) check() (err error) {
 	if b.StructInfo.InMainPkg() {
 		return fmt.Errorf("can't generated data object for struct in main package, ignored:%s", b.StructName)
 	}
 	if !isCapitalize(b.StructName) {
 		return fmt.Errorf("can't generated data object for non-exportable struct, ignore:%s", b.NewStructName)
 	}
+
+	return nil
+}
+
+// fixType fix special type and get newType
+func (b *BaseStruct) fixType() {
 	for _, m := range b.Members {
 		if m.IsGormDeleteAt() {
 			m.Type = "time.Time"
@@ -92,9 +97,9 @@ func (b *BaseStruct) checkOrFix() (err error) {
 		if !m.AllowType() {
 			m.Type = "field"
 		}
+
 		m.NewType = getNewTypeName(m.Type)
 	}
-	return nil
 }
 
 func isStructType(data reflect.Value) bool {

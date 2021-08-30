@@ -85,6 +85,26 @@ func TestExpr_Build(t *testing.T) {
 			Result: "`id` = `new_id`",
 		},
 		{
+			Expr:   field.NewField("", "id").NeqCol(field.NewField("", "new_id")),
+			Result: "`id` <> `new_id`",
+		},
+		{
+			Expr:   field.NewField("", "id").LtCol(field.NewField("", "new_id")),
+			Result: "`id` < `new_id`",
+		},
+		{
+			Expr:   field.NewField("", "id").LteCol(field.NewField("", "new_id")),
+			Result: "`id` <= `new_id`",
+		},
+		{
+			Expr:   field.NewField("", "id").GtCol(field.NewField("", "new_id")),
+			Result: "`id` > `new_id`",
+		},
+		{
+			Expr:   field.NewField("", "id").GteCol(field.NewField("", "new_id")),
+			Result: "`id` >= `new_id`",
+		},
+		{
 			Expr:   field.NewField("", "id").EqCol(field.NewField("", "new_id").Avg()),
 			Result: "`id` = AVG(`new_id`)",
 		},
@@ -95,6 +115,10 @@ func TestExpr_Build(t *testing.T) {
 		{
 			Expr:   field.NewField("", "id").EqCol(field.NewField("", "new_id").WithTable("tableB")),
 			Result: "`id` = `tableB`.`new_id`",
+		},
+		{
+			Expr:   field.NewField("", "id").NeqCol(field.NewField("", "new_id").WithTable("tableB")),
+			Result: "`id` <> `tableB`.`new_id`",
 		},
 		{
 			Expr:   field.NewField("", "id").IsNull(),

@@ -144,6 +144,11 @@ func (d *DO) As(alias string) Dao {
 	return &DO{db: d.db, alias: alias}
 }
 
+// Columns return columns for Subquery
+func (*DO) Columns(cols ...field.Expr) columns {
+	return cols
+}
+
 // ======================== chainable api ========================
 func (d *DO) Not(conds ...Condition) Dao {
 	return NewDO(d.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Not(condToExpression(conds)...)}}))
@@ -514,44 +519,63 @@ func Table(subQueries ...subQuery) Dao {
 
 // ======================== sub query method ========================
 
-// In return a subquery expression
-// the params conds must contains 2 parameters. Input should be in the order of field expression and sub query
-// the function will painc if the last item is not of sub query type
-func In(conds ...Condition) field.Expr {
-	switch len(conds) {
-	case 0, 1:
-		return field.ContainsSubQuery(nil, nil)
-	default:
-		columns := condToExpr(conds[:len(conds)-1]...)
-		query := conds[len(conds)-1].(subQuery)
-		return field.ContainsSubQuery(columns, query.UnderlyingDB())
+type columns []field.Expr
+
+// In accept query or value
+func (cs columns) In(queryOrValue Condition) field.Expr {
+	if len(cs) == 0 {
+		return field.EmptyExpr()
 	}
-}
 
-func Eq(column field.Expr, query subQuery) field.Expr {
-	return field.CompareSubQuery(field.EqOp, column, query.UnderlyingDB())
-}
-
-func Gt(column field.Expr, query subQuery) field.Expr {
-	return field.CompareSubQuery(field.GtOp, column, query.UnderlyingDB())
-}
-
-func Gte(column field.Expr, query subQuery) field.Expr {
-	return field.CompareSubQuery(field.GteOp, column, query.UnderlyingDB())
-}
-
-func Lt(column field.Expr, query subQuery) field.Expr {
-	return field.CompareSubQuery(field.LtOp, column, query.UnderlyingDB())
-}
-
-func Lte(column field.Expr, query subQuery) field.Expr {
-	return field.CompareSubQuery(field.LteOp, column, query.UnderlyingDB())
-}
-
-func condToExpr(conds ...Condition) []field.Expr {
-	exprs := make([]field.Expr, len(conds))
-	for i, cond := range conds {
-		exprs[i] = cond.(field.Expr)
+	query, ok := queryOrValue.(subQuery)
+	if !ok {
+		return field.ContainsValue(cs, queryOrValue)
 	}
-	return exprs
+	return field.ContainsSubQuery(cs, query.UnderlyingDB())
+}
+
+func (cs columns) NotIn(queryOrValue Condition) field.Expr {
+	return field.Not(cs.In(queryOrValue))
+}
+
+func (cs columns) Eq(query subQuery) field.Expr {
+	if len(cs) == 0 {
+		return field.EmptyExpr()
+	}
+	return field.CompareSubQuery(field.EqOp, cs[0], query.UnderlyingDB())
+}
+
+func (cs columns) Neq(query subQuery) field.Expr {
+	if len(cs) == 0 {
+		return field.EmptyExpr()
+	}
+	return field.CompareSubQuery(field.NeqOp, cs[0], query.UnderlyingDB())
+}
+
+func (cs columns) Gt(query subQuery) field.Expr {
+	if len(cs) == 0 {
+		return field.EmptyExpr()
+	}
+	return field.CompareSubQuery(field.GtOp, cs[0], query.UnderlyingDB())
+}
+
+func (cs columns) Gte(query subQuery) field.Expr {
+	if len(cs) == 0 {
+		return field.EmptyExpr()
+	}
+	return field.CompareSubQuery(field.GteOp, cs[0], query.UnderlyingDB())
+}
+
+func (cs columns) Lt(query subQuery) field.Expr {
+	if len(cs) == 0 {
+		return field.EmptyExpr()
+	}
+	return field.CompareSubQuery(field.LtOp, cs[0], query.UnderlyingDB())
+}
+
+func (cs columns) Lte(query subQuery) field.Expr {
+	if len(cs) == 0 {
+		return field.EmptyExpr()
+	}
+	return field.CompareSubQuery(field.LteOp, cs[0], query.UnderlyingDB())
 }
