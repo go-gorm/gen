@@ -151,7 +151,7 @@ func ({{.S}} {{.NewStructName}}) Unscoped() *{{.NewStructName}} {
 	return &{{.S}}
 }
 
-func ({{.S}} {{.NewStructName}}) Create(value *{{.StructInfo.Package}}.{{.StructInfo.Type}}) error {
+func ({{.S}} {{.NewStructName}}) Create(value ...*{{.StructInfo.Package}}.{{.StructInfo.Type}}) error {
 	return {{.S}}.DO.Create(value)
 }
 
