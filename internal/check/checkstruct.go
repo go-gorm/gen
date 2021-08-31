@@ -16,7 +16,6 @@ var keywords = []string{
 	"Distinct", "Omit",
 	"Select", "Where", "Order", "Group", "Having", "Limit", "Offset",
 	"Join", "LeftJoin", "RightJoin",
-	"Create", "CreateInBatches",
 	"Save", "Create", "CreateInBatches",
 	"Update", "Updates", "UpdateColumn", "UpdateColumns",
 	"Find", "FindInBatches", "First", "Take", "Last", "Pluck", "Count",
