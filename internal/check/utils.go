@@ -81,9 +81,11 @@ func uncaptialize(s string) string {
 	return strings.ToLower(s[:1]) + s[1:]
 }
 
-// func captialize(s string) string {
-// 	if s == "" {
-// 		return ""
-// 	}
-// 	return strings.ToUpper(s[:1]) + s[1:]
-// }
+func contains(target string, list []string) bool {
+	for _, item := range list {
+		if target == item {
+			return true
+		}
+	}
+	return false
+}

@@ -98,7 +98,7 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 		base.Members = append(base.Members, m)
 	}
 
-	base.fixType()
+	base.fixMember()
 
 	return &base, nil
 }
