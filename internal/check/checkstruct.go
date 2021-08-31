@@ -10,6 +10,21 @@ import (
 	"gorm.io/gen/internal/parser"
 )
 
+var keywords = []string{
+	"UnderlyingDB", "UseDB", "UseModel", "UseTable", "Quote", "Debug", "TableName",
+	"As", "Not", "Or", "Build", "Columns", "Hints",
+	"Distinct", "Omit",
+	"Select", "Where", "Order", "Group", "Having", "Limit", "Offset",
+	"Join", "LeftJoin", "RightJoin",
+	"Create", "CreateInBatches",
+	"Save", "Create", "CreateInBatches",
+	"Update", "Updates", "UpdateColumn", "UpdateColumns",
+	"Find", "FindInBatches", "First", "Take", "Last", "Pluck", "Count",
+	"Scan", "ScanRows", "Row", "Rows",
+	"Delete", "Unscoped",
+	"Transaction", "Begin", "Commit", "SavePoint", "RollBack", "RollBackTo", "Scopes",
+}
+
 // BaseStruct struct info in generated code
 type BaseStruct struct {
 	GenBaseStruct bool   // whether to generate db model
@@ -40,7 +55,7 @@ func (b *BaseStruct) transStruct(st interface{}) error {
 		})
 	}
 
-	b.fixType()
+	b.fixMember()
 	return nil
 }
 
@@ -91,9 +106,12 @@ func (b *BaseStruct) check() (err error) {
 	return nil
 }
 
-// fixType fix special type and get newType
-func (b *BaseStruct) fixType() {
+// fixMember fix special type and get newType
+func (b *BaseStruct) fixMember() {
 	for _, m := range b.Members {
+		if contains(m.Name, keywords) {
+			m.Name += "_"
+		}
 		if !m.AllowType() {
 			m.Type = "field"
 		}
