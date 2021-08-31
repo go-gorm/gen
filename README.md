@@ -22,6 +22,7 @@ The code generator base on [GORM](https://github.com/go-gorm/gorm), aims to be d
 ## Contents
 
 - [GORM/GEN](#gormgen)
+  - [Overview](#overview)
   - [Contents](#contents)
   - [Installation](#installation)
   - [Quick start](#quick-start)
@@ -47,6 +48,7 @@ The code generator base on [GORM](https://github.com/go-gorm/gorm), aims to be d
           - [Or Conditions](#or-conditions)
           - [Group Conditions](#group-conditions)
           - [Selecting Specific Fields](#selecting-specific-fields)
+          - [Tuple Query](#tuple-query)
           - [Order](#order)
           - [Limit & Offset](#limit--offset)
           - [Group By & Having](#group-by--having)
@@ -263,7 +265,7 @@ type DB struct {
 // u refer to query.user
 user := model.User{Name: "Modi", Age: 18, Birthday: time.Now()}
 
-u := query.Query.User
+u := query.Use(db).User
 err := u.Create(&user) // pass pointer of data to Create
 
 err // returns error
@@ -274,7 +276,7 @@ err // returns error
 Create a record and assgin a value to the fields specified.
 
 ```go
-u := query.Query.User
+u := query.Use(db).User
 u.Select(u.Name, u.Age).Create(&user)
 // INSERT INTO `users` (`name`,`age`) VALUES ("modi", 18)
 ```
@@ -282,7 +284,7 @@ u.Select(u.Name, u.Age).Create(&user)
 Create a record and ignore the values for fields passed to omit
 
 ```go
-u := query.Query.User
+u := query.Use(db).User
 u.Omit(u.Name, u.Age).Create(&user)
 // INSERT INTO `users` (`Address`, `Birthday`) VALUES ("2021-08-17 20:54:12.000", 18)
 ```
@@ -293,7 +295,7 @@ To efficiently insert large number of records, pass a slice to the `Create` meth
 
 ```go
 var users = []model.User{{Name: "modi"}, {Name: "zhangqiang"}, {Name: "songyuan"}}
-query.Query.User.Create(&users)
+query.Use(db).User.Create(&users)
 
 for _, user := range users {
     user.ID // 1,2,3
@@ -306,7 +308,7 @@ You can specify batch size when creating with `CreateInBatches`, e.g:
 var users = []User{{Name: "modi_1"}, ...., {Name: "modi_10000"}}
 
 // batch size 100
-query.Query.User.CreateInBatches(users, 100)
+query.Use(db).User.CreateInBatches(users, 100)
 ```
 
 It will works if you set `CreateBatchSize` in `gorm.Config` / `gorm.Session`
@@ -333,7 +335,7 @@ u.Create(&users)
 Generated code provides `First`, `Take`, `Last` methods to retrieve a single object from the database, it adds `LIMIT 1` condition when querying the database, and it will return the error `ErrRecordNotFound` if no record is found.
 
 ```go
-u := query.Query.User
+u := query.Use(db).User
 
 // Get the first record ordered by primary key
 user, err := u.First()
@@ -354,7 +356,7 @@ errors.Is(err, gorm.ErrRecordNotFound)
 ##### Retrieving objects with primary key
 
 ```go
-u := query.Query.User
+u := query.Use(db).User
 
 user, err := u.Where(u.ID.Eq(10)).First()
 // SELECT * FROM users WHERE id = 10;
@@ -373,7 +375,7 @@ user, err := u.Where(u.ID.Eq("1b74413f-f3b8-409f-ac47-e8c062e3472a")).First()
 ##### Retrieving all objects
 
 ```go
-u := query.Query.User
+u := query.Use(db).User
 
 // Get all records
 users, err := u.Find()
@@ -385,7 +387,7 @@ users, err := u.Find()
 ###### String Conditions
 
 ```go
-u := query.Query.User
+u := query.Use(db).User
 
 // Get first matched record
 user, err := u.Where(u.Name.Eq("modi")).First()
@@ -419,7 +421,7 @@ users, err := u.Where(u.Birthday.Between(lastWeek, today)).Find()
 ###### Inline Condition
 
 ```go
-u := query.Query.User
+u := query.Use(db).User
 
 // Get by primary key if it were a non-integer type
 user, err := u.Where(u.ID.Eq("string_primary_key")).First()
@@ -438,7 +440,7 @@ users, err := u.Where(u.Name.Neq("modi"), u.Age.Gt(17)).Find()
 Build NOT conditions, works similar to `Where`
 
 ```go
-u := query.Query.User
+u := query.Use(db).User
 
 user, err := u.Not(u.Name.Eq("modi")).First()
 // SELECT * FROM users WHERE NOT name = "modi" ORDER BY id LIMIT 1;
@@ -455,7 +457,7 @@ user, err := u.Not(u.ID.In(1,2,3)).First()
 ###### Or Conditions
 
 ```go
-u := query.Query.User
+u := query.Use(db).User
 
 users, err := u.Where(u.Role.Eq("admin")).Or(u.Role.Eq("super_admin")).Find()
 // SELECT * FROM users WHERE role = 'admin' OR role = 'super_admin';
@@ -466,7 +468,7 @@ users, err := u.Where(u.Role.Eq("admin")).Or(u.Role.Eq("super_admin")).Find()
 Easier to write complicated SQL query with Group Conditions
 
 ```go
-p := query.Query.Pizza
+p := query.Use(db).Pizza
 
 pizzas, err := p.Where(
     p.Where(p.Pizza.Eq("pepperoni")).Where(p.Where(p.Size.Eq("small")).Or(p.Size.Eq("medium"))),
@@ -482,7 +484,7 @@ pizzas, err := p.Where(
 `Select` allows you to specify the fields that you want to retrieve from database. Otherwise, GORM will select all fields by default.
 
 ```go
-u := query.Query.User
+u := query.Use(db).User
 
 users, err := u.Select(u.Name, u.Age).Find()
 // SELECT name, age FROM users;
@@ -494,7 +496,7 @@ u.Select(u.Age.Avg()).Rows()
 ###### Tuple Query
 
 ```go
-u := query.Query.User
+u := query.Use(db).User
 
 users, err := u.Where(u.Columns(u.ID, u.Name).In(field.Values([][]inferface{}{{1, "modi"}, {2, "zhangqiang"}}))).Find()
 // SELECT * FROM `users` WHERE (`id`, `name`) IN ((1,'humodi'),(2,'tom'));
@@ -505,7 +507,7 @@ users, err := u.Where(u.Columns(u.ID, u.Name).In(field.Values([][]inferface{}{{1
 Specify order when retrieving records from the database
 
 ```go
-u := query.Query.User
+u := query.Use(db).User
 
 users, err := u.Order(u.Age.Desc(), u.Name).Find()
 // SELECT * FROM users ORDER BY age DESC, name;
@@ -521,7 +523,7 @@ users, err := u.Order(u.Age.Desc()).Order(u.Name).Find()
 `Offset` specify the number of records to skip before starting to return the records
 
 ```go
-u := query.Query.User
+u := query.Use(db).User
 
 urers, err := u.Limit(3).Find()
 // SELECT * FROM users LIMIT 3;
@@ -544,7 +546,7 @@ users, err := u.Offset(10).Offset(-1).Find()
 ###### Group By & Having
 
 ```go
-u := query.Query.User
+u := query.Use(db).User
 
 type Result struct {
     Date  time.Time
@@ -564,7 +566,7 @@ for rows.Next() {
   ...
 }
 
-o := query.Query.Order
+o := query.Use(db).Order
 
 rows, err := o.Select(o.CreateAt.Date().As("date"), o.Amount.Sum().As("total")).Group(o.CreateAt.Date()).Having(u.Amount.Sum().Gt(100)).Rows()
 for rows.Next() {
@@ -581,7 +583,7 @@ o.Select(o.CreateAt.Date().As("date"), o.Amount.Sum().As("total")).Group(o.Creat
 Selecting distinct values from the model
 
 ```go
-u := query.Query.User
+u := query.Use(db).User
 
 users, err := u.Distinct(u.Name, u.Age).Order(u.Name, u.Age.Desc()).Find()
 ```
@@ -593,9 +595,9 @@ users, err := u.Distinct(u.Name, u.Age).Order(u.Name, u.Age.Desc()).Find()
 Specify Joins conditions
 
 ```go
-u := query.Query.User
-e := query.Query.Email
-c := query.Query.CreditCard
+u := query.Use(db).User
+e := query.Use(db).Email
+c := query.Use(db).CreditCard
 
 type Result struct {
     Name  string
@@ -625,8 +627,8 @@ users := u.Join(e, e.UserID.EqCol(u.id), e.Email.Eq("modi@example.org")).Join(c,
 A subquery can be nested within a query, GEN can generate subquery when using a `Dao` object as param
 
 ```go
-o := query.Query.Order
-u := query.Query.User
+o := query.Use(db).Order
+u := query.Use(db).User
 
 orders, err := o.Where(u.Columns(o.Amount).Gt(o.Select(u.Amount.Avg())).Find()
 // SELECT * FROM "orders" WHERE amount > (SELECT AVG(amount) FROM "orders");
@@ -641,8 +643,8 @@ users, err := u.Select(u.Age.Avg().As("avgage")).Group(u.Name).Having(u.Columns(
 GORM allows you using subquery in FROM clause with method `Table`, for example:
 
 ```go
-u := query.Query.User
-p := query.Query.Pet
+u := query.Use(db).User
+p := query.Use(db).Pet
 
 users, err := gen.Table(u.Select(u.Name, u.Age).As("u")).Where(u.Age.Eq(18)).Find()
 // SELECT * FROM (SELECT `name`,`age` FROM `users`) as u WHERE `age` = 18
@@ -659,8 +661,8 @@ db.Table("(?) as u, (?) as p", subQuery1, subQuery2).Find(&User{})
 Update a table by using SubQuery
 
 ```go
-u := query.Query.User
-c := query.Query.Company
+u := query.Use(db).User
+c := query.Use(db).Company
 
 u.Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqCol(u.CompanyID)))
 // UPDATE "users" SET "company_name" = (SELECT name FROM companies WHERE companies.id = users.company_id);
@@ -675,7 +677,7 @@ u.Where(u.Name.Eq("modi")).Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqC
 GEN supports iterating through Rows
 
 ```go
-rows, err := query.Query.User.Where(u.Name.Eq("modi")).Rows()
+rows, err := query.Use(db).User.Where(u.Name.Eq("modi")).Rows()
 defer rows.Close()
 
 for rows.Next() {
@@ -692,7 +694,7 @@ for rows.Next() {
 Query and process records in batch
 
 ```go
-u := query.Query.User
+u := query.Use(db).User
 
 // batch size 100
 err := u.Where(u.ID.Gt(9)).FindInBatches(&results, 100, func(tx gen.Dao, batch int) error {
@@ -717,7 +719,7 @@ err := u.Where(u.ID.Gt(9)).FindInBatches(&results, 100, func(tx gen.Dao, batch i
 Query single column from database and scan into a slice, if you want to query multiple columns, use `Select` with `Scan` instead
 
 ```go
-u := query.Query.User
+u := query.Use(db).User
 
 var ages []int64
 u.Pluck(u.Age, &ages)
@@ -739,7 +741,7 @@ users, err := db.Select(u.Name, u.Age).Find()
 `Scopes` allows you to specify commonly-used queries which can be referenced as method calls
 
 ```go
-o := query.Query.Order
+o := query.Use(db).Order
 
 func AmountGreaterThan1000(tx gen.Dao) gen.Dao {
     return tx.Where(o.Amount.Gt(1000))
@@ -774,7 +776,7 @@ orders, err := o.Scopes(AmountGreaterThan1000, OrderStatus([]string{"paid", "shi
 Get matched records count
 
 ```go
-u := query.Query.User
+u := query.Use(db).User
 
 count, err := u.Where(u.Name.Eq("modi")).Or(u.Name.Eq("zhangqiang")).Count()
 // SELECT count(1) FROM users WHERE name = 'modi' OR name = 'zhangqiang'
@@ -794,7 +796,7 @@ u.Distinct(u.Name).Count()
 When updating a single column with `Update`, it needs to have any conditions or it will raise error `ErrMissingWhereClause`, for example:
 
 ```go
-u := query.Query.User
+u := query.Use(db).User
 
 // Update with conditions
 u.Where(u.Activate.Is(true)).Update(u.Name, "hello")
@@ -810,7 +812,7 @@ u.Where(u.Activate.Is(true)).Update(u.Age, u.Age.Add(1))
 `Updates` supports update with `struct` or `map[string]interface{}`, when updating with `struct` it will only update non-zero fields by default
 
 ```go
-u := query.Query.User
+u := query.Use(db).User
 
 // Update attributes with `map`
 u).Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
@@ -824,7 +826,7 @@ u).Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
 If you want to update selected fields or ignore some fields when updating, you can use `Select`, `Omit`
 
 ```go
-u := query.Query.User
+u := query.Use(db).User
 
 // Select with Map
 // User's ID is `111`:
@@ -840,7 +842,7 @@ u.Omit(u.Name).Where(u.ID.Eq(111)).Updates(map[string]interface{}{"name": "hello
 ##### Delete record
 
 ```go
-e := query.Query.Email
+e := query.Use(db).Email
 
 // Email's ID is `10`
 e.Where(e.ID.Eq(10)).Delete()
@@ -865,7 +867,7 @@ u.Where(u.ID.In(1,2,3)).Delete()
 The specified value has no primary value, GEN will perform a batch delete, it will delete all matched records
 
 ```go
-e := query.Query.Email
+e := query.Use(db).Email
 
 err := e.Where(e.Name.Like("%modi%")).Delete()
 // DELETE from emails where email LIKE "%modi%";
@@ -1119,7 +1121,7 @@ Optimizer hints allow to control the query optimizer to choose a certain query e
 ```go
 import "gorm.io/hints"
 
-u := query.Query.User
+u := query.Use(db).User
 
 users, err := u.Hints(hints.New("MAX_EXECUTION_TIME(10000)")).Find()
 // SELECT * /*+ MAX_EXECUTION_TIME(10000) */ FROM `users`
@@ -1130,7 +1132,7 @@ Index hints allow passing index hints to the database in case the query planner 
 ```go
 import "gorm.io/hints"
 
-u := query.Query.User
+u := query.Use(db).User
 
 users, err := u.Hints(hints.UseIndex("idx_user_name")).Find()
 // SELECT * FROM `users` USE INDEX (`idx_user_name`)
