@@ -159,7 +159,7 @@ func ({{.S}} {{.NewStructName}}) CreateInBatches(values []*{{.StructInfo.Package
 	return {{.S}}.DO.CreateInBatches(values, batchSize)
 }
 
-func ({{.S}} {{.NewStructName}}) Save(value *{{.StructInfo.Package}}.{{.StructInfo.Type}}) error {
+func ({{.S}} {{.NewStructName}}) Save(value ...*{{.StructInfo.Package}}.{{.StructInfo.Type}}) error {
 	return {{.S}}.DO.Save(value)
 }
 
@@ -204,10 +204,6 @@ func ({{.S}} {{.NewStructName}}) FindByPage(offset int, limit int) (result []*{{
 
 	result, err = {{.S}}.Offset(offset).Limit(limit).Find()
 	return
-}
-
-func ({{.S}} {{.NewStructName}}) Delete() error {
-	return {{.S}}.DO.Delete()
 }
 
 func ({{.S}} {{.NewStructName}}) Begin(opts ...*sql.TxOptions) *{{.NewStructName}} {
