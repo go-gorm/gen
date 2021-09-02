@@ -230,6 +230,26 @@ func TestExpr_Build(t *testing.T) {
 			Result:       "COUNT(`id`)",
 		},
 		{
+			Expr:         field.NewUint("", "id").Count().As("UserID"),
+			ExpectedVars: nil,
+			Result:       "COUNT(`id`) AS `UserID`",
+		},
+		{
+			Expr:         field.NewUint("", "id").Distinct(),
+			ExpectedVars: nil,
+			Result:       "DISTINCT `id`",
+		},
+		{
+			Expr:         field.NewUint("", "id").Distinct().Count(),
+			ExpectedVars: nil,
+			Result:       "COUNT(DISTINCT `id`)",
+		},
+		{
+			Expr:         field.NewUint("", "id").Distinct().Count().As("UserID"),
+			ExpectedVars: nil,
+			Result:       "COUNT(DISTINCT `id`) AS `UserID`",
+		},
+		{
 			Expr:         field.NewInt("", "age").RightShift(3),
 			ExpectedVars: []interface{}{3},
 			Result:       "`age`>>?",
