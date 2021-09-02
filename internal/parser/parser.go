@@ -17,10 +17,20 @@ type InterfaceSet struct {
 
 // InterfaceInfo ...
 type InterfaceInfo struct {
-	Name    string
-	Doc     string
-	Methods []*Method
-	Package string
+	Name        string
+	Doc         string
+	Methods     []*Method
+	Package     string
+	ApplyStruct []string
+}
+
+func (i *InterfaceInfo) IsMatchStruct(name string) bool {
+	for _, s := range i.ApplyStruct {
+		if s == name {
+			return true
+		}
+	}
+	return false
 }
 
 // Method interface's method
@@ -32,7 +42,7 @@ type Method struct {
 }
 
 // ParseFile get interface's info from source file
-func (i *InterfaceSet) ParseFile(paths []*InterfacePath) error {
+func (i *InterfaceSet) ParseFile(paths []*InterfacePath, structNames []string) error {
 	for _, path := range paths {
 		for _, file := range path.Files {
 			absFilePath, err := filepath.Abs(file)
@@ -40,7 +50,7 @@ func (i *InterfaceSet) ParseFile(paths []*InterfacePath) error {
 				return fmt.Errorf("file not found：%s", file)
 			}
 
-			err = i.getInterfaceFromFile(absFilePath, path.Name, path.FullName)
+			err = i.getInterfaceFromFile(absFilePath, path.Name, path.FullName, structNames)
 			if err != nil {
 				return fmt.Errorf("can't get interface from %s:%s", path.FullName, err)
 			}
@@ -80,7 +90,7 @@ func (i *InterfaceSet) Visit(n ast.Node) (w ast.Visitor) {
 
 // getInterfaceFromFile get interfaces
 // get all interfaces from file and compare with specified name
-func (i *InterfaceSet) getInterfaceFromFile(filename string, name, Package string) error {
+func (i *InterfaceSet) getInterfaceFromFile(filename string, name, Package string, structNames []string) error {
 	fileset := token.NewFileSet()
 	f, err := parser.ParseFile(fileset, filename, nil, parser.ParseComments)
 	if err != nil {
@@ -93,6 +103,7 @@ func (i *InterfaceSet) getInterfaceFromFile(filename string, name, Package strin
 	for _, info := range astResult.Interfaces {
 		if name == info.Name {
 			info.Package = Package
+			info.ApplyStruct = structNames
 			i.Interfaces = append(i.Interfaces, info)
 		}
 	}
