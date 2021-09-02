@@ -119,6 +119,13 @@ func (b *BaseStruct) fixMember() {
 	}
 }
 
+func GetNames(bases []*BaseStruct) (res []string) {
+	for _, base := range bases {
+		res = append(res, base.StructName)
+	}
+	return res
+}
+
 func isStructType(data reflect.Value) bool {
 	return data.Kind() == reflect.Struct ||
 		(data.Kind() == reflect.Ptr && data.Elem().Kind() == reflect.Struct)
