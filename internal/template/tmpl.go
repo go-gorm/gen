@@ -151,16 +151,22 @@ func ({{.S}} {{.NewStructName}}) Unscoped() *{{.NewStructName}} {
 	return &{{.S}}
 }
 
-func ({{.S}} {{.NewStructName}}) Create(value ...*{{.StructInfo.Package}}.{{.StructInfo.Type}}) error {
-	return {{.S}}.DO.Create(value)
+func ({{.S}} {{.NewStructName}}) Create(values ...*{{.StructInfo.Package}}.{{.StructInfo.Type}}) error {
+	if len(values) == 0 {
+		return nil
+	}
+	return {{.S}}.DO.Create(values)
 }
 
 func ({{.S}} {{.NewStructName}}) CreateInBatches(values []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, batchSize int) error {
 	return {{.S}}.DO.CreateInBatches(values, batchSize)
 }
 
-func ({{.S}} {{.NewStructName}}) Save(value ...*{{.StructInfo.Package}}.{{.StructInfo.Type}}) error {
-	return {{.S}}.DO.Save(value)
+func ({{.S}} {{.NewStructName}}) Save(values ...*{{.StructInfo.Package}}.{{.StructInfo.Type}}) error {
+	if len(values) == 0 {
+		return nil
+	}
+	return {{.S}}.DO.Save(values)
 }
 
 func ({{.S}} {{.NewStructName}}) First() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {

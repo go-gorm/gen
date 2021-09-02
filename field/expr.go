@@ -94,6 +94,10 @@ func (e expr) Count() Int {
 	return Int{e.setExpression(clause.Expr{SQL: "COUNT(?)", Vars: []interface{}{e.RawExpr()}})}
 }
 
+func (e expr) Distinct() Int {
+	return Int{e.setExpression(clause.Expr{SQL: "DISTINCT ?", Vars: []interface{}{e.RawExpr()}})}
+}
+
 func (e expr) Length() Int {
 	return Int{e.setExpression(clause.Expr{SQL: "LENGTH(?)", Vars: []interface{}{e.RawExpr()}})}
 }

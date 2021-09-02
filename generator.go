@@ -39,9 +39,8 @@ func NewGenerator(cfg Config) *Generator {
 		cfg.db, _ = gorm.Open(tests.DummyDialector{})
 	}
 	return &Generator{
-		Config:           cfg,
-		Data:             make(map[string]*genInfo),
-		readInterfaceSet: new(parser.InterfaceSet),
+		Config: cfg,
+		Data:   make(map[string]*genInfo),
 	}
 }
 
@@ -72,24 +71,30 @@ type genInfo struct {
 	Interfaces []*check.InterfaceMethod
 }
 
-func (i *genInfo) AppendMethods(methods []*check.InterfaceMethod) error {
+//
+func (i *genInfo) appendMethods(methods []*check.InterfaceMethod) error {
 	for _, newMethod := range methods {
-		for _, infoMethod := range i.Interfaces {
-			if infoMethod.MethodName == newMethod.MethodName && infoMethod.InterfaceName != newMethod.InterfaceName {
-				return fmt.Errorf("can not generate method with the same name from different interface:%s.%s and %s.%s", infoMethod.InterfaceName, infoMethod.MethodName, newMethod.InterfaceName, newMethod.MethodName)
-			}
+		if i.methodInGenInfo(newMethod) {
+			continue
 		}
 		i.Interfaces = append(i.Interfaces, newMethod)
 	}
 	return nil
+}
+func (i *genInfo) methodInGenInfo(m *check.InterfaceMethod) bool {
+	for _, method := range i.Interfaces {
+		if method.IsRepeatFromSameInterface(m) {
+			return true
+		}
+	}
+	return false
 }
 
 // Generator code generator
 type Generator struct {
 	Config
 
-	Data             map[string]*genInfo
-	readInterfaceSet *parser.InterfaceSet
+	Data map[string]*genInfo
 }
 
 // UseDB set db connection
@@ -114,6 +119,16 @@ var (
 		return func(m *check.Member) *check.Member {
 			if m.Name == columnName {
 				m.Name = newName
+			}
+			return m
+		}
+	}
+	// FieldSetType specify field type in generated struct
+	FieldSetType = func(columnName string, newType string) check.MemberOpt {
+		return func(m *check.Member) *check.Member {
+			if m.Name == columnName {
+				m.Type = newType
+				m.ModelType = newType
 			}
 			return m
 		}
@@ -200,13 +215,14 @@ func (g *Generator) ApplyInterface(fc interface{}, models ...interface{}) {
 }
 
 func (g *Generator) apply(fc interface{}, structs []*check.BaseStruct) {
+	readInterface := new(parser.InterfaceSet)
 	interfacePaths, err := parser.GetInterfacePath(fc)
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "can not get interface name or file: %s", err)
 		panic("panic with check interface error")
 	}
 
-	err = g.readInterfaceSet.ParseFile(interfacePaths)
+	err = readInterface.ParseFile(interfacePaths, check.GetNames(structs))
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "can not parser interface file: %s", err)
 		panic("panic with parser interface file error")
@@ -220,12 +236,12 @@ func (g *Generator) apply(fc interface{}, structs []*check.BaseStruct) {
 
 		}
 
-		functions, err := check.CheckInterface(g.readInterfaceSet, interfaceStruct)
+		functions, err := check.CheckInterface(readInterface, interfaceStruct, data.Interfaces)
 		if err != nil {
 			g.db.Logger.Error(context.Background(), "check interface error: %v", err)
 			panic("panic with check interface error")
 		}
-		err = data.AppendMethods(functions)
+		err = data.appendMethods(functions)
 		if err != nil {
 			g.db.Logger.Error(context.Background(), "check interface error: %v", err)
 			panic("panic with check interface error")
@@ -262,7 +278,7 @@ func (g *Generator) Execute() {
 	}
 
 	g.successInfo(
-		"Gorm generated query object file successful!",
+		"Gorm generate query object file successful!",
 		"Generated path："+g.OutPath,
 		"Generated file："+g.OutFile,
 	)
@@ -385,7 +401,8 @@ func (g *Generator) pushBaseStruct(base *check.BaseStruct) (*genInfo, error) {
 		g.Data[structName] = &genInfo{BaseStruct: base}
 	}
 	if g.Data[structName].Source != base.Source {
-		return nil, fmt.Errorf("can not generate struct with the same name from different source:%s.%s and %s.%s", base.StructInfo.Package, base.StructName, g.Data[structName].StructInfo.Package, g.Data[structName].StructName)
+		return nil, fmt.Errorf("can not generate struct with the same name from different source:%s.%s and %s.%s",
+			base.StructInfo.Package, base.StructName, g.Data[structName].StructInfo.Package, g.Data[structName].StructName)
 	}
 	return g.Data[structName], nil
 }

@@ -35,28 +35,38 @@ type InterfaceMethod struct {
 }
 
 // HasSqlData has variable or not
-func (f *InterfaceMethod) HasSqlData() bool {
-	return len(f.SqlData) > 0
+func (m *InterfaceMethod) HasSqlData() bool {
+	return len(m.SqlData) > 0
 }
 
 // HasGotPoint parameter has pointer or not
-func (f *InterfaceMethod) HasGotPoint() bool {
-	return !f.HasNeedNewResult()
+func (m *InterfaceMethod) HasGotPoint() bool {
+	return !m.HasNeedNewResult()
 }
 
 // HasNeedNewResult need pointer or not
-func (f *InterfaceMethod) HasNeedNewResult() bool {
-	return !f.ResultData.IsArray && ((f.ResultData.IsNull() && f.ResultData.IsTime()) || f.ResultData.IsMap())
+func (m *InterfaceMethod) HasNeedNewResult() bool {
+	return !m.ResultData.IsArray && ((m.ResultData.IsNull() && m.ResultData.IsTime()) || m.ResultData.IsMap())
+}
+
+// IsRepeatFromDifferentInterface check different interface has same mame method
+func (m *InterfaceMethod) IsRepeatFromDifferentInterface(newMethod *InterfaceMethod) bool {
+	return m.MethodName == newMethod.MethodName && m.InterfaceName != newMethod.InterfaceName && m.MethodStruct == newMethod.MethodStruct
+}
+
+// IsRepeatFromSameInterface check different interface has same mame method
+func (m *InterfaceMethod) IsRepeatFromSameInterface(newMethod *InterfaceMethod) bool {
+	return m.MethodName == newMethod.MethodName && m.InterfaceName == newMethod.InterfaceName && m.MethodStruct == newMethod.MethodStruct
 }
 
 //GetParamInTmpl return param list
-func (f *InterfaceMethod) GetParamInTmpl() string {
-	return paramToString(f.Params)
+func (m *InterfaceMethod) GetParamInTmpl() string {
+	return paramToString(m.Params)
 }
 
 // GetResultParamInTmpl return result list
-func (f *InterfaceMethod) GetResultParamInTmpl() string {
-	return paramToString(f.Result)
+func (m *InterfaceMethod) GetResultParamInTmpl() string {
+	return paramToString(m.Result)
 }
 
 // paramToString param list to string used in tmpl
@@ -80,98 +90,107 @@ func paramToString(params []parser.Param) string {
 }
 
 // checkParams check all parameters
-func (f *InterfaceMethod) checkParams(params []parser.Param) (err error) {
-	paramList := make([]parser.Param, len(params))
-	for i, r := range params {
-		if r.Package == "UNDEFINED" {
-			r.Package = f.OriginStruct.Package
+func (m *InterfaceMethod) checkMethod(methods []*InterfaceMethod) (err error) {
+	for _, method := range methods {
+		if m.IsRepeatFromDifferentInterface(method) {
+			return fmt.Errorf("can not generate method with the same name from different interface:[%s.%s] and [%s.%s]",
+				m.InterfaceName, m.MethodName, method.InterfaceName, method.MethodName)
 		}
-		if r.IsMap() || r.IsGenM() || r.IsError() || r.IsNull() {
-			return fmt.Errorf("type error on interface [%s] param: [%s]", f.InterfaceName, r.Name)
-		}
-		paramList[i] = r
 	}
-	f.Params = paramList
+	return nil
+
+}
+
+// checkParams check all parameters
+func (m *InterfaceMethod) checkParams(params []parser.Param) (err error) {
+	paramList := make([]parser.Param, len(params))
+	for i, param := range params {
+		if param.Package == "UNDEFINED" {
+			param.Package = m.OriginStruct.Package
+		}
+		if param.IsMap() || param.IsGenM() || param.IsError() || param.IsNull() {
+			return fmt.Errorf("type error on interface [%s] param: [%s]", m.InterfaceName, param.Name)
+		}
+		paramList[i] = param
+	}
+	m.Params = paramList
 	return
 }
 
 // checkResult check all parameters and replace gen.T by target structure. Parameters must be one of int/string/struct/map
-func (f *InterfaceMethod) checkResult(result []parser.Param) (err error) {
+func (m *InterfaceMethod) checkResult(result []parser.Param) (err error) {
 	resList := make([]parser.Param, len(result))
 	var hasError bool
 	for i, param := range result {
 		if param.Package == "UNDEFINED" {
-			param.Package = f.Package
+			param.Package = m.Package
 		}
 		if param.IsGenM() {
 			param.Type = "map[string]interface{}"
 			param.Package = ""
 		}
-		if param.InMainPkg() {
-			return fmt.Errorf("query method cannot return struct of main package in [%s.%s]", f.InterfaceName, f.MethodName)
-		}
 		switch {
+		case param.InMainPkg():
+			return fmt.Errorf("query method cannot return struct of main package in [%s.%s]", m.InterfaceName, m.MethodName)
 		case param.IsError():
 			if hasError {
-				return fmt.Errorf("query method cannot return more than 1 error value in [%s.%s]", f.InterfaceName, f.MethodName)
+				return fmt.Errorf("query method cannot return more than 1 error value in [%s.%s]", m.InterfaceName, m.MethodName)
 			}
 			param.SetName("err")
-			f.ExecuteResult = "err"
+			m.ExecuteResult = "err"
 			hasError = true
-		case param.Eq(f.OriginStruct) || param.IsGenT():
-			if !f.ResultData.IsNull() {
-				return fmt.Errorf("query method cannot return more than 1 data value in [%s.%s]", f.InterfaceName, f.MethodName)
+		case param.Eq(m.OriginStruct) || param.IsGenT():
+			if !m.ResultData.IsNull() {
+				return fmt.Errorf("query method cannot return more than 1 data value in [%s.%s]", m.InterfaceName, m.MethodName)
 			}
 			param.SetName("result")
-			param.Type = f.OriginStruct.Type
-			param.Package = f.OriginStruct.Package
+			param.Type = m.OriginStruct.Type
+			param.Package = m.OriginStruct.Package
 			param.IsPointer = true
-			f.ResultData = param
+			m.ResultData = param
 		case param.IsInterface():
-			return fmt.Errorf("query method can not return interface in [%s.%s]", f.InterfaceName, f.MethodName)
+			return fmt.Errorf("query method can not return interface in [%s.%s]", m.InterfaceName, m.MethodName)
 		default:
-			if !f.ResultData.IsNull() {
-				return fmt.Errorf("query method cannot return more than 1 data value in [%s.%s]", f.InterfaceName, f.MethodName)
+			if !m.ResultData.IsNull() {
+				return fmt.Errorf("query method cannot return more than 1 data value in [%s.%s]", m.InterfaceName, m.MethodName)
 			}
 			if param.Package == "" && !(param.AllowType() || param.IsMap() || param.IsTime()) {
-				param.Package = f.Package
+				param.Package = m.Package
 			}
-
 			param.SetName("result")
-			f.ResultData = param
-			//return fmt.Errorf("illegal parameter：%s.%s on struct %s.%s generated method %s", param.Package, param.Type, f.OriginStruct.Package, f.OriginStruct.Type, f.MethodName)
+			m.ResultData = param
 		}
 		resList[i] = param
 	}
-	f.Result = resList
+	m.Result = resList
 	return
 }
 
 // checkSQL get sql from comment and check it
-func (f *InterfaceMethod) checkSQL() (err error) {
-	f.SqlString = f.parseDocString()
-	if err = f.sqlStateCheck(); err != nil {
-		err = fmt.Errorf("interface %s member method %s check sql err:%w", f.InterfaceName, f.MethodName, err)
+func (m *InterfaceMethod) checkSQL() (err error) {
+	m.SqlString = m.parseDocString()
+	if err = m.sqlStateCheck(); err != nil {
+		err = fmt.Errorf("interface %s member method %s check sql err:%w", m.InterfaceName, m.MethodName, err)
 	}
 	return
 }
 
-func (f *InterfaceMethod) parseDocString() string {
-	docString := strings.TrimSpace(f.Doc)
+func (m *InterfaceMethod) parseDocString() string {
+	docString := strings.TrimSpace(m.Doc)
 	switch {
 	case strings.HasPrefix(strings.ToLower(docString), "sql("):
 		docString = docString[4 : len(docString)-1]
-		f.GormOption = "Raw"
-		if f.ResultData.IsNull() {
-			f.GormOption = "Exec"
+		m.GormOption = "Raw"
+		if m.ResultData.IsNull() {
+			m.GormOption = "Exec"
 		}
 	case strings.HasPrefix(strings.ToLower(docString), "where("):
 		docString = docString[6 : len(docString)-1]
-		f.GormOption = "Where"
+		m.GormOption = "Where"
 	default:
-		f.GormOption = "Raw"
-		if f.ResultData.IsNull() {
-			f.GormOption = "Exec"
+		m.GormOption = "Raw"
+		if m.ResultData.IsNull() {
+			m.GormOption = "Exec"
 		}
 	}
 
@@ -183,8 +202,8 @@ func (f *InterfaceMethod) parseDocString() string {
 }
 
 // sqlStateCheck check sql with an adeterministic finite automaton
-func (f *InterfaceMethod) sqlStateCheck() error {
-	sqlString := f.SqlString
+func (m *InterfaceMethod) sqlStateCheck() error {
+	sqlString := m.SqlString
 	result := NewSlices()
 	var buf sql
 	for i := 0; !strOutrange(i, sqlString); i++ {
@@ -238,7 +257,7 @@ func (f *InterfaceMethod) sqlStateCheck() error {
 						i++
 
 						sqlClause := buf.Dump()
-						part, err := checkTemplate(sqlClause, f.Params)
+						part, err := checkTemplate(sqlClause, m.Params)
 						if err != nil {
 							return fmt.Errorf("sql [%s] dynamic template %s err:%w", sqlString, sqlClause, err)
 						}
@@ -258,7 +277,7 @@ func (f *InterfaceMethod) sqlStateCheck() error {
 				for ; ; i++ {
 					if strOutrange(i, sqlString) || isEnd(sqlString[i]) {
 						varString := buf.Dump()
-						params, err := f.methodParams(varString, status)
+						params, err := m.methodParams(varString, status)
 						if err != nil {
 							return fmt.Errorf("sql [%s] varable %s err:%s", sqlString, varString, err)
 						}
@@ -284,24 +303,24 @@ func (f *InterfaceMethod) sqlStateCheck() error {
 	if err != nil {
 		return fmt.Errorf("sql [%s] parser err:%w", sqlString, err)
 	}
-	f.SqlTmplList = result.tmpl
+	m.SqlTmplList = result.tmpl
 	return nil
 }
 
 // methodParams return extrenal parameters, table name
-func (f *InterfaceMethod) methodParams(param string, s Status) (result slice, err error) {
-	for _, p := range f.Params {
+func (m *InterfaceMethod) methodParams(param string, s Status) (result slice, err error) {
+	for _, p := range m.Params {
 		if p.Name == param {
 			var str string
 			switch s {
 			case DATA:
 				str = fmt.Sprintf("\"@%s\"", param)
-				f.SqlData = append(f.SqlData, param)
+				m.SqlData = append(m.SqlData, param)
 			case VARIABLE:
 				if p.Type != "string" {
 					err = fmt.Errorf("variable name must be string :%s type is %s", param, p.Type)
 				}
-				str = fmt.Sprintf("%s.Quote(%s)", f.S, param)
+				str = fmt.Sprintf("%s.Quote(%s)", m.S, param)
 			}
 			result = slice{
 				Type:  s,
@@ -313,7 +332,7 @@ func (f *InterfaceMethod) methodParams(param string, s Status) (result slice, er
 	if param == "table" {
 		result = slice{
 			Type:  SQL,
-			Value: strconv.Quote(f.Table),
+			Value: strconv.Quote(m.Table),
 		}
 		return
 	}
