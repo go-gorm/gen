@@ -75,7 +75,7 @@ type genInfo struct {
 func (i *genInfo) AppendMethods(methods []*check.InterfaceMethod) error {
 	for _, newMethod := range methods {
 		for _, infoMethod := range i.Interfaces {
-			if infoMethod.MethodName == newMethod.MethodName && infoMethod.InterfaceName != newMethod.InterfaceName {
+			if infoMethod.IsRepeatInterfaceMethod(newMethod) {
 				return fmt.Errorf("can not generate method with the same name from different interface:%s.%s and %s.%s", infoMethod.InterfaceName, infoMethod.MethodName, newMethod.InterfaceName, newMethod.MethodName)
 			}
 		}
@@ -206,7 +206,7 @@ func (g *Generator) apply(fc interface{}, structs []*check.BaseStruct) {
 		panic("panic with check interface error")
 	}
 
-	err = g.readInterfaceSet.ParseFile(interfacePaths)
+	err = g.readInterfaceSet.ParseFile(interfacePaths, check.GetNames(structs))
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "can not parser interface file: %s", err)
 		panic("panic with parser interface file error")
