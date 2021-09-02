@@ -118,6 +118,16 @@ var (
 			return m
 		}
 	}
+	// FieldSetType specify field type in generated struct
+	FieldSetType = func(columnName string, newType string) check.MemberOpt {
+		return func(m *check.Member) *check.Member {
+			if m.Name == columnName {
+				m.Type = newType
+				m.ModelType = newType
+			}
+			return m
+		}
+	}
 
 	// FieldTag specify json tag and gorm tag
 	FieldTag = func(columnName string, gormTag, jsonTag string) check.MemberOpt {
