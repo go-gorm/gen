@@ -1,8 +1,6 @@
 package field
 
 import (
-	"fmt"
-	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -23,31 +21,6 @@ type Expr interface {
 
 	// pirvate do nothing, prevent users from implementing interfaces outside the package
 	private()
-}
-
-func Or(exprs ...Expr) Expr {
-	return &expr{expression: clause.Or(toExpression(exprs...)...)}
-}
-
-func And(exprs ...Expr) Expr {
-	return &expr{expression: clause.And(toExpression(exprs...)...)}
-}
-
-func Not(exprs ...Expr) Expr {
-	return &expr{expression: clause.Not(toExpression(exprs...)...)}
-}
-
-func toExpression(conds ...Expr) []clause.Expression {
-	exprs := make([]clause.Expression, len(conds))
-	for i, cond := range conds {
-		exprs[i] = cond
-	}
-	return exprs
-}
-
-// Field a standard field struct
-type Field struct {
-	expr
 }
 
 type expr struct {
@@ -117,28 +90,32 @@ func (e expr) IsNotNull() Expr {
 	return e.setExpression(clause.Expr{SQL: "? IS NOT NULL", Vars: []interface{}{e.RawExpr()}})
 }
 
-func (e expr) Count() Expr {
-	return e.setExpression(clause.Expr{SQL: "COUNT(?)", Vars: []interface{}{e.RawExpr()}})
+func (e expr) Count() Int {
+	return Int{e.setExpression(clause.Expr{SQL: "COUNT(?)", Vars: []interface{}{e.RawExpr()}})}
 }
 
-func (e expr) Length() Expr {
-	return e.setExpression(clause.Expr{SQL: "LENGTH(?)", Vars: []interface{}{e.RawExpr()}})
+func (e expr) Distinct() Int {
+	return Int{e.setExpression(clause.Expr{SQL: "DISTINCT ?", Vars: []interface{}{e.RawExpr()}})}
 }
 
-func (e expr) Max() Expr {
-	return e.setExpression(clause.Expr{SQL: "MAX(?)", Vars: []interface{}{e.RawExpr()}})
+func (e expr) Length() Int {
+	return Int{e.setExpression(clause.Expr{SQL: "LENGTH(?)", Vars: []interface{}{e.RawExpr()}})}
 }
 
-func (e expr) Min() Expr {
-	return e.setExpression(clause.Expr{SQL: "MIN(?)", Vars: []interface{}{e.RawExpr()}})
+func (e expr) Max() Float64 {
+	return Float64{e.setExpression(clause.Expr{SQL: "MAX(?)", Vars: []interface{}{e.RawExpr()}})}
 }
 
-func (e expr) Avg() Expr {
-	return e.setExpression(clause.Expr{SQL: "AVG(?)", Vars: []interface{}{e.RawExpr()}})
+func (e expr) Min() Float64 {
+	return Float64{e.setExpression(clause.Expr{SQL: "MIN(?)", Vars: []interface{}{e.RawExpr()}})}
 }
 
-func (e expr) Sum() Expr {
-	return e.setExpression(clause.Expr{SQL: "SUM(?)", Vars: []interface{}{e.RawExpr()}})
+func (e expr) Avg() Float64 {
+	return Float64{e.setExpression(clause.Expr{SQL: "AVG(?)", Vars: []interface{}{e.RawExpr()}})}
+}
+
+func (e expr) Sum() Float64 {
+	return Float64{e.setExpression(clause.Expr{SQL: "SUM(?)", Vars: []interface{}{e.RawExpr()}})}
 }
 
 func (e expr) WithTable(table string) Expr {
@@ -149,6 +126,10 @@ func (e expr) WithTable(table string) Expr {
 // ======================== comparison between columns ========================
 func (e expr) EqCol(col Expr) Expr {
 	return e.setExpression(clause.Expr{SQL: "? = ?", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})
+}
+
+func (e expr) NeqCol(col Expr) Expr {
+	return e.setExpression(clause.Expr{SQL: "? <> ?", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})
 }
 
 func (e expr) GtCol(col Expr) Expr {
@@ -181,11 +162,11 @@ func (e expr) Desc() Expr {
 }
 
 // ======================== general experssion ========================
-func (e expr) between(values []interface{}) Expr {
+func (e expr) between(values []interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "? BETWEEN ? AND ?", Vars: append([]interface{}{e.RawExpr()}, values...)})
 }
 
-func (e expr) add(value interface{}) Expr {
+func (e expr) add(value interface{}) expr {
 	switch v := value.(type) {
 	case time.Duration:
 		return e.setExpression(clause.Expr{SQL: "DATE_ADD(?, INTERVAL ? MICROSECOND)", Vars: []interface{}{e.RawExpr(), v.Microseconds()}})
@@ -194,7 +175,7 @@ func (e expr) add(value interface{}) Expr {
 	}
 }
 
-func (e expr) sub(value interface{}) Expr {
+func (e expr) sub(value interface{}) expr {
 	switch v := value.(type) {
 	case time.Duration:
 		return e.setExpression(clause.Expr{SQL: "DATE_SUB(?, INTERVAL ? MICROSECOND)", Vars: []interface{}{e.RawExpr(), v.Microseconds()}})
@@ -203,106 +184,70 @@ func (e expr) sub(value interface{}) Expr {
 	}
 }
 
-func (e expr) mul(value interface{}) Expr {
+func (e expr) mul(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "?*?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) div(value interface{}) Expr {
+func (e expr) div(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "?/?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) mod(value interface{}) Expr {
+func (e expr) mod(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "?%?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) floorDiv(value interface{}) Expr {
+func (e expr) floorDiv(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "? DIV ?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) rightShift(value interface{}) Expr {
+func (e expr) floor() expr {
+	return e.setExpression(clause.Expr{SQL: "FLOOR(?)", Vars: []interface{}{e.RawExpr()}})
+}
+
+func (e expr) rightShift(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "?>>?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) leftShift(value interface{}) Expr {
+func (e expr) leftShift(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "?<<?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) bitXor(value interface{}) Expr {
+func (e expr) bitXor(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "?^?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) bitAnd(value interface{}) Expr {
+func (e expr) bitAnd(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "?&?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) bitOr(value interface{}) Expr {
+func (e expr) bitOr(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "?|?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) bitFlip() Expr {
+func (e expr) bitFlip() expr {
 	return e.setExpression(clause.Expr{SQL: "~?", Vars: []interface{}{e.RawExpr()}})
 }
 
-func (e expr) regexp(value interface{}) Expr {
+func (e expr) regexp(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "? REGEXP ?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) not() Expr {
+func (e expr) not() expr {
 	return e.setExpression(clause.Expr{SQL: "NOT ?", Vars: []interface{}{e.RawExpr()}})
 }
 
-func (e expr) is(value interface{}) Expr {
+func (e expr) is(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "? IS ?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) and(value interface{}) Expr {
+func (e expr) and(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "? AND ?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) or(value interface{}) Expr {
+func (e expr) or(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "? OR ?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
-func (e expr) xor(value interface{}) Expr {
+func (e expr) xor(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "? XOR ?", Vars: []interface{}{e.RawExpr(), value}})
-}
-
-// ======================== subquery method ========================
-func ContainsSubQuery(columns []Expr, subQuery *gorm.DB) Expr {
-	switch len(columns) {
-	case 0:
-		return expr{expression: clause.Expr{}}
-	case 1:
-		return expr{expression: clause.Expr{
-			SQL:  "? IN (?)",
-			Vars: append([]interface{}{columns[0].RawExpr()}, subQuery),
-		}}
-	default: // len(columns) > 0
-		vars := make([]string, len(columns))
-		queryCols := make([]interface{}, len(columns))
-		for i, c := range columns {
-			vars[i], queryCols[i] = "?", c.RawExpr()
-		}
-		return expr{expression: clause.Expr{
-			SQL:  fmt.Sprintf("(%s) IN (?)", strings.Join(vars, ", ")),
-			Vars: append(queryCols, subQuery),
-		}}
-	}
-}
-
-type CompareOperate string
-
-const (
-	EqOp  CompareOperate = " = "
-	GtOp  CompareOperate = " > "
-	GteOp CompareOperate = " >= "
-	LtOp  CompareOperate = " < "
-	LteOp CompareOperate = " <= "
-)
-
-func CompareSubQuery(op CompareOperate, column Expr, subQuery *gorm.DB) Expr {
-	return expr{expression: clause.Expr{
-		SQL:  fmt.Sprint("?", op, "(?)"),
-		Vars: append([]interface{}{column.RawExpr()}, subQuery),
-	}}
 }

@@ -2,13 +2,27 @@ package check
 
 import (
 	"fmt"
-	"log"
 	"reflect"
 
 	"gorm.io/gorm"
 
+	"gorm.io/gen/field"
 	"gorm.io/gen/internal/parser"
 )
+
+var keywords = []string{
+	"UnderlyingDB", "UseDB", "UseModel", "UseTable", "Quote", "Debug", "TableName",
+	"As", "Not", "Or", "Build", "Columns", "Hints",
+	"Distinct", "Omit",
+	"Select", "Where", "Order", "Group", "Having", "Limit", "Offset",
+	"Join", "LeftJoin", "RightJoin",
+	"Save", "Create", "CreateInBatches",
+	"Update", "Updates", "UpdateColumn", "UpdateColumns",
+	"Find", "FindInBatches", "First", "Take", "Last", "Pluck", "Count",
+	"Scan", "ScanRows", "Row", "Rows",
+	"Delete", "Unscoped",
+	"Transaction", "Begin", "Commit", "SavePoint", "RollBack", "RollBackTo", "Scopes",
+}
 
 // BaseStruct struct info in generated code
 type BaseStruct struct {
@@ -23,22 +37,48 @@ type BaseStruct struct {
 	db            *gorm.DB
 }
 
-// getMembers get all elements of struct with gorm's Parse, ignore unexport elements
-func (b *BaseStruct) getMembers(st interface{}) {
+// transStruct get all elements of struct with gorm's Parse, ignore unexported elements
+func (b *BaseStruct) transStruct(st interface{}) error {
 	stmt := gorm.Statement{DB: b.db}
-	_ = stmt.Parse(st)
+	err := stmt.Parse(st)
+	if err != nil {
+		return err
+	}
+	b.TableName = stmt.Table
 
-	for _, field := range stmt.Schema.Fields {
+	for _, f := range stmt.Schema.Fields {
 		b.appendOrUpdateMember(&Member{
-			Name:       field.Name,
-			Type:       DelPointerSym(field.FieldType.String()),
-			ColumnName: field.DBName,
+			Name:       f.Name,
+			Type:       b.getMemberRealType(f.FieldType),
+			ColumnName: f.DBName,
 		})
 	}
+
+	b.fixMember()
+	return nil
+}
+
+// getMemberRealType  get basic type of member
+func (b *BaseStruct) getMemberRealType(member reflect.Type) string {
+	scanValuer := reflect.TypeOf((*field.ScanValuer)(nil)).Elem()
+	if member.Implements(scanValuer) || reflect.New(member).Type().Implements(scanValuer) {
+		return "field"
+	}
+
+	if member.Kind() == reflect.Ptr {
+		member = member.Elem()
+	}
+	if member.String() == "time.Time" {
+		return "time.Time"
+	}
+	return member.Kind().String()
 }
 
 // check member if in BaseStruct update else append
 func (b *BaseStruct) appendOrUpdateMember(member *Member) {
+	if member.ColumnName == "" {
+		return
+	}
 	for index, m := range b.Members {
 		if m.Name == member.Name {
 			b.Members[index] = member
@@ -46,13 +86,6 @@ func (b *BaseStruct) appendOrUpdateMember(member *Member) {
 		}
 	}
 	b.Members = append(b.Members, member)
-}
-
-// getTableName get table name with gorm's Parse
-func (b *BaseStruct) getTableName(st interface{}) {
-	stmt := gorm.Statement{DB: b.db}
-	_ = stmt.Parse(st)
-	b.TableName = stmt.Table
 }
 
 // HasMember check if BaseStruct has members
@@ -63,22 +96,34 @@ func (b *BaseStruct) HasMember() bool {
 // check if struct is exportable and if struct in main package and if member's type is regular
 func (b *BaseStruct) check() (err error) {
 	if b.StructInfo.InMainPkg() {
-		err = fmt.Errorf("can't generated data object for struct in main package, ignored:%s", b.StructName)
-		log.Println(err)
-		return
+		return fmt.Errorf("can't generated data object for struct in main package, ignored:%s", b.StructName)
 	}
 	if !isCapitalize(b.StructName) {
-		err = fmt.Errorf("can't generated data object for non-exportable struct, ignore:%s", b.NewStructName)
-		log.Println(err)
-		return
+		return fmt.Errorf("can't generated data object for non-exportable struct, ignore:%s", b.NewStructName)
 	}
-	for index, m := range b.Members {
-		if !allowType(m.Type) {
-			b.Members[index].Type = "field"
-		}
-		b.Members[index].NewType = getNewTypeName(m.Type)
-	}
+
 	return nil
+}
+
+// fixMember fix special type and get newType
+func (b *BaseStruct) fixMember() {
+	for _, m := range b.Members {
+		if contains(m.Name, keywords) {
+			m.Name += "_"
+		}
+		if !m.AllowType() {
+			m.Type = "field"
+		}
+
+		m.NewType = getNewTypeName(m.Type)
+	}
+}
+
+func GetNames(bases []*BaseStruct) (res []string) {
+	for _, base := range bases {
+		res = append(res, base.StructName)
+	}
+	return res
 }
 
 func isStructType(data reflect.Value) bool {

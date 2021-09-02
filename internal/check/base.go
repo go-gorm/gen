@@ -39,6 +39,27 @@ type Member struct {
 	ColumnName    string
 	ColumnComment string
 	ModelType     string
+	JSONTag       string
+	GORMTag       string
+	NewTag        string
+}
+
+// AllowType check Member Type
+func (m *Member) AllowType() bool {
+	switch m.Type {
+	case "string", "bytes":
+		return true
+	case "int", "int8", "int16", "int32", "int64", "uint", "uint8", "uint16", "uint32", "uint64":
+		return true
+	case "float64", "float32":
+		return true
+	case "bool":
+		return true
+	case "time.Time":
+		return true
+	default:
+		return false
+	}
 }
 
 // Column table column's info

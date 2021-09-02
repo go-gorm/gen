@@ -4,131 +4,14 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-	"time"
 
-	"gorm.io/gorm"
-	"gorm.io/gorm/callbacks"
-	"gorm.io/gorm/utils/tests"
 	"gorm.io/hints"
 
 	"gorm.io/gen/field"
 )
 
-var db, _ = gorm.Open(tests.DummyDialector{}, nil)
-
-func init() {
-	db = db.Debug()
-
-	callbacks.RegisterDefaultCallbacks(db, &callbacks.Config{
-		UpdateClauses: []string{"UPDATE", "SET", "WHERE", "ORDER BY", "LIMIT"},
-		DeleteClauses: []string{"DELETE", "FROM", "WHERE", "ORDER BY", "LIMIT"},
-	})
-}
-
-// UserRaw user data struct
-type UserRaw struct {
-	ID         uint `gorm:"primary_key"`
-	Name       string
-	Age        int
-	Score      float64
-	Address    string
-	Famous     bool
-	RegisterAt time.Time
-}
-
-func (UserRaw) TableName() string {
-	return "users_info"
-}
-
-// StudentRaw student data struct
-type StudentRaw struct {
-	ID         int64 `gorm:"primary_key"`
-	Name       string
-	Age        int
-	Instructor int64 //导师
-}
-
-func (StudentRaw) TableName() string {
-	return "student"
-}
-
-// Teacher teacher data struct
-type TeacherRaw struct {
-	ID   int64 `gorm:"primary_key"`
-	Name string
-}
-
-func (TeacherRaw) TableName() string {
-	return "teacher"
-}
-
-type User struct {
-	DO
-
-	ID         field.Uint
-	Name       field.String
-	Age        field.Int
-	Score      field.Float64
-	Address    field.String
-	Famous     field.Bool
-	RegisterAt field.Time
-}
-
-var u = func() *User {
-	u := User{
-		ID:         field.NewUint("", "id"),
-		Name:       field.NewString("", "name"),
-		Age:        field.NewInt("", "age"),
-		Score:      field.NewFloat64("", "score"),
-		Address:    field.NewString("", "address"),
-		Famous:     field.NewBool("", "famous"),
-		RegisterAt: field.NewTime("", "register_at"),
-	}
-	u.UseDB(db.Session(&gorm.Session{DryRun: true}))
-	u.UseModel(UserRaw{})
-	return &u
-}()
-
-type Student struct {
-	DO
-
-	ID         field.Int64
-	Name       field.String
-	Age        field.Int
-	Instructor field.Int64
-}
-
-var student = func() *Student {
-	s := Student{
-		ID:         field.NewInt64("student", "id"),
-		Name:       field.NewString("student", "name"),
-		Age:        field.NewInt("student", "age"),
-		Instructor: field.NewInt64("student", "instructor"),
-	}
-	s.UseDB(db.Session(&gorm.Session{DryRun: true}))
-	s.UseModel(StudentRaw{})
-	return &s
-}()
-
-type Teacher struct {
-	DO
-
-	ID   field.Int64
-	Name field.String
-}
-
-var teacher = func() *Teacher {
-	t := Teacher{
-		ID:   field.NewInt64("teacher", "id"),
-		Name: field.NewString("teacher", "name"),
-	}
-	t.UseDB(db.Session(&gorm.Session{DryRun: true}))
-	t.UseModel(TeacherRaw{})
-	return &t
-}()
-
-func checkBuildExpr(t *testing.T, e Dao, opts []stmtOpt, result string, vars []interface{}) {
-	stmt := e.(*DO).build(opts...)
+func checkBuildExpr(t *testing.T, e subQuery, opts []stmtOpt, result string, vars []interface{}) {
+	stmt := e.underlyingDO().build(opts...)
 
 	sql := strings.TrimSpace(stmt.SQL.String())
 	if sql != result {
@@ -142,7 +25,7 @@ func checkBuildExpr(t *testing.T, e Dao, opts []stmtOpt, result string, vars []i
 
 func TestDO_methods(t *testing.T) {
 	testcases := []struct {
-		Expr         Dao
+		Expr         subQuery
 		Opts         []stmtOpt
 		ExpectedVars []interface{}
 		Result       string
@@ -199,7 +82,11 @@ func TestDO_methods(t *testing.T) {
 		},
 		{
 			Expr:   u.Order(u.ID.Desc(), u.Age),
-			Result: "ORDER BY `id` DESC, `age`",
+			Result: "ORDER BY `id` DESC,`age`",
+		},
+		{
+			Expr:   u.Order(u.ID.Desc()).Order(u.Age),
+			Result: "ORDER BY `id` DESC,`age`",
 		},
 		{
 			Expr:   u.Hints(hints.New("hint")).Select(),
@@ -257,6 +144,21 @@ func TestDO_methods(t *testing.T) {
 			Result:       "WHERE `age` <= ? OR (`name` = ? AND `famous` IS ?)",
 		},
 		{
+			Expr:         u.Where(u.Columns(u.ID, u.Age).In(field.Values([][]int{{1, 18}, {2, 19}}))),
+			ExpectedVars: []interface{}{1, 18, 2, 19},
+			Result:       "WHERE (`id`, `age`) IN ((?,?),(?,?))",
+		},
+		{
+			Expr:         u.Where(u.Columns(u.ID, u.Age).NotIn(field.Values([][]int{{1, 18}, {2, 19}}))),
+			ExpectedVars: []interface{}{1, 18, 2, 19},
+			Result:       "WHERE NOT (`id`, `age`) IN ((?,?),(?,?))",
+		},
+		{
+			Expr:         u.Where(u.Columns(u.ID, u.Name).In(field.Values([][]interface{}{{1, "modi"}, {2, "tom"}}))),
+			ExpectedVars: []interface{}{1, "modi", 2, "tom"},
+			Result:       "WHERE (`id`, `name`) IN ((?,?),(?,?))",
+		},
+		{
 			Expr:         u.Where(u.Where(u.Name.Eq("tom"), u.Famous.Is(true))).Or(u.Age.Lte(18)),
 			ExpectedVars: []interface{}{"tom", true, 18},
 			Result:       "WHERE (`name` = ? AND `famous` IS ?) OR `age` <= ?",
@@ -285,32 +187,42 @@ func TestDO_methods(t *testing.T) {
 		},
 		// ======================== subquery ========================
 		{
-			Expr:         u.Select().Where(Eq(u.ID, u.Select(u.ID.Max()))),
+			Expr:         u.Select().Where(u.Columns(u.ID).Eq(u.Select(u.ID.Max()))),
 			ExpectedVars: nil,
 			Result:       "SELECT * WHERE `id` = (SELECT MAX(`id`) FROM `users_info`)",
 		},
 		{
-			Expr:         u.Select(u.ID).Where(Gt(u.Score, u.Select(u.Score.Avg()))),
+			Expr:         u.Select().Where(u.Columns(u.ID).Neq(u.Select(u.ID.Max()))),
+			ExpectedVars: nil,
+			Result:       "SELECT * WHERE `id` <> (SELECT MAX(`id`) FROM `users_info`)",
+		},
+		{
+			Expr:         u.Select(u.ID).Where(u.Columns(u.Score.Mul(2)).Lte(u.Select(u.Score.Avg()))),
+			ExpectedVars: []interface{}{2.0},
+			Result:       "SELECT `id` WHERE `score`*? <= (SELECT AVG(`score`) FROM `users_info`)",
+		},
+		{
+			Expr:         u.Select(u.ID).Where(u.Columns(u.Score).Gt(u.Select(u.Score.Avg()))),
 			ExpectedVars: nil,
 			Result:       "SELECT `id` WHERE `score` > (SELECT AVG(`score`) FROM `users_info`)",
 		},
 		{
-			Expr:         u.Select(u.ID, u.Name).Where(Lte(u.Score, u.Select(u.Score.Avg()).Where(u.Age.Gte(18)))),
+			Expr:         u.Select(u.ID, u.Name).Where(u.Columns(u.Score).Lte(u.Select(u.Score.Avg()).Where(u.Age.Gte(18)))),
 			ExpectedVars: []interface{}{18},
 			Result:       "SELECT `id`,`name` WHERE `score` <= (SELECT AVG(`score`) FROM `users_info` WHERE `age` >= ?)",
 		},
 		{
-			Expr:         u.Select(u.ID).Where(In(u.Score, u.Select(u.Score).Where(u.Age.Gte(18)))),
+			Expr:         u.Select(u.ID).Where(u.Columns(u.Score).In(u.Select(u.Score).Where(u.Age.Gte(18)))),
 			ExpectedVars: []interface{}{18},
 			Result:       "SELECT `id` WHERE `score` IN (SELECT `score` FROM `users_info` WHERE `age` >= ?)",
 		},
 		{
-			Expr:         u.Select(u.ID).Where(In(u.ID, u.Age, u.Select(u.ID, u.Age).Where(u.Score.Eq(100)))),
+			Expr:         u.Select(u.ID).Where(u.Columns(u.ID, u.Age).In(u.Select(u.ID, u.Age).Where(u.Score.Eq(100)))),
 			ExpectedVars: []interface{}{100.0},
 			Result:       "SELECT `id` WHERE (`id`, `age`) IN (SELECT `id`,`age` FROM `users_info` WHERE `score` = ?)",
 		},
 		{
-			Expr:         u.Select(u.Age.Avg().As("avgage")).Group(u.Name).Having(Gt(u.Age.Avg(), u.Select(u.Age.Avg()).Where(u.Name.Like("name%")))),
+			Expr:         u.Select(u.Age.Avg().As("avgage")).Group(u.Name).Having(u.Columns(u.Age.Avg()).Gt(u.Select(u.Age.Avg()).Where(u.Name.Like("name%")))),
 			Opts:         []stmtOpt{withFROM},
 			ExpectedVars: []interface{}{"name%"},
 			Result:       "SELECT AVG(`age`) AS `avgage` FROM `users_info` GROUP BY `name` HAVING AVG(`age`) > (SELECT AVG(`age`) FROM `users_info` WHERE `name` LIKE ?)",
