@@ -123,8 +123,8 @@ var (
 			return m
 		}
 	}
-	// FieldSetType specify field type in generated struct
-	FieldSetType = func(columnName string, newType string) check.MemberOpt {
+	// FieldType specify field type in generated struct
+	FieldType = func(columnName string, newType string) check.MemberOpt {
 		return func(m *check.Member) *check.Member {
 			if m.Name == columnName {
 				m.Type = newType
