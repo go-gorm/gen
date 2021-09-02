@@ -188,6 +188,7 @@ g.GenerateModel("people", gen.FieldIgnore("address"))
 ```go
 FieldIgnore // ignore field
 FieldRename // rename field in struct
+FieldType // specify field type
 FieldTag // specify gorm and json tag
 FieldJSONTag // specify json tag
 FieldGORMTag // specify gorm tag
