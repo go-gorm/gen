@@ -49,9 +49,14 @@ func (m *InterfaceMethod) HasNeedNewResult() bool {
 	return !m.ResultData.IsArray && ((m.ResultData.IsNull() && m.ResultData.IsTime()) || m.ResultData.IsMap())
 }
 
-// IsRepeatInterfaceMethod check different interface has same mame method
-func (m *InterfaceMethod) IsRepeatInterfaceMethod(newMethod *InterfaceMethod) bool {
+// IsRepeatFromDifferentInterface check different interface has same mame method
+func (m *InterfaceMethod) IsRepeatFromDifferentInterface(newMethod *InterfaceMethod) bool {
 	return m.MethodName == newMethod.MethodName && m.InterfaceName != newMethod.InterfaceName && m.MethodStruct == newMethod.MethodStruct
+}
+
+// IsRepeatFromSameInterface check different interface has same mame method
+func (m *InterfaceMethod) IsRepeatFromSameInterface(newMethod *InterfaceMethod) bool {
+	return m.MethodName == newMethod.MethodName && m.InterfaceName == newMethod.InterfaceName && m.MethodStruct == newMethod.MethodStruct
 }
 
 //GetParamInTmpl return param list
@@ -82,6 +87,18 @@ func paramToString(params []parser.Param) string {
 		res = append(res, tmplString)
 	}
 	return strings.Join(res, ",")
+}
+
+// checkParams check all parameters
+func (m *InterfaceMethod) checkMethod(methods []*InterfaceMethod) (err error) {
+	for _, method := range methods {
+		if m.IsRepeatFromDifferentInterface(method) {
+			return fmt.Errorf("can not generate method with the same name from different interface:[%s.%s] and [%s.%s]",
+				m.InterfaceName, m.MethodName, method.InterfaceName, method.MethodName)
+		}
+	}
+	return nil
+
 }
 
 // checkParams check all parameters
