@@ -31,6 +31,20 @@ const (
 	TableName
 )
 
+var keywords = []string{
+	"UnderlyingDB", "UseDB", "UseModel", "UseTable", "Quote", "Debug", "TableName",
+	"As", "Not", "Or", "Build", "Columns", "Hints",
+	"Distinct", "Omit",
+	"Select", "Where", "Order", "Group", "Having", "Limit", "Offset",
+	"Join", "LeftJoin", "RightJoin",
+	"Save", "Create", "CreateInBatches",
+	"Update", "Updates", "UpdateColumn", "UpdateColumns",
+	"Find", "FindInBatches", "First", "Take", "Last", "Pluck", "Count",
+	"Scan", "ScanRows", "Row", "Rows",
+	"Delete", "Unscoped",
+	"Transaction", "Begin", "Commit", "SavePoint", "RollBack", "RollBackTo", "Scopes",
+}
+
 // Member user input structures
 type Member struct {
 	Name          string
@@ -60,6 +74,19 @@ func (m *Member) AllowType() bool {
 	default:
 		return false
 	}
+}
+
+// fix special type and get newType
+func (m *Member) Revise() *Member {
+	if contains(m.Name, keywords) {
+		m.Name += "_"
+	}
+	if !m.AllowType() {
+		m.Type = "field"
+	}
+	m.NewType = getNewTypeName(m.Type)
+
+	return m
 }
 
 // Column table column's info

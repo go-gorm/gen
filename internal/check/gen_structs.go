@@ -95,10 +95,8 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 		}
 		m.Name = db.NamingStrategy.SchemaName(m.Name)
 
-		base.Members = append(base.Members, m)
+		base.Members = append(base.Members, m.Revise())
 	}
-
-	base.fixMember()
 
 	return &base, nil
 }

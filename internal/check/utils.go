@@ -38,7 +38,7 @@ func isDBUnset(db *gorm.DB) bool {
 }
 
 func getPackageName(fullName string) string {
-	return strings.Split(DelPointerSym(fullName), ".")[0]
+	return strings.Split(delPointerSym(fullName), ".")[0]
 }
 
 func isDigit(str string) bool {
@@ -54,12 +54,12 @@ func strOutrange(index int, str string) bool {
 	return index >= len(str)
 }
 
-func DelPointerSym(name string) string {
+func delPointerSym(name string) string {
 	return strings.TrimLeft(name, "*")
 }
 
-func GetSimpleName(s string) string {
-	return string(strings.ToLower(DelPointerSym(s))[0])
+func getPureName(s string) string {
+	return string(strings.ToLower(delPointerSym(s))[0])
 }
 
 func getNewTypeName(t string) string {

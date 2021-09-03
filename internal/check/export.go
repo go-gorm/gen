@@ -29,17 +29,16 @@ func CheckStructs(db *gorm.DB, structs ...interface{}) (bases []*BaseStruct, err
 		structType := reflect.TypeOf(st)
 		name := getStructName(structType.String())
 		base := &BaseStruct{
-			S:             GetSimpleName(name),
+			S:             getPureName(name),
 			StructName:    name,
 			NewStructName: uncaptialize(name),
 			StructInfo:    parser.Param{Type: name, Package: getPackageName(structType.String())},
 			Source:        Struct,
 			db:            db,
 		}
-		if err := base.transStruct(st); err != nil {
+		if err := base.parseStruct(st); err != nil {
 			return nil, fmt.Errorf("transform struct [%s.%s] error:%s", base.StructInfo.Package, name, err)
 		}
-
 		if err := base.check(); err != nil {
 			db.Logger.Warn(context.Background(), err.Error())
 			continue
