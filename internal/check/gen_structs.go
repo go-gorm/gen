@@ -107,13 +107,14 @@ func toMember(field *Column) *Member {
 		memberType = "gorm.DeletedAt"
 	}
 	return &Member{
-		Name:          field.ColumnName,
-		Type:          memberType,
-		ModelType:     memberType,
-		ColumnName:    field.ColumnName,
-		ColumnComment: field.ColumnComment,
-		GORMTag:       field.ColumnName,
-		JSONTag:       field.ColumnName,
+		Name:             field.ColumnName,
+		Type:             memberType,
+		ModelType:        memberType,
+		ColumnName:       field.ColumnName,
+		ColumnComment:    field.ColumnComment,
+		MultilineComment: containMultiline(field.ColumnComment),
+		GORMTag:          field.ColumnName,
+		JSONTag:          field.ColumnName,
 	}
 }
 

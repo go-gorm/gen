@@ -47,15 +47,16 @@ var keywords = []string{
 
 // Member user input structures
 type Member struct {
-	Name          string
-	Type          string
-	NewType       string
-	ColumnName    string
-	ColumnComment string
-	ModelType     string
-	JSONTag       string
-	GORMTag       string
-	NewTag        string
+	Name             string
+	Type             string
+	NewType          string
+	ColumnName       string
+	ColumnComment    string
+	MultilineComment bool
+	ModelType        string
+	JSONTag          string
+	GORMTag          string
+	NewTag           string
 }
 
 // AllowType check Member Type

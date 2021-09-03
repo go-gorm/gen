@@ -303,10 +303,13 @@ const TableName{{.StructName}} = "{{.TableName}}"
 // {{.TableName}}
 type {{.StructName}} struct {
     {{range .Members}}
+	{{if .MultilineComment -}}
 	/*
-		{{.ColumnComment}}
+{{.ColumnComment}}
     */
+	{{end -}}
     {{.Name}} {{.ModelType}} ` + "`json:\"{{.JSONTag}}\" gorm:\"column:{{.GORMTag}}\"{{.NewTag}}` " +
+	"{{if not .MultilineComment}}{{if .ColumnComment}}// {{.ColumnComment}}{{end}}{{end}}" +
 	`{{end}}
 }
 
