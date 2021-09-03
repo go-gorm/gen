@@ -66,7 +66,7 @@ func CheckInterface(f *parser.InterfaceSet, s *BaseStruct, data []*InterfaceMeth
 					InterfaceName: interfaceInfo.Name,
 					Package:       getPackageName(interfaceInfo.Package),
 				}
-				if err = t.checkMethod(data); err != nil {
+				if err = t.checkMethod(data, s); err != nil {
 					return nil, err
 				}
 				if err = t.checkParams(method.Params); err != nil {
