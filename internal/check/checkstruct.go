@@ -10,20 +10,6 @@ import (
 	"gorm.io/gen/internal/parser"
 )
 
-var keywords = []string{
-	"UnderlyingDB", "UseDB", "UseModel", "UseTable", "Quote", "Debug", "TableName",
-	"As", "Not", "Or", "Build", "Columns", "Hints",
-	"Distinct", "Omit",
-	"Select", "Where", "Order", "Group", "Having", "Limit", "Offset",
-	"Join", "LeftJoin", "RightJoin",
-	"Save", "Create", "CreateInBatches",
-	"Update", "Updates", "UpdateColumn", "UpdateColumns",
-	"Find", "FindInBatches", "First", "Take", "Last", "Pluck", "Count",
-	"Scan", "ScanRows", "Row", "Rows",
-	"Delete", "Unscoped",
-	"Transaction", "Begin", "Commit", "SavePoint", "RollBack", "RollBackTo", "Scopes",
-}
-
 // BaseStruct struct info in generated code
 type BaseStruct struct {
 	GenBaseStruct bool   // whether to generate db model
@@ -37,8 +23,8 @@ type BaseStruct struct {
 	db            *gorm.DB
 }
 
-// transStruct get all elements of struct with gorm's Parse, ignore unexported elements
-func (b *BaseStruct) transStruct(st interface{}) error {
+// parseStruct get all elements of struct with gorm's Parse, ignore unexported elements
+func (b *BaseStruct) parseStruct(st interface{}) error {
 	stmt := gorm.Statement{DB: b.db}
 	err := stmt.Parse(st)
 	if err != nil {
@@ -47,14 +33,12 @@ func (b *BaseStruct) transStruct(st interface{}) error {
 	b.TableName = stmt.Table
 
 	for _, f := range stmt.Schema.Fields {
-		b.appendOrUpdateMember(&Member{
+		b.appendOrUpdateMember((&Member{
 			Name:       f.Name,
 			Type:       b.getMemberRealType(f.FieldType),
 			ColumnName: f.DBName,
-		})
+		}).Revise())
 	}
-
-	b.fixMember()
 	return nil
 }
 
@@ -96,27 +80,13 @@ func (b *BaseStruct) HasMember() bool {
 // check if struct is exportable and if struct in main package and if member's type is regular
 func (b *BaseStruct) check() (err error) {
 	if b.StructInfo.InMainPkg() {
-		return fmt.Errorf("can't generated data object for struct in main package, ignored:%s", b.StructName)
+		return fmt.Errorf("can't generated data object for struct in main package, ignore:%s", b.StructName)
 	}
 	if !isCapitalize(b.StructName) {
 		return fmt.Errorf("can't generated data object for non-exportable struct, ignore:%s", b.NewStructName)
 	}
 
 	return nil
-}
-
-// fixMember fix special type and get newType
-func (b *BaseStruct) fixMember() {
-	for _, m := range b.Members {
-		if contains(m.Name, keywords) {
-			m.Name += "_"
-		}
-		if !m.AllowType() {
-			m.Type = "field"
-		}
-
-		m.NewType = getNewTypeName(m.Type)
-	}
 }
 
 func GetNames(bases []*BaseStruct) (res []string) {
