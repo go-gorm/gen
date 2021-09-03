@@ -90,15 +90,22 @@ func paramToString(params []parser.Param) string {
 }
 
 // checkParams check all parameters
-func (m *InterfaceMethod) checkMethod(methods []*InterfaceMethod) (err error) {
+func (m *InterfaceMethod) checkMethod(methods []*InterfaceMethod, s *BaseStruct) (err error) {
 	for _, method := range methods {
 		if m.IsRepeatFromDifferentInterface(method) {
 			return fmt.Errorf("can not generate method with the same name from different interface:[%s.%s] and [%s.%s]",
 				m.InterfaceName, m.MethodName, method.InterfaceName, method.MethodName)
 		}
 	}
-	return nil
 
+	for _, member := range s.Members {
+		if member.Name == m.MethodName {
+			return fmt.Errorf("can not generate method same name with struct member:[%s.%s] and [%s.%s]",
+				m.InterfaceName, m.MethodName, s.StructName, member.Name)
+		}
+	}
+
+	return nil
 }
 
 // checkParams check all parameters
