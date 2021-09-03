@@ -89,3 +89,7 @@ func contains(target string, list []string) bool {
 	}
 	return false
 }
+
+func containMultiline(s string) bool {
+	return strings.Contains(s, "\n")
+}
