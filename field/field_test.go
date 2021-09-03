@@ -130,9 +130,8 @@ func TestExpr_Build(t *testing.T) {
 		},
 		// ======================== integer ========================
 		{
-			Expr:         field.NewUint("", "id"),
-			ExpectedVars: nil,
-			Result:       "`id`",
+			Expr:   field.NewUint("", "id"),
+			Result: "`id`",
 		},
 		{
 			Expr:         field.NewUint("user", "id").Sum().Gt(100),
@@ -140,29 +139,24 @@ func TestExpr_Build(t *testing.T) {
 			Result:       "SUM(`user`.`id`) > ?",
 		},
 		{
-			Expr:         field.NewUint("", "i`d"),
-			ExpectedVars: nil,
-			Result:       "`i`d`", // should be `i``d`
+			Expr:   field.NewUint("", "i`d"),
+			Result: "`i`d`", // should be `i``d`
 		},
 		{
-			Expr:         field.NewUint("", "id").Avg(),
-			ExpectedVars: nil,
-			Result:       "AVG(`id`)",
+			Expr:   field.NewUint("", "id").Avg(),
+			Result: "AVG(`id`)",
 		},
 		{
-			Expr:         field.NewUint("", "id").Desc(),
-			ExpectedVars: nil,
-			Result:       "`id` DESC",
+			Expr:   field.NewUint("", "id").Desc(),
+			Result: "`id` DESC",
 		},
 		{
-			Expr:         field.NewUint("", "id").As("number"),
-			ExpectedVars: nil,
-			Result:       "`id` AS `number`",
+			Expr:   field.NewUint("", "id").As("number"),
+			Result: "`id` AS `number`",
 		},
 		{
-			Expr:         field.NewUint("", "id").Avg().As("number"),
-			ExpectedVars: nil,
-			Result:       "AVG(`id`) AS `number`",
+			Expr:   field.NewUint("", "id").Avg().As("number"),
+			Result: "AVG(`id`) AS `number`",
 		},
 		{
 			Expr:         field.NewUint("", "id").Eq(10),
@@ -225,29 +219,24 @@ func TestExpr_Build(t *testing.T) {
 			Result:       "`id` BETWEEN ? AND ?",
 		},
 		{
-			Expr:         field.NewUint("", "id").Count(),
-			ExpectedVars: nil,
-			Result:       "COUNT(`id`)",
+			Expr:   field.NewUint("", "id").Count(),
+			Result: "COUNT(`id`)",
 		},
 		{
-			Expr:         field.NewUint("", "id").Count().As("UserID"),
-			ExpectedVars: nil,
-			Result:       "COUNT(`id`) AS `UserID`",
+			Expr:   field.NewUint("", "id").Count().As("UserID"),
+			Result: "COUNT(`id`) AS `UserID`",
 		},
 		{
-			Expr:         field.NewUint("", "id").Distinct(),
-			ExpectedVars: nil,
-			Result:       "DISTINCT `id`",
+			Expr:   field.NewUint("", "id").Distinct(),
+			Result: "DISTINCT `id`",
 		},
 		{
-			Expr:         field.NewUint("", "id").Distinct().Count(),
-			ExpectedVars: nil,
-			Result:       "COUNT(DISTINCT `id`)",
+			Expr:   field.NewUint("", "id").Distinct().Count(),
+			Result: "COUNT(DISTINCT `id`)",
 		},
 		{
-			Expr:         field.NewUint("", "id").Distinct().Count().As("UserID"),
-			ExpectedVars: nil,
-			Result:       "COUNT(DISTINCT `id`) AS `UserID`",
+			Expr:   field.NewUint("", "id").Distinct().Count().As("UserID"),
+			Result: "COUNT(DISTINCT `id`) AS `UserID`",
 		},
 		{
 			Expr:         field.NewInt("", "age").RightShift(3),
@@ -359,9 +348,8 @@ func TestExpr_Build(t *testing.T) {
 		},
 		// ======================== bool ========================
 		{
-			Expr:         field.NewBool("", "male").Not(),
-			ExpectedVars: nil,
-			Result:       "NOT `male`",
+			Expr:   field.NewBool("", "male").Not(),
+			Result: "NOT `male`",
 		},
 		{
 			Expr:         field.NewBool("", "male").Is(true),
