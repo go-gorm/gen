@@ -1,6 +1,7 @@
 package gen
 
 import (
+	"context"
 	"database/sql"
 	"reflect"
 	"strings"
@@ -37,7 +38,7 @@ var (
 
 // UseDB specify a db connection(*gorm.DB)
 func (d *DO) UseDB(db *gorm.DB, opts ...doOptions) {
-	db = db.Session(new(gorm.Session))
+	db = db.Session(&gorm.Session{Context: context.Background()})
 	for _, opt := range opts {
 		db = opt(db)
 	}
@@ -46,7 +47,6 @@ func (d *DO) UseDB(db *gorm.DB, opts ...doOptions) {
 
 // UseModel specify a data model structure as a source for table name
 func (d *DO) UseModel(model interface{}) {
-	d.db = d.db.Model(model).Session(new(gorm.Session))
 	_ = d.db.Statement.Parse(model)
 }
 
@@ -83,25 +83,6 @@ func (d *DO) buildCondition() []clause.Expression {
 }
 
 type stmtOpt func(*gorm.Statement) *gorm.Statement
-
-var (
-	// withFROM add FROM clause
-	withFROM stmtOpt = func(stmt *gorm.Statement) *gorm.Statement {
-		if stmt.Table == "" {
-			_ = stmt.Parse(stmt.Model)
-		}
-		stmt.AddClause(clause.From{})
-		return stmt
-	}
-
-	// // withSELECT add SELECT clause
-	// withSELECT stmtOpt = func(stmt *gorm.Statement) *gorm.Statement {
-	// 	if _, ok := stmt.Clauses["SELECT"]; !ok {
-	// 		stmt.AddClause(clause.Select{Distinct: stmt.Distinct})
-	// 	}
-	// 	return stmt
-	// }
-)
 
 // build FOR TEST. call statement.Build to combine all clauses in one statement
 func (d *DO) build(opts ...stmtOpt) *gorm.Statement {
@@ -358,7 +339,7 @@ func (d *DO) UpdateColumns(values interface{}) error {
 }
 
 func (d *DO) Delete() error {
-	return d.db.Delete(d.db.Statement.Model).Error
+	return d.db.Delete(reflect.New(d.getModelType())).Error
 }
 
 func (d *DO) Count() (count int64, err error) {
@@ -410,15 +391,20 @@ func (d *DO) RollBackTo(name string) Dao {
 }
 
 func (d *DO) newResultPointer() interface{} {
-	return reflect.New(d.getModel()).Interface()
+	return reflect.New(d.getModelType()).Interface()
 }
 
 func (d *DO) newResultSlicePointer() interface{} {
-	return reflect.New(reflect.SliceOf(reflect.PtrTo(d.getModel()))).Interface()
+	return reflect.New(reflect.SliceOf(reflect.PtrTo(d.getModelType()))).Interface()
 }
 
-func (d *DO) getModel() reflect.Type {
-	return reflect.Indirect(reflect.ValueOf(d.db.Statement.Model)).Type()
+// getModelType get model type
+func (d *DO) getModelType() reflect.Type {
+	mt := d.db.Statement.Schema.ModelType
+	if mt.Kind() == reflect.Ptr {
+		mt = mt.Elem()
+	}
+	return mt
 }
 
 func hintToExpression(hs []Hint) []clause.Expression {

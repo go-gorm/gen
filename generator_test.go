@@ -1,6 +1,7 @@
 package gen
 
 import (
+	"context"
 	"database/sql"
 	"testing"
 	"time"
@@ -272,7 +273,7 @@ var u = func() *user {
 		Famous:     field.NewBool("", "famous"),
 		RegisterAt: field.NewTime("", "register_at"),
 	}
-	u.UseDB(db.Session(&gorm.Session{DryRun: true}))
+	u.UseDB(db.Session(&gorm.Session{Context: context.Background(), DryRun: true}))
 	u.UseModel(User{})
 	return &u
 }()
@@ -293,7 +294,7 @@ var student = func() *Student {
 		Age:        field.NewInt("student", "age"),
 		Instructor: field.NewInt64("student", "instructor"),
 	}
-	s.UseDB(db.Session(&gorm.Session{DryRun: true}))
+	s.UseDB(db.Session(&gorm.Session{Context: context.Background(), DryRun: true}))
 	s.UseModel(StudentRaw{})
 	return &s
 }()
@@ -310,7 +311,7 @@ var teacher = func() *Teacher {
 		ID:   field.NewInt64("teacher", "id"),
 		Name: field.NewString("teacher", "name"),
 	}
-	t.UseDB(db.Session(&gorm.Session{DryRun: true}))
+	t.UseDB(db.Session(&gorm.Session{Context: context.Background(), DryRun: true}))
 	t.UseModel(TeacherRaw{})
 	return &t
 }()

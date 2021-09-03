@@ -5,9 +5,27 @@ import (
 	"strings"
 	"testing"
 
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"gorm.io/hints"
 
 	"gorm.io/gen/field"
+)
+
+var (
+	// withFROM add FROM clause
+	withFROM stmtOpt = func(stmt *gorm.Statement) *gorm.Statement {
+		stmt.AddClause(clause.From{})
+		return stmt
+	}
+
+	// // withSELECT add SELECT clause
+	// withSELECT stmtOpt = func(stmt *gorm.Statement) *gorm.Statement {
+	// 	if _, ok := stmt.Clauses["SELECT"]; !ok {
+	// 		stmt.AddClause(clause.Select{Distinct: stmt.Distinct})
+	// 	}
+	// 	return stmt
+	// }
 )
 
 func checkBuildExpr(t *testing.T, e subQuery, opts []stmtOpt, result string, vars []interface{}) {
@@ -187,14 +205,12 @@ func TestDO_methods(t *testing.T) {
 		},
 		// ======================== subquery ========================
 		{
-			Expr:         u.Select().Where(u.Columns(u.ID).Eq(u.Select(u.ID.Max()))),
-			ExpectedVars: nil,
-			Result:       "SELECT * WHERE `id` = (SELECT MAX(`id`) FROM `users_info`)",
+			Expr:   u.Select().Where(u.Columns(u.ID).Eq(u.Select(u.ID.Max()))),
+			Result: "SELECT * WHERE `id` = (SELECT MAX(`id`) FROM `users_info`)",
 		},
 		{
-			Expr:         u.Select().Where(u.Columns(u.ID).Neq(u.Select(u.ID.Max()))),
-			ExpectedVars: nil,
-			Result:       "SELECT * WHERE `id` <> (SELECT MAX(`id`) FROM `users_info`)",
+			Expr:   u.Select().Where(u.Columns(u.ID).Neq(u.Select(u.ID.Max()))),
+			Result: "SELECT * WHERE `id` <> (SELECT MAX(`id`) FROM `users_info`)",
 		},
 		{
 			Expr:         u.Select(u.ID).Where(u.Columns(u.Score.Mul(2)).Lte(u.Select(u.Score.Avg()))),
@@ -202,9 +218,8 @@ func TestDO_methods(t *testing.T) {
 			Result:       "SELECT `id` WHERE `score`*? <= (SELECT AVG(`score`) FROM `users_info`)",
 		},
 		{
-			Expr:         u.Select(u.ID).Where(u.Columns(u.Score).Gt(u.Select(u.Score.Avg()))),
-			ExpectedVars: nil,
-			Result:       "SELECT `id` WHERE `score` > (SELECT AVG(`score`) FROM `users_info`)",
+			Expr:   u.Select(u.ID).Where(u.Columns(u.Score).Gt(u.Select(u.Score.Avg()))),
+			Result: "SELECT `id` WHERE `score` > (SELECT AVG(`score`) FROM `users_info`)",
 		},
 		{
 			Expr:         u.Select(u.ID, u.Name).Where(u.Columns(u.Score).Lte(u.Select(u.Score.Avg()).Where(u.Age.Gte(18)))),
