@@ -252,9 +252,11 @@ func (g *Generator) apply(fc interface{}, structs []*check.BaseStruct) {
 // Execute generate code to output path
 func (g *Generator) Execute() {
 	var err error
+
 	if g.OutPath == "" {
-		g.OutPath = "./query"
+		g.OutPath = "./query/"
 	}
+	g.OutPath, err = filepath.Abs(g.OutPath)
 	if g.OutFile == "" {
 		g.OutFile = g.OutPath + "/gorm_generated.go"
 	}
@@ -278,9 +280,8 @@ func (g *Generator) Execute() {
 	}
 
 	g.successInfo(
-		"Gorm generate query object file successful!",
-		"Generated path："+g.OutPath,
-		"Generated file："+g.OutFile,
+		"Success generate query object file："+g.OutFile,
+		"Gorm generate successful",
 	)
 }
 
@@ -378,7 +379,7 @@ func (g *Generator) generatedBaseStruct() (err error) {
 		if err != nil {
 			return err
 		}
-		modelFile := fmt.Sprint(outPath, data.BaseStruct.TableName, ".go")
+		modelFile := fmt.Sprint(outPath, data.BaseStruct.TableName, ".gen.go")
 		result, err := imports.Process(modelFile, buf.Bytes(), nil)
 		if err != nil {
 			for i, line := range strings.Split(buf.String(), "\n") {
@@ -391,6 +392,7 @@ func (g *Generator) generatedBaseStruct() (err error) {
 			return nil
 		}
 		g.successInfo(fmt.Sprintf("Generate struct [%s.%s] from table [%s]", data.StructInfo.Package, data.StructInfo.Type, data.TableName))
+		g.successInfo(fmt.Sprintf("Success generate struct file:%s", modelFile))
 	}
 	return nil
 }
