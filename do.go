@@ -299,11 +299,6 @@ func (d *DO) FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batc
 // }
 
 func (d *DO) Update(column field.Expr, value interface{}) error {
-	switch expr := column.RawExpr().(type) {
-	case clause.Expression:
-		return d.db.Update(column.Column().Name, expr).Error
-	}
-
 	switch value := value.(type) {
 	case field.Expr:
 		return d.db.Update(column.Column().Name, value.RawExpr()).Error
@@ -314,16 +309,19 @@ func (d *DO) Update(column field.Expr, value interface{}) error {
 	}
 }
 
+func (d *DO) UpdateSimple(column field.Expr) error {
+	expr, ok := column.RawExpr().(clause.Expression)
+	if !ok {
+		return ErrInvalidExpression
+	}
+	return d.db.Update(column.BuildColumn(d.db.Statement, field.WithTable), expr).Error
+}
+
 func (d *DO) Updates(values interface{}) error {
 	return d.db.Updates(values).Error
 }
 
 func (d *DO) UpdateColumn(column field.Expr, value interface{}) error {
-	switch expr := column.RawExpr().(type) {
-	case clause.Expression:
-		return d.db.UpdateColumn(column.Column().Name, expr).Error
-	}
-
 	switch value := value.(type) {
 	case field.Expr:
 		return d.db.UpdateColumn(column.Column().Name, value.RawExpr()).Error
@@ -332,6 +330,14 @@ func (d *DO) UpdateColumn(column field.Expr, value interface{}) error {
 	default:
 		return d.db.UpdateColumn(column.Column().Name, value).Error
 	}
+}
+
+func (d *DO) UpdateColumnSimple(column field.Expr) error {
+	expr, ok := column.RawExpr().(clause.Expression)
+	if !ok {
+		return ErrInvalidExpression
+	}
+	return d.db.UpdateColumn(column.BuildColumn(d.db.Statement, field.WithTable), expr).Error
 }
 
 func (d *DO) UpdateColumns(values interface{}) error {

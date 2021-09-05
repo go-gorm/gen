@@ -805,6 +805,8 @@ u.Where(u.Activate.Is(true)).Update(u.Name, "hello")
 
 // Update with conditions
 u.Where(u.Activate.Is(true)).Update(u.Age, u.Age.Add(1))
+// or
+u.Where(u.Activate.Is(true)).UpdateSimple(u.Age.Add(1))
 // UPDATE users SET age=age+1, updated_at='2013-11-17 21:34:10' WHERE active=true;
 ```
 
@@ -816,7 +818,7 @@ u.Where(u.Activate.Is(true)).Update(u.Age, u.Age.Add(1))
 u := query.Use(db).User
 
 // Update attributes with `map`
-u).Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
+u.Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
 // UPDATE users SET name='hello', age=18, active=false, updated_at='2013-11-17 21:34:10' WHERE id=111;
 ```
 
