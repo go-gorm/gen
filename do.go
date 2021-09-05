@@ -47,6 +47,7 @@ func (d *DO) UseDB(db *gorm.DB, opts ...doOptions) {
 
 // UseModel specify a data model structure as a source for table name
 func (d *DO) UseModel(model interface{}) {
+	d.db = d.db.Model(model).Session(new(gorm.Session))
 	_ = d.db.Statement.Parse(model)
 }
 
@@ -253,6 +254,10 @@ func (d *DO) CreateInBatches(value interface{}, batchSize int) error {
 }
 
 func (d *DO) Save(value interface{}) error {
+	var model interface{}
+	model, d.db.Statement.Model = d.db.Statement.Model, nil
+	defer func() { d.db.Statement.Model = model }()
+
 	return d.db.Save(value).Error
 }
 
@@ -345,7 +350,7 @@ func (d *DO) UpdateColumns(values interface{}) error {
 }
 
 func (d *DO) Delete() error {
-	return d.db.Delete(reflect.New(d.getModelType())).Error
+	return d.db.Delete(reflect.New(d.getModelType()).Interface()).Error
 }
 
 func (d *DO) Count() (count int64, err error) {
