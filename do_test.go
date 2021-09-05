@@ -292,6 +292,7 @@ func TestDO_methods(t *testing.T) {
 
 	// _ = u.Update(u.Age, u.Age.Add(1))
 	// _ = u.Update(u.Age, gorm.Expr("age+1"))
+	// _ = u.UpdateSimple(u.Age.Add(1))
 
 	// _ = u.Find(u.ID.In(1, 2, 3))
 
