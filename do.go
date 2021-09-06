@@ -305,11 +305,11 @@ func (d *DO) Model(model interface{}) Dao {
 func (d *DO) Update(column field.Expr, value interface{}) error {
 	switch value := value.(type) {
 	case field.Expr:
-		return d.db.Update(column.Column().Name, value.RawExpr()).Error
+		return d.db.Update(column.BuildColumn(d.db.Statement, field.WithTable), value.RawExpr()).Error
 	case subQuery:
-		return d.db.Update(column.Column().Name, value.UnderlyingDB()).Error
+		return d.db.Update(column.BuildColumn(d.db.Statement, field.WithTable), value.UnderlyingDB()).Error
 	default:
-		return d.db.Update(column.Column().Name, value).Error
+		return d.db.Update(column.BuildColumn(d.db.Statement, field.WithTable), value).Error
 	}
 }
 
@@ -328,11 +328,11 @@ func (d *DO) Updates(value interface{}) error {
 func (d *DO) UpdateColumn(column field.Expr, value interface{}) error {
 	switch value := value.(type) {
 	case field.Expr:
-		return d.db.UpdateColumn(column.Column().Name, value.RawExpr()).Error
+		return d.db.UpdateColumn(column.BuildColumn(d.db.Statement, field.WithTable), value.RawExpr()).Error
 	case subQuery:
-		return d.db.UpdateColumn(column.Column().Name, value.UnderlyingDB()).Error
+		return d.db.UpdateColumn(column.BuildColumn(d.db.Statement, field.WithTable), value.UnderlyingDB()).Error
 	default:
-		return d.db.UpdateColumn(column.Column().Name, value).Error
+		return d.db.UpdateColumn(column.BuildColumn(d.db.Statement, field.WithTable), value).Error
 	}
 }
 
