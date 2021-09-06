@@ -185,19 +185,19 @@ func (e expr) sub(value interface{}) expr {
 }
 
 func (e expr) mul(value interface{}) expr {
-	return e.setExpression(clause.Expr{SQL: "?*?", Vars: []interface{}{e.RawExpr(), value}})
+	return e.setExpression(clause.Expr{SQL: "(?)*?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
 func (e expr) div(value interface{}) expr {
-	return e.setExpression(clause.Expr{SQL: "?/?", Vars: []interface{}{e.RawExpr(), value}})
+	return e.setExpression(clause.Expr{SQL: "(?)/?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
 func (e expr) mod(value interface{}) expr {
-	return e.setExpression(clause.Expr{SQL: "?%?", Vars: []interface{}{e.RawExpr(), value}})
+	return e.setExpression(clause.Expr{SQL: "(?)%?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
 func (e expr) floorDiv(value interface{}) expr {
-	return e.setExpression(clause.Expr{SQL: "? DIV ?", Vars: []interface{}{e.RawExpr(), value}})
+	return e.setExpression(clause.Expr{SQL: "(?) DIV ?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
 func (e expr) floor() expr {
@@ -205,27 +205,27 @@ func (e expr) floor() expr {
 }
 
 func (e expr) rightShift(value interface{}) expr {
-	return e.setExpression(clause.Expr{SQL: "?>>?", Vars: []interface{}{e.RawExpr(), value}})
+	return e.setExpression(clause.Expr{SQL: "(?)>>?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
 func (e expr) leftShift(value interface{}) expr {
-	return e.setExpression(clause.Expr{SQL: "?<<?", Vars: []interface{}{e.RawExpr(), value}})
+	return e.setExpression(clause.Expr{SQL: "(?)<<?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
 func (e expr) bitXor(value interface{}) expr {
-	return e.setExpression(clause.Expr{SQL: "?^?", Vars: []interface{}{e.RawExpr(), value}})
+	return e.setExpression(clause.Expr{SQL: "(?)^?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
 func (e expr) bitAnd(value interface{}) expr {
-	return e.setExpression(clause.Expr{SQL: "?&?", Vars: []interface{}{e.RawExpr(), value}})
+	return e.setExpression(clause.Expr{SQL: "(?)&?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
 func (e expr) bitOr(value interface{}) expr {
-	return e.setExpression(clause.Expr{SQL: "?|?", Vars: []interface{}{e.RawExpr(), value}})
+	return e.setExpression(clause.Expr{SQL: "(?)|?", Vars: []interface{}{e.RawExpr(), value}})
 }
 
 func (e expr) bitFlip() expr {
-	return e.setExpression(clause.Expr{SQL: "~?", Vars: []interface{}{e.RawExpr()}})
+	return e.setExpression(clause.Expr{SQL: "~(?)", Vars: []interface{}{e.RawExpr()}})
 }
 
 func (e expr) regexp(value interface{}) expr {
