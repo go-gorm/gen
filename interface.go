@@ -66,7 +66,9 @@ type Dao interface {
 	FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error
 	// FirstOrInit(dest interface{}) error
 	// FirstOrCreate(dest interface{}) error
+	Model(model interface{}) Dao
 	Update(column field.Expr, value interface{}) error
+	UpdateSimple(column field.Expr) error
 	Updates(values interface{}) error
 	UpdateColumn(column field.Expr, value interface{}) error
 	UpdateColumns(values interface{}) error

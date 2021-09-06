@@ -47,7 +47,6 @@ func (d *DO) UseDB(db *gorm.DB, opts ...doOptions) {
 
 // UseModel specify a data model structure as a source for table name
 func (d *DO) UseModel(model interface{}) {
-	d.db = d.db.Model(model).Session(new(gorm.Session))
 	_ = d.db.Statement.Parse(model)
 }
 
@@ -254,10 +253,6 @@ func (d *DO) CreateInBatches(value interface{}, batchSize int) error {
 }
 
 func (d *DO) Save(value interface{}) error {
-	var model interface{}
-	model, d.db.Statement.Model = d.db.Statement.Model, nil
-	defer func() { d.db.Statement.Model = model }()
-
 	return d.db.Save(value).Error
 }
 
@@ -303,6 +298,10 @@ func (d *DO) FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batc
 // 	return d.db.Clauses(toExpression(conds)...).FirstOrCreate(dest).Error
 // }
 
+func (d *DO) Model(model interface{}) Dao {
+	return NewDO(d.db.Model(model))
+}
+
 func (d *DO) Update(column field.Expr, value interface{}) error {
 	switch value := value.(type) {
 	case field.Expr:
@@ -322,8 +321,8 @@ func (d *DO) UpdateSimple(column field.Expr) error {
 	return d.db.Update(column.BuildColumn(d.db.Statement, field.WithTable), expr).Error
 }
 
-func (d *DO) Updates(values interface{}) error {
-	return d.db.Updates(values).Error
+func (d *DO) Updates(value interface{}) error {
+	return d.db.Updates(value).Error
 }
 
 func (d *DO) UpdateColumn(column field.Expr, value interface{}) error {
@@ -345,8 +344,8 @@ func (d *DO) UpdateColumnSimple(column field.Expr) error {
 	return d.db.UpdateColumn(column.BuildColumn(d.db.Statement, field.WithTable), expr).Error
 }
 
-func (d *DO) UpdateColumns(values interface{}) error {
-	return d.db.UpdateColumns(values).Error
+func (d *DO) UpdateColumns(value interface{}) error {
+	return d.db.UpdateColumns(value).Error
 }
 
 func (d *DO) Delete() error {

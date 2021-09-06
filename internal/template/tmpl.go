@@ -212,6 +212,11 @@ func ({{.S}} {{.NewStructName}}) FindByPage(offset int, limit int) (result []*{{
 	return
 }
 
+func ({{.S}} {{.NewStructName}}) Model(result *{{.StructInfo.Package}}.{{.StructInfo.Type}}) *{{.NewStructName}} {
+	{{.S}}.DO = *{{.S}}.DO.Model(result).(*gen.DO)
+	return &{{.S}}
+}
+
 func ({{.S}} {{.NewStructName}}) Begin(opts ...*sql.TxOptions) *{{.NewStructName}} {
 	{{.S}}.DO = *{{.S}}.DO.Begin(opts...).(*gen.DO)
 	return &{{.S}}
