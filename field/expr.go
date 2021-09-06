@@ -185,19 +185,31 @@ func (e expr) sub(value interface{}) expr {
 }
 
 func (e expr) mul(value interface{}) expr {
-	return e.setExpression(clause.Expr{SQL: "(?)*?", Vars: []interface{}{e.RawExpr(), value}})
+	if e.isPure() {
+		return e.setExpression(clause.Expr{SQL: "?*?", Vars: []interface{}{e.Col, value}})
+	}
+	return e.setExpression(clause.Expr{SQL: "(?)*?", Vars: []interface{}{e.expression, value}})
 }
 
 func (e expr) div(value interface{}) expr {
-	return e.setExpression(clause.Expr{SQL: "(?)/?", Vars: []interface{}{e.RawExpr(), value}})
+	if e.isPure() {
+		return e.setExpression(clause.Expr{SQL: "?/?", Vars: []interface{}{e.Col, value}})
+	}
+	return e.setExpression(clause.Expr{SQL: "(?)/?", Vars: []interface{}{e.expression, value}})
 }
 
 func (e expr) mod(value interface{}) expr {
-	return e.setExpression(clause.Expr{SQL: "(?)%?", Vars: []interface{}{e.RawExpr(), value}})
+	if e.isPure() {
+		return e.setExpression(clause.Expr{SQL: "?%?", Vars: []interface{}{e.Col, value}})
+	}
+	return e.setExpression(clause.Expr{SQL: "(?)%?", Vars: []interface{}{e.expression, value}})
 }
 
 func (e expr) floorDiv(value interface{}) expr {
-	return e.setExpression(clause.Expr{SQL: "(?) DIV ?", Vars: []interface{}{e.RawExpr(), value}})
+	if e.isPure() {
+		return e.setExpression(clause.Expr{SQL: "? DIV ?", Vars: []interface{}{e.Col, value}})
+	}
+	return e.setExpression(clause.Expr{SQL: "(?) DIV ?", Vars: []interface{}{e.expression, value}})
 }
 
 func (e expr) floor() expr {
@@ -205,26 +217,44 @@ func (e expr) floor() expr {
 }
 
 func (e expr) rightShift(value interface{}) expr {
-	return e.setExpression(clause.Expr{SQL: "(?)>>?", Vars: []interface{}{e.RawExpr(), value}})
+	if e.isPure() {
+		return e.setExpression(clause.Expr{SQL: "?>>?", Vars: []interface{}{e.Col, value}})
+	}
+	return e.setExpression(clause.Expr{SQL: "(?)>>?", Vars: []interface{}{e.expression, value}})
 }
 
 func (e expr) leftShift(value interface{}) expr {
-	return e.setExpression(clause.Expr{SQL: "(?)<<?", Vars: []interface{}{e.RawExpr(), value}})
+	if e.isPure() {
+		return e.setExpression(clause.Expr{SQL: "?<<?", Vars: []interface{}{e.Col, value}})
+	}
+	return e.setExpression(clause.Expr{SQL: "(?)<<?", Vars: []interface{}{e.expression, value}})
 }
 
 func (e expr) bitXor(value interface{}) expr {
-	return e.setExpression(clause.Expr{SQL: "(?)^?", Vars: []interface{}{e.RawExpr(), value}})
+	if e.isPure() {
+		return e.setExpression(clause.Expr{SQL: "?^?", Vars: []interface{}{e.Col, value}})
+	}
+	return e.setExpression(clause.Expr{SQL: "(?)^?", Vars: []interface{}{e.expression, value}})
 }
 
 func (e expr) bitAnd(value interface{}) expr {
-	return e.setExpression(clause.Expr{SQL: "(?)&?", Vars: []interface{}{e.RawExpr(), value}})
+	if e.isPure() {
+		return e.setExpression(clause.Expr{SQL: "?&?", Vars: []interface{}{e.Col, value}})
+	}
+	return e.setExpression(clause.Expr{SQL: "(?)&?", Vars: []interface{}{e.expression, value}})
 }
 
 func (e expr) bitOr(value interface{}) expr {
-	return e.setExpression(clause.Expr{SQL: "(?)|?", Vars: []interface{}{e.RawExpr(), value}})
+	if e.isPure() {
+		return e.setExpression(clause.Expr{SQL: "?|?", Vars: []interface{}{e.Col, value}})
+	}
+	return e.setExpression(clause.Expr{SQL: "(?)|?", Vars: []interface{}{e.expression, value}})
 }
 
 func (e expr) bitFlip() expr {
+	if e.isPure() {
+		return e.setExpression(clause.Expr{SQL: "~?", Vars: []interface{}{e.Col}})
+	}
 	return e.setExpression(clause.Expr{SQL: "~(?)", Vars: []interface{}{e.RawExpr()}})
 }
 
@@ -250,4 +280,8 @@ func (e expr) or(value interface{}) expr {
 
 func (e expr) xor(value interface{}) expr {
 	return e.setExpression(clause.Expr{SQL: "? XOR ?", Vars: []interface{}{e.RawExpr(), value}})
+}
+
+func (e expr) isPure() bool {
+	return e.expression == nil
 }
