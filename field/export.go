@@ -162,22 +162,28 @@ func CompareSubQuery(op CompareOperate, column Expr, subQuery *gorm.DB) Expr {
 	}}
 }
 
-func Values(value interface{}) clause.Expression {
-	return clause.Expr{
+type Value interface{ expr() clause.Expr }
+
+type val struct{ clause.Expr }
+
+func (v *val) expr() clause.Expr { return v.Expr }
+
+func Values(value interface{}) Value {
+	return &val{clause.Expr{
 		SQL:                "?",
 		Vars:               []interface{}{value},
 		WithoutParentheses: true,
-	}
+	}}
 }
 
-func ContainsValue(columns []Expr, value clause.Expression) Expr {
+func ContainsValue(columns []Expr, value Value) Expr {
 	switch len(columns) {
 	case 0:
 		return expr{e: clause.Expr{}}
 	case 1:
 		return expr{e: clause.Expr{
 			SQL:  "? IN (?)",
-			Vars: []interface{}{columns[0].RawExpr(), value},
+			Vars: []interface{}{columns[0].RawExpr(), value.expr()},
 		}}
 	default: // len(columns) > 0
 		vars := make([]string, len(columns))
@@ -187,11 +193,9 @@ func ContainsValue(columns []Expr, value clause.Expression) Expr {
 		}
 		return expr{e: clause.Expr{
 			SQL:  fmt.Sprintf("(%s) IN (?)", strings.Join(vars, ", ")),
-			Vars: append(queryCols, value),
+			Vars: append(queryCols, value.expr()),
 		}}
 	}
 }
 
-func EmptyExpr() Expr {
-	return expr{e: clause.Expr{}}
-}
+func EmptyExpr() Expr { return expr{e: clause.Expr{}} }
