@@ -7,27 +7,27 @@ import (
 type String Field
 
 func (field String) Eq(value string) Expr {
-	return expr{expression: clause.Eq{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Eq{Column: field.RawExpr(), Value: value}}
 }
 
 func (field String) Neq(value string) Expr {
-	return expr{expression: clause.Neq{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Neq{Column: field.RawExpr(), Value: value}}
 }
 
 func (field String) Gt(value string) Expr {
-	return expr{expression: clause.Gt{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Gt{Column: field.RawExpr(), Value: value}}
 }
 
 func (field String) Gte(value string) Expr {
-	return expr{expression: clause.Gte{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Gte{Column: field.RawExpr(), Value: value}}
 }
 
 func (field String) Lt(value string) Expr {
-	return expr{expression: clause.Lt{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Lt{Column: field.RawExpr(), Value: value}}
 }
 
 func (field String) Lte(value string) Expr {
-	return expr{expression: clause.Lte{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Lte{Column: field.RawExpr(), Value: value}}
 }
 
 func (field String) Between(left string, right string) Expr {
@@ -39,19 +39,19 @@ func (field String) NotBetween(left string, right string) Expr {
 }
 
 func (field String) In(values ...string) Expr {
-	return expr{expression: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values)}}
+	return expr{e: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values)}}
 }
 
 func (field String) NotIn(values ...string) Expr {
-	return expr{expression: clause.Not(field.In(values...))}
+	return expr{e: clause.Not(field.In(values...).expression())}
 }
 
 func (field String) Like(value string) Expr {
-	return expr{expression: clause.Like{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Like{Column: field.RawExpr(), Value: value}}
 }
 
 func (field String) NotLike(value string) Expr {
-	return expr{expression: clause.Not(field.Like(value))}
+	return expr{e: clause.Not(field.Like(value).expression())}
 }
 
 func (field String) Regexp(value string) Expr {
@@ -59,7 +59,7 @@ func (field String) Regexp(value string) Expr {
 }
 
 func (field String) NotRegxp(value string) Expr {
-	return Not(field.Regexp(value))
+	return expr{e: clause.Not(field.Regexp(value).expression())}
 }
 
 func (field String) toSlice(values []string) []interface{} {
@@ -73,27 +73,27 @@ func (field String) toSlice(values []string) []interface{} {
 type Bytes String
 
 func (field Bytes) Eq(value []byte) Expr {
-	return expr{expression: clause.Eq{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Eq{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Bytes) Neq(value []byte) Expr {
-	return expr{expression: clause.Neq{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Neq{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Bytes) Gt(value []byte) Expr {
-	return expr{expression: clause.Gt{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Gt{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Bytes) Gte(value []byte) Expr {
-	return expr{expression: clause.Gte{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Gte{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Bytes) Lt(value []byte) Expr {
-	return expr{expression: clause.Lt{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Lt{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Bytes) Lte(value []byte) Expr {
-	return expr{expression: clause.Lte{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Lte{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Bytes) Between(left []byte, right []byte) Expr {
@@ -105,19 +105,19 @@ func (field Bytes) NotBetween(left []byte, right []byte) Expr {
 }
 
 func (field Bytes) In(values ...[]byte) Expr {
-	return expr{expression: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values)}}
+	return expr{e: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values)}}
 }
 
 func (field Bytes) NotIn(values ...[]byte) Expr {
-	return expr{expression: clause.Not(field.In(values...))}
+	return expr{e: clause.Not(field.In(values...).expression())}
 }
 
 func (field Bytes) Like(value string) Expr {
-	return expr{expression: clause.Like{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Like{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Bytes) NotLike(value string) Expr {
-	return expr{expression: clause.Not(field.Like(value))}
+	return expr{e: clause.Not(field.Like(value).expression())}
 }
 
 func (field Bytes) Regexp(value string) Expr {

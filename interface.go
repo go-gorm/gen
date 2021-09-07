@@ -10,27 +10,26 @@ import (
 	"gorm.io/gen/field"
 )
 
-var _ Condition = Dao(&DO{})
-var _ Condition = field.Expr(field.NewField("", "field"))
+// var _ Condition = Dao(&DO{})
+// var _ Condition = field.Expr(field.NewField("", "field"))
 
 type (
 	// Condition query condition
 	// field.Expr and subquery(Dao) are expect value
-	Condition clause.Expression
+	Condition interface{}
 
 	// Hint hints.Hints and hints.IndexHint are expect value
 	Hint clause.Expression
 )
 
 type subQuery interface {
-	UnderlyingDB() *gorm.DB
+	underlyingDB() *gorm.DB
 	underlyingDO() *DO
 	build(opts ...stmtOpt) *gorm.Statement
 }
 
 // Dao CRUD methods
 type Dao interface {
-	clause.Expression
 	subQuery
 
 	As(alias string) Dao
