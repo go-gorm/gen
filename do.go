@@ -109,7 +109,8 @@ func (d *DO) build(opts ...stmtOpt) *gorm.Statement {
 }
 
 // underlyingDO return self
-func (d *DO) underlyingDO() *DO { return d }
+func (d *DO) underlyingDO() *DO      { return d }
+func (d *DO) underlyingDB() *gorm.DB { return d.db }
 
 // Debug return a DO with db in debug mode
 func (d *DO) Debug() Dao {
@@ -165,7 +166,7 @@ func (d *DO) Order(columns ...field.Expr) Dao {
 	// eager build Columns
 	orderArray := make([]string, len(columns))
 	for i, c := range columns {
-		orderArray[i] = c.BuildExpr(d.db.Statement)
+		orderArray[i] = c.Build(d.db.Statement).String()
 	}
 	return NewDO(d.db.Order(strings.Join(orderArray, ",")))
 }
@@ -179,7 +180,7 @@ func (d *DO) Omit(columns ...field.Expr) Dao {
 }
 
 func (d *DO) Group(column field.Expr) Dao {
-	return NewDO(d.db.Group(column.Column().Name))
+	return NewDO(d.db.Group(column.ColumnName().String()))
 }
 
 func (d *DO) Having(conds ...Condition) Dao {
@@ -305,11 +306,11 @@ func (d *DO) Model(model interface{}) Dao {
 func (d *DO) Update(column field.Expr, value interface{}) error {
 	switch value := value.(type) {
 	case field.Expr:
-		return d.db.Update(column.BuildColumn(d.db.Statement, field.WithTable), value.RawExpr()).Error
+		return d.db.Update(column.BuildColumn(d.db.Statement, field.WithTable).String(), value.RawExpr()).Error
 	case subQuery:
-		return d.db.Update(column.BuildColumn(d.db.Statement, field.WithTable), value.UnderlyingDB()).Error
+		return d.db.Update(column.BuildColumn(d.db.Statement, field.WithTable).String(), value.underlyingDB()).Error
 	default:
-		return d.db.Update(column.BuildColumn(d.db.Statement, field.WithTable), value).Error
+		return d.db.Update(column.BuildColumn(d.db.Statement, field.WithTable).String(), value).Error
 	}
 }
 
@@ -318,7 +319,7 @@ func (d *DO) UpdateSimple(column field.Expr) error {
 	if !ok {
 		return ErrInvalidExpression
 	}
-	return d.db.Update(column.BuildColumn(d.db.Statement, field.WithTable), expr).Error
+	return d.db.Update(column.BuildColumn(d.db.Statement, field.WithTable).String(), expr).Error
 }
 
 func (d *DO) Updates(value interface{}) error {
@@ -328,11 +329,11 @@ func (d *DO) Updates(value interface{}) error {
 func (d *DO) UpdateColumn(column field.Expr, value interface{}) error {
 	switch value := value.(type) {
 	case field.Expr:
-		return d.db.UpdateColumn(column.BuildColumn(d.db.Statement, field.WithTable), value.RawExpr()).Error
+		return d.db.UpdateColumn(column.BuildColumn(d.db.Statement, field.WithTable).String(), value.RawExpr()).Error
 	case subQuery:
-		return d.db.UpdateColumn(column.BuildColumn(d.db.Statement, field.WithTable), value.UnderlyingDB()).Error
+		return d.db.UpdateColumn(column.BuildColumn(d.db.Statement, field.WithTable).String(), value.underlyingDB()).Error
 	default:
-		return d.db.UpdateColumn(column.BuildColumn(d.db.Statement, field.WithTable), value).Error
+		return d.db.UpdateColumn(column.BuildColumn(d.db.Statement, field.WithTable).String(), value).Error
 	}
 }
 
@@ -341,7 +342,7 @@ func (d *DO) UpdateColumnSimple(column field.Expr) error {
 	if !ok {
 		return ErrInvalidExpression
 	}
-	return d.db.UpdateColumn(column.BuildColumn(d.db.Statement, field.WithTable), expr).Error
+	return d.db.UpdateColumn(column.BuildColumn(d.db.Statement, field.WithTable).String(), expr).Error
 }
 
 func (d *DO) UpdateColumns(value interface{}) error {
@@ -369,7 +370,7 @@ func (d *DO) Scan(dest interface{}) error {
 }
 
 func (d *DO) Pluck(column field.Expr, dest interface{}) error {
-	return d.db.Pluck(column.Column().Name, dest).Error
+	return d.db.Pluck(column.ColumnName().String(), dest).Error
 }
 
 func (d *DO) ScanRows(rows *sql.Rows, dest interface{}) error {
@@ -431,8 +432,10 @@ func condToExpression(conds []Condition) []clause.Expression {
 		switch cond := cond.(type) {
 		case subQuery:
 			exprs = append(exprs, cond.underlyingDO().buildCondition()...)
-		default:
-			exprs = append(exprs, cond)
+		case field.Expr:
+			if expr, ok := cond.RawExpr().(clause.Expression); ok {
+				exprs = append(exprs, expr)
+			}
 		}
 	}
 	return exprs
@@ -449,7 +452,7 @@ func toColNames(stmt *gorm.Statement, columns ...field.Expr) []string {
 func buildColumn(stmt *gorm.Statement, cols []field.Expr, opts ...field.BuildOpt) []string {
 	results := make([]string, len(cols))
 	for i, c := range cols {
-		results[i] = c.BuildColumn(stmt, opts...)
+		results[i] = c.BuildColumn(stmt, opts...).String()
 	}
 	return results
 }
@@ -457,7 +460,7 @@ func buildColumn(stmt *gorm.Statement, cols []field.Expr, opts ...field.BuildOpt
 func buildExpr(stmt *gorm.Statement, exprs ...field.Expr) []string {
 	results := make([]string, len(exprs))
 	for i, e := range exprs {
-		results[i] = e.BuildExpr(stmt)
+		results[i] = e.Build(stmt).String()
 	}
 	return results
 }
@@ -523,11 +526,14 @@ func (cs columns) In(queryOrValue Condition) field.Expr {
 		return field.EmptyExpr()
 	}
 
-	query, ok := queryOrValue.(subQuery)
-	if !ok {
-		return field.ContainsValue(cs, queryOrValue)
+	switch query := queryOrValue.(type) {
+	case subQuery:
+		return field.ContainsSubQuery(cs, query.underlyingDB())
+	case clause.Expression:
+		return field.ContainsValue(cs, query)
+	default:
+		return nil
 	}
-	return field.ContainsSubQuery(cs, query.UnderlyingDB())
 }
 
 func (cs columns) NotIn(queryOrValue Condition) field.Expr {
@@ -538,40 +544,40 @@ func (cs columns) Eq(query subQuery) field.Expr {
 	if len(cs) == 0 {
 		return field.EmptyExpr()
 	}
-	return field.CompareSubQuery(field.EqOp, cs[0], query.UnderlyingDB())
+	return field.CompareSubQuery(field.EqOp, cs[0], query.underlyingDB())
 }
 
 func (cs columns) Neq(query subQuery) field.Expr {
 	if len(cs) == 0 {
 		return field.EmptyExpr()
 	}
-	return field.CompareSubQuery(field.NeqOp, cs[0], query.UnderlyingDB())
+	return field.CompareSubQuery(field.NeqOp, cs[0], query.underlyingDB())
 }
 
 func (cs columns) Gt(query subQuery) field.Expr {
 	if len(cs) == 0 {
 		return field.EmptyExpr()
 	}
-	return field.CompareSubQuery(field.GtOp, cs[0], query.UnderlyingDB())
+	return field.CompareSubQuery(field.GtOp, cs[0], query.underlyingDB())
 }
 
 func (cs columns) Gte(query subQuery) field.Expr {
 	if len(cs) == 0 {
 		return field.EmptyExpr()
 	}
-	return field.CompareSubQuery(field.GteOp, cs[0], query.UnderlyingDB())
+	return field.CompareSubQuery(field.GteOp, cs[0], query.underlyingDB())
 }
 
 func (cs columns) Lt(query subQuery) field.Expr {
 	if len(cs) == 0 {
 		return field.EmptyExpr()
 	}
-	return field.CompareSubQuery(field.LtOp, cs[0], query.UnderlyingDB())
+	return field.CompareSubQuery(field.LtOp, cs[0], query.underlyingDB())
 }
 
 func (cs columns) Lte(query subQuery) field.Expr {
 	if len(cs) == 0 {
 		return field.EmptyExpr()
 	}
-	return field.CompareSubQuery(field.LteOp, cs[0], query.UnderlyingDB())
+	return field.CompareSubQuery(field.LteOp, cs[0], query.underlyingDB())
 }
