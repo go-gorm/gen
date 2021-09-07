@@ -117,6 +117,9 @@ func (d *DO) underlyingDB() *gorm.DB { return d.db }
 // Debug return a DO with db in debug mode
 func (d *DO) Debug() Dao { return NewDO(d.db.Debug()) }
 
+// WithContext return a DO with db with context
+func (d *DO) WithContext(ctx context.Context) Dao { return NewDO(d.db.WithContext(ctx)) }
+
 // Hints specify Hints
 func (d *DO) Hints(hs ...Hint) Dao { return NewDO(d.db.Clauses(hintToExpression(hs)...)) }
 

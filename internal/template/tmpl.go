@@ -66,6 +66,11 @@ func ({{.S}} {{.NewStructName}}) Debug() *{{.NewStructName}} {
 	return &{{.S}}
 }
 
+func ({{.S}} {{.NewStructName}}) WithContext(ctx context.Context) *{{.NewStructName}} {
+	{{.S}}.DO = *{{.S}}.DO.WithContext(ctx).(*gen.DO)
+	return &{{.S}}
+}
+
 func ({{.S}} {{.NewStructName}}) Hints(hs ...gen.Hint) *{{.NewStructName}} {
 	{{.S}}.DO = *{{.S}}.DO.Hints(hs...).(*gen.DO)
 	return &{{.S}}
