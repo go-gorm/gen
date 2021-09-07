@@ -109,27 +109,22 @@ func (d *DO) build(opts ...stmtOpt) *gorm.Statement {
 }
 
 // underlyingDO return self
-func (d *DO) underlyingDO() *DO      { return d }
+func (d *DO) underlyingDO() *DO { return d }
+
+// underlyingDB return self.db
 func (d *DO) underlyingDB() *gorm.DB { return d.db }
 
 // Debug return a DO with db in debug mode
-func (d *DO) Debug() Dao {
-	return NewDO(d.db.Debug())
-}
+func (d *DO) Debug() Dao { return NewDO(d.db.Debug()) }
 
-func (d *DO) Hints(hs ...Hint) Dao {
-	return NewDO(d.db.Clauses(hintToExpression(hs)...))
-}
+// Hints specify Hints
+func (d *DO) Hints(hs ...Hint) Dao { return NewDO(d.db.Clauses(hintToExpression(hs)...)) }
 
 // As alias cannot be heired, As must used on tail
-func (d *DO) As(alias string) Dao {
-	return &DO{db: d.db, alias: alias}
-}
+func (d *DO) As(alias string) Dao { return &DO{db: d.db, alias: alias} }
 
 // Columns return columns for Subquery
-func (*DO) Columns(cols ...field.Expr) columns {
-	return cols
-}
+func (*DO) Columns(cols ...field.Expr) columns { return cols }
 
 // ======================== chainable api ========================
 func (d *DO) Not(conds ...Condition) Dao {
@@ -527,10 +522,10 @@ func (cs columns) In(queryOrValue Condition) field.Expr {
 	}
 
 	switch query := queryOrValue.(type) {
+	case field.Value:
+		return field.ContainsValue(cs, query)
 	case subQuery:
 		return field.ContainsSubQuery(cs, query.underlyingDB())
-	case clause.Expression:
-		return field.ContainsValue(cs, query)
 	default:
 		return nil
 	}

@@ -10,9 +10,6 @@ import (
 	"gorm.io/gen/field"
 )
 
-// var _ Condition = Dao(&DO{})
-// var _ Condition = field.Expr(field.NewField("", "field"))
-
 type (
 	// Condition query condition
 	// field.Expr and subquery(Dao) are expect value
