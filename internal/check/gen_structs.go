@@ -24,39 +24,37 @@ const (
 		" FROM information_schema.columns WHERE table_schema = ? AND table_name =?"
 )
 
-var dataType = map[string]string{
-	"smallint":            "int32",
-	"smallint unsigned":   "int32",
-	"int":                 "int32",
-	"int unsigned":        "int32",
-	"bigint":              "int64",
-	"bigint unsigned":     "int64",
-	"varchar":             "string",
-	"char":                "string",
-	"date":                "time.Time",
-	"datetime":            "time.Time",
-	"bit(1)":              "[]uint8",
-	"tinyint":             "int32",
-	"tinyint unsigned":    "int32",
-	"tinyint(1)":          "bool",
-	"tinyint(1) unsigned": "bool",
-	"json":                "string",
-	"text":                "string",
-	"timestamp":           "time.Time",
-	"double":              "float64",
-	"decimal":             "float64",
-	"mediumtext":          "string",
-	"longtext":            "string",
-	"float":               "float32",
-	"float unsigned":      "float32",
-	"tinytext":            "string",
-	"enum":                "string",
-	"time":                "time.Time",
-	"tinyblob":            "[]byte",
-	"blob":                "[]byte",
-	"mediumblob":          "[]byte",
-	"longblob":            "[]byte",
-	"integer":             "int32",
+var dataType = map[string]func(detailType string) string{
+	"integer":    func(string) string { return "int32" },
+	"smallint":   func(string) string { return "int32" },
+	"int":        func(string) string { return "int32" },
+	"bigint":     func(string) string { return "int64" },
+	"float":      func(string) string { return "float32" },
+	"double":     func(string) string { return "float64" },
+	"decimal":    func(string) string { return "float64" },
+	"varchar":    func(string) string { return "string" },
+	"char":       func(string) string { return "string" },
+	"json":       func(string) string { return "string" },
+	"text":       func(string) string { return "string" },
+	"tinytext":   func(string) string { return "string" },
+	"mediumtext": func(string) string { return "string" },
+	"longtext":   func(string) string { return "string" },
+	"enum":       func(string) string { return "string" },
+	"tinyblob":   func(string) string { return "[]byte" },
+	"blob":       func(string) string { return "[]byte" },
+	"mediumblob": func(string) string { return "[]byte" },
+	"longblob":   func(string) string { return "[]byte" },
+	"time":       func(string) string { return "time.Time" },
+	"date":       func(string) string { return "time.Time" },
+	"datetime":   func(string) string { return "time.Time" },
+	"timestamp":  func(string) string { return "time.Time" },
+	"bit":        func(string) string { return "[]uint8" },
+	"tinyint": func(detailType string) string {
+		if strings.HasPrefix(detailType, "tinyint(1)") {
+			return "bool"
+		}
+		return "int32"
+	},
 }
 
 type SchemaNameOpt func(*gorm.DB) string
@@ -102,7 +100,7 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 }
 
 func toMember(field *Column) *Member {
-	memberType := dataType[field.DataType]
+	memberType := dataType[field.DataType](field.ColumnType)
 	if memberType == "time.Time" && field.ColumnName == "deleted_at" {
 		memberType = "gorm.DeletedAt"
 	}
