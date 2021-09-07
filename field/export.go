@@ -102,21 +102,21 @@ func toColumn(table, column string, opts ...FieldOption) clause.Column {
 
 // ======================== boolean operate ========================
 func Or(exprs ...Expr) Expr {
-	return &expr{expression: clause.Or(toExpression(exprs...)...)}
+	return &expr{e: clause.Or(toExpression(exprs...)...)}
 }
 
 func And(exprs ...Expr) Expr {
-	return &expr{expression: clause.And(toExpression(exprs...)...)}
+	return &expr{e: clause.And(toExpression(exprs...)...)}
 }
 
 func Not(exprs ...Expr) Expr {
-	return &expr{expression: clause.Not(toExpression(exprs...)...)}
+	return &expr{e: clause.Not(toExpression(exprs...)...)}
 }
 
 func toExpression(conds ...Expr) []clause.Expression {
 	exprs := make([]clause.Expression, len(conds))
 	for i, cond := range conds {
-		exprs[i] = cond
+		exprs[i] = cond.expression()
 	}
 	return exprs
 }
@@ -125,9 +125,9 @@ func toExpression(conds ...Expr) []clause.Expression {
 func ContainsSubQuery(columns []Expr, subQuery *gorm.DB) Expr {
 	switch len(columns) {
 	case 0:
-		return expr{expression: clause.Expr{}}
+		return expr{e: clause.Expr{}}
 	case 1:
-		return expr{expression: clause.Expr{
+		return expr{e: clause.Expr{
 			SQL:  "? IN (?)",
 			Vars: []interface{}{columns[0].RawExpr(), subQuery},
 		}}
@@ -137,7 +137,7 @@ func ContainsSubQuery(columns []Expr, subQuery *gorm.DB) Expr {
 		for i, c := range columns {
 			vars[i], queryCols[i] = "?", c.RawExpr()
 		}
-		return expr{expression: clause.Expr{
+		return expr{e: clause.Expr{
 			SQL:  fmt.Sprintf("(%s) IN (?)", strings.Join(vars, ", ")),
 			Vars: append(queryCols, subQuery),
 		}}
@@ -156,7 +156,7 @@ const (
 )
 
 func CompareSubQuery(op CompareOperate, column Expr, subQuery *gorm.DB) Expr {
-	return expr{expression: clause.Expr{
+	return expr{e: clause.Expr{
 		SQL:  fmt.Sprint("?", op, "(?)"),
 		Vars: []interface{}{column.RawExpr(), subQuery},
 	}}
@@ -173,9 +173,9 @@ func Values(value interface{}) clause.Expression {
 func ContainsValue(columns []Expr, value clause.Expression) Expr {
 	switch len(columns) {
 	case 0:
-		return expr{expression: clause.Expr{}}
+		return expr{e: clause.Expr{}}
 	case 1:
-		return expr{expression: clause.Expr{
+		return expr{e: clause.Expr{
 			SQL:  "? IN (?)",
 			Vars: []interface{}{columns[0].RawExpr(), value},
 		}}
@@ -185,7 +185,7 @@ func ContainsValue(columns []Expr, value clause.Expression) Expr {
 		for i, c := range columns {
 			vars[i], queryCols[i] = "?", c.RawExpr()
 		}
-		return expr{expression: clause.Expr{
+		return expr{e: clause.Expr{
 			SQL:  fmt.Sprintf("(%s) IN (?)", strings.Join(vars, ", ")),
 			Vars: append(queryCols, value),
 		}}
@@ -193,5 +193,5 @@ func ContainsValue(columns []Expr, value clause.Expression) Expr {
 }
 
 func EmptyExpr() Expr {
-	return expr{expression: clause.Expr{}}
+	return expr{e: clause.Expr{}}
 }

@@ -7,35 +7,35 @@ import (
 type Int Field
 
 func (field Int) Eq(value int) Expr {
-	return expr{expression: clause.Eq{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Eq{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int) Neq(value int) Expr {
-	return expr{expression: clause.Neq{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Neq{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int) Gt(value int) Expr {
-	return expr{expression: clause.Gt{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Gt{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int) Gte(value int) Expr {
-	return expr{expression: clause.Gte{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Gte{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int) Lt(value int) Expr {
-	return expr{expression: clause.Lt{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Lt{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int) Lte(value int) Expr {
-	return expr{expression: clause.Lte{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Lte{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int) In(values ...int) Expr {
-	return expr{expression: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
+	return expr{e: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
 }
 
 func (field Int) NotIn(values ...int) Expr {
-	return expr{expression: clause.Not(field.In(values...))}
+	return expr{e: clause.Not(field.In(values...).expression())}
 }
 
 func (field Int) Between(left int, right int) Expr {
@@ -47,11 +47,11 @@ func (field Int) NotBetween(left int, right int) Expr {
 }
 
 func (field Int) Like(value int) Expr {
-	return expr{expression: clause.Like{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Like{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int) NotLike(value int) Expr {
-	return expr{expression: clause.Not(field.Like(value))}
+	return expr{e: clause.Not(field.Like(value).expression())}
 }
 
 func (field Int) Add(value int) Int {
@@ -113,35 +113,35 @@ func (field Int) toSlice(values ...int) []interface{} {
 type Int8 Int
 
 func (field Int8) Eq(value int8) Expr {
-	return expr{expression: clause.Eq{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Eq{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int8) Neq(value int8) Expr {
-	return expr{expression: clause.Neq{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Neq{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int8) Gt(value int8) Expr {
-	return expr{expression: clause.Gt{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Gt{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int8) Gte(value int8) Expr {
-	return expr{expression: clause.Gte{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Gte{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int8) Lt(value int8) Expr {
-	return expr{expression: clause.Lt{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Lt{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int8) Lte(value int8) Expr {
-	return expr{expression: clause.Lte{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Lte{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int8) In(values ...int8) Expr {
-	return expr{expression: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
+	return expr{e: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
 }
 
 func (field Int8) NotIn(values ...int8) Expr {
-	return expr{expression: clause.Not(field.In(values...))}
+	return expr{e: clause.Not(field.In(values...).expression())}
 }
 
 func (field Int8) Between(left int8, right int8) Expr {
@@ -153,11 +153,11 @@ func (field Int8) NotBetween(left int8, right int8) Expr {
 }
 
 func (field Int8) Like(value int8) Expr {
-	return expr{expression: clause.Like{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Like{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int8) NotLike(value int8) Expr {
-	return expr{expression: clause.Not(field.Like(value))}
+	return expr{e: clause.Not(field.Like(value).expression())}
 }
 
 func (field Int8) Add(value int8) Int8 {
@@ -219,35 +219,35 @@ func (field Int8) toSlice(values ...int8) []interface{} {
 type Int16 Int
 
 func (field Int16) Eq(value int16) Expr {
-	return expr{expression: clause.Eq{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Eq{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int16) Neq(value int16) Expr {
-	return expr{expression: clause.Neq{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Neq{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int16) Gt(value int16) Expr {
-	return expr{expression: clause.Gt{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Gt{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int16) Gte(value int16) Expr {
-	return expr{expression: clause.Gte{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Gte{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int16) Lt(value int16) Expr {
-	return expr{expression: clause.Lt{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Lt{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int16) Lte(value int16) Expr {
-	return expr{expression: clause.Lte{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Lte{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int16) In(values ...int16) Expr {
-	return expr{expression: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
+	return expr{e: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
 }
 
 func (field Int16) NotIn(values ...int16) Expr {
-	return expr{expression: clause.Not(field.In(values...))}
+	return expr{e: clause.Not(field.In(values...).expression())}
 }
 
 func (field Int16) Between(left int16, right int16) Expr {
@@ -259,11 +259,11 @@ func (field Int16) NotBetween(left int16, right int16) Expr {
 }
 
 func (field Int16) Like(value int16) Expr {
-	return expr{expression: clause.Like{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Like{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int16) NotLike(value int16) Expr {
-	return expr{expression: clause.Not(field.Like(value))}
+	return expr{e: clause.Not(field.Like(value).expression())}
 }
 
 func (field Int16) Add(value int16) Int16 {
@@ -325,35 +325,35 @@ func (field Int16) toSlice(values ...int16) []interface{} {
 type Int32 Int
 
 func (field Int32) Eq(value int32) Expr {
-	return expr{expression: clause.Eq{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Eq{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int32) Neq(value int32) Expr {
-	return expr{expression: clause.Neq{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Neq{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int32) Gt(value int32) Expr {
-	return expr{expression: clause.Gt{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Gt{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int32) Gte(value int32) Expr {
-	return expr{expression: clause.Gte{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Gte{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int32) Lt(value int32) Expr {
-	return expr{expression: clause.Lt{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Lt{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int32) Lte(value int32) Expr {
-	return expr{expression: clause.Lte{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Lte{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int32) In(values ...int32) Expr {
-	return expr{expression: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
+	return expr{e: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
 }
 
 func (field Int32) NotIn(values ...int32) Expr {
-	return expr{expression: clause.Not(field.In(values...))}
+	return expr{e: clause.Not(field.In(values...).expression())}
 }
 
 func (field Int32) Between(left int32, right int32) Expr {
@@ -365,11 +365,11 @@ func (field Int32) NotBetween(left int32, right int32) Expr {
 }
 
 func (field Int32) Like(value int32) Expr {
-	return expr{expression: clause.Like{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Like{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int32) NotLike(value int32) Expr {
-	return expr{expression: clause.Not(field.Like(value))}
+	return expr{e: clause.Not(field.Like(value).expression())}
 }
 
 func (field Int32) Add(value int32) Int32 {
@@ -431,35 +431,35 @@ func (field Int32) toSlice(values ...int32) []interface{} {
 type Int64 Int
 
 func (field Int64) Eq(value int64) Expr {
-	return expr{expression: clause.Eq{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Eq{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int64) Neq(value int64) Expr {
-	return expr{expression: clause.Neq{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Neq{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int64) Gt(value int64) Expr {
-	return expr{expression: clause.Gt{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Gt{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int64) Gte(value int64) Expr {
-	return expr{expression: clause.Gte{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Gte{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int64) Lt(value int64) Expr {
-	return expr{expression: clause.Lt{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Lt{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int64) Lte(value int64) Expr {
-	return expr{expression: clause.Lte{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Lte{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int64) In(values ...int64) Expr {
-	return expr{expression: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
+	return expr{e: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
 }
 
 func (field Int64) NotIn(values ...int64) Expr {
-	return expr{expression: clause.Not(field.In(values...))}
+	return expr{e: clause.Not(field.In(values...).expression())}
 }
 
 func (field Int64) Between(left int64, right int64) Expr {
@@ -471,11 +471,11 @@ func (field Int64) NotBetween(left int64, right int64) Expr {
 }
 
 func (field Int64) Like(value int64) Expr {
-	return expr{expression: clause.Like{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Like{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Int64) NotLike(value int64) Expr {
-	return expr{expression: clause.Not(field.Like(value))}
+	return expr{e: clause.Not(field.Like(value).expression())}
 }
 
 func (field Int64) Add(value int64) Int64 {
@@ -537,35 +537,35 @@ func (field Int64) toSlice(values ...int64) []interface{} {
 type Uint Int
 
 func (field Uint) Eq(value uint) Expr {
-	return expr{expression: clause.Eq{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Eq{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint) Neq(value uint) Expr {
-	return expr{expression: clause.Neq{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Neq{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint) Gt(value uint) Expr {
-	return expr{expression: clause.Gt{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Gt{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint) Gte(value uint) Expr {
-	return expr{expression: clause.Gte{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Gte{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint) Lt(value uint) Expr {
-	return expr{expression: clause.Lt{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Lt{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint) Lte(value uint) Expr {
-	return expr{expression: clause.Lte{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Lte{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint) In(values ...uint) Expr {
-	return expr{expression: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
+	return expr{e: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
 }
 
 func (field Uint) NotIn(values ...uint) Expr {
-	return expr{expression: clause.Not(field.In(values...))}
+	return expr{e: clause.Not(field.In(values...).expression())}
 }
 
 func (field Uint) Between(left uint, right uint) Expr {
@@ -577,11 +577,11 @@ func (field Uint) NotBetween(left uint, right uint) Expr {
 }
 
 func (field Uint) Like(value uint) Expr {
-	return expr{expression: clause.Like{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Like{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint) NotLike(value uint) Expr {
-	return expr{expression: clause.Not(field.Like(value))}
+	return expr{e: clause.Not(field.Like(value).expression())}
 }
 
 func (field Uint) Add(value uint) Uint {
@@ -643,35 +643,35 @@ func (field Uint) toSlice(values ...uint) []interface{} {
 type Uint8 Int
 
 func (field Uint8) Eq(value uint8) Expr {
-	return expr{expression: clause.Eq{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Eq{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint8) Neq(value uint8) Expr {
-	return expr{expression: clause.Neq{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Neq{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint8) Gt(value uint8) Expr {
-	return expr{expression: clause.Gt{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Gt{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint8) Gte(value uint8) Expr {
-	return expr{expression: clause.Gte{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Gte{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint8) Lt(value uint8) Expr {
-	return expr{expression: clause.Lt{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Lt{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint8) Lte(value uint8) Expr {
-	return expr{expression: clause.Lte{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Lte{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint8) In(values ...uint8) Expr {
-	return expr{expression: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
+	return expr{e: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
 }
 
 func (field Uint8) NotIn(values ...uint8) Expr {
-	return expr{expression: clause.Not(field.In(values...))}
+	return expr{e: clause.Not(field.In(values...).expression())}
 }
 
 func (field Uint8) Between(left uint8, right uint8) Expr {
@@ -683,11 +683,11 @@ func (field Uint8) NotBetween(left uint8, right uint8) Expr {
 }
 
 func (field Uint8) Like(value uint8) Expr {
-	return expr{expression: clause.Like{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Like{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint8) NotLike(value uint8) Expr {
-	return expr{expression: clause.Not(field.Like(value))}
+	return expr{e: clause.Not(field.Like(value).expression())}
 }
 
 func (field Uint8) Add(value uint8) Uint8 {
@@ -749,35 +749,35 @@ func (field Uint8) toSlice(values ...uint8) []interface{} {
 type Uint16 Int
 
 func (field Uint16) Eq(value uint16) Expr {
-	return expr{expression: clause.Eq{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Eq{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint16) Neq(value uint16) Expr {
-	return expr{expression: clause.Neq{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Neq{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint16) Gt(value uint16) Expr {
-	return expr{expression: clause.Gt{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Gt{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint16) Gte(value uint16) Expr {
-	return expr{expression: clause.Gte{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Gte{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint16) Lt(value uint16) Expr {
-	return expr{expression: clause.Lt{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Lt{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint16) Lte(value uint16) Expr {
-	return expr{expression: clause.Lte{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Lte{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint16) In(values ...uint16) Expr {
-	return expr{expression: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
+	return expr{e: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
 }
 
 func (field Uint16) NotIn(values ...uint16) Expr {
-	return expr{expression: clause.Not(field.In(values...))}
+	return expr{e: clause.Not(field.In(values...).expression())}
 }
 
 func (field Uint16) Between(left uint16, right uint16) Expr {
@@ -789,11 +789,11 @@ func (field Uint16) NotBetween(left uint16, right uint16) Expr {
 }
 
 func (field Uint16) Like(value uint16) Expr {
-	return expr{expression: clause.Like{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Like{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint16) NotLike(value uint16) Expr {
-	return expr{expression: clause.Not(field.Like(value))}
+	return expr{e: clause.Not(field.Like(value).expression())}
 }
 
 func (field Uint16) Add(value uint16) Uint16 {
@@ -855,35 +855,35 @@ func (field Uint16) toSlice(values ...uint16) []interface{} {
 type Uint32 Int
 
 func (field Uint32) Eq(value uint32) Expr {
-	return expr{expression: clause.Eq{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Eq{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint32) Neq(value uint32) Expr {
-	return expr{expression: clause.Neq{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Neq{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint32) Gt(value uint32) Expr {
-	return expr{expression: clause.Gt{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Gt{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint32) Gte(value uint32) Expr {
-	return expr{expression: clause.Gte{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Gte{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint32) Lt(value uint32) Expr {
-	return expr{expression: clause.Lt{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Lt{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint32) Lte(value uint32) Expr {
-	return expr{expression: clause.Lte{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Lte{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint32) In(values ...uint32) Expr {
-	return expr{expression: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
+	return expr{e: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
 }
 
 func (field Uint32) NotIn(values ...uint32) Expr {
-	return expr{expression: clause.Not(field.In(values...))}
+	return expr{e: clause.Not(field.In(values...).expression())}
 }
 
 func (field Uint32) Between(left uint32, right uint32) Expr {
@@ -895,11 +895,11 @@ func (field Uint32) NotBetween(left uint32, right uint32) Expr {
 }
 
 func (field Uint32) Like(value uint32) Expr {
-	return expr{expression: clause.Like{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Like{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint32) NotLike(value uint32) Expr {
-	return expr{expression: clause.Not(field.Like(value))}
+	return expr{e: clause.Not(field.Like(value).expression())}
 }
 
 func (field Uint32) Add(value uint32) Uint32 {
@@ -961,35 +961,35 @@ func (field Uint32) toSlice(values ...uint32) []interface{} {
 type Uint64 Int
 
 func (field Uint64) Eq(value uint64) Expr {
-	return expr{expression: clause.Eq{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Eq{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint64) Neq(value uint64) Expr {
-	return expr{expression: clause.Neq{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Neq{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint64) Gt(value uint64) Expr {
-	return expr{expression: clause.Gt{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Gt{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint64) Gte(value uint64) Expr {
-	return expr{expression: clause.Gte{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Gte{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint64) Lt(value uint64) Expr {
-	return expr{expression: clause.Lt{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Lt{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint64) Lte(value uint64) Expr {
-	return expr{expression: clause.Lte{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Lte{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint64) In(values ...uint64) Expr {
-	return expr{expression: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
+	return expr{e: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
 }
 
 func (field Uint64) NotIn(values ...uint64) Expr {
-	return expr{expression: clause.Not(field.In(values...))}
+	return expr{e: clause.Not(field.In(values...).expression())}
 }
 
 func (field Uint64) Between(left uint64, right uint64) Expr {
@@ -1001,11 +1001,11 @@ func (field Uint64) NotBetween(left uint64, right uint64) Expr {
 }
 
 func (field Uint64) Like(value uint64) Expr {
-	return expr{expression: clause.Like{Column: field.RawExpr(), Value: value}}
+	return expr{e: clause.Like{Column: field.RawExpr(), Value: value}}
 }
 
 func (field Uint64) NotLike(value uint64) Expr {
-	return expr{expression: clause.Not(field.Like(value))}
+	return expr{e: clause.Not(field.Like(value).expression())}
 }
 
 func (field Uint64) Add(value uint64) Uint64 {
