@@ -57,6 +57,7 @@ func New{{.StructName}}(db *gorm.DB) *{{.NewStructName}} {
 	
 	return _{{.NewStructName}}
 }
+
 `
 
 const BaseGormFunc = `
@@ -245,9 +246,10 @@ func ({{.S}} {{.NewStructName}}) RollBackTo(name string) *{{.NewStructName}} {
 	{{.S}}.DO = *{{.S}}.DO.RollBackTo(name).(*gen.DO)
 	return &{{.S}}
 }
+
 `
 
-const UseTmpl = `
+const DefaultQueryTmpl = `
 var (
 	Q *Query
 	{{range $name,$d :=.Data -}}
@@ -262,6 +264,9 @@ func SetDefault(db *gorm.DB) {
 	{{end -}}
 }
 
+`
+
+const QueryTmpl = `
 func Use(db *gorm.DB) *Query {
 	return &Query{
 		db: db,
@@ -312,6 +317,7 @@ func (q Query) withTx(tx *gorm.DB) *Query {
 	q.db = tx
 	return &q
 }
+
 `
 
 // ModelTemplate used as a variable because it cannot load template file after packed, params still can pass file

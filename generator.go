@@ -110,14 +110,31 @@ func (i *genInfo) methodInGenInfo(m *check.InterfaceMethod) bool {
 // Generator code generator
 type Generator struct {
 	Config
+	Mode GenerateMode
 
 	Data map[string]*genInfo
 }
 
 // UseDB set db connection
-func (g *Generator) UseDB(db *gorm.DB) {
-	g.db = db
+func (g *Generator) UseDB(db *gorm.DB) { g.db = db }
+
+type GenerateMode uint
+
+const (
+	// WithDefaultQuery create default query in generated code
+	WithDefaultQuery GenerateMode = 1 << iota
+
+	// WithoutContext generate code without context constrain
+	WithoutContext
+)
+
+func (g *Generator) UseMode(modes ...GenerateMode) {
+	for _, mode := range modes {
+		g.Mode &= mode
+	}
 }
+
+func (g *Generator) judgeMode(mode GenerateMode) bool { return g.Mode&mode != 0 }
 
 var (
 	// FieldIgnore ignore some columns by name
@@ -318,7 +335,14 @@ func (g *Generator) generateQueryFile() (err error) {
 		return err
 	}
 
-	err = render(tmpl.UseTmpl, &buf, g)
+	if g.judgeMode(WithDefaultQuery) {
+		err = render(tmpl.DefaultQueryTmpl, &buf, g)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = render(tmpl.QueryTmpl, &buf, g)
 	if err != nil {
 		return err
 	}
