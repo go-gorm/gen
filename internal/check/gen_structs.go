@@ -2,6 +2,7 @@ package check
 
 import (
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -71,6 +72,7 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 	if pkg == "" {
 		pkg = ModelPkg
 	}
+	pkg = filepath.Base(pkg)
 	dbName := getSchemaName(db, schemaNameOpts...)
 	columns, err := getTbColumns(db, dbName, tableName)
 	if err != nil {
