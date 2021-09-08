@@ -57,7 +57,6 @@ func New{{.StructName}}(db *gorm.DB) *{{.NewStructName}} {
 	
 	return _{{.NewStructName}}
 }
-
 `
 
 const BaseGormFunc = `
