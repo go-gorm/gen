@@ -18,7 +18,7 @@ type Expr interface {
 	Build(*gorm.Statement) sql
 	RawExpr() expression
 
-	ConditionTag()
+	ConditionMark()
 
 	expression() clause.Expression
 }
@@ -35,7 +35,7 @@ type expr struct {
 	e clause.Expression
 }
 
-func (expr) ConditionTag() {}
+func (expr) ConditionMark() {}
 
 func (e expr) expression() clause.Expression {
 	if e.e == nil {
