@@ -12,6 +12,8 @@ import (
 	"gorm.io/gen/field"
 )
 
+type stmtOpt func(*gorm.Statement) *gorm.Statement
+
 var (
 	// withFROM add FROM clause
 	withFROM stmtOpt = func(stmt *gorm.Statement) *gorm.Statement {
@@ -29,7 +31,7 @@ var (
 )
 
 func checkBuildExpr(t *testing.T, e subQuery, opts []stmtOpt, result string, vars []interface{}) {
-	stmt := e.underlyingDO().build(opts...)
+	stmt := build(e.underlyingDB().Statement)
 
 	sql := strings.TrimSpace(stmt.SQL.String())
 	if sql != result {
@@ -39,6 +41,28 @@ func checkBuildExpr(t *testing.T, e subQuery, opts []stmtOpt, result string, var
 	if !reflect.DeepEqual(stmt.Vars, vars) {
 		t.Errorf("Vars expects %+v got %v", vars, stmt.Vars)
 	}
+}
+
+func build(stmt *gorm.Statement, opts ...stmtOpt) *gorm.Statement {
+	for _, opt := range opts {
+		stmt = opt(stmt)
+	}
+
+	if _, ok := stmt.Clauses["SELECT"]; !ok && len(stmt.Selects) > 0 {
+		stmt.AddClause(clause.Select{Distinct: stmt.Distinct, Expression: clause.Expr{SQL: strings.Join(stmt.Selects, ",")}})
+	}
+
+	findClauses := func() []string {
+		for _, cs := range [][]string{createClauses, queryClauses, updateClauses, deleteClauses} {
+			if _, ok := stmt.Clauses[cs[0]]; ok {
+				return cs
+			}
+		}
+		return queryClauses
+	}
+
+	stmt.Build(findClauses()...)
+	return stmt
 }
 
 func TestDO_methods(t *testing.T) {

@@ -82,32 +82,6 @@ func (d *DO) buildCondition() []clause.Expression {
 	return d.db.Statement.BuildCondition(d.db)
 }
 
-type stmtOpt func(*gorm.Statement) *gorm.Statement
-
-// build FOR TEST. call statement.Build to combine all clauses in one statement
-func (d *DO) build(opts ...stmtOpt) *gorm.Statement {
-	stmt := d.db.Statement
-	for _, opt := range opts {
-		stmt = opt(stmt)
-	}
-
-	if _, ok := stmt.Clauses["SELECT"]; !ok && len(stmt.Selects) > 0 {
-		stmt.AddClause(clause.Select{Distinct: stmt.Distinct, Expression: clause.Expr{SQL: strings.Join(stmt.Selects, ",")}})
-	}
-
-	findClauses := func() []string {
-		for _, cs := range [][]string{createClauses, queryClauses, updateClauses, deleteClauses} {
-			if _, ok := stmt.Clauses[cs[0]]; ok {
-				return cs
-			}
-		}
-		return queryClauses
-	}
-
-	stmt.Build(findClauses()...)
-	return stmt
-}
-
 // underlyingDO return self
 func (d *DO) underlyingDO() *DO { return d }
 

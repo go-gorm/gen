@@ -22,7 +22,6 @@ type (
 type subQuery interface {
 	underlyingDB() *gorm.DB
 	underlyingDO() *DO
-	build(opts ...stmtOpt) *gorm.Statement
 }
 
 // Dao CRUD methods
