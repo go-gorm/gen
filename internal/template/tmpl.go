@@ -249,10 +249,34 @@ func ({{.S}} {{.NewStructName}}) RollBackTo(name string) *{{.NewStructName}} {
 `
 
 const UseTmpl = `
+var (
+	Q *Query
+	{{range $name,$d :=.Data -}}
+	{{$d.StructName}} *{{$d.NewStructName}}
+	{{end -}}
+)
+
+func SetDefault(db *gorm.DB) {
+	Q = Use(db)
+	{{range $name,$d :=.Data -}}
+	{{$d.StructName}} = Q.{{$d.StructName}}
+	{{end -}}
+}
+
+func Use(db *gorm.DB) *Query {
+	return &Query{
+		db: db,
+		{{range $name,$d :=.Data -}}
+		{{$d.StructName}}: New{{$d.StructName}}(db),
+		{{end -}}
+	}
+}
+
 type Query struct{
 	db *gorm.DB
 
-	{{range $name,$d :=.Data}}{{$d.StructName}} *{{$d.NewStructName}}
+	{{range $name,$d :=.Data -}}
+	{{$d.StructName}} *{{$d.NewStructName}}
 	{{end}}
 }
 
@@ -288,14 +312,6 @@ func (q Query) RollbackTo(name string) *Query {
 func (q Query) withTx(tx *gorm.DB) *Query {
 	q.db = tx
 	return &q
-}
-
-func Use(db *gorm.DB) *Query {
-	return &Query{
-		db: db,
-		{{range $name,$d :=.Data}}{{$d.StructName}}: New{{$d.StructName}}(db),
-		{{end}}
-	}
 }
 `
 
