@@ -165,13 +165,13 @@ func CompareSubQuery(op CompareOperate, column Expr, subQuery *gorm.DB) Expr {
 type Value interface {
 	expr() clause.Expr
 
-	ConditionTag()
+	ConditionMark()
 }
 
 type val clause.Expr
 
 func (v val) expr() clause.Expr { return clause.Expr(v) }
-func (val) ConditionTag()       {}
+func (val) ConditionMark()      {}
 
 func Values(value interface{}) Value {
 	return val(clause.Expr{
