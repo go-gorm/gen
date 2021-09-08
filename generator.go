@@ -32,12 +32,11 @@ type M map[string]interface{}
 
 // NewGenerator create a new generator
 func NewGenerator(cfg Config) *Generator {
-	if cfg.ModelPkgName == "" {
-		cfg.ModelPkgName = check.ModelPkg
+	err := cfg.Revise()
+	if err != nil {
+		panic(fmt.Errorf("create generator fail: %w", err))
 	}
-	if cfg.db == nil {
-		cfg.db, _ = gorm.Open(tests.DummyDialector{})
-	}
+
 	return &Generator{
 		Config: cfg,
 		Data:   make(map[string]*genInfo),
@@ -63,6 +62,23 @@ func (cfg *Config) WithDbNameOpts(opts ...check.SchemaNameOpt) {
 	} else {
 		cfg.dbNameOpts = append(cfg.dbNameOpts, opts...)
 	}
+}
+
+func (cfg *Config) Revise() (err error) {
+	if cfg.ModelPkgName == "" {
+		cfg.ModelPkgName = check.ModelPkg
+	}
+
+	cfg.OutPath, err = filepath.Abs(cfg.OutPath)
+	if err != nil {
+		return fmt.Errorf("outpath is invalid: %w", err)
+	}
+
+	if cfg.db == nil {
+		cfg.db, _ = gorm.Open(tests.DummyDialector{})
+	}
+
+	return nil
 }
 
 // genInfo info about generated code
@@ -256,7 +272,6 @@ func (g *Generator) Execute() {
 	if g.OutPath == "" {
 		g.OutPath = "./query/"
 	}
-	g.OutPath, err = filepath.Abs(g.OutPath)
 	if g.OutFile == "" {
 		g.OutFile = g.OutPath + "/gorm_generated.go"
 	}
@@ -268,12 +283,12 @@ func (g *Generator) Execute() {
 	}
 	g.queryPkgName = filepath.Base(g.OutPath)
 
-	err = g.generatedBaseStruct()
+	err = g.generateBaseStruct()
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate basic struct from table fail: %v", err)
 		panic("panic with generate basic struct from table error")
 	}
-	err = g.generatedToOutFile()
+	err = g.generateQueryFile()
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate query to file: %v", err)
 		panic("panic with generate query to file error")
@@ -293,8 +308,8 @@ func (g *Generator) successInfo(logInfos ...string) {
 	}
 }
 
-// generatedToOutFile save generate code to file
-func (g *Generator) generatedToOutFile() (err error) {
+// generateQueryFile generate query code and save to file
+func (g *Generator) generateQueryFile() (err error) {
 	var buf bytes.Buffer
 
 	err = render(tmpl.HeaderTmpl, &buf, g.queryPkgName)
@@ -345,8 +360,8 @@ func (g *Generator) generatedToOutFile() (err error) {
 	return outputFile(g.OutFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, result)
 }
 
-// generatedBaseStruct generate basic structures
-func (g *Generator) generatedBaseStruct() (err error) {
+// generateBaseStruct generate basic structures and save to file
+func (g *Generator) generateBaseStruct() (err error) {
 	var outPath string
 	outPath, err = filepath.Abs(g.OutPath)
 	if err != nil {
