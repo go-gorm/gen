@@ -49,7 +49,7 @@ type Config struct {
 
 	OutPath      string
 	OutFile      string
-	ModelPkgName string // generated model code's package name
+	ModelPkgPath string // generated model code's package name
 
 	queryPkgName string // generated query code's package name
 	dbNameOpts   []check.SchemaNameOpt
@@ -65,8 +65,8 @@ func (cfg *Config) WithDbNameOpts(opts ...check.SchemaNameOpt) {
 }
 
 func (cfg *Config) Revise() (err error) {
-	if cfg.ModelPkgName == "" {
-		cfg.ModelPkgName = check.ModelPkg
+	if cfg.ModelPkgPath == "" {
+		cfg.ModelPkgPath = check.ModelPkg
 	}
 
 	cfg.OutPath, err = filepath.Abs(cfg.OutPath)
@@ -97,6 +97,7 @@ func (i *genInfo) appendMethods(methods []*check.InterfaceMethod) error {
 	}
 	return nil
 }
+
 func (i *genInfo) methodInGenInfo(m *check.InterfaceMethod) bool {
 	for _, method := range i.Interfaces {
 		if method.IsRepeatFromSameInterface(m) {
@@ -206,7 +207,7 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, opts ...
 		colNameOpts[i] = opt
 	}
 
-	s, err := check.GenBaseStructs(g.db, g.Config.ModelPkgName, tableName, modelName, g.dbNameOpts, colNameOpts)
+	s, err := check.GenBaseStructs(g.db, g.Config.ModelPkgPath, tableName, modelName, g.dbNameOpts, colNameOpts)
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generated struct from table has error: %s", err)
 		panic("panic with generated struct error")
@@ -367,11 +368,16 @@ func (g *Generator) generateBaseStruct() (err error) {
 	if err != nil {
 		return err
 	}
-	pkg := g.ModelPkgName
-	if pkg == "" {
-		pkg = check.ModelPkg
+	path := filepath.Clean(g.ModelPkgPath)
+	if path == "" {
+		path = check.ModelPkg
 	}
-	outPath = fmt.Sprint(filepath.Dir(outPath), "/", pkg, "/")
+	if strings.Contains(path, "/") {
+		outPath, _ = filepath.Abs(path)
+		outPath += "/"
+	} else {
+		outPath = fmt.Sprint(filepath.Dir(outPath), "/", path, "/")
+	}
 
 	_, err = os.Stat(outPath)
 	created := err == nil

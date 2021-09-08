@@ -339,7 +339,7 @@ type {{.StructName}} struct {
 	`{{end}}
 }
 
-// TableName .
+// TableName {{.StructName}}'s table name
 func (*{{.StructName}}) TableName() string {
     return TableName{{.StructName}}
 }
