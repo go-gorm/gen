@@ -373,7 +373,10 @@ func (g *Generator) generateBaseStruct() (err error) {
 		path = check.ModelPkg
 	}
 	if strings.Contains(path, "/") {
-		outPath, _ = filepath.Abs(path)
+		outPath, err = filepath.Abs(path)
+		if err != nil {
+			return fmt.Errorf("cannot parse model pkg path: %w", err)
+		}
 		outPath += "/"
 	} else {
 		outPath = fmt.Sprint(filepath.Dir(outPath), "/", path, "/")
