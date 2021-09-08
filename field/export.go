@@ -162,18 +162,23 @@ func CompareSubQuery(op CompareOperate, column Expr, subQuery *gorm.DB) Expr {
 	}}
 }
 
-type Value interface{ expr() clause.Expr }
+type Value interface {
+	expr() clause.Expr
 
-type val struct{ clause.Expr }
+	ConditionTag()
+}
 
-func (v *val) expr() clause.Expr { return v.Expr }
+type val clause.Expr
+
+func (v val) expr() clause.Expr { return clause.Expr(v) }
+func (val) ConditionTag()       {}
 
 func Values(value interface{}) Value {
-	return &val{clause.Expr{
+	return val(clause.Expr{
 		SQL:                "?",
 		Vars:               []interface{}{value},
 		WithoutParentheses: true,
-	}}
+	})
 }
 
 func ContainsValue(columns []Expr, value Value) Expr {
