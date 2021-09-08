@@ -31,7 +31,7 @@ var (
 )
 
 func checkBuildExpr(t *testing.T, e subQuery, opts []stmtOpt, result string, vars []interface{}) {
-	stmt := build(e.underlyingDB().Statement)
+	stmt := build(e.underlyingDB().Statement, opts...)
 
 	sql := strings.TrimSpace(stmt.SQL.String())
 	if sql != result {

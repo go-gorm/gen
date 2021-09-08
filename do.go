@@ -88,6 +88,8 @@ func (d *DO) underlyingDO() *DO { return d }
 // underlyingDB return self.db
 func (d *DO) underlyingDB() *gorm.DB { return d.db }
 
+func (DO) ConditionTag() {}
+
 // Debug return a DO with db in debug mode
 func (d *DO) Debug() Dao { return NewDO(d.db.Debug()) }
 
