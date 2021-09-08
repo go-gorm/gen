@@ -302,6 +302,11 @@ func (g *Generator) generatedToOutFile() (err error) {
 		return err
 	}
 
+	err = render(tmpl.UseTmpl, &buf, g)
+	if err != nil {
+		return err
+	}
+
 	keys := make([]string, 0, len(g.Data))
 	for key := range g.Data {
 		keys = append(keys, key)
@@ -326,11 +331,6 @@ func (g *Generator) generatedToOutFile() (err error) {
 		if err != nil {
 			return err
 		}
-	}
-
-	err = render(tmpl.UseTmpl, &buf, g)
-	if err != nil {
-		return err
 	}
 
 	result, err := imports.Process(g.OutFile, buf.Bytes(), nil)
