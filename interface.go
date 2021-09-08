@@ -12,8 +12,8 @@ import (
 
 type (
 	// Condition query condition
-	// field.Expr and subquery(Dao) are expect value
-	Condition interface{}
+	// field.Expr and subquery are expect value
+	Condition interface{ ConditionTag() }
 
 	// Hint hints.Hints and hints.IndexHint are expect value
 	Hint clause.Expression
@@ -22,6 +22,8 @@ type (
 type subQuery interface {
 	underlyingDB() *gorm.DB
 	underlyingDO() *DO
+
+	ConditionTag()
 }
 
 // Dao CRUD methods
