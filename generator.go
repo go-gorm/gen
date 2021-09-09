@@ -43,6 +43,16 @@ func NewGenerator(cfg Config) *Generator {
 	}
 }
 
+type GenerateMode uint
+
+const (
+	// WithDefaultQuery create default query in generated code
+	WithDefaultQuery GenerateMode = 1 << iota
+
+	// WithContext generate code with context constrain
+	WithContext
+)
+
 // Config generator's basic configuration
 type Config struct {
 	db *gorm.DB //nolint
@@ -50,6 +60,8 @@ type Config struct {
 	OutPath      string
 	OutFile      string
 	ModelPkgPath string // generated model code's package name
+
+	Mode GenerateMode
 
 	queryPkgName string // generated query code's package name
 	dbNameOpts   []check.SchemaNameOpt
@@ -81,6 +93,8 @@ func (cfg *Config) Revise() (err error) {
 	return nil
 }
 
+func (cfg *Config) judgeMode(mode GenerateMode) bool { return cfg.Mode&mode != 0 }
+
 // genInfo info about generated code
 type genInfo struct {
 	*check.BaseStruct
@@ -110,31 +124,12 @@ func (i *genInfo) methodInGenInfo(m *check.InterfaceMethod) bool {
 // Generator code generator
 type Generator struct {
 	Config
-	Mode GenerateMode
 
 	Data map[string]*genInfo
 }
 
 // UseDB set db connection
 func (g *Generator) UseDB(db *gorm.DB) { g.db = db }
-
-type GenerateMode uint
-
-const (
-	// WithDefaultQuery create default query in generated code
-	WithDefaultQuery GenerateMode = 1 << iota
-
-	// WithoutContext generate code without context constrain
-	WithoutContext
-)
-
-func (g *Generator) UseMode(modes ...GenerateMode) {
-	for _, mode := range modes {
-		g.Mode |= mode
-	}
-}
-
-func (g *Generator) judgeMode(mode GenerateMode) bool { return g.Mode&mode != 0 }
 
 var (
 	// FieldIgnore ignore some columns by name
@@ -353,21 +348,25 @@ func (g *Generator) generateQueryFile() (err error) {
 	}
 	sort.Strings(keys)
 
+	structTmpl := tmpl.BaseStruct
+	if g.judgeMode(WithContext) {
+		structTmpl = tmpl.BaseStructWithContext
+	}
 	for _, key := range keys {
 		data := g.Data[key]
-		err = render(tmpl.BaseStruct, &buf, data.BaseStruct)
+		err = render(structTmpl, &buf, data.BaseStruct)
 		if err != nil {
 			return err
 		}
 
 		for _, method := range data.Interfaces {
-			err = render(tmpl.FuncTmpl, &buf, method)
+			err = render(tmpl.DIYMethod, &buf, method)
 			if err != nil {
 				return err
 			}
 		}
 
-		err = render(tmpl.BaseGormFunc, &buf, data.BaseStruct)
+		err = render(tmpl.CRUDMethod, &buf, data.BaseStruct)
 		if err != nil {
 			return err
 		}
