@@ -4,7 +4,6 @@ import (
 	"database/sql"
 
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 	"gorm.io/gorm/schema"
 
 	"gorm.io/gen/field"
@@ -14,9 +13,6 @@ type (
 	// Condition query condition
 	// field.Expr and subquery are expect value
 	Condition interface{ ConditionMark() }
-
-	// Hint hints.Hints and hints.IndexHint are expect value
-	Hint clause.Expression
 )
 
 type subQuery interface {

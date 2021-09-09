@@ -131,38 +131,38 @@ func TestDO_methods(t *testing.T) {
 			Result: "ORDER BY `id` DESC,`age`",
 		},
 		{
-			Expr:   u.Hints(hints.New("hint")).Select(),
+			Expr:   u.Clauses(hints.New("hint")).Select(),
 			Result: "SELECT /*+ hint */ *",
 		},
 		{
-			Expr:   u.Hints(hints.Comment("select", "hint")).Select(),
+			Expr:   u.Clauses(hints.Comment("select", "hint")).Select(),
 			Result: "SELECT /* hint */ *",
 		},
 		{
-			Expr:   u.Hints(hints.CommentBefore("select", "hint")).Select(),
+			Expr:   u.Clauses(hints.CommentBefore("select", "hint")).Select(),
 			Result: "/* hint */ SELECT *",
 		},
 		{
-			Expr:   u.Hints(hints.CommentAfter("select", "hint")).Select(),
+			Expr:   u.Clauses(hints.CommentAfter("select", "hint")).Select(),
 			Result: "SELECT * /* hint */",
 		},
 		{
-			Expr:         u.Hints(hints.CommentAfter("where", "hint")).Select().Where(u.ID.Gt(0)),
+			Expr:         u.Clauses(hints.CommentAfter("where", "hint")).Select().Where(u.ID.Gt(0)),
 			ExpectedVars: []interface{}{uint(0)},
 			Result:       "SELECT * WHERE `id` > ? /* hint */",
 		},
 		{
-			Expr:   u.Hints(hints.UseIndex("user_name")).Select(),
+			Expr:   u.Clauses(hints.UseIndex("user_name")).Select(),
 			Opts:   []stmtOpt{withFROM},
 			Result: "SELECT * FROM `users_info` USE INDEX (`user_name`)",
 		},
 		{
-			Expr:   u.Hints(hints.ForceIndex("user_name", "user_id").ForJoin()).Select(),
+			Expr:   u.Clauses(hints.ForceIndex("user_name", "user_id").ForJoin()).Select(),
 			Opts:   []stmtOpt{withFROM},
 			Result: "SELECT * FROM `users_info` FORCE INDEX FOR JOIN (`user_name`,`user_id`)",
 		},
 		{
-			Expr: u.Hints(
+			Expr: u.Clauses(
 				hints.ForceIndex("user_name", "user_id").ForJoin(),
 				hints.IgnoreIndex("user_name").ForGroupBy(),
 			).Select(),
