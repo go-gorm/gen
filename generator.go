@@ -130,7 +130,7 @@ const (
 
 func (g *Generator) UseMode(modes ...GenerateMode) {
 	for _, mode := range modes {
-		g.Mode &= mode
+		g.Mode |= mode
 	}
 }
 
