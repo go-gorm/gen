@@ -58,6 +58,12 @@ func (b *BaseStruct) getMemberRealType(member reflect.Type) string {
 	return member.Kind().String()
 }
 
+func (b *BaseStruct) ReviseMemberName() {
+	for _, m := range b.Members {
+		m.ReviseKeyword()
+	}
+}
+
 // check member if in BaseStruct update else append
 func (b *BaseStruct) appendOrUpdateMember(member *Member) {
 	if member.ColumnName == "" {

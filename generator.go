@@ -49,8 +49,8 @@ const (
 	// WithDefaultQuery create default query in generated code
 	WithDefaultQuery GenerateMode = 1 << iota
 
-	// WithContext generate code with context constrain
-	WithContext
+	// WithoutContext generate code without context constrain
+	WithoutContext
 )
 
 // Config generator's basic configuration
@@ -258,11 +258,14 @@ func (g *Generator) apply(fc interface{}, structs []*check.BaseStruct) {
 	}
 
 	for _, interfaceStruct := range structs {
+		if g.judgeMode(WithoutContext) {
+			interfaceStruct.ReviseMemberName()
+		}
+
 		data, err := g.pushBaseStruct(interfaceStruct)
 		if err != nil {
 			g.db.Logger.Error(context.Background(), "gen struct error: %v", err)
 			panic("panic with gen struct error")
-
 		}
 
 		functions, err := check.CheckInterface(readInterface, interfaceStruct, data.Interfaces)
@@ -348,9 +351,9 @@ func (g *Generator) generateQueryFile() (err error) {
 	}
 	sort.Strings(keys)
 
-	structTmpl := tmpl.BaseStruct
-	if g.judgeMode(WithContext) {
-		structTmpl = tmpl.BaseStructWithContext
+	structTmpl := tmpl.BaseStructWithContext
+	if g.judgeMode(WithoutContext) {
+		structTmpl = tmpl.BaseStruct
 	}
 	for _, key := range keys {
 		data := g.Data[key]
