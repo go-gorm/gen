@@ -79,14 +79,18 @@ func (m *Member) AllowType() bool {
 
 // fix special type and get newType
 func (m *Member) Revise() *Member {
-	if contains(m.Name, keywords) {
-		m.Name += "_"
-	}
 	if !m.AllowType() {
 		m.Type = "field"
 	}
 	m.NewType = getNewTypeName(m.Type)
 
+	return m
+}
+
+func (m *Member) ReviseKeyword() *Member {
+	if contains(m.Name, keywords) {
+		m.Name += "_"
+	}
 	return m
 }
 
