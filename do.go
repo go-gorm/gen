@@ -29,6 +29,7 @@ func NewDO(db *gorm.DB) *DO { return &DO{db: db} }
 type DO struct {
 	db    *gorm.DB
 	alias string // for subquery
+	model interface{}
 }
 
 type doOptions func(*gorm.DB) *gorm.DB
@@ -49,6 +50,8 @@ func (d *DO) UseDB(db *gorm.DB, opts ...doOptions) {
 
 // UseModel specify a data model structure as a source for table name
 func (d *DO) UseModel(model interface{}) {
+	d.model = model
+	d.db = d.db.Model(model).Session(new(gorm.Session))
 	_ = d.db.Statement.Parse(model)
 }
 
@@ -432,7 +435,7 @@ func (d *DO) newResultSlicePointer() interface{} {
 
 // getModelType get model type
 func (d *DO) getModelType() reflect.Type {
-	mt := d.db.Statement.Schema.ModelType
+	mt := reflect.TypeOf(d.model)
 	if mt.Kind() == reflect.Ptr {
 		mt = mt.Elem()
 	}
