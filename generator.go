@@ -61,7 +61,7 @@ type Config struct {
 	OutFile      string
 	ModelPkgPath string // generated model code's package name
 
-	Mode GenerateMode
+	Mode GenerateMode // generate mode
 
 	queryPkgName string // generated query code's package name
 	dbNameOpts   []check.SchemaNameOpt
