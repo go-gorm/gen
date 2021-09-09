@@ -114,7 +114,7 @@ import "gorm.io/gen"
 $ cat generate.go
 ```
 
-**Emphasis: All use cases in this doc are generated under `WithContext` mode, And if you generate code under `WithoutContext` mode, please remove `WithContext(ctx)` before you call any query method, it helps you make code more concise ** 
+<font color="red" size="4"><b>Emphasis</b></font>: All use cases in this doc are generated under `WithContext` mode, And if you generate code under `WithoutContext` mode, please remove `WithContext(ctx)` before you call any query method, it helps you make code more concise.
 
 ```go
 package main
