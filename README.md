@@ -1126,7 +1126,7 @@ import "gorm.io/hints"
 
 u := query.Use(db).User
 
-users, err := u.Hints(hints.New("MAX_EXECUTION_TIME(10000)")).Find()
+users, err := u.Clauses(hints.New("MAX_EXECUTION_TIME(10000)")).Find()
 // SELECT * /*+ MAX_EXECUTION_TIME(10000) */ FROM `users`
 ```
 

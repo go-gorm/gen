@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/schema"
+	"gorm.io/hints"
 
 	"gorm.io/gen/field"
 )
@@ -96,8 +97,40 @@ func (d *DO) Debug() Dao { return NewDO(d.db.Debug()) }
 // WithContext return a DO with db with context
 func (d *DO) WithContext(ctx context.Context) Dao { return NewDO(d.db.WithContext(ctx)) }
 
-// Hints specify Hints
-func (d *DO) Hints(hs ...Hint) Dao { return NewDO(d.db.Clauses(hintToExpression(hs)...)) }
+// Clauses specify Clauses
+func (d *DO) Clauses(conds ...clause.Expression) Dao {
+	return NewDO(d.db.Clauses(filterConds(conds)...))
+}
+
+func filterConds(conds []clause.Expression) []clause.Expression {
+	validConds := make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		if isClauseValid(cond) {
+			validConds = append(validConds, cond)
+		}
+	}
+	return validConds
+}
+
+func isClauseValid(cond clause.Expression) bool {
+	switch cond := cond.(type) {
+	default:
+		return false
+	case hints.Hints, hints.IndexHint:
+		return true
+	case clause.Interface:
+		name := cond.Name()
+		for _, clauseName := range []string{
+			"INSERT", "VALUES", "ON CONFLICT",
+			"SELECT", "FROM", "WHERE", "GROUP BY", "ORDER BY", "LIMIT", "FOR",
+			"UPDATE", "SET", "DELETE"} {
+			if name == clauseName {
+				return false
+			}
+		}
+		return true
+	}
+}
 
 // As alias cannot be heired, As must used on tail
 func (d *DO) As(alias string) Dao { return &DO{db: d.db, alias: alias} }
@@ -390,14 +423,6 @@ func (d *DO) getModelType() reflect.Type {
 		mt = mt.Elem()
 	}
 	return mt
-}
-
-func hintToExpression(hs []Hint) []clause.Expression {
-	exprs := make([]clause.Expression, len(hs))
-	for i, hint := range hs {
-		exprs[i] = hint
-	}
-	return exprs
 }
 
 func condToExpression(conds []Condition) []clause.Expression {
