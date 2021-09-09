@@ -8,6 +8,7 @@ import (
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/callbacks"
+	"gorm.io/gorm/clause"
 	"gorm.io/gorm/schema"
 	"gorm.io/gorm/utils/tests"
 
@@ -94,8 +95,8 @@ func (u user) Debug() *user {
 	return &u
 }
 
-func (u user) Hints(hs ...Hint) *user {
-	u.DO = *u.DO.Hints(hs...).(*DO)
+func (u user) Clauses(conds ...clause.Expression) *user {
+	u.DO = *u.DO.Clauses(conds...).(*DO)
 	return &u
 }
 

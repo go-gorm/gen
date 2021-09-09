@@ -30,8 +30,8 @@ func ({{.S}} {{.NewStructName}}Do) WithContext(ctx context.Context) *{{.NewStruc
 	return &{{.S}}
 }
 
-func ({{.S}} {{.NewStructName}}Do) Hints(hs ...gen.Hint) *{{.NewStructName}}Do {
-	{{.S}}.DO = *{{.S}}.DO.Hints(hs...).(*gen.DO)
+func ({{.S}} {{.NewStructName}}Do) Clauses(conds ...clause.Expression) *{{.NewStructName}}Do {
+	{{.S}}.DO = *{{.S}}.DO.Clauses(conds...).(*gen.DO)
 	return &{{.S}}
 }
 
