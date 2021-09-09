@@ -18,6 +18,7 @@ The code generator base on [GORM](https://github.com/go-gorm/gorm), aims to be d
 - Transactions, Nested Transactions, Save Point, RollbackTo to Saved Point
 - Competely compatible with GORM
 - Developer Friendly
+- Multiple Generate modes
 
 ## Contents
 
@@ -121,7 +122,11 @@ import "gorm.io/gen"
 // generate code
 func main() {
     // specify the output directory (default: "./query")
-    g := gen.NewGenerator(gen.Config{OutPath: "../dal/query"})
+    // ### if you want to query without context constrain, set mode gen.WithoutContext ###
+    g := gen.NewGenerator(gen.Config{
+        OutPath: "../dal/query",
+        /* Mode: gen.WithoutContext,*/
+    })
   
     // reuse the database connection in Project or create a connection here
     // if you want to use GenerateModel/GenerateModelAs, UseDB is necessray or it will panic
@@ -183,7 +188,7 @@ g.GenerateModelAs("people", "People")
 g.GenerateModel("people", gen.FieldIgnore("address"))
 ```
 
-**Options**
+Field Generate **Options**
 
 ```go
 FieldIgnore // ignore field
@@ -267,7 +272,7 @@ type DB struct {
 user := model.User{Name: "Modi", Age: 18, Birthday: time.Now()}
 
 u := query.Use(db).User
-err := u.Create(&user) // pass pointer of data to Create
+err := u.WithContext(ctx).Create(&user) // pass pointer of data to Create
 
 err // returns error
 ```
@@ -278,7 +283,7 @@ Create a record and assgin a value to the fields specified.
 
 ```go
 u := query.Use(db).User
-u.Select(u.Name, u.Age).Create(&user)
+u.WithContext(ctx).Select(u.Name, u.Age).Create(&user)
 // INSERT INTO `users` (`name`,`age`) VALUES ("modi", 18)
 ```
 
@@ -286,7 +291,7 @@ Create a record and ignore the values for fields passed to omit
 
 ```go
 u := query.Use(db).User
-u.Omit(u.Name, u.Age).Create(&user)
+u.WithContext(ctx).Omit(u.Name, u.Age).Create(&user)
 // INSERT INTO `users` (`Address`, `Birthday`) VALUES ("2021-08-17 20:54:12.000", 18)
 ```
 
@@ -296,7 +301,7 @@ To efficiently insert large number of records, pass a slice to the `Create` meth
 
 ```go
 var users = []model.User{{Name: "modi"}, {Name: "zhangqiang"}, {Name: "songyuan"}}
-query.Use(db).User.Create(&users)
+query.Use(db).User.WithContext(ctx).Create(&users)
 
 for _, user := range users {
     user.ID // 1,2,3
@@ -309,7 +314,7 @@ You can specify batch size when creating with `CreateInBatches`, e.g:
 var users = []User{{Name: "modi_1"}, ...., {Name: "modi_10000"}}
 
 // batch size 100
-query.Use(db).User.CreateInBatches(users, 100)
+query.Use(db).User.WithContext(ctx).CreateInBatches(users, 100)
 ```
 
 It will works if you set `CreateBatchSize` in `gorm.Config` / `gorm.Session`
@@ -325,7 +330,7 @@ u := query.NewUser(db)
 
 var users = []User{{Name: "modi_1"}, ...., {Name: "modi_5000"}}
 
-u.Create(&users)
+u.WithContext(ctx).Create(&users)
 // INSERT INTO users xxx (5 batches)
 ```
 
@@ -339,15 +344,15 @@ Generated code provides `First`, `Take`, `Last` methods to retrieve a single obj
 u := query.Use(db).User
 
 // Get the first record ordered by primary key
-user, err := u.First()
+user, err := u.WithContext(ctx).First()
 // SELECT * FROM users ORDER BY id LIMIT 1;
 
 // Get one record, no specified order
-user, err := u.Take()
+user, err := u.WithContext(ctx).Take()
 // SELECT * FROM users LIMIT 1;
 
 // Get last record, ordered by primary key desc
-user, err := u.Last()
+user, err := u.WithContext(ctx).Last()
 // SELECT * FROM users ORDER BY id DESC LIMIT 1;
 
 // check error ErrRecordNotFound
@@ -359,17 +364,17 @@ errors.Is(err, gorm.ErrRecordNotFound)
 ```go
 u := query.Use(db).User
 
-user, err := u.Where(u.ID.Eq(10)).First()
+user, err := u.WithContext(ctx).Where(u.ID.Eq(10)).First()
 // SELECT * FROM users WHERE id = 10;
 
-users, err := u.Where(u.ID.In(1,2,3)).Find()
+users, err := u.WithContext(ctx).Where(u.ID.In(1,2,3)).Find()
 // SELECT * FROM users WHERE id IN (1,2,3);
 ```
 
 If the primary key is a string (for example, like a uuid), the query will be written as follows:
 
 ```go
-user, err := u.Where(u.ID.Eq("1b74413f-f3b8-409f-ac47-e8c062e3472a")).First()
+user, err := u.WithContext(ctx).Where(u.ID.Eq("1b74413f-f3b8-409f-ac47-e8c062e3472a")).First()
 // SELECT * FROM users WHERE id = "1b74413f-f3b8-409f-ac47-e8c062e3472a";
 ```
 
@@ -379,7 +384,7 @@ user, err := u.Where(u.ID.Eq("1b74413f-f3b8-409f-ac47-e8c062e3472a")).First()
 u := query.Use(db).User
 
 // Get all records
-users, err := u.Find()
+users, err := u.WithContext(ctx).Find()
 // SELECT * FROM users;
 ```
 
@@ -391,31 +396,31 @@ users, err := u.Find()
 u := query.Use(db).User
 
 // Get first matched record
-user, err := u.Where(u.Name.Eq("modi")).First()
+user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).First()
 // SELECT * FROM users WHERE name = 'modi' ORDER BY id LIMIT 1;
 
 // Get all matched records
-users, err := u.Where(u.Name.Neq("modi")).Find()
+users, err := u.WithContext(ctx).Where(u.Name.Neq("modi")).Find()
 // SELECT * FROM users WHERE name <> 'modi';
 
 // IN
-users, err := u.Where(u.Name.In("modi", "zhangqiang")).Find()
+users, err := u.WithContext(ctx).Where(u.Name.In("modi", "zhangqiang")).Find()
 // SELECT * FROM users WHERE name IN ('modi','zhangqiang');
 
 // LIKE
-users, err := u.Where(u.Name.Like("%modi%")).Find()
+users, err := u.WithContext(ctx).Where(u.Name.Like("%modi%")).Find()
 // SELECT * FROM users WHERE name LIKE '%modi%';
 
 // AND
-users, err := u.Where(u.Name.Eq("modi"), u.Age.Gte(17)).Find()
+users, err := u.WithContext(ctx).Where(u.Name.Eq("modi"), u.Age.Gte(17)).Find()
 // SELECT * FROM users WHERE name = 'modi' AND age >= 17;
 
 // Time
-users, err := u.Where(u.Birthday.Gt(birthTime).Find()
+users, err := u.WithContext(ctx).Where(u.Birthday.Gt(birthTime).Find()
 // SELECT * FROM users WHERE birthday > '2000-01-01 00:00:00';
 
 // BETWEEN
-users, err := u.Where(u.Birthday.Between(lastWeek, today)).Find()
+users, err := u.WithContext(ctx).Where(u.Birthday.Between(lastWeek, today)).Find()
 // SELECT * FROM users WHERE birthday BETWEEN '2000-01-01 00:00:00' AND '2000-01-08 00:00:00';
 ```
 
@@ -425,14 +430,14 @@ users, err := u.Where(u.Birthday.Between(lastWeek, today)).Find()
 u := query.Use(db).User
 
 // Get by primary key if it were a non-integer type
-user, err := u.Where(u.ID.Eq("string_primary_key")).First()
+user, err := u.WithContext(ctx).Where(u.ID.Eq("string_primary_key")).First()
 // SELECT * FROM users WHERE id = 'string_primary_key';
 
 // Plain SQL
-users, err := u.Where(u.Name.Eq("modi")).Find()
+users, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Find()
 // SELECT * FROM users WHERE name = "modi";
 
-users, err := u.Where(u.Name.Neq("modi"), u.Age.Gt(17)).Find()
+users, err := u.WithContext(ctx).Where(u.Name.Neq("modi"), u.Age.Gt(17)).Find()
 // SELECT * FROM users WHERE name <> "modi" AND age > 17;
 ```
 
@@ -443,15 +448,15 @@ Build NOT conditions, works similar to `Where`
 ```go
 u := query.Use(db).User
 
-user, err := u.Not(u.Name.Eq("modi")).First()
+user, err := u.WithContext(ctx).Not(u.Name.Eq("modi")).First()
 // SELECT * FROM users WHERE NOT name = "modi" ORDER BY id LIMIT 1;
 
 // Not In
-users, err := u.Not(u.Name.In("modi", "zhangqiang")).Find()
+users, err := u.WithContext(ctx).Not(u.Name.In("modi", "zhangqiang")).Find()
 // SELECT * FROM users WHERE name NOT IN ("modi", "zhangqiang");
 
 // Not In slice of primary keys
-user, err := u.Not(u.ID.In(1,2,3)).First()
+user, err := u.WithContext(ctx).Not(u.ID.In(1,2,3)).First()
 // SELECT * FROM users WHERE id NOT IN (1,2,3) ORDER BY id LIMIT 1;
 ```
 
@@ -460,7 +465,7 @@ user, err := u.Not(u.ID.In(1,2,3)).First()
 ```go
 u := query.Use(db).User
 
-users, err := u.Where(u.Role.Eq("admin")).Or(u.Role.Eq("super_admin")).Find()
+users, err := u.WithContext(ctx).Where(u.Role.Eq("admin")).Or(u.Role.Eq("super_admin")).Find()
 // SELECT * FROM users WHERE role = 'admin' OR role = 'super_admin';
 ```
 
@@ -471,10 +476,11 @@ Easier to write complicated SQL query with Group Conditions
 ```go
 p := query.Use(db).Pizza
 
-pizzas, err := p.Where(
-    p.Where(p.Pizza.Eq("pepperoni")).Where(p.Where(p.Size.Eq("small")).Or(p.Size.Eq("medium"))),
+pizzas, err := p.WithContext(ctx).Where(
+    p.WithContext(ctx).Where(p.Pizza.Eq("pepperoni")).
+        Where(p.Where(p.Size.Eq("small")).Or(p.Size.Eq("medium"))),
 ).Or(
-    p.Where(p.Pizza.Eq("hawaiian")).Where(p.Size.Eq("xlarge")),
+    p.WithContext(ctx).Where(p.Pizza.Eq("hawaiian")).Where(p.Size.Eq("xlarge")),
 ).Find()
 
 // SELECT * FROM `pizzas` WHERE (pizza = "pepperoni" AND (size = "small" OR size = "medium")) OR (pizza = "hawaiian" AND size = "xlarge")
@@ -487,10 +493,10 @@ pizzas, err := p.Where(
 ```go
 u := query.Use(db).User
 
-users, err := u.Select(u.Name, u.Age).Find()
+users, err := u.WithContext(ctx).Select(u.Name, u.Age).Find()
 // SELECT name, age FROM users;
 
-u.Select(u.Age.Avg()).Rows()
+u.WithContext(ctx).Select(u.Age.Avg()).Rows()
 // SELECT Avg(age) FROM users;
 ```
 
@@ -499,7 +505,7 @@ u.Select(u.Age.Avg()).Rows()
 ```go
 u := query.Use(db).User
 
-users, err := u.Where(u.Columns(u.ID, u.Name).In(field.Values([][]inferface{}{{1, "modi"}, {2, "zhangqiang"}}))).Find()
+users, err := u.WithContext(ctx).Where(u.Columns(u.ID, u.Name).In(field.Values([][]inferface{}{{1, "modi"}, {2, "zhangqiang"}}))).Find()
 // SELECT * FROM `users` WHERE (`id`, `name`) IN ((1,'humodi'),(2,'tom'));
 ```
 
@@ -510,11 +516,11 @@ Specify order when retrieving records from the database
 ```go
 u := query.Use(db).User
 
-users, err := u.Order(u.Age.Desc(), u.Name).Find()
+users, err := u.WithContext(ctx).Order(u.Age.Desc(), u.Name).Find()
 // SELECT * FROM users ORDER BY age DESC, name;
 
 // Multiple orders
-users, err := u.Order(u.Age.Desc()).Order(u.Name).Find()
+users, err := u.WithContext(ctx).Order(u.Age.Desc()).Order(u.Name).Find()
 // SELECT * FROM users ORDER BY age DESC, name;
 ```
 
@@ -526,21 +532,21 @@ users, err := u.Order(u.Age.Desc()).Order(u.Name).Find()
 ```go
 u := query.Use(db).User
 
-urers, err := u.Limit(3).Find()
+urers, err := u.WithContext(ctx).Limit(3).Find()
 // SELECT * FROM users LIMIT 3;
 
 // Cancel limit condition with -1
-users, err := u.Limit(10).Limit(-1).Find()
+users, err := u.WithContext(ctx).Limit(10).Limit(-1).Find()
 // SELECT * FROM users;
 
-users, err := u.Offset(3).Find()
+users, err := u.WithContext(ctx).Offset(3).Find()
 // SELECT * FROM users OFFSET 3;
 
-users, err := u.Limit(10).Offset(5).Find()
+users, err := u.WithContext(ctx).Limit(10).Offset(5).Find()
 // SELECT * FROM users OFFSET 5 LIMIT 10;
 
 // Cancel offset condition with -1
-users, err := u.Offset(10).Offset(-1).Find()
+users, err := u.WithContext(ctx).Offset(10).Offset(-1).Find()
 // SELECT * FROM users;
 ```
 
@@ -556,27 +562,27 @@ type Result struct {
 
 var result Result
 
-err := u.Select(u.Name, u.Age.Sum().As("total")).Where(u.Name.Like("%modi%")).Group(u.Name).Scan(&result)
+err := u.WithContext(ctx).Select(u.Name, u.Age.Sum().As("total")).Where(u.Name.Like("%modi%")).Group(u.Name).Scan(&result)
 // SELECT name, sum(age) as total FROM `users` WHERE name LIKE "group%" GROUP BY `name`
 
-err := u.Select(u.Name, u.Age.Sum().As("total")).Group(u.Name).Having(u.Name.Eq("group")).Scan(&result)
+err := u.WithContext(ctx).Select(u.Name, u.Age.Sum().As("total")).Group(u.Name).Having(u.Name.Eq("group")).Scan(&result)
 // SELECT name, sum(age) as total FROM `users` GROUP BY `name` HAVING name = "group"
 
-rows, err := u.Select(u.Birthday.As("date"), u.Age.Sum().As("total")).Group(u.Birthday).Rows()
+rows, err := u.WithContext(ctx).Select(u.Birthday.As("date"), u.Age.Sum().As("total")).Group(u.Birthday).Rows()
 for rows.Next() {
   ...
 }
 
 o := query.Use(db).Order
 
-rows, err := o.Select(o.CreateAt.Date().As("date"), o.Amount.Sum().As("total")).Group(o.CreateAt.Date()).Having(u.Amount.Sum().Gt(100)).Rows()
+rows, err := o.WithContext(ctx).Select(o.CreateAt.Date().As("date"), o.Amount.Sum().As("total")).Group(o.CreateAt.Date()).Having(u.Amount.Sum().Gt(100)).Rows()
 for rows.Next() {
   ...
 }
 
 var results []Result
 
-o.Select(o.CreateAt.Date().As("date"), o.Amount.Sum().As("total")).Group(o.CreateAt.Date()).Having(u.Amount.Sum().Gt(100)).Scan(&results)
+o.WithContext(ctx).Select(o.CreateAt.Date().As("date"), o.WithContext(ctx).Amount.Sum().As("total")).Group(o.CreateAt.Date()).Having(u.Amount.Sum().Gt(100)).Scan(&results)
 ```
 
 ###### Distinct
@@ -586,7 +592,7 @@ Selecting distinct values from the model
 ```go
 u := query.Use(db).User
 
-users, err := u.Distinct(u.Name, u.Age).Order(u.Name, u.Age.Desc()).Find()
+users, err := u.WithContext(ctx).Distinct(u.Name, u.Age).Order(u.Name, u.Age.Desc()).Find()
 ```
 
 `Distinct` works with `Pluck` and `Count` too
@@ -607,20 +613,20 @@ type Result struct {
 
 var result Result
 
-err := u.Select(u.Name, e.Email).LeftJoin(e, e.UserID.EqCol(u.ID)).Scan(&result)
+err := u.WithContext(ctx).Select(u.Name, e.Email).LeftJoin(e, e.UserID.EqCol(u.ID)).Scan(&result)
 // SELECT users.name, emails.email FROM `users` left join emails on emails.user_id = users.id
 
-rows, err := u.Select(u.Name, e.Email).LeftJoin(e, e.UserID.EqCol(u.ID)).Rows()
+rows, err := u.WithContext(ctx).Select(u.Name, e.Email).LeftJoin(e, e.UserID.EqCol(u.ID)).Rows()
 for rows.Next() {
   ...
 }
 
 var results []Result
 
-err := u.Select(u.Name, e.Email).LeftJoin(e, e.UserID.EqCol(u.ID)).Scan(&results)
+err := u.WithContext(ctx).Select(u.Name, e.Email).LeftJoin(e, e.UserID.EqCol(u.ID)).Scan(&results)
 
 // multiple joins with parameter
-users := u.Join(e, e.UserID.EqCol(u.id), e.Email.Eq("modi@example.org")).Join(c, c.UserID.EqCol(u.ID)).Where(c.Number.Eq("411111111111")).Find()
+users := u.WithContext(ctx).Join(e, e.UserID.EqCol(u.id), e.Email.Eq("modi@example.org")).Join(c, c.UserID.EqCol(u.ID)).Where(c.Number.Eq("411111111111")).Find()
 ```
 
 ##### SubQuery
@@ -631,11 +637,11 @@ A subquery can be nested within a query, GEN can generate subquery when using a 
 o := query.Use(db).Order
 u := query.Use(db).User
 
-orders, err := o.Where(u.Columns(o.Amount).Gt(o.Select(u.Amount.Avg())).Find()
+orders, err := o.WithContext(ctx).Where(u.Columns(o.Amount).Gt(o.Select(u.Amount.Avg())).Find()
 // SELECT * FROM "orders" WHERE amount > (SELECT AVG(amount) FROM "orders");
 
-subQuery := u.Select(u.Age.Avg()).Where(u.Name.Like("name%"))
-users, err := u.Select(u.Age.Avg().As("avgage")).Group(u.Name).Having(u.Columns(u.Age.Avg()).Gt(subQuery).Find()
+subQuery := u.WithContext(ctx).Select(u.Age.Avg()).Where(u.Name.Like("name%"))
+users, err := u.WithContext(ctx).Select(u.Age.Avg().As("avgage")).Group(u.Name).Having(u.Columns(u.Age.Avg()).Gt(subQuery).Find()
 // SELECT AVG(age) as avgage FROM `users` GROUP BY `name` HAVING AVG(age) > (SELECT AVG(age) FROM `users` WHERE name LIKE "name%")
 ```
 
@@ -647,11 +653,11 @@ GORM allows you using subquery in FROM clause with method `Table`, for example:
 u := query.Use(db).User
 p := query.Use(db).Pet
 
-users, err := gen.Table(u.Select(u.Name, u.Age).As("u")).Where(u.Age.Eq(18)).Find()
+users, err := gen.Table(u.WithContext(ctx).Select(u.Name, u.Age).As("u")).Where(u.Age.Eq(18)).Find()
 // SELECT * FROM (SELECT `name`,`age` FROM `users`) as u WHERE `age` = 18
 
-subQuery1 := u.Select(u.Name)
-subQuery2 := p.Select(p.Name)
+subQuery1 := u.WithContext(ctx).Select(u.Name)
+subQuery2 := p.WithContext(ctx).Select(p.Name)
 users, err := gen.Table(subQuery1.As("u"), subQuery2.As("p")).Find()
 db.Table("(?) as u, (?) as p", subQuery1, subQuery2).Find(&User{})
 // SELECT * FROM (SELECT `name` FROM `users`) as u, (SELECT `name` FROM `pets`) as p
@@ -665,10 +671,10 @@ Update a table by using SubQuery
 u := query.Use(db).User
 c := query.Use(db).Company
 
-u.Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqCol(u.CompanyID)))
+u.WithContext(ctx).Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqCol(u.CompanyID)))
 // UPDATE "users" SET "company_name" = (SELECT name FROM companies WHERE companies.id = users.company_id);
 
-u.Where(u.Name.Eq("modi")).Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqCol(u.CompanyID)))
+u.WithContext(ctx).Where(u.Name.Eq("modi")).Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqCol(u.CompanyID)))
 ```
 
 ##### Advanced Query
@@ -678,13 +684,15 @@ u.Where(u.Name.Eq("modi")).Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqC
 GEN supports iterating through Rows
 
 ```go
-rows, err := query.Use(db).User.Where(u.Name.Eq("modi")).Rows()
+u := query.Use(db).User
+do := u.WithContext(ctx)
+rows, err := do.Where(u.Name.Eq("modi")).Rows()
 defer rows.Close()
 
 for rows.Next() {
     var user User
     // ScanRows is a method of `gorm.DB`, it can be used to scan a row into a struct
-    db.ScanRows(rows, &user)
+    do.ScanRows(rows, &user)
 
     // do something
 }
@@ -698,7 +706,7 @@ Query and process records in batch
 u := query.Use(db).User
 
 // batch size 100
-err := u.Where(u.ID.Gt(9)).FindInBatches(&results, 100, func(tx gen.Dao, batch int) error {
+err := u.WithContext(ctx).Where(u.ID.Gt(9)).FindInBatches(&results, 100, func(tx gen.Dao, batch int) error {
     for _, result := range results {
       // batch processing found records
     }
@@ -723,17 +731,17 @@ Query single column from database and scan into a slice, if you want to query mu
 u := query.Use(db).User
 
 var ages []int64
-u.Pluck(u.Age, &ages)
+u.WithContext(ctx).Pluck(u.Age, &ages)
 
 var names []string
-u.Pluck(u.Name, &names)
+u.WithContext(ctx).Pluck(u.Name, &names)
 
 // Distinct Pluck
-u.Distinct().Pluck(u.Name, &names)
+u.WithContext(ctx).Distinct().Pluck(u.Name, &names)
 // SELECT DISTINCT `name` FROM `users`
 
 // Requesting more than one column, use `Scan` or `Find` like this:
-db.Select(u.Name, u.Age).Scan(&users)
+db.WithContext(ctx).Select(u.Name, u.Age).Scan(&users)
 users, err := db.Select(u.Name, u.Age).Find()
 ```
 
@@ -762,13 +770,13 @@ func OrderStatus(status []string) func (tx gen.Dao) gen.Dao {
     }
 }
 
-orders, err := o.Scopes(AmountGreaterThan1000, PaidWithCreditCard).Find()
+orders, err := o.WithContext(ctx).Scopes(AmountGreaterThan1000, PaidWithCreditCard).Find()
 // Find all credit card orders and amount greater than 1000
 
-orders, err := o.Scopes(AmountGreaterThan1000, PaidWithCod).Find()
+orders, err := o.WithContext(ctx).Scopes(AmountGreaterThan1000, PaidWithCod).Find()
 // Find all COD orders and amount greater than 1000
 
-orders, err := o.Scopes(AmountGreaterThan1000, OrderStatus([]string{"paid", "shipped"})).Find()
+orders, err := o.WithContext(ctx).Scopes(AmountGreaterThan1000, OrderStatus([]string{"paid", "shipped"})).Find()
 // Find all paid, shipped orders that amount greater than 1000
 ```
 
@@ -779,14 +787,14 @@ Get matched records count
 ```go
 u := query.Use(db).User
 
-count, err := u.Where(u.Name.Eq("modi")).Or(u.Name.Eq("zhangqiang")).Count()
+count, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Or(u.Name.Eq("zhangqiang")).Count()
 // SELECT count(1) FROM users WHERE name = 'modi' OR name = 'zhangqiang'
 
-count, err := u.Where(u.Name.Eq("modi")).Count()
+count, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Count()
 // SELECT count(1) FROM users WHERE name = 'modi'; (count)
 
 // Count with Distinct
-u.Distinct(u.Name).Count()
+u.WithContext(ctx).Distinct(u.Name).Count()
 // SELECT COUNT(DISTINCT(`name`)) FROM `users`
 ```
 
@@ -800,13 +808,13 @@ When updating a single column with `Update`, it needs to have any conditions or 
 u := query.Use(db).User
 
 // Update with conditions
-u.Where(u.Activate.Is(true)).Update(u.Name, "hello")
+u.WithContext(ctx).Where(u.Activate.Is(true)).Update(u.Name, "hello")
 // UPDATE users SET name='hello', updated_at='2013-11-17 21:34:10' WHERE active=true;
 
 // Update with conditions
-u.Where(u.Activate.Is(true)).Update(u.Age, u.Age.Add(1))
+u.WithContext(ctx).Where(u.Activate.Is(true)).Update(u.Age, u.Age.Add(1))
 // or
-u.Where(u.Activate.Is(true)).UpdateSimple(u.Age.Add(1))
+u.WithContext(ctx).Where(u.Activate.Is(true)).UpdateSimple(u.Age.Add(1))
 // UPDATE users SET age=age+1, updated_at='2013-11-17 21:34:10' WHERE active=true;
 ```
 
@@ -818,7 +826,7 @@ u.Where(u.Activate.Is(true)).UpdateSimple(u.Age.Add(1))
 u := query.Use(db).User
 
 // Update attributes with `map`
-u.Model(&model.User{ID: 111}).Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
+u.WithContext(ctx).Model(&model.User{ID: 111}).Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
 // UPDATE users SET name='hello', age=18, active=false, updated_at='2013-11-17 21:34:10' WHERE id=111;
 ```
 
@@ -833,10 +841,10 @@ u := query.Use(db).User
 
 // Select with Map
 // User's ID is `111`:
-u.Select(u.Name).Where(u.ID.Eq(111)).Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
+u.WithContext(ctx).Select(u.Name).Where(u.ID.Eq(111)).Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
 // UPDATE users SET name='hello' WHERE id=111;
 
-u.Omit(u.Name).Where(u.ID.Eq(111)).Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
+u.WithContext(ctx).Omit(u.Name).Where(u.ID.Eq(111)).Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
 // UPDATE users SET age=18, active=false, updated_at='2013-11-17 21:34:10' WHERE id=111;
 ```
 
@@ -848,11 +856,11 @@ u.Omit(u.Name).Where(u.ID.Eq(111)).Updates(map[string]interface{}{"name": "hello
 e := query.Use(db).Email
 
 // Email's ID is `10`
-e.Where(e.ID.Eq(10)).Delete()
+e.WithContext(ctx).Where(e.ID.Eq(10)).Delete()
 // DELETE from emails where id = 10;
 
 // Delete with additional conditions
-e.Where(e.ID.Eq(10), e.Name.Eq("modi")).Delete()
+e.WithContext(ctx).Where(e.ID.Eq(10), e.Name.Eq("modi")).Delete()
 // DELETE from emails where id = 10 AND name = "modi";
 ```
 
@@ -861,7 +869,7 @@ e.Where(e.ID.Eq(10), e.Name.Eq("modi")).Delete()
 GEN allows to delete objects using primary key(s) with inline condition, it works with numbers.
 
 ```go
-u.Where(u.ID.In(1,2,3)).Delete()
+u.WithContext(ctx).Where(u.ID.In(1,2,3)).Delete()
 // DELETE FROM users WHERE id IN (1,2,3);
 ```
 
@@ -872,7 +880,7 @@ The specified value has no primary value, GEN will perform a batch delete, it wi
 ```go
 e := query.Use(db).Email
 
-err := e.Where(e.Name.Like("%modi%")).Delete()
+err := e.WithContext(ctx).Where(e.Name.Like("%modi%")).Delete()
 // DELETE from emails where email LIKE "%modi%";
 ```
 
@@ -884,11 +892,11 @@ When calling `Delete`, the record WON’T be removed from the database, but GORM
 
 ```go
 // Batch Delete
-err := u.Where(u.Age.Eq(20)).Delete()
+err := u.WithContext(ctx).Where(u.Age.Eq(20)).Delete()
 // UPDATE users SET deleted_at="2013-10-29 10:23" WHERE age = 20;
 
 // Soft deleted records will be ignored when querying
-users, err := u.Where(u.Age.Eq(20)).Find()
+users, err := u.WithContext(ctx).Where(u.Age.Eq(20)).Find()
 // SELECT * FROM users WHERE age = 20 AND deleted_at IS NULL;
 ```
 
@@ -907,7 +915,7 @@ type User struct {
 You can find soft deleted records with `Unscoped`
 
 ```go
-users, err := db.Unscoped().Where(u.Age.Eq(20)).Find()
+users, err := db.WithContext(ctx).Unscoped().Where(u.Age.Eq(20)).Find()
 // SELECT * FROM users WHERE age = 20;
 ```
 
@@ -916,7 +924,7 @@ users, err := db.Unscoped().Where(u.Age.Eq(20)).Find()
 You can delete matched records permanently with `Unscoped`
 
 ```go
-o.Unscoped().Where(o.ID.Eq(10)).Delete()
+o.WithContext(ctx).Unscoped().Where(o.ID.Eq(10)).Delete()
 // DELETE FROM orders WHERE id=10;
 ```
 
@@ -1111,7 +1119,7 @@ type Method interface{
     FindSome() ([]APIUser, error)
 }
 
-apiusers, err := u.Limit(10).FindSome()
+apiusers, err := u.WithContext(ctx).Limit(10).FindSome()
 // SELECT `id`, `name` FROM `users` LIMIT 10
 ```
 
@@ -1126,7 +1134,7 @@ import "gorm.io/hints"
 
 u := query.Use(db).User
 
-users, err := u.Clauses(hints.New("MAX_EXECUTION_TIME(10000)")).Find()
+users, err := u.WithContext(ctx).Clauses(hints.New("MAX_EXECUTION_TIME(10000)")).Find()
 // SELECT * /*+ MAX_EXECUTION_TIME(10000) */ FROM `users`
 ```
 
@@ -1137,10 +1145,10 @@ import "gorm.io/hints"
 
 u := query.Use(db).User
 
-users, err := u.Hints(hints.UseIndex("idx_user_name")).Find()
+users, err := u.WithContext(ctx).Clauses(hints.UseIndex("idx_user_name")).Find()
 // SELECT * FROM `users` USE INDEX (`idx_user_name`)
 
-users, err := u.Hints(hints.ForceIndex("idx_user_name", "idx_user_id").ForJoin()).Find()
+users, err := u.WithContext(ctx).Clauses(hints.ForceIndex("idx_user_name", "idx_user_id").ForJoin()).Find()
 // SELECT * FROM `users` FORCE INDEX FOR JOIN (`idx_user_name`,`idx_user_id`)"
 ```
 
