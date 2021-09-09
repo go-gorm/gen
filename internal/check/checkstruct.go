@@ -19,7 +19,7 @@ type BaseStruct struct {
 	TableName     string
 	StructInfo    parser.Param
 	Members       []*Member
-	Source        source
+	Source        sourceCode
 	db            *gorm.DB
 }
 

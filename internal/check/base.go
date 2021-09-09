@@ -24,15 +24,15 @@ const (
 	LOGICAL
 )
 
-type source int
+type sourceCode int
 
 const (
-	Struct source = iota
+	Struct sourceCode = iota
 	TableName
 )
 
 var keywords = []string{
-	"UnderlyingDB", "UseDB", "UseModel", "UseTable", "Quote", "Debug", "TableName",
+	"UnderlyingDB", "UseDB", "UseModel", "UseTable", "Quote", "Debug", "TableName", "WithContext",
 	"As", "Not", "Or", "Build", "Columns", "Hints",
 	"Distinct", "Omit",
 	"Select", "Where", "Order", "Group", "Having", "Limit", "Offset",
