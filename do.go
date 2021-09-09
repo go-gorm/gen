@@ -112,6 +112,22 @@ func filterConds(conds []clause.Expression) []clause.Expression {
 	return validConds
 }
 
+var banClauses = map[string]bool{
+	"INSERT":      true,
+	"VALUES":      true,
+	"ON CONFLICT": true,
+	"SELECT":      true,
+	"FROM":        true,
+	"WHERE":       true,
+	"GROUP BY":    true,
+	"ORDER BY":    true,
+	"LIMIT":       true,
+	"FOR":         true,
+	"UPDATE":      true,
+	"SET":         true,
+	"DELETE":      true,
+}
+
 func isClauseValid(cond clause.Expression) bool {
 	switch cond := cond.(type) {
 	default:
@@ -119,16 +135,7 @@ func isClauseValid(cond clause.Expression) bool {
 	case hints.Hints, hints.IndexHint:
 		return true
 	case clause.Interface:
-		name := cond.Name()
-		for _, clauseName := range []string{
-			"INSERT", "VALUES", "ON CONFLICT",
-			"SELECT", "FROM", "WHERE", "GROUP BY", "ORDER BY", "LIMIT", "FOR",
-			"UPDATE", "SET", "DELETE"} {
-			if name == clauseName {
-				return false
-			}
-		}
-		return true
+		return !banClauses[cond.Name()]
 	}
 }
 
