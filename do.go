@@ -3,6 +3,7 @@ package gen
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -99,17 +100,21 @@ func (d *DO) WithContext(ctx context.Context) Dao { return NewDO(d.db.WithContex
 
 // Clauses specify Clauses
 func (d *DO) Clauses(conds ...clause.Expression) Dao {
-	return NewDO(d.db.Clauses(filterConds(conds)...))
+	if err := checkConds(conds); err != nil {
+		newDB := d.db.Session(new(gorm.Session))
+		_ = newDB.AddError(err)
+		return NewDO(newDB)
+	}
+	return NewDO(d.db.Clauses(conds...))
 }
 
-func filterConds(conds []clause.Expression) []clause.Expression {
-	validConds := make([]clause.Expression, 0, len(conds))
+func checkConds(conds []clause.Expression) error {
 	for _, cond := range conds {
-		if isClauseValid(cond) {
-			validConds = append(validConds, cond)
+		if err := checkClause(cond); err != nil {
+			return err
 		}
 	}
-	return validConds
+	return nil
 }
 
 var banClauses = map[string]bool{
@@ -128,15 +133,17 @@ var banClauses = map[string]bool{
 	"DELETE":      true,
 }
 
-func isClauseValid(cond clause.Expression) bool {
+func checkClause(cond clause.Expression) error {
 	switch cond := cond.(type) {
-	default:
-		return false
 	case hints.Hints, hints.IndexHint:
-		return true
+		return nil
 	case clause.Interface:
-		return !banClauses[cond.Name()]
+		if banClauses[cond.Name()] {
+			return fmt.Errorf("banned clause: %s", cond.Name())
+		}
+		return nil
 	}
+	return fmt.Errorf("unknown clause: %v", cond)
 }
 
 // As alias cannot be heired, As must used on tail
