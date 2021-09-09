@@ -19,7 +19,7 @@ type InterfaceMethod struct {
 	Doc           string
 	S             string
 	OriginStruct  parser.Param
-	MethodStruct  string
+	TargetStruct  string
 	MethodName    string
 	Params        []parser.Param
 	Result        []parser.Param
@@ -51,12 +51,12 @@ func (m *InterfaceMethod) HasNeedNewResult() bool {
 
 // IsRepeatFromDifferentInterface check different interface has same mame method
 func (m *InterfaceMethod) IsRepeatFromDifferentInterface(newMethod *InterfaceMethod) bool {
-	return m.MethodName == newMethod.MethodName && m.InterfaceName != newMethod.InterfaceName && m.MethodStruct == newMethod.MethodStruct
+	return m.MethodName == newMethod.MethodName && m.InterfaceName != newMethod.InterfaceName && m.TargetStruct == newMethod.TargetStruct
 }
 
 // IsRepeatFromSameInterface check different interface has same mame method
 func (m *InterfaceMethod) IsRepeatFromSameInterface(newMethod *InterfaceMethod) bool {
-	return m.MethodName == newMethod.MethodName && m.InterfaceName == newMethod.InterfaceName && m.MethodStruct == newMethod.MethodStruct
+	return m.MethodName == newMethod.MethodName && m.InterfaceName == newMethod.InterfaceName && m.TargetStruct == newMethod.TargetStruct
 }
 
 //GetParamInTmpl return param list

@@ -56,7 +56,7 @@ func CheckInterface(f *parser.InterfaceSet, s *BaseStruct, data []*InterfaceMeth
 			for _, method := range interfaceInfo.Methods {
 				t := &InterfaceMethod{
 					S:             s.S,
-					MethodStruct:  s.NewStructName,
+					TargetStruct:  s.NewStructName,
 					OriginStruct:  s.StructInfo,
 					MethodName:    method.MethodName,
 					Params:        method.Params,
