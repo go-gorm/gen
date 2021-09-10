@@ -191,8 +191,8 @@ func ({{.S}} {{.NewStructName}}Do) Commit() *{{.NewStructName}}Do {
 	return &{{.S}}
 }
 
-func ({{.S}} {{.NewStructName}}Do) RollBack() *{{.NewStructName}}Do {
-	{{.S}}.DO = *{{.S}}.DO.RollBack().(*gen.DO)
+func ({{.S}} {{.NewStructName}}Do) Rollback() *{{.NewStructName}}Do {
+	{{.S}}.DO = *{{.S}}.DO.Rollback().(*gen.DO)
 	return &{{.S}}
 }
 
@@ -201,8 +201,8 @@ func ({{.S}} {{.NewStructName}}Do) SavePoint(name string) *{{.NewStructName}}Do 
 	return &{{.S}}
 }
 
-func ({{.S}} {{.NewStructName}}Do) RollBackTo(name string) *{{.NewStructName}}Do {
-	{{.S}}.DO = *{{.S}}.DO.RollBackTo(name).(*gen.DO)
+func ({{.S}} {{.NewStructName}}Do) RollbackTo(name string) *{{.NewStructName}}Do {
+	{{.S}}.DO = *{{.S}}.DO.RollbackTo(name).(*gen.DO)
 	return &{{.S}}
 }
 
