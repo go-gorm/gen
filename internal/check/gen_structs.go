@@ -8,6 +8,7 @@ import (
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/utils/tests"
 
 	"gorm.io/gen/internal/parser"
 )
@@ -63,6 +64,10 @@ type MemberOpt func(*Member) *Member
 
 // GenBaseStructs generate db model by table name
 func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpts []SchemaNameOpt, memberOpts []MemberOpt) (bases *BaseStruct, err error) {
+	if _, ok := db.Config.Dialector.(tests.DummyDialector); ok {
+		return nil, fmt.Errorf("UseDB() is necessary for generating model struct [%s] from database table [%s]", modelName, tableName)
+	}
+
 	if err = checkModelName(modelName); err != nil {
 		return nil, fmt.Errorf("model name %q is invalid: %w", modelName, err)
 	}
