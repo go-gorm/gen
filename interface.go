@@ -76,7 +76,7 @@ type Dao interface {
 	Transaction(fc func(tx Dao) error, opts ...*sql.TxOptions) error
 	Begin(opts ...*sql.TxOptions) Dao
 	Commit() Dao
-	RollBack() Dao
+	Rollback() Dao
 	SavePoint(name string) Dao
-	RollBackTo(name string) Dao
+	RollbackTo(name string) Dao
 }

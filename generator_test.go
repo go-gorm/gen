@@ -249,8 +249,8 @@ func (u user) Commit() *user {
 	return &u
 }
 
-func (u user) RollBack() *user {
-	u.DO = *u.DO.Commit().(*DO)
+func (u user) Rollback() *user {
+	u.DO = *u.DO.Rollback().(*DO)
 	return &u
 }
 
@@ -259,8 +259,8 @@ func (u user) SavePoint(name string) *user {
 	return &u
 }
 
-func (u user) RollBackTo(name string) *user {
-	u.DO = *u.DO.RollBackTo(name).(*DO)
+func (u user) RollbackTo(name string) *user {
+	u.DO = *u.DO.RollbackTo(name).(*DO)
 	return &u
 }
 
