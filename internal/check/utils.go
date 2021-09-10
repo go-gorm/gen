@@ -3,8 +3,6 @@ package check
 import (
 	"strings"
 	"unicode"
-
-	"gorm.io/gorm"
 )
 
 func isCapitalize(s string) bool {
@@ -31,10 +29,6 @@ func isEnd(b byte) bool {
 	default:
 		return true
 	}
-}
-
-func isDBUnset(db *gorm.DB) bool {
-	return db == nil
 }
 
 func getPackageName(fullName string) string {

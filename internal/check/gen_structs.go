@@ -63,9 +63,6 @@ type MemberOpt func(*Member) *Member
 
 // GenBaseStructs generate db model by table name
 func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpts []SchemaNameOpt, memberOpts []MemberOpt) (bases *BaseStruct, err error) {
-	if isDBUnset(db) {
-		return nil, fmt.Errorf("gen config db is undefined")
-	}
 	if err = checkModelName(modelName); err != nil {
 		return nil, fmt.Errorf("model name %q is invalid: %w", modelName, err)
 	}
