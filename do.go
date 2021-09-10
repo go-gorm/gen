@@ -172,6 +172,9 @@ func (d *DO) Select(columns ...field.Expr) Dao {
 }
 
 func (d *DO) Where(conds ...Condition) Dao {
+	if len(conds) == 0 {
+		return d
+	}
 	return d.getInstance(d.db.Clauses(clause.Where{Exprs: condToExpression(conds)}))
 }
 
@@ -413,7 +416,7 @@ func (d *DO) Commit() Dao {
 	return d.getInstance(d.db.Commit())
 }
 
-func (d *DO) RollBack() Dao {
+func (d *DO) Rollback() Dao {
 	return d.getInstance(d.db.Rollback())
 }
 
@@ -421,7 +424,7 @@ func (d *DO) SavePoint(name string) Dao {
 	return d.getInstance(d.db.SavePoint(name))
 }
 
-func (d *DO) RollBackTo(name string) Dao {
+func (d *DO) RollbackTo(name string) Dao {
 	return d.getInstance(d.db.RollbackTo(name))
 }
 
