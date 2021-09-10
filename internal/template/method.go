@@ -186,24 +186,4 @@ func ({{.S}} {{.NewStructName}}Do) Begin(opts ...*sql.TxOptions) *{{.NewStructNa
 	return &{{.S}}
 }
 
-func ({{.S}} {{.NewStructName}}Do) Commit() *{{.NewStructName}}Do {
-	{{.S}}.DO = *{{.S}}.DO.Commit().(*gen.DO)
-	return &{{.S}}
-}
-
-func ({{.S}} {{.NewStructName}}Do) Rollback() *{{.NewStructName}}Do {
-	{{.S}}.DO = *{{.S}}.DO.Rollback().(*gen.DO)
-	return &{{.S}}
-}
-
-func ({{.S}} {{.NewStructName}}Do) SavePoint(name string) *{{.NewStructName}}Do {
-	{{.S}}.DO = *{{.S}}.DO.SavePoint(name).(*gen.DO)
-	return &{{.S}}
-}
-
-func ({{.S}} {{.NewStructName}}Do) RollbackTo(name string) *{{.NewStructName}}Do {
-	{{.S}}.DO = *{{.S}}.DO.RollbackTo(name).(*gen.DO)
-	return &{{.S}}
-}
-
 `

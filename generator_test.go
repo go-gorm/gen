@@ -244,26 +244,6 @@ func (u user) Begin(opts ...*sql.TxOptions) *user {
 	return &u
 }
 
-func (u user) Commit() *user {
-	u.DO = *u.DO.Commit().(*DO)
-	return &u
-}
-
-func (u user) Rollback() *user {
-	u.DO = *u.DO.Rollback().(*DO)
-	return &u
-}
-
-func (u user) SavePoint(name string) *user {
-	u.DO = *u.DO.SavePoint(name).(*DO)
-	return &u
-}
-
-func (u user) RollbackTo(name string) *user {
-	u.DO = *u.DO.RollbackTo(name).(*DO)
-	return &u
-}
-
 var u = func() *user {
 	u := user{
 		ID:         field.NewUint("", "id"),

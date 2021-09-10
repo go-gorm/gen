@@ -409,23 +409,24 @@ func (d *DO) Transaction(fc func(Dao) error, opts ...*sql.TxOptions) error {
 }
 
 func (d *DO) Begin(opts ...*sql.TxOptions) Dao {
-	return d.getInstance(d.db.Begin(opts...))
+	d.db.Begin(opts...)
+	return d
 }
 
-func (d *DO) Commit() Dao {
-	return d.getInstance(d.db.Commit())
+func (d *DO) Commit() error {
+	return d.db.Commit().Error
 }
 
-func (d *DO) Rollback() Dao {
-	return d.getInstance(d.db.Rollback())
+func (d *DO) Rollback() error {
+	return d.db.Rollback().Error
 }
 
-func (d *DO) SavePoint(name string) Dao {
-	return d.getInstance(d.db.SavePoint(name))
+func (d *DO) SavePoint(name string) error {
+	return d.db.SavePoint(name).Error
 }
 
-func (d *DO) RollbackTo(name string) Dao {
-	return d.getInstance(d.db.RollbackTo(name))
+func (d *DO) RollbackTo(name string) error {
+	return d.db.RollbackTo(name).Error
 }
 
 func (d *DO) newResultPointer() interface{} {
