@@ -192,7 +192,7 @@ func ({{.S}} {{.NewStructName}}Do) Commit() *{{.NewStructName}}Do {
 }
 
 func ({{.S}} {{.NewStructName}}Do) RollBack() *{{.NewStructName}}Do {
-	{{.S}}.DO = *{{.S}}.DO.Commit().(*gen.DO)
+	{{.S}}.DO = *{{.S}}.DO.RollBack().(*gen.DO)
 	return &{{.S}}
 }
 
