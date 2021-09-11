@@ -70,17 +70,17 @@ func ({{.S}} {{.NewStructName}}Do) Omit(cols ...field.Expr) *{{.NewStructName}}D
 	return &{{.S}}
 }
 
-func ({{.S}} {{.NewStructName}}Do) Join(table schema.Tabler, on ...gen.Condition) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Join(table schema.Tabler, on ...field.Expr) *{{.NewStructName}}Do {
 	{{.S}}.DO = *{{.S}}.DO.Join(table, on...).(*gen.DO)
 	return &{{.S}}
 }
 
-func ({{.S}} {{.NewStructName}}Do) LeftJoin(table schema.Tabler, on ...gen.Condition) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) LeftJoin(table schema.Tabler, on ...field.Expr) *{{.NewStructName}}Do {
 	{{.S}}.DO = *{{.S}}.DO.LeftJoin(table, on...).(*gen.DO)
 	return &{{.S}}
 }
 
-func ({{.S}} {{.NewStructName}}Do) RightJoin(table schema.Tabler, on ...gen.Condition) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) RightJoin(table schema.Tabler, on ...field.Expr) *{{.NewStructName}}Do {
 	{{.S}}.DO = *{{.S}}.DO.RightJoin(table, on...).(*gen.DO)
 	return &{{.S}}
 }
