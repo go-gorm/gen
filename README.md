@@ -50,6 +50,7 @@ The code generator base on [GORM](https://github.com/go-gorm/gorm), aims to be d
           - [Group Conditions](#group-conditions)
           - [Selecting Specific Fields](#selecting-specific-fields)
           - [Tuple Query](#tuple-query)
+          - [JSON Query](#json-query)
           - [Order](#order)
           - [Limit & Offset](#limit--offset)
           - [Group By & Having](#group-by--having)
