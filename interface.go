@@ -12,14 +12,24 @@ import (
 type (
 	// Condition query condition
 	// field.Expr and subquery are expect value
-	Condition interface{ BeCond() interface{} }
+	Condition interface {
+		BeCond() interface{}
+		CondError() error
+	}
+)
+
+var (
+	_ Condition = (field.Expr)(nil)
+	_ Condition = (field.Value)(nil)
+	_ Condition = (subQuery)(nil)
+	_ Condition = (Dao)(nil)
 )
 
 type subQuery interface {
 	underlyingDB() *gorm.DB
 	underlyingDO() *DO
 
-	BeCond() interface{}
+	Condition
 }
 
 // Dao CRUD methods
@@ -36,9 +46,9 @@ type Dao interface {
 	Order(columns ...field.Expr) Dao
 	Distinct(columns ...field.Expr) Dao
 	Omit(columns ...field.Expr) Dao
-	Join(table schema.Tabler, conds ...Condition) Dao
-	LeftJoin(table schema.Tabler, conds ...Condition) Dao
-	RightJoin(table schema.Tabler, conds ...Condition) Dao
+	Join(table schema.Tabler, conds ...field.Expr) Dao
+	LeftJoin(table schema.Tabler, conds ...field.Expr) Dao
+	RightJoin(table schema.Tabler, conds ...field.Expr) Dao
 	Group(columns field.Expr) Dao
 	Having(conds ...Condition) Dao
 	Limit(limit int) Dao

@@ -103,7 +103,9 @@ func (d *DO) withError(err error) *DO {
 	return d.getInstance(newDB)
 }
 
-func (d *DO) BeCond() interface{} { return d }
+func (d *DO) BeCond() interface{} { return d.buildCondition() }
+
+func (d *DO) CondError() error { return nil }
 
 // Debug return a DO with db in debug mode
 func (d *DO) Debug() Dao { return d.getInstance(d.db.Debug()) }
@@ -269,29 +271,28 @@ func (d *DO) Unscoped() Dao {
 	return d.getInstance(d.db.Unscoped())
 }
 
-func (d *DO) Join(table schema.Tabler, conds ...Condition) Dao {
-	return d.join(table, clause.InnerJoin, conds...)
+func (d *DO) Join(table schema.Tabler, conds ...field.Expr) Dao {
+	return d.join(table, clause.InnerJoin, conds)
 }
 
-func (d *DO) LeftJoin(table schema.Tabler, conds ...Condition) Dao {
-	return d.join(table, clause.LeftJoin, conds...)
+func (d *DO) LeftJoin(table schema.Tabler, conds ...field.Expr) Dao {
+	return d.join(table, clause.LeftJoin, conds)
 }
 
-func (d *DO) RightJoin(table schema.Tabler, conds ...Condition) Dao {
-	return d.join(table, clause.RightJoin, conds...)
+func (d *DO) RightJoin(table schema.Tabler, conds ...field.Expr) Dao {
+	return d.join(table, clause.RightJoin, conds)
 }
 
-func (d *DO) join(table schema.Tabler, joinType clause.JoinType, conds ...Condition) Dao {
-	exprs, err := condToExpression(conds)
-	if err != nil {
-		return d.withError(err)
+func (d *DO) join(table schema.Tabler, joinType clause.JoinType, conds []field.Expr) Dao {
+	if len(conds) == 0 {
+		return d.withError(ErrEmptyCondition)
 	}
 
 	from := getFromClause(d.db)
 	from.Joins = append(from.Joins, clause.Join{
 		Type:  joinType,
 		Table: clause.Table{Name: table.TableName()},
-		ON:    clause.Where{Exprs: exprs},
+		ON:    clause.Where{Exprs: toExpression(conds...)},
 	})
 	return d.getInstance(d.db.Clauses(from))
 }
@@ -510,6 +511,19 @@ func buildExpr(stmt *gorm.Statement, exprs ...field.Expr) []string {
 	return results
 }
 
+func toExpression(exprs ...field.Expr) []clause.Expression {
+	result := make([]clause.Expression, len(exprs))
+	for i, e := range exprs {
+		switch v := e.RawExpr().(type) {
+		case clause.Expression:
+			result[i] = v
+		case clause.Column:
+			result[i] = clause.NamedExpr{SQL: "?", Vars: []interface{}{v}}
+		}
+	}
+	return result
+}
+
 func toInterfaceSlice(value interface{}) []interface{} {
 	switch v := value.(type) {
 	case string:
@@ -578,7 +592,7 @@ func (cs columns) In(queryOrValue Condition) field.Expr {
 	case subQuery:
 		return field.ContainsSubQuery(cs, query.underlyingDB())
 	default:
-		return nil
+		return field.EmptyExpr()
 	}
 }
 

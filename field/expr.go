@@ -18,7 +18,9 @@ type Expr interface {
 	Build(*gorm.Statement) sql
 	RawExpr() expression
 
+	// implement Condition
 	BeCond() interface{}
+	CondError() error
 
 	expression() clause.Expression
 }
@@ -35,7 +37,8 @@ type expr struct {
 	e clause.Expression
 }
 
-func (e expr) BeCond() interface{} { return e }
+func (e expr) BeCond() interface{} { return e.expression() }
+func (expr) CondError() error      { return nil }
 
 func (e expr) expression() clause.Expression {
 	if e.e == nil {
