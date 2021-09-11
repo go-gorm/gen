@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"gorm.io/hints"
@@ -206,6 +207,11 @@ func TestDO_methods(t *testing.T) {
 			Result:       "WHERE (`name` = ? AND `famous` IS true) OR `age` <= ?",
 		},
 		{
+			Expr:         u.Where(Cond(datatypes.JSONQuery("attributes").HasKey("role", "name"))...),
+			ExpectedVars: []interface{}{"$.role.name"},
+			Result:       "WHERE JSON_EXTRACT(`attributes`,?) IS NOT NULL",
+		},
+		{
 			Expr: u.Where(
 				u.Where(u.ID.Neq(0)).Where(u.Score.Gt(89.9)),
 				u.Where(u.Age.Gt(18)).Where(u.Address.Eq("New York")),
@@ -226,6 +232,12 @@ func TestDO_methods(t *testing.T) {
 			Expr:         u.Select(u.ID, u.Name).Where(u.Age.Gt(18), u.Score.Gte(100)),
 			ExpectedVars: []interface{}{18, 100.0},
 			Result:       "SELECT `id`,`name` WHERE `age` > ? AND `score` >= ?",
+		},
+		{
+			Expr:         u.Select().Where(Cond(datatypes.JSONQuery("attributes").HasKey("role"))...),
+			Opts:         []stmtOpt{withFROM},
+			ExpectedVars: []interface{}{"$.role"},
+			Result:       "SELECT * FROM `users_info` WHERE JSON_EXTRACT(`attributes`,?) IS NOT NULL",
 		},
 		// ======================== subquery ========================
 		{

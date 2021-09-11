@@ -29,8 +29,13 @@ func TestConfig(t *testing.T) {
 }
 
 // test data
+type mysqlDialectors struct{ tests.DummyDialector }
 
-var db, _ = gorm.Open(tests.DummyDialector{}, nil)
+func (mysqlDialectors) Name() string {
+	return "mysql"
+}
+
+var db, _ = gorm.Open(mysqlDialectors{}, nil)
 
 func init() {
 	db = db.Debug()
@@ -79,7 +84,7 @@ func (TeacherRaw) TableName() string {
 }
 
 type user struct {
-	DO
+	userDo
 
 	ID         field.Uint
 	Name       field.String
@@ -90,142 +95,155 @@ type user struct {
 	RegisterAt field.Time
 }
 
-func (u user) Debug() *user {
+type userDo struct{ DO }
+
+func (u userDo) Debug() *userDo {
 	u.DO = *u.DO.Debug().(*DO)
 	return &u
 }
 
-func (u user) Clauses(conds ...clause.Expression) *user {
+func (u userDo) WithContext(ctx context.Context) *userDo {
+	u.DO = *u.DO.WithContext(ctx).(*DO)
+	return &u
+}
+
+func (u userDo) Clauses(conds ...clause.Expression) *userDo {
 	u.DO = *u.DO.Clauses(conds...).(*DO)
 	return &u
 }
 
-func (u user) Not(conds ...Condition) *user {
+func (u userDo) Not(conds ...Condition) *userDo {
 	u.DO = *u.DO.Not(conds...).(*DO)
 	return &u
 }
 
-func (u user) Or(conds ...Condition) *user {
+func (u userDo) Or(conds ...Condition) *userDo {
 	u.DO = *u.DO.Or(conds...).(*DO)
 	return &u
 }
 
-func (u user) Select(conds ...field.Expr) *user {
+func (u userDo) Select(conds ...field.Expr) *userDo {
 	u.DO = *u.DO.Select(conds...).(*DO)
 	return &u
 }
 
-func (u user) Where(conds ...Condition) *user {
+func (u userDo) Where(conds ...Condition) *userDo {
 	u.DO = *u.DO.Where(conds...).(*DO)
 	return &u
 }
 
-func (u user) Order(conds ...field.Expr) *user {
+func (u userDo) Order(conds ...field.Expr) *userDo {
 	u.DO = *u.DO.Order(conds...).(*DO)
 	return &u
 }
 
-func (u user) Distinct(cols ...field.Expr) *user {
+func (u userDo) Distinct(cols ...field.Expr) *userDo {
 	u.DO = *u.DO.Distinct(cols...).(*DO)
 	return &u
 }
 
-func (u user) Omit(cols ...field.Expr) *user {
+func (u userDo) Omit(cols ...field.Expr) *userDo {
 	u.DO = *u.DO.Omit(cols...).(*DO)
 	return &u
 }
 
-func (u user) Join(table schema.Tabler, on ...Condition) *user {
+func (u userDo) Join(table schema.Tabler, on ...field.Expr) *userDo {
 	u.DO = *u.DO.Join(table, on...).(*DO)
 	return &u
 }
 
-func (u user) LeftJoin(table schema.Tabler, on ...Condition) *user {
+func (u userDo) LeftJoin(table schema.Tabler, on ...field.Expr) *userDo {
 	u.DO = *u.DO.LeftJoin(table, on...).(*DO)
 	return &u
 }
 
-func (u user) RightJoin(table schema.Tabler, on ...Condition) *user {
+func (u userDo) RightJoin(table schema.Tabler, on ...field.Expr) *userDo {
 	u.DO = *u.DO.RightJoin(table, on...).(*DO)
 	return &u
 }
 
-func (u user) Group(col field.Expr) *user {
+func (u userDo) Group(col field.Expr) *userDo {
 	u.DO = *u.DO.Group(col).(*DO)
 	return &u
 }
 
-func (u user) Having(conds ...Condition) *user {
+func (u userDo) Having(conds ...Condition) *userDo {
 	u.DO = *u.DO.Having(conds...).(*DO)
 	return &u
 }
 
-func (u user) Limit(limit int) *user {
+func (u userDo) Limit(limit int) *userDo {
 	u.DO = *u.DO.Limit(limit).(*DO)
 	return &u
 }
 
-func (u user) Offset(offset int) *user {
+func (u userDo) Offset(offset int) *userDo {
 	u.DO = *u.DO.Offset(offset).(*DO)
 	return &u
 }
 
-func (u user) Scopes(funcs ...func(Dao) Dao) *user {
+func (u userDo) Scopes(funcs ...func(Dao) Dao) *userDo {
 	u.DO = *u.DO.Scopes(funcs...).(*DO)
 	return &u
 }
 
-func (u user) Unscoped() *user {
+func (u userDo) Unscoped() *userDo {
 	u.DO = *u.DO.Unscoped().(*DO)
 	return &u
 }
 
-func (u user) Create(value *User) error {
-	return u.DO.Create(value)
+func (u userDo) Create(values ...*user) error {
+	if len(values) == 0 {
+		return nil
+	}
+	return u.DO.Create(values)
 }
 
-func (u user) CreateInBatches(values []*User, batchSize int) error {
+func (u userDo) CreateInBatches(values []*user, batchSize int) error {
 	return u.DO.CreateInBatches(values, batchSize)
 }
 
-func (u user) Save(value *User) error {
-	return u.DO.Save(value)
+func (u userDo) Save(values ...*user) error {
+	if len(values) == 0 {
+		return nil
+	}
+	return u.DO.Save(values)
 }
 
-func (u user) First() (*User, error) {
-	if resultPtr, err := u.DO.First(); err != nil {
+func (u userDo) First() (*user, error) {
+	if result, err := u.DO.First(); err != nil {
 		return nil, err
 	} else {
-		return resultPtr.(*User), nil
+		return result.(*user), nil
 	}
 }
 
-func (u user) Last() (*User, error) {
-	if resultPtr, err := u.DO.Last(); err != nil {
+func (u userDo) Take() (*user, error) {
+	if result, err := u.DO.Take(); err != nil {
 		return nil, err
 	} else {
-		return resultPtr.(*User), nil
+		return result.(*user), nil
 	}
 }
 
-func (u user) Take() (*User, error) {
-	if resultPtr, err := u.DO.Take(); err != nil {
+func (u userDo) Last() (*user, error) {
+	if result, err := u.DO.Last(); err != nil {
 		return nil, err
 	} else {
-		return resultPtr.(*User), nil
+		return result.(*user), nil
 	}
 }
 
-func (u user) Find() ([]*User, error) {
+func (u userDo) Find() ([]*user, error) {
 	result, err := u.DO.Find()
-	return result.([]*User), err
+	return result.([]*user), err
 }
 
-func (u user) FindInBatches(result []*User, batchSize int, fc func(tx Dao, batch int) error) error {
+func (u userDo) FindInBatches(result []*user, batchSize int, fc func(tx Dao, batch int) error) error {
 	return u.DO.FindInBatches(&result, batchSize, fc)
 }
 
-func (u user) FindByPage(offset int, limit int) (result []*User, count int64, err error) {
+func (u userDo) FindByPage(offset int, limit int) (result []*user, count int64, err error) {
 	count, err = u.Count()
 	if err != nil {
 		return
@@ -235,32 +253,13 @@ func (u user) FindByPage(offset int, limit int) (result []*User, count int64, er
 	return
 }
 
-func (u user) Delete() error {
-	return u.DO.Delete()
+func (u userDo) Model(result *user) *userDo {
+	u.DO = *u.DO.Model(result).(*DO)
+	return &u
 }
 
-func (u user) Begin(opts ...*sql.TxOptions) *user {
+func (u userDo) Begin(opts ...*sql.TxOptions) *userDo {
 	u.DO = *u.DO.Begin(opts...).(*DO)
-	return &u
-}
-
-func (u user) Commit() *user {
-	u.DO = *u.DO.Commit().(*DO)
-	return &u
-}
-
-func (u user) RollBack() *user {
-	u.DO = *u.DO.Commit().(*DO)
-	return &u
-}
-
-func (u user) SavePoint(name string) *user {
-	u.DO = *u.DO.SavePoint(name).(*DO)
-	return &u
-}
-
-func (u user) RollBackTo(name string) *user {
-	u.DO = *u.DO.RollBackTo(name).(*DO)
 	return &u
 }
 

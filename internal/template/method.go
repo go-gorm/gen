@@ -70,17 +70,17 @@ func ({{.S}} {{.NewStructName}}Do) Omit(cols ...field.Expr) *{{.NewStructName}}D
 	return &{{.S}}
 }
 
-func ({{.S}} {{.NewStructName}}Do) Join(table schema.Tabler, on ...gen.Condition) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Join(table schema.Tabler, on ...field.Expr) *{{.NewStructName}}Do {
 	{{.S}}.DO = *{{.S}}.DO.Join(table, on...).(*gen.DO)
 	return &{{.S}}
 }
 
-func ({{.S}} {{.NewStructName}}Do) LeftJoin(table schema.Tabler, on ...gen.Condition) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) LeftJoin(table schema.Tabler, on ...field.Expr) *{{.NewStructName}}Do {
 	{{.S}}.DO = *{{.S}}.DO.LeftJoin(table, on...).(*gen.DO)
 	return &{{.S}}
 }
 
-func ({{.S}} {{.NewStructName}}Do) RightJoin(table schema.Tabler, on ...gen.Condition) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) RightJoin(table schema.Tabler, on ...field.Expr) *{{.NewStructName}}Do {
 	{{.S}}.DO = *{{.S}}.DO.RightJoin(table, on...).(*gen.DO)
 	return &{{.S}}
 }
@@ -183,26 +183,6 @@ func ({{.S}} {{.NewStructName}}Do) Model(result *{{.StructInfo.Package}}.{{.Stru
 
 func ({{.S}} {{.NewStructName}}Do) Begin(opts ...*sql.TxOptions) *{{.NewStructName}}Do {
 	{{.S}}.DO = *{{.S}}.DO.Begin(opts...).(*gen.DO)
-	return &{{.S}}
-}
-
-func ({{.S}} {{.NewStructName}}Do) Commit() *{{.NewStructName}}Do {
-	{{.S}}.DO = *{{.S}}.DO.Commit().(*gen.DO)
-	return &{{.S}}
-}
-
-func ({{.S}} {{.NewStructName}}Do) RollBack() *{{.NewStructName}}Do {
-	{{.S}}.DO = *{{.S}}.DO.Commit().(*gen.DO)
-	return &{{.S}}
-}
-
-func ({{.S}} {{.NewStructName}}Do) SavePoint(name string) *{{.NewStructName}}Do {
-	{{.S}}.DO = *{{.S}}.DO.SavePoint(name).(*gen.DO)
-	return &{{.S}}
-}
-
-func ({{.S}} {{.NewStructName}}Do) RollBackTo(name string) *{{.NewStructName}}Do {
-	{{.S}}.DO = *{{.S}}.DO.RollBackTo(name).(*gen.DO)
 	return &{{.S}}
 }
 

@@ -129,7 +129,11 @@ type Generator struct {
 }
 
 // UseDB set db connection
-func (g *Generator) UseDB(db *gorm.DB) { g.db = db }
+func (g *Generator) UseDB(db *gorm.DB) {
+	if db != nil {
+		g.db = db
+	}
+}
 
 var (
 	// FieldIgnore ignore some columns by name

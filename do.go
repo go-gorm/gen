@@ -22,14 +22,15 @@ var (
 	deleteClauses = []string{"DELETE", "FROM", "WHERE"}
 )
 
-func NewDO(db *gorm.DB) *DO { return &DO{db: db} }
-
 // DO (data object): implement basic query methods
 // the structure embedded with a *gorm.DB, and has a element item "alias" will be used when used as a sub query
 type DO struct {
 	db    *gorm.DB
 	alias string // for subquery
+	model interface{}
 }
+
+func (d *DO) getInstance(db *gorm.DB) *DO { return &DO{db: db, alias: d.alias, model: d.model} }
 
 type doOptions func(*gorm.DB) *gorm.DB
 
@@ -49,6 +50,8 @@ func (d *DO) UseDB(db *gorm.DB, opts ...doOptions) {
 
 // UseModel specify a data model structure as a source for table name
 func (d *DO) UseModel(model interface{}) {
+	d.model = model
+	d.db = d.db.Model(model).Session(new(gorm.Session))
 	_ = d.db.Statement.Parse(model)
 }
 
@@ -90,22 +93,34 @@ func (d *DO) underlyingDO() *DO { return d }
 // underlyingDB return self.db
 func (d *DO) underlyingDB() *gorm.DB { return d.db }
 
-func (DO) ConditionMark() {}
+func (d *DO) withError(err error) *DO {
+	if err == nil {
+		return d
+	}
+
+	newDB := d.db.Session(new(gorm.Session))
+	_ = newDB.AddError(err)
+	return d.getInstance(newDB)
+}
+
+func (d *DO) BeCond() interface{} { return d.buildCondition() }
+
+func (d *DO) CondError() error { return nil }
 
 // Debug return a DO with db in debug mode
-func (d *DO) Debug() Dao { return NewDO(d.db.Debug()) }
+func (d *DO) Debug() Dao { return d.getInstance(d.db.Debug()) }
 
 // WithContext return a DO with db with context
-func (d *DO) WithContext(ctx context.Context) Dao { return NewDO(d.db.WithContext(ctx)) }
+func (d *DO) WithContext(ctx context.Context) Dao { return d.getInstance(d.db.WithContext(ctx)) }
 
 // Clauses specify Clauses
 func (d *DO) Clauses(conds ...clause.Expression) Dao {
 	if err := checkConds(conds); err != nil {
 		newDB := d.db.Session(new(gorm.Session))
 		_ = newDB.AddError(err)
-		return NewDO(newDB)
+		return d.getInstance(newDB)
 	}
-	return NewDO(d.db.Clauses(conds...))
+	return d.getInstance(d.db.Clauses(conds...))
 }
 
 func checkConds(conds []clause.Expression) error {
@@ -139,11 +154,11 @@ func checkClause(cond clause.Expression) error {
 		return nil
 	case clause.Interface:
 		if banClauses[cond.Name()] {
-			return fmt.Errorf("banned clause: %s", cond.Name())
+			return fmt.Errorf("banned clause %s", cond.Name())
 		}
 		return nil
 	}
-	return fmt.Errorf("unknown clause: %v", cond)
+	return fmt.Errorf("unknown clause %v", cond)
 }
 
 // As alias cannot be heired, As must used on tail
@@ -154,22 +169,43 @@ func (*DO) Columns(cols ...field.Expr) columns { return cols }
 
 // ======================== chainable api ========================
 func (d *DO) Not(conds ...Condition) Dao {
-	return NewDO(d.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Not(condToExpression(conds)...)}}))
+	if len(conds) == 0 {
+		return d
+	}
+	exprs, err := condToExpression(conds)
+	if err != nil {
+		return d.withError(err)
+	}
+	return d.getInstance(d.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Not(exprs...)}}))
 }
 
 func (d *DO) Or(conds ...Condition) Dao {
-	return NewDO(d.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Or(clause.And(condToExpression(conds)...))}}))
+	if len(conds) == 0 {
+		return d
+	}
+	exprs, err := condToExpression(conds)
+	if err != nil {
+		return d.withError(err)
+	}
+	return d.getInstance(d.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Or(clause.And(exprs...))}}))
 }
 
 func (d *DO) Select(columns ...field.Expr) Dao {
 	if len(columns) == 0 {
-		return NewDO(d.db.Clauses(clause.Select{}))
+		return d.getInstance(d.db.Clauses(clause.Select{}))
 	}
-	return NewDO(d.db.Select(buildExpr(d.db.Statement, columns...)))
+	return d.getInstance(d.db.Select(buildExpr(d.db.Statement, columns...)))
 }
 
 func (d *DO) Where(conds ...Condition) Dao {
-	return NewDO(d.db.Clauses(clause.Where{Exprs: condToExpression(conds)}))
+	if len(conds) == 0 {
+		return d
+	}
+	exprs, err := condToExpression(conds)
+	if err != nil {
+		return d.withError(err)
+	}
+	return d.getInstance(d.db.Clauses(clause.Where{Exprs: exprs}))
 }
 
 func (d *DO) Order(columns ...field.Expr) Dao {
@@ -178,76 +214,87 @@ func (d *DO) Order(columns ...field.Expr) Dao {
 	// 	if order, ok := c.Expression.(clause.OrderBy); ok {
 	// 		if expr, ok := order.Expression.(clause.CommaExpression); ok {
 	// 			expr.Exprs = append(expr.Exprs, toExpression(columns)...)
-	// 			return NewDO(d.db.Clauses(clause.OrderBy{Expression: expr}))
+	// 			return d.newInstance(d.db.Clauses(clause.OrderBy{Expression: expr}))
 	// 		}
 	// 	}
 	// }
-	// return NewDO(d.db.Clauses(clause.OrderBy{Expression: clause.CommaExpression{Exprs: toExpression(columns)}}))
+	// return d.newInstance(d.db.Clauses(clause.OrderBy{Expression: clause.CommaExpression{Exprs: toExpression(columns)}}))
 
 	// eager build Columns
 	orderArray := make([]string, len(columns))
 	for i, c := range columns {
 		orderArray[i] = c.Build(d.db.Statement).String()
 	}
-	return NewDO(d.db.Order(strings.Join(orderArray, ",")))
+	return d.getInstance(d.db.Order(strings.Join(orderArray, ",")))
 }
 
 func (d *DO) Distinct(columns ...field.Expr) Dao {
-	return NewDO(d.db.Distinct(toInterfaceSlice(toColumnFullName(d.db.Statement, columns...))...))
+	return d.getInstance(d.db.Distinct(toInterfaceSlice(toColumnFullName(d.db.Statement, columns...))...))
 }
 
 func (d *DO) Omit(columns ...field.Expr) Dao {
-	return NewDO(d.db.Omit(toColNames(d.db.Statement, columns...)...))
+	return d.getInstance(d.db.Omit(toColNames(d.db.Statement, columns...)...))
 }
 
 func (d *DO) Group(column field.Expr) Dao {
-	return NewDO(d.db.Group(column.ColumnName().String()))
+	return d.getInstance(d.db.Group(column.ColumnName().String()))
 }
 
 func (d *DO) Having(conds ...Condition) Dao {
-	return NewDO(d.db.Clauses(clause.GroupBy{Having: condToExpression(conds)}))
+	if len(conds) == 0 {
+		return d
+	}
+	exprs, err := condToExpression(conds)
+	if err != nil {
+		return d.withError(err)
+	}
+	return d.getInstance(d.db.Clauses(clause.GroupBy{Having: exprs}))
 }
 
 func (d *DO) Limit(limit int) Dao {
-	return NewDO(d.db.Limit(limit))
+	return d.getInstance(d.db.Limit(limit))
 }
 
 func (d *DO) Offset(offset int) Dao {
-	return NewDO(d.db.Offset(offset))
+	return d.getInstance(d.db.Offset(offset))
 }
 
 func (d *DO) Scopes(funcs ...func(Dao) Dao) Dao {
 	fcs := make([]func(*gorm.DB) *gorm.DB, len(funcs))
 	for i, f := range funcs {
-		fcs[i] = func(tx *gorm.DB) *gorm.DB { return f(NewDO(tx)).(*DO).db }
+		fcs[i] = func(tx *gorm.DB) *gorm.DB { return f(d.getInstance(tx)).(*DO).db }
 	}
-	return NewDO(d.db.Scopes(fcs...))
+	return d.getInstance(d.db.Scopes(fcs...))
 }
 
 func (d *DO) Unscoped() Dao {
-	return NewDO(d.db.Unscoped())
+	return d.getInstance(d.db.Unscoped())
 }
 
-func (d *DO) Join(table schema.Tabler, conds ...Condition) Dao {
-	return d.join(table, clause.InnerJoin, conds...)
+func (d *DO) Join(table schema.Tabler, conds ...field.Expr) Dao {
+	return d.join(table, clause.InnerJoin, conds)
 }
 
-func (d *DO) LeftJoin(table schema.Tabler, conds ...Condition) Dao {
-	return d.join(table, clause.LeftJoin, conds...)
+func (d *DO) LeftJoin(table schema.Tabler, conds ...field.Expr) Dao {
+	return d.join(table, clause.LeftJoin, conds)
 }
 
-func (d *DO) RightJoin(table schema.Tabler, conds ...Condition) Dao {
-	return d.join(table, clause.RightJoin, conds...)
+func (d *DO) RightJoin(table schema.Tabler, conds ...field.Expr) Dao {
+	return d.join(table, clause.RightJoin, conds)
 }
 
-func (d *DO) join(table schema.Tabler, joinType clause.JoinType, conds ...Condition) Dao {
+func (d *DO) join(table schema.Tabler, joinType clause.JoinType, conds []field.Expr) Dao {
+	if len(conds) == 0 {
+		return d.withError(ErrEmptyCondition)
+	}
+
 	from := getFromClause(d.db)
 	from.Joins = append(from.Joins, clause.Join{
 		Type:  joinType,
 		Table: clause.Table{Name: table.TableName()},
-		ON:    clause.Where{Exprs: condToExpression(conds)},
+		ON:    clause.Where{Exprs: toExpression(conds...)},
 	})
-	return NewDO(d.db.Clauses(from))
+	return d.getInstance(d.db.Clauses(from))
 }
 
 func getFromClause(db *gorm.DB) *clause.From {
@@ -309,7 +356,7 @@ func (d *DO) multiQuery(query func(dest interface{}, conds ...interface{}) *gorm
 }
 
 func (d *DO) FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error {
-	return d.db.FindInBatches(dest, batchSize, func(tx *gorm.DB, batch int) error { return fc(NewDO(tx), batch) }).Error
+	return d.db.FindInBatches(dest, batchSize, func(tx *gorm.DB, batch int) error { return fc(d.getInstance(tx), batch) }).Error
 }
 
 // func (d *DO) FirstOrInit(dest interface{}, conds ...field.Expr) error {
@@ -321,7 +368,7 @@ func (d *DO) FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batc
 // }
 
 func (d *DO) Model(model interface{}) Dao {
-	return NewDO(d.db.Model(model))
+	return d.getInstance(d.db.Model(model))
 }
 
 func (d *DO) Update(column field.Expr, value interface{}) error {
@@ -399,27 +446,28 @@ func (d *DO) ScanRows(rows *sql.Rows, dest interface{}) error {
 }
 
 func (d *DO) Transaction(fc func(Dao) error, opts ...*sql.TxOptions) error {
-	return d.db.Transaction(func(tx *gorm.DB) error { return fc(NewDO(tx)) }, opts...)
+	return d.db.Transaction(func(tx *gorm.DB) error { return fc(d.getInstance(tx)) }, opts...)
 }
 
 func (d *DO) Begin(opts ...*sql.TxOptions) Dao {
-	return NewDO(d.db.Begin(opts...))
+	d.db.Begin(opts...)
+	return d
 }
 
-func (d *DO) Commit() Dao {
-	return NewDO(d.db.Commit())
+func (d *DO) Commit() error {
+	return d.db.Commit().Error
 }
 
-func (d *DO) RollBack() Dao {
-	return NewDO(d.db.Rollback())
+func (d *DO) Rollback() error {
+	return d.db.Rollback().Error
 }
 
-func (d *DO) SavePoint(name string) Dao {
-	return NewDO(d.db.SavePoint(name))
+func (d *DO) SavePoint(name string) error {
+	return d.db.SavePoint(name).Error
 }
 
-func (d *DO) RollBackTo(name string) Dao {
-	return NewDO(d.db.RollbackTo(name))
+func (d *DO) RollbackTo(name string) error {
+	return d.db.RollbackTo(name).Error
 }
 
 func (d *DO) newResultPointer() interface{} {
@@ -432,26 +480,11 @@ func (d *DO) newResultSlicePointer() interface{} {
 
 // getModelType get model type
 func (d *DO) getModelType() reflect.Type {
-	mt := d.db.Statement.Schema.ModelType
+	mt := reflect.TypeOf(d.model)
 	if mt.Kind() == reflect.Ptr {
 		mt = mt.Elem()
 	}
 	return mt
-}
-
-func condToExpression(conds []Condition) []clause.Expression {
-	exprs := make([]clause.Expression, 0, len(conds))
-	for _, cond := range conds {
-		switch cond := cond.(type) {
-		case subQuery:
-			exprs = append(exprs, cond.underlyingDO().buildCondition()...)
-		case field.Expr:
-			if expr, ok := cond.RawExpr().(clause.Expression); ok {
-				exprs = append(exprs, expr)
-			}
-		}
-	}
-	return exprs
 }
 
 func toColumnFullName(stmt *gorm.Statement, columns ...field.Expr) []string {
@@ -476,6 +509,19 @@ func buildExpr(stmt *gorm.Statement, exprs ...field.Expr) []string {
 		results[i] = e.Build(stmt).String()
 	}
 	return results
+}
+
+func toExpression(exprs ...field.Expr) []clause.Expression {
+	result := make([]clause.Expression, len(exprs))
+	for i, e := range exprs {
+		switch v := e.RawExpr().(type) {
+		case clause.Expression:
+			result[i] = v
+		case clause.Column:
+			result[i] = clause.NamedExpr{SQL: "?", Vars: []interface{}{v}}
+		}
+	}
+	return result
 }
 
 func toInterfaceSlice(value interface{}) []interface{} {
@@ -509,7 +555,7 @@ func toInterfaceSlice(value interface{}) []interface{} {
 // 	SELECT * FROM (SELECT `id`, `name` FROM `users_info` WHERE `age` > ?)"
 func Table(subQueries ...subQuery) Dao {
 	if len(subQueries) == 0 {
-		return NewDO(nil)
+		return &DO{}
 	}
 
 	tablePlaceholder := make([]string, len(subQueries))
@@ -524,9 +570,10 @@ func Table(subQueries ...subQuery) Dao {
 		}
 	}
 
-	return NewDO(subQueries[0].underlyingDO().db.
-		Session(&gorm.Session{NewDB: true}).
-		Table(strings.Join(tablePlaceholder, ", "), tableExprs...))
+	return &DO{
+		db: subQueries[0].underlyingDO().db.Session(&gorm.Session{NewDB: true}).
+			Table(strings.Join(tablePlaceholder, ", "), tableExprs...),
+	}
 }
 
 // ======================== sub query method ========================
@@ -545,7 +592,7 @@ func (cs columns) In(queryOrValue Condition) field.Expr {
 	case subQuery:
 		return field.ContainsSubQuery(cs, query.underlyingDB())
 	default:
-		return nil
+		return field.EmptyExpr()
 	}
 }
 

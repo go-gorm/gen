@@ -511,6 +511,15 @@ users, err := u.WithContext(ctx).Where(u.Columns(u.ID, u.Name).In(field.Values([
 // SELECT * FROM `users` WHERE (`id`, `name`) IN ((1,'humodi'),(2,'tom'));
 ```
 
+###### JSON Query
+
+```go
+u := query.Use(db).User
+
+users, err := u.WithContext(ctx).Where(gen.Cond(datatypes.JSONQuery("attributes").HasKey("role"))...).Find()
+// SELECT * FROM `users` WHERE JSON_EXTRACT(`attributes`,'$.role') IS NOT NULL;
+```
+
 ###### Order
 
 Specify order when retrieving records from the database
