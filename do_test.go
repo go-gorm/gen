@@ -207,6 +207,10 @@ func TestDO_methods(t *testing.T) {
 			Result:       "WHERE (`name` = ? AND `famous` IS true) OR `age` <= ?",
 		},
 		{
+			Expr:   u.Where(Cond(datatypes.JSONQuery("attributes").HasKey("role"))...),
+			Result: "WHERE JSON_EXTRACT(`attributes`, '$.role') IS NOT NULL",
+		},
+		{
 			Expr: u.Where(
 				u.Where(u.ID.Neq(0)).Where(u.Score.Gt(89.9)),
 				u.Where(u.Age.Gt(18)).Where(u.Address.Eq("New York")),
@@ -229,8 +233,9 @@ func TestDO_methods(t *testing.T) {
 			Result:       "SELECT `id`,`name` WHERE `age` > ? AND `score` >= ?",
 		},
 		{
-			Expr:   u.Where(Cond(datatypes.JSONQuery("attributes").HasKey("role"))...),
-			Result: "SELECT * FROM `users` WHERE JSON_EXTRACT(`attributes`, '$.role') IS NOT NULL",
+			Expr:   u.Select().Where(Cond(datatypes.JSONQuery("attributes").HasKey("role"))...),
+			Opts:   []stmtOpt{withFROM},
+			Result: "SELECT * FROM `users_info` WHERE JSON_EXTRACT(`attributes`, '$.role') IS NOT NULL",
 		},
 		// ======================== subquery ========================
 		{
