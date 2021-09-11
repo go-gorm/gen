@@ -29,8 +29,13 @@ func TestConfig(t *testing.T) {
 }
 
 // test data
+type mysqlDialectors struct{ tests.DummyDialector }
 
-var db, _ = gorm.Open(tests.DummyDialector{}, nil)
+func (mysqlDialectors) Name() string {
+	return "mysql"
+}
+
+var db, _ = gorm.Open(mysqlDialectors{}, nil)
 
 func init() {
 	db = db.Debug()
@@ -233,10 +238,6 @@ func (u user) FindByPage(offset int, limit int) (result []*User, count int64, er
 
 	result, err = u.Offset(offset).Limit(limit).Find()
 	return
-}
-
-func (u user) Delete() error {
-	return u.DO.Delete()
 }
 
 func (u user) Begin(opts ...*sql.TxOptions) *user {
