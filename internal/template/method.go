@@ -167,12 +167,12 @@ func ({{.S}} {{.NewStructName}}Do) FindInBatches(result []*{{.StructInfo.Package
 }
 
 func ({{.S}} {{.NewStructName}}Do) FindByPage(offset int, limit int) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, count int64, err error) {
-	count, err = {{.S}}.Count()
+	result, err = {{.S}}.Offset(offset).Limit(limit).Find()
 	if err != nil {
 		return
 	}
 
-	result, err = {{.S}}.Offset(offset).Limit(limit).Find()
+	count, err = {{.S}}.Count()
 	return
 }
 
