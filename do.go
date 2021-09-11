@@ -93,7 +93,17 @@ func (d *DO) underlyingDO() *DO { return d }
 // underlyingDB return self.db
 func (d *DO) underlyingDB() *gorm.DB { return d.db }
 
-func (DO) ConditionMark() {}
+func (d *DO) withError(err error) *DO {
+	if err == nil {
+		return d
+	}
+
+	newDB := d.db.Session(new(gorm.Session))
+	_ = newDB.AddError(err)
+	return d.getInstance(newDB)
+}
+
+func (d *DO) BeCond() interface{} { return d }
 
 // Debug return a DO with db in debug mode
 func (d *DO) Debug() Dao { return d.getInstance(d.db.Debug()) }
@@ -142,11 +152,11 @@ func checkClause(cond clause.Expression) error {
 		return nil
 	case clause.Interface:
 		if banClauses[cond.Name()] {
-			return fmt.Errorf("banned clause: %s", cond.Name())
+			return fmt.Errorf("banned clause %s", cond.Name())
 		}
 		return nil
 	}
-	return fmt.Errorf("unknown clause: %v", cond)
+	return fmt.Errorf("unknown clause %v", cond)
 }
 
 // As alias cannot be heired, As must used on tail
@@ -157,11 +167,25 @@ func (*DO) Columns(cols ...field.Expr) columns { return cols }
 
 // ======================== chainable api ========================
 func (d *DO) Not(conds ...Condition) Dao {
-	return d.getInstance(d.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Not(condToExpression(conds)...)}}))
+	if len(conds) == 0 {
+		return d
+	}
+	exprs, err := condToExpression(conds)
+	if err != nil {
+		return d.withError(err)
+	}
+	return d.getInstance(d.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Not(exprs...)}}))
 }
 
 func (d *DO) Or(conds ...Condition) Dao {
-	return d.getInstance(d.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Or(clause.And(condToExpression(conds)...))}}))
+	if len(conds) == 0 {
+		return d
+	}
+	exprs, err := condToExpression(conds)
+	if err != nil {
+		return d.withError(err)
+	}
+	return d.getInstance(d.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Or(clause.And(exprs...))}}))
 }
 
 func (d *DO) Select(columns ...field.Expr) Dao {
@@ -175,7 +199,11 @@ func (d *DO) Where(conds ...Condition) Dao {
 	if len(conds) == 0 {
 		return d
 	}
-	return d.getInstance(d.db.Clauses(clause.Where{Exprs: condToExpression(conds)}))
+	exprs, err := condToExpression(conds)
+	if err != nil {
+		return d.withError(err)
+	}
+	return d.getInstance(d.db.Clauses(clause.Where{Exprs: exprs}))
 }
 
 func (d *DO) Order(columns ...field.Expr) Dao {
@@ -211,7 +239,14 @@ func (d *DO) Group(column field.Expr) Dao {
 }
 
 func (d *DO) Having(conds ...Condition) Dao {
-	return d.getInstance(d.db.Clauses(clause.GroupBy{Having: condToExpression(conds)}))
+	if len(conds) == 0 {
+		return d
+	}
+	exprs, err := condToExpression(conds)
+	if err != nil {
+		return d.withError(err)
+	}
+	return d.getInstance(d.db.Clauses(clause.GroupBy{Having: exprs}))
 }
 
 func (d *DO) Limit(limit int) Dao {
@@ -247,11 +282,16 @@ func (d *DO) RightJoin(table schema.Tabler, conds ...Condition) Dao {
 }
 
 func (d *DO) join(table schema.Tabler, joinType clause.JoinType, conds ...Condition) Dao {
+	exprs, err := condToExpression(conds)
+	if err != nil {
+		return d.withError(err)
+	}
+
 	from := getFromClause(d.db)
 	from.Joins = append(from.Joins, clause.Join{
 		Type:  joinType,
 		Table: clause.Table{Name: table.TableName()},
-		ON:    clause.Where{Exprs: condToExpression(conds)},
+		ON:    clause.Where{Exprs: exprs},
 	})
 	return d.getInstance(d.db.Clauses(from))
 }
@@ -444,21 +484,6 @@ func (d *DO) getModelType() reflect.Type {
 		mt = mt.Elem()
 	}
 	return mt
-}
-
-func condToExpression(conds []Condition) []clause.Expression {
-	exprs := make([]clause.Expression, 0, len(conds))
-	for _, cond := range conds {
-		switch cond := cond.(type) {
-		case subQuery:
-			exprs = append(exprs, cond.underlyingDO().buildCondition()...)
-		case field.Expr:
-			if expr, ok := cond.RawExpr().(clause.Expression); ok {
-				exprs = append(exprs, expr)
-			}
-		}
-	}
-	return exprs
 }
 
 func toColumnFullName(stmt *gorm.Statement, columns ...field.Expr) []string {
