@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"gorm.io/hints"
@@ -226,6 +227,10 @@ func TestDO_methods(t *testing.T) {
 			Expr:         u.Select(u.ID, u.Name).Where(u.Age.Gt(18), u.Score.Gte(100)),
 			ExpectedVars: []interface{}{18, 100.0},
 			Result:       "SELECT `id`,`name` WHERE `age` > ? AND `score` >= ?",
+		},
+		{
+			Expr:   u.Where(Cond(datatypes.JSONQuery("attributes").HasKey("role"))...),
+			Result: "SELECT * FROM `users` WHERE JSON_EXTRACT(`attributes`, '$.role') IS NOT NULL",
 		},
 		// ======================== subquery ========================
 		{

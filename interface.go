@@ -12,14 +12,14 @@ import (
 type (
 	// Condition query condition
 	// field.Expr and subquery are expect value
-	Condition interface{ ConditionMark() }
+	Condition interface{ BeCond() interface{} }
 )
 
 type subQuery interface {
 	underlyingDB() *gorm.DB
 	underlyingDO() *DO
 
-	ConditionMark()
+	BeCond() interface{}
 }
 
 // Dao CRUD methods
