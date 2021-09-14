@@ -390,8 +390,9 @@ func (d *DO) UpdateSimple(column field.Expr) error {
 	return d.db.Update(column.BuildColumn(d.db.Statement, field.WithTable).String(), expr).Error
 }
 
-func (d *DO) Updates(value interface{}) error {
-	return d.db.Updates(value).Error
+func (d *DO) Updates(value interface{}) (affectRows int64, err error) {
+	result := d.db.Updates(value)
+	return result.RowsAffected, result.Error
 }
 
 func (d *DO) UpdateColumn(column field.Expr, value interface{}) error {
@@ -413,8 +414,9 @@ func (d *DO) UpdateColumnSimple(column field.Expr) error {
 	return d.db.UpdateColumn(column.BuildColumn(d.db.Statement, field.WithTable).String(), expr).Error
 }
 
-func (d *DO) UpdateColumns(value interface{}) error {
-	return d.db.UpdateColumns(value).Error
+func (d *DO) UpdateColumns(value interface{}) (affectRows int64, err error) {
+	result := d.db.UpdateColumns(value)
+	return result.RowsAffected, result.Error
 }
 
 func (d *DO) Delete() error {
