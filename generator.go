@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 	"text/template"
 
@@ -129,7 +128,11 @@ type Generator struct {
 }
 
 // UseDB set db connection
-func (g *Generator) UseDB(db *gorm.DB) { g.db = db }
+func (g *Generator) UseDB(db *gorm.DB) {
+	if db != nil {
+		g.db = db
+	}
+}
 
 var (
 	// FieldIgnore ignore some columns by name
@@ -304,7 +307,7 @@ func (g *Generator) Execute() {
 		g.db.Logger.Error(context.Background(), "generate basic struct from table fail: %v", err)
 		panic("panic with generate basic struct from table error")
 	}
-	g.DeleteHistoryGeneratedFile()
+	g.deleteHistoryGeneratedFile()
 	err = g.generateQueryFile()
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate query to file: %v", err)
@@ -346,16 +349,7 @@ func (g *Generator) generateQueryFile() (err error) {
 		return err
 	}
 
-	result, err := imports.Process(g.OutFile, buf.Bytes(), nil)
-	if err != nil {
-		errLine, _ := strconv.Atoi(strings.Split(err.Error(), ":")[1])
-		line := strings.Split(buf.String(), "\n")
-		for i := -3; i < 3; i++ {
-			fmt.Println(i+errLine, line[i+errLine])
-		}
-		return fmt.Errorf("can not format query file: %w", err)
-	}
-	err = outputFile(g.OutFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, result)
+	err = g.output(g.OutFile, buf.Bytes())
 	if err != nil {
 		return err
 	}
@@ -404,23 +398,14 @@ func (g *Generator) generateSubQuery(data *genInfo) (err error) {
 		return err
 	}
 	queryFile := fmt.Sprintf("%s/%s.gen.go", g.OutPath, strings.ToLower(data.TableName))
-	result, err := imports.Process(queryFile, buf.Bytes(), nil)
-	if err != nil {
-		errLine, _ := strconv.Atoi(strings.Split(err.Error(), ":")[1])
-		line := strings.Split(buf.String(), "\n")
-		for i := -3; i < 3; i++ {
-			fmt.Println(i+errLine, line[i+errLine])
-		}
-		return fmt.Errorf("can not format query file: %w", err)
-	}
-	return outputFile(queryFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, result)
+	return g.output(queryFile, buf.Bytes())
 }
 
 // remove history GEN generated file
-func (g *Generator) DeleteHistoryGeneratedFile() {
+func (g *Generator) deleteHistoryGeneratedFile() {
 	historyFile := g.OutPath + "/gorm_generated.go"
 	if _, err := os.Stat(g.OutPath); err == nil {
-		err = os.Remove(historyFile)
+		_ = os.Remove(historyFile)
 	}
 }
 
@@ -467,21 +452,27 @@ func (g *Generator) generateBaseStruct() (err error) {
 			return err
 		}
 		modelFile := fmt.Sprint(outPath, data.BaseStruct.TableName, ".gen.go")
-		result, err := imports.Process(modelFile, buf.Bytes(), nil)
+		err = g.output(modelFile, buf.Bytes())
 		if err != nil {
-			for i, line := range strings.Split(buf.String(), "\n") {
-				fmt.Println(i, line)
-			}
-			return fmt.Errorf("can not format struct file: %w", err)
+			return err
 		}
-		err = outputFile(modelFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, result)
-		if err != nil {
-			return nil
-		}
+
 		g.successInfo(fmt.Sprintf("Generate struct [%s.%s] from table [%s]", data.StructInfo.Package, data.StructInfo.Type, data.TableName))
 		g.successInfo(fmt.Sprintf("Success generate struct file:%s", modelFile))
 	}
 	return nil
+}
+
+// output format and output
+func (g *Generator) output(fileName string, content []byte) error {
+	result, err := imports.Process(fileName, content, nil)
+	if err != nil {
+		for i, line := range strings.Split(string(content), "\n") {
+			fmt.Println(i, line)
+		}
+		return fmt.Errorf("can not format struct file: %w", err)
+	}
+	return outputFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, result)
 }
 
 func (g *Generator) pushBaseStruct(base *check.BaseStruct) (*genInfo, error) {
