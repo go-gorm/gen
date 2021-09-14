@@ -82,11 +82,4 @@ type Dao interface {
 	Scan(dest interface{}) error
 	Pluck(column field.Expr, dest interface{}) error
 	ScanRows(rows *sql.Rows, dest interface{}) error
-
-	Transaction(fc func(tx Dao) error, opts ...*sql.TxOptions) error
-	Begin(opts ...*sql.TxOptions) Dao
-	Commit() error
-	Rollback() error
-	SavePoint(name string) error
-	RollbackTo(name string) error
 }
