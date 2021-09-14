@@ -840,6 +840,10 @@ u := query.Use(db).User
 // Update attributes with `map`
 u.WithContext(ctx).Model(&model.User{ID: 111}).Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
 // UPDATE users SET name='hello', age=18, active=false, updated_at='2013-11-17 21:34:10' WHERE id=111;
+
+// Update attributes with `struct`
+u.WithContext(ctx)..Where(u.ID.Eq(111)).Updates(model.User{Name: "hello", Age: 18, Active: false})
+// UPDATE users SET name='hello', age=18, active=false, updated_at='2013-11-17 21:34:10' WHERE id=111;
 ```
 
 > **NOTE** When update with struct, GEN will only update non-zero fields, you might want to use `map` to update attributes or use `Select` to specify fields to update
