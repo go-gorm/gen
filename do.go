@@ -445,31 +445,6 @@ func (d *DO) ScanRows(rows *sql.Rows, dest interface{}) error {
 	return d.db.ScanRows(rows, dest)
 }
 
-func (d *DO) Transaction(fc func(Dao) error, opts ...*sql.TxOptions) error {
-	return d.db.Transaction(func(tx *gorm.DB) error { return fc(d.getInstance(tx)) }, opts...)
-}
-
-func (d *DO) Begin(opts ...*sql.TxOptions) Dao {
-	d.db.Begin(opts...)
-	return d
-}
-
-func (d *DO) Commit() error {
-	return d.db.Commit().Error
-}
-
-func (d *DO) Rollback() error {
-	return d.db.Rollback().Error
-}
-
-func (d *DO) SavePoint(name string) error {
-	return d.db.SavePoint(name).Error
-}
-
-func (d *DO) RollbackTo(name string) error {
-	return d.db.RollbackTo(name).Error
-}
-
 func (d *DO) newResultPointer() interface{} {
 	return reflect.New(d.getModelType()).Interface()
 }

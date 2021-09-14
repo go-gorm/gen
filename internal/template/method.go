@@ -181,9 +181,4 @@ func ({{.S}} {{.NewStructName}}Do) Model(result *{{.StructInfo.Package}}.{{.Stru
 	return &{{.S}}
 }
 
-func ({{.S}} {{.NewStructName}}Do) Begin(opts ...*sql.TxOptions) *{{.NewStructName}}Do {
-	{{.S}}.DO = *{{.S}}.DO.Begin(opts...).(*gen.DO)
-	return &{{.S}}
-}
-
 `
