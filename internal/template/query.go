@@ -23,7 +23,7 @@ func Use(db *gorm.DB) *Query {
 	return &Query{
 		db: db,
 		{{range $name,$d :=.Data -}}
-		{{$d.StructName}}: New{{$d.StructName}}(db),
+		{{$d.StructName}}: new{{$d.StructName}}(db),
 		{{end -}}
 	}
 }

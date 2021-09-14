@@ -1,8 +1,7 @@
 package template
 
-// TODO New方法不可导出
 const createMethod = `
-func New{{.StructName}}(db *gorm.DB) *{{.NewStructName}} {
+func new{{.StructName}}(db *gorm.DB) *{{.NewStructName}} {
 	_{{.NewStructName}} := new({{.NewStructName}})
 
 	_{{.NewStructName}}.{{.NewStructName}}Do.UseDB(db)
