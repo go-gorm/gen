@@ -2,7 +2,6 @@ package gen
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 	"time"
 
@@ -255,11 +254,6 @@ func (u userDo) FindByPage(offset int, limit int) (result []*user, count int64, 
 
 func (u userDo) Model(result *user) *userDo {
 	u.DO = *u.DO.Model(result).(*DO)
-	return &u
-}
-
-func (u userDo) Begin(opts ...*sql.TxOptions) *userDo {
-	u.DO = *u.DO.Begin(opts...).(*DO)
 	return &u
 }
 
