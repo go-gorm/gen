@@ -54,9 +54,6 @@ type Dao interface {
 	Limit(limit int) Dao
 	Offset(offset int) Dao
 	Scopes(funcs ...func(Dao) Dao) Dao
-	// Preload(conds ...field.Expr) Dao
-	// Attrs(attrs ...interface{}) Dao
-	// Assign(attrs ...interface{}) Dao
 	Unscoped() Dao
 
 	Create(value interface{}) error
@@ -67,8 +64,6 @@ type Dao interface {
 	Last() (result interface{}, err error)
 	Find() (results interface{}, err error)
 	FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error
-	// FirstOrInit(dest interface{}) error
-	// FirstOrCreate(dest interface{}) error
 	Model(model interface{}) Dao
 	Update(column field.Expr, value interface{}) error
 	UpdateSimple(column field.Expr) error
