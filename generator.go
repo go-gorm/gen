@@ -129,11 +129,7 @@ type Generator struct {
 }
 
 // UseDB set db connection
-func (g *Generator) UseDB(db *gorm.DB) {
-	if db != nil {
-		g.db = db
-	}
-}
+func (g *Generator) UseDB(db *gorm.DB) { g.db = db }
 
 var (
 	// FieldIgnore ignore some columns by name
@@ -293,7 +289,7 @@ func (g *Generator) Execute() {
 		g.OutPath = "./query/"
 	}
 	if g.OutFile == "" {
-		g.OutFile = g.OutPath + "/gorm_generated.go"
+		g.OutFile = g.OutPath + "/gen.go"
 	}
 	if _, err := os.Stat(g.OutPath); err != nil {
 		if err := os.Mkdir(g.OutPath, os.ModePerm); err != nil {
@@ -308,6 +304,7 @@ func (g *Generator) Execute() {
 		g.db.Logger.Error(context.Background(), "generate basic struct from table fail: %v", err)
 		panic("panic with generate basic struct from table error")
 	}
+	g.DeleteHistoryGeneratedFile()
 	err = g.generateQueryFile()
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate query to file: %v", err)
@@ -349,36 +346,6 @@ func (g *Generator) generateQueryFile() (err error) {
 		return err
 	}
 
-	keys := make([]string, 0, len(g.Data))
-	for key := range g.Data {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-
-	structTmpl := tmpl.BaseStructWithContext
-	if g.judgeMode(WithoutContext) {
-		structTmpl = tmpl.BaseStruct
-	}
-	for _, key := range keys {
-		data := g.Data[key]
-		err = render(structTmpl, &buf, data.BaseStruct)
-		if err != nil {
-			return err
-		}
-
-		for _, method := range data.Interfaces {
-			err = render(tmpl.DIYMethod, &buf, method)
-			if err != nil {
-				return err
-			}
-		}
-
-		err = render(tmpl.CRUDMethod, &buf, data.BaseStruct)
-		if err != nil {
-			return err
-		}
-	}
-
 	result, err := imports.Process(g.OutFile, buf.Bytes(), nil)
 	if err != nil {
 		errLine, _ := strconv.Atoi(strings.Split(err.Error(), ":")[1])
@@ -388,7 +355,73 @@ func (g *Generator) generateQueryFile() (err error) {
 		}
 		return fmt.Errorf("can not format query file: %w", err)
 	}
-	return outputFile(g.OutFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, result)
+	err = outputFile(g.OutFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, result)
+	if err != nil {
+		return err
+	}
+	keys := make([]string, 0, len(g.Data))
+	for key := range g.Data {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		err = g.generateSubQuery(g.Data[key])
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// generateSubQuery generate query code and save to file
+func (g *Generator) generateSubQuery(data *genInfo) (err error) {
+	var buf bytes.Buffer
+
+	err = render(tmpl.HeaderTmpl, &buf, g.queryPkgName)
+	if err != nil {
+		return err
+	}
+
+	structTmpl := tmpl.BaseStructWithContext
+	if g.judgeMode(WithoutContext) {
+		structTmpl = tmpl.BaseStruct
+	}
+
+	err = render(structTmpl, &buf, data.BaseStruct)
+	if err != nil {
+		return err
+	}
+
+	for _, method := range data.Interfaces {
+		err = render(tmpl.DIYMethod, &buf, method)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = render(tmpl.CRUDMethod, &buf, data.BaseStruct)
+	if err != nil {
+		return err
+	}
+	queryFile := fmt.Sprintf("%s/%s.gen.go", g.OutPath, strings.ToLower(data.TableName))
+	result, err := imports.Process(queryFile, buf.Bytes(), nil)
+	if err != nil {
+		errLine, _ := strconv.Atoi(strings.Split(err.Error(), ":")[1])
+		line := strings.Split(buf.String(), "\n")
+		for i := -3; i < 3; i++ {
+			fmt.Println(i+errLine, line[i+errLine])
+		}
+		return fmt.Errorf("can not format query file: %w", err)
+	}
+	return outputFile(queryFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, result)
+}
+
+// remove history GEN generated file
+func (g *Generator) DeleteHistoryGeneratedFile() {
+	historyFile := g.OutPath + "/gorm_generated.go"
+	if _, err := os.Stat(g.OutPath); err == nil {
+		err = os.Remove(historyFile)
+	}
 }
 
 // generateBaseStruct generate basic structures and save to file
