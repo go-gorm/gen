@@ -17,6 +17,7 @@ func SetDefault(db *gorm.DB) {
 
 `
 
+// TODO remove pointer && query clone
 const QueryTmpl = `
 func Use(db *gorm.DB) *Query {
 	return &Query{
