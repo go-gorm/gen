@@ -22,6 +22,12 @@ var (
 	deleteClauses = []string{"DELETE", "FROM", "WHERE"}
 )
 
+// resultInfo query/execute info
+type resultInfo struct {
+	RowsAffected int64
+	Error        error
+}
+
 // DO (data object): implement basic query methods
 // the structure embedded with a *gorm.DB, and has a element item "alias" will be used when used as a sub query
 type DO struct {
@@ -390,9 +396,9 @@ func (d *DO) UpdateSimple(column field.Expr) error {
 	return d.db.Update(column.BuildColumn(d.db.Statement, field.WithTable).String(), expr).Error
 }
 
-func (d *DO) Updates(value interface{}) (affectRows int64, err error) {
+func (d *DO) Updates(value interface{}) (info resultInfo, err error) {
 	result := d.db.Updates(value)
-	return result.RowsAffected, result.Error
+	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
 func (d *DO) UpdateColumn(column field.Expr, value interface{}) error {
@@ -414,13 +420,14 @@ func (d *DO) UpdateColumnSimple(column field.Expr) error {
 	return d.db.UpdateColumn(column.BuildColumn(d.db.Statement, field.WithTable).String(), expr).Error
 }
 
-func (d *DO) UpdateColumns(value interface{}) (affectRows int64, err error) {
+func (d *DO) UpdateColumns(value interface{}) (info resultInfo, err error) {
 	result := d.db.UpdateColumns(value)
-	return result.RowsAffected, result.Error
+	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
-func (d *DO) Delete() error {
-	return d.db.Delete(reflect.New(d.getModelType()).Interface()).Error
+func (d *DO) Delete() (info resultInfo, err error) {
+	result := d.db.Delete(reflect.New(d.getModelType()).Interface())
+	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
 func (d *DO) Count() (count int64, err error) {
