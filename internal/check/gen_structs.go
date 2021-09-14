@@ -27,30 +27,33 @@ const (
 )
 
 var dataType = map[string]func(detailType string) string{
+	"int":        func(string) string { return "int32" },
 	"integer":    func(string) string { return "int32" },
 	"smallint":   func(string) string { return "int32" },
-	"int":        func(string) string { return "int32" },
+	"mediumint":  func(string) string { return "int32" },
 	"bigint":     func(string) string { return "int64" },
 	"float":      func(string) string { return "float32" },
 	"double":     func(string) string { return "float64" },
 	"decimal":    func(string) string { return "float64" },
-	"varchar":    func(string) string { return "string" },
 	"char":       func(string) string { return "string" },
-	"json":       func(string) string { return "string" },
-	"text":       func(string) string { return "string" },
+	"varchar":    func(string) string { return "string" },
 	"tinytext":   func(string) string { return "string" },
 	"mediumtext": func(string) string { return "string" },
 	"longtext":   func(string) string { return "string" },
-	"enum":       func(string) string { return "string" },
 	"tinyblob":   func(string) string { return "[]byte" },
 	"blob":       func(string) string { return "[]byte" },
 	"mediumblob": func(string) string { return "[]byte" },
 	"longblob":   func(string) string { return "[]byte" },
+	"text":       func(string) string { return "string" },
+	"json":       func(string) string { return "string" },
+	"enum":       func(string) string { return "string" },
 	"time":       func(string) string { return "time.Time" },
 	"date":       func(string) string { return "time.Time" },
 	"datetime":   func(string) string { return "time.Time" },
 	"timestamp":  func(string) string { return "time.Time" },
+	"year":       func(string) string { return "int32" },
 	"bit":        func(string) string { return "[]uint8" },
+	"boolean":    func(string) string { return "bool" },
 	"tinyint": func(detailType string) string {
 		if strings.HasPrefix(detailType, "tinyint(1)") {
 			return "bool"
@@ -58,6 +61,8 @@ var dataType = map[string]func(detailType string) string{
 		return "int32"
 	},
 }
+
+var defaultType = "string"
 
 type SchemaNameOpt func(*gorm.DB) string
 type MemberOpt func(*Member) *Member
@@ -104,7 +109,10 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 }
 
 func toMember(field *Column) *Member {
-	memberType := dataType[field.DataType](field.ColumnType)
+	var memberType = defaultType
+	if convert, ok := dataType[field.DataType]; ok {
+		memberType = convert(field.ColumnType)
+	}
 	if memberType == "time.Time" && field.ColumnName == "deleted_at" {
 		memberType = "gorm.DeletedAt"
 	}
