@@ -72,9 +72,9 @@ type Dao interface {
 	Model(model interface{}) Dao
 	Update(column field.Expr, value interface{}) error
 	UpdateSimple(column field.Expr) error
-	Updates(values interface{}) error
+	Updates(values interface{}) (affectRows int64, err error)
 	UpdateColumn(column field.Expr, value interface{}) error
-	UpdateColumns(values interface{}) error
+	UpdateColumns(values interface{}) (affectRows int64, err error)
 	Delete() error
 	Count() (int64, error)
 	Row() *sql.Row
