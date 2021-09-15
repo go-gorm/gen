@@ -163,7 +163,8 @@ demo
 │   │   ├── method.go # DIY method interfaces
 │   │   └── model.go  # store struct which corresponding to the database table
 │   └── query  # generated code's directory
-│       └── gorm_generated.go # generated code
+|       ├── user.gen.go # generated code for user
+│       └── gen.go # generated code
 ├── biz
 │   └── query.go # call function in dal/gorm_generated.go and query databases
 ├── config
@@ -887,7 +888,7 @@ e.WithContext(ctx).Where(e.ID.Eq(10), e.Name.Eq("modi")).Delete()
 result, err := e.WithContext(ctx).Where(e.ID.Eq(10), e.Name.Eq("modi")).Delete()
 
 result.RowsAffected // affect rows number
-err 								// error
+err                 // error
 ```
 
 ##### Delete with primary key
