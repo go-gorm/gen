@@ -575,7 +575,7 @@ type Result struct {
 var result Result
 
 err := u.WithContext(ctx).Select(u.Name, u.Age.Sum().As("total")).Where(u.Name.Like("%modi%")).Group(u.Name).Scan(&result)
-// SELECT name, sum(age) as total FROM `users` WHERE name LIKE "group%" GROUP BY `name`
+// SELECT name, sum(age) as total FROM `users` WHERE name LIKE "%modi%" GROUP BY `name`
 
 err := u.WithContext(ctx).Select(u.Name, u.Age.Sum().As("total")).Group(u.Name).Having(u.Name.Eq("group")).Scan(&result)
 // SELECT name, sum(age) as total FROM `users` GROUP BY `name` HAVING name = "group"
