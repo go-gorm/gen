@@ -13,7 +13,7 @@ func ({{.S}} {{.TargetStruct}}Do){{.MethodName}}({{.GetParamInTmpl}})({{.GetResu
 	{{end}}
 
 	{{if .HasNeedNewResult}}result ={{if .ResultData.IsMap}}make{{else}}new{{end}}({{if ne .ResultData.Package ""}}{{.ResultData.Package}}.{{end}}{{.ResultData.Type}}){{end}}
-	{{.ExecuteResult}} = {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL{{if .HasSqlData}},params{{end}}){{if not .ResultData.IsNull}}.Find({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}.Error
+	{{.ExecuteResult}} = {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL{{if .HasSqlData}},params{{end}}){{if not .ResultData.IsNull}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}.Error
 	return
 }
 
