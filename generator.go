@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -467,8 +468,16 @@ func (g *Generator) generateBaseStruct() (err error) {
 func (g *Generator) output(fileName string, content []byte) error {
 	result, err := imports.Process(fileName, content, nil)
 	if err != nil {
-		for i, line := range strings.Split(string(content), "\n") {
-			fmt.Println(i, line)
+		errLine, _ := strconv.Atoi(strings.Split(err.Error(), ":")[1])
+		startLine, endLine := errLine-3, errLine+3
+		if startLine < 0 {
+			startLine = 0
+		}
+
+		fmt.Println("Format fail:")
+		line := strings.Split(string(content), "\n")
+		for i := startLine; i <= endLine; i++ {
+			fmt.Println(i+errLine, line[i+errLine])
 		}
 		return fmt.Errorf("can not format struct file: %w", err)
 	}
