@@ -329,6 +329,24 @@ func TestExpr_Build(t *testing.T) {
 	}
 }
 
+func TestExpr_BuildColumn(t *testing.T) {
+	stmt := field.GetStatement()
+	id := field.NewUint("user", "id")
+	expectColumnStr := "`id`"
+	expectColumnStrWithTable := "`user`.`id`"
+	expectColumnStrWithoutQuote := "user.id"
+
+	if colStr := id.BuildColumn(stmt).String(); colStr != expectColumnStr {
+		t.Errorf("id.BuildColumn(stmt).String() got: %q, except: %q", colStr, expectColumnStr)
+	}
+	if colStr := id.BuildColumn(stmt, field.WithTable).String(); colStr != expectColumnStrWithTable {
+		t.Errorf("id.BuildColumn(stmt, field.WithTable).String() got: %q, except: %q", colStr, expectColumnStrWithTable)
+	}
+	if colStr := id.BuildColumn(stmt, field.WithoutQuote).String(); colStr != expectColumnStrWithoutQuote {
+		t.Errorf("id.BuildColumn(stmt, field.WithoutQuote).String() got: %q, except: %q", colStr, expectColumnStrWithoutQuote)
+	}
+}
+
 func BenchmarkExpr_Count(b *testing.B) {
 	id := field.NewUint("", "id")
 	for i := 0; i < b.N; i++ {
