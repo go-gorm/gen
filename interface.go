@@ -54,9 +54,6 @@ type Dao interface {
 	Limit(limit int) Dao
 	Offset(offset int) Dao
 	Scopes(funcs ...func(Dao) Dao) Dao
-	// Preload(conds ...field.Expr) Dao
-	// Attrs(attrs ...interface{}) Dao
-	// Assign(attrs ...interface{}) Dao
 	Unscoped() Dao
 
 	Create(value interface{}) error
@@ -67,26 +64,16 @@ type Dao interface {
 	Last() (result interface{}, err error)
 	Find() (results interface{}, err error)
 	FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error
-	// FirstOrInit(dest interface{}) error
-	// FirstOrCreate(dest interface{}) error
-	Model(model interface{}) Dao
-	Update(column field.Expr, value interface{}) error
-	UpdateSimple(column field.Expr) error
-	Updates(values interface{}) error
-	UpdateColumn(column field.Expr, value interface{}) error
-	UpdateColumns(values interface{}) error
-	Delete() error
+	Update(column field.Expr, value interface{}) (info resultInfo, err error)
+	UpdateSimple(column field.Expr) (info resultInfo, err error)
+	Updates(values interface{}) (info resultInfo, err error)
+	UpdateColumn(column field.Expr, value interface{}) (info resultInfo, err error)
+	UpdateColumns(values interface{}) (info resultInfo, err error)
+	Delete() (info resultInfo, err error)
 	Count() (int64, error)
 	Row() *sql.Row
 	Rows() (*sql.Rows, error)
 	Scan(dest interface{}) error
 	Pluck(column field.Expr, dest interface{}) error
 	ScanRows(rows *sql.Rows, dest interface{}) error
-
-	Transaction(fc func(tx Dao) error, opts ...*sql.TxOptions) error
-	Begin(opts ...*sql.TxOptions) Dao
-	Commit() error
-	Rollback() error
-	SavePoint(name string) error
-	RollbackTo(name string) error
 }

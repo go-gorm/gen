@@ -838,7 +838,11 @@ u.WithContext(ctx).Where(u.Activate.Is(true)).UpdateSimple(u.Age.Add(1))
 u := query.Use(db).User
 
 // Update attributes with `map`
-u.WithContext(ctx).Model(&model.User{ID: 111}).Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
+u.WithContext(ctx).Where(u.ID.Eq(111)).Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
+// UPDATE users SET name='hello', age=18, active=false, updated_at='2013-11-17 21:34:10' WHERE id=111;
+
+// Update attributes with `struct`
+u.WithContext(ctx).Where(u.ID.Eq(111)).Updates(model.User{Name: "hello", Age: 18, Active: false})
 // UPDATE users SET name='hello', age=18, active=false, updated_at='2013-11-17 21:34:10' WHERE id=111;
 ```
 
@@ -858,6 +862,11 @@ u.WithContext(ctx).Select(u.Name).Where(u.ID.Eq(111)).Updates(map[string]interfa
 
 u.WithContext(ctx).Omit(u.Name).Where(u.ID.Eq(111)).Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
 // UPDATE users SET age=18, active=false, updated_at='2013-11-17 21:34:10' WHERE id=111;
+
+result, err := u.WithContext(ctx).Where(u.ID.Eq(111)).Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
+
+result.RowsAffected // affect rows number
+err 								// error
 ```
 
 #### Delete
@@ -874,6 +883,11 @@ e.WithContext(ctx).Where(e.ID.Eq(10)).Delete()
 // Delete with additional conditions
 e.WithContext(ctx).Where(e.ID.Eq(10), e.Name.Eq("modi")).Delete()
 // DELETE from emails where id = 10 AND name = "modi";
+
+result, err := e.WithContext(ctx).Where(e.ID.Eq(10), e.Name.Eq("modi")).Delete()
+
+result.RowsAffected // affect rows number
+err 								// error
 ```
 
 ##### Delete with primary key
@@ -892,7 +906,7 @@ The specified value has no primary value, GEN will perform a batch delete, it wi
 ```go
 e := query.Use(db).Email
 
-err := e.WithContext(ctx).Where(e.Name.Like("%modi%")).Delete()
+e.WithContext(ctx).Where(e.Name.Like("%modi%")).Delete()
 // DELETE from emails where email LIKE "%modi%";
 ```
 
@@ -904,7 +918,7 @@ When calling `Delete`, the record WON’T be removed from the database, but GORM
 
 ```go
 // Batch Delete
-err := u.WithContext(ctx).Where(u.Age.Eq(20)).Delete()
+u.WithContext(ctx).Where(u.Age.Eq(20)).Delete()
 // UPDATE users SET deleted_at="2013-10-29 10:23" WHERE age = 20;
 
 // Soft deleted records will be ignored when querying

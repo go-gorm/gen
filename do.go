@@ -22,12 +22,19 @@ var (
 	deleteClauses = []string{"DELETE", "FROM", "WHERE"}
 )
 
+// resultInfo query/execute info
+type resultInfo struct {
+	RowsAffected int64
+	Error        error
+}
+
 // DO (data object): implement basic query methods
 // the structure embedded with a *gorm.DB, and has a element item "alias" will be used when used as a sub query
 type DO struct {
-	db    *gorm.DB
-	alias string // for subquery
-	model interface{}
+	db     *gorm.DB
+	alias  string // for subquery
+	model  interface{}
+	schema *schema.Schema
 }
 
 func (d *DO) getInstance(db *gorm.DB) *DO { return &DO{db: db, alias: d.alias, model: d.model} }
@@ -48,11 +55,19 @@ func (d *DO) UseDB(db *gorm.DB, opts ...doOptions) {
 	d.db = db
 }
 
+func (d *DO) ReplaceDB(db *gorm.DB) {
+	d.db = db
+}
+
 // UseModel specify a data model structure as a source for table name
 func (d *DO) UseModel(model interface{}) {
 	d.model = model
-	d.db = d.db.Model(model).Session(new(gorm.Session))
-	_ = d.db.Statement.Parse(model)
+
+	err := d.db.Statement.Parse(model)
+	if err != nil {
+		panic(fmt.Errorf("Cannot parse model: %+v", model))
+	}
+	d.schema = d.db.Statement.Schema
 }
 
 // UseTable specify table name
@@ -62,7 +77,7 @@ func (d *DO) UseTable(tableName string) {
 
 // TableName return table name
 func (d *DO) TableName() string {
-	return d.db.Statement.Table
+	return d.schema.Table
 }
 
 // UnderlyingDB return the underlying database connection
@@ -314,27 +329,27 @@ func getFromClause(db *gorm.DB) *clause.From {
 
 // ======================== finisher api ========================
 func (d *DO) Create(value interface{}) error {
-	return d.db.Create(value).Error
+	return d.db.Model(d.model).Create(value).Error
 }
 
 func (d *DO) CreateInBatches(value interface{}, batchSize int) error {
-	return d.db.CreateInBatches(value, batchSize).Error
+	return d.db.Model(d.model).CreateInBatches(value, batchSize).Error
 }
 
 func (d *DO) Save(value interface{}) error {
-	return d.db.Save(value).Error
+	return d.db.Model(d.model).Save(value).Error
 }
 
 func (d *DO) First() (result interface{}, err error) {
-	return d.singleQuery(d.db.First)
+	return d.singleQuery(d.db.Model(d.model).First)
 }
 
 func (d *DO) Take() (result interface{}, err error) {
-	return d.singleQuery(d.db.Take)
+	return d.singleQuery(d.db.Model(d.model).Take)
 }
 
 func (d *DO) Last() (result interface{}, err error) {
-	return d.singleQuery(d.db.Last)
+	return d.singleQuery(d.db.Model(d.model).Last)
 }
 
 func (d *DO) singleQuery(query func(dest interface{}, conds ...interface{}) *gorm.DB) (result interface{}, err error) {
@@ -346,7 +361,7 @@ func (d *DO) singleQuery(query func(dest interface{}, conds ...interface{}) *gor
 }
 
 func (d *DO) Find() (results interface{}, err error) {
-	return d.multiQuery(d.db.Find)
+	return d.multiQuery(d.db.Model(d.model).Find)
 }
 
 func (d *DO) multiQuery(query func(dest interface{}, conds ...interface{}) *gorm.DB) (results interface{}, err error) {
@@ -356,118 +371,96 @@ func (d *DO) multiQuery(query func(dest interface{}, conds ...interface{}) *gorm
 }
 
 func (d *DO) FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error {
-	return d.db.FindInBatches(dest, batchSize, func(tx *gorm.DB, batch int) error { return fc(d.getInstance(tx), batch) }).Error
+	return d.db.Model(d.model).FindInBatches(dest, batchSize, func(tx *gorm.DB, batch int) error { return fc(d.getInstance(tx), batch) }).Error
 }
 
-// func (d *DO) FirstOrInit(dest interface{}, conds ...field.Expr) error {
-// 	return d.db.Clauses(toExpression(conds)...).FirstOrInit(dest).Error
-// }
+func (d *DO) Update(column field.Expr, value interface{}) (info resultInfo, err error) {
+	tx := d.db.Model(d.model)
+	columnStr := column.BuildColumn(d.db.Statement, field.WithTable, field.WithoutQuote).String()
 
-// func (d *DO) FirstOrCreate(dest interface{}, conds ...field.Expr) error {
-// 	return d.db.Clauses(toExpression(conds)...).FirstOrCreate(dest).Error
-// }
-
-func (d *DO) Model(model interface{}) Dao {
-	return d.getInstance(d.db.Model(model))
-}
-
-func (d *DO) Update(column field.Expr, value interface{}) error {
+	var result *gorm.DB
 	switch value := value.(type) {
 	case field.Expr:
-		return d.db.Update(column.BuildColumn(d.db.Statement, field.WithTable).String(), value.RawExpr()).Error
+		result = tx.Update(columnStr, value.RawExpr())
 	case subQuery:
-		return d.db.Update(column.BuildColumn(d.db.Statement, field.WithTable).String(), value.underlyingDB()).Error
+		result = tx.Update(columnStr, value.underlyingDB())
 	default:
-		return d.db.Update(column.BuildColumn(d.db.Statement, field.WithTable).String(), value).Error
+		result = tx.Update(columnStr, value)
 	}
+	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
-func (d *DO) UpdateSimple(column field.Expr) error {
+func (d *DO) UpdateSimple(column field.Expr) (info resultInfo, err error) {
 	expr, ok := column.RawExpr().(clause.Expression)
 	if !ok {
-		return ErrInvalidExpression
+		return resultInfo{Error: ErrInvalidExpression}, ErrInvalidExpression
 	}
-	return d.db.Update(column.BuildColumn(d.db.Statement, field.WithTable).String(), expr).Error
+	result := d.db.Model(d.model).Update(column.BuildColumn(d.db.Statement, field.WithTable, field.WithoutQuote).String(), expr)
+	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
-func (d *DO) Updates(value interface{}) error {
-	return d.db.Updates(value).Error
+func (d *DO) Updates(value interface{}) (info resultInfo, err error) {
+	result := d.db.Model(d.model).Updates(value)
+	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
-func (d *DO) UpdateColumn(column field.Expr, value interface{}) error {
+func (d *DO) UpdateColumn(column field.Expr, value interface{}) (info resultInfo, err error) {
+	tx := d.db.Model(d.model)
+	columnStr := column.BuildColumn(d.db.Statement, field.WithTable, field.WithoutQuote).String()
+
+	var result *gorm.DB
 	switch value := value.(type) {
 	case field.Expr:
-		return d.db.UpdateColumn(column.BuildColumn(d.db.Statement, field.WithTable).String(), value.RawExpr()).Error
+		result = tx.UpdateColumn(columnStr, value.RawExpr())
 	case subQuery:
-		return d.db.UpdateColumn(column.BuildColumn(d.db.Statement, field.WithTable).String(), value.underlyingDB()).Error
+		result = d.db.UpdateColumn(columnStr, value.underlyingDB())
 	default:
-		return d.db.UpdateColumn(column.BuildColumn(d.db.Statement, field.WithTable).String(), value).Error
+		result = d.db.UpdateColumn(columnStr, value)
 	}
+	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
-func (d *DO) UpdateColumnSimple(column field.Expr) error {
+func (d *DO) UpdateColumnSimple(column field.Expr) (info resultInfo, err error) {
 	expr, ok := column.RawExpr().(clause.Expression)
 	if !ok {
-		return ErrInvalidExpression
+		return resultInfo{Error: ErrInvalidExpression}, ErrInvalidExpression
 	}
-	return d.db.UpdateColumn(column.BuildColumn(d.db.Statement, field.WithTable).String(), expr).Error
+	result := d.db.Model(d.model).UpdateColumn(column.BuildColumn(d.db.Statement, field.WithTable, field.WithoutQuote).String(), expr)
+	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
-func (d *DO) UpdateColumns(value interface{}) error {
-	return d.db.UpdateColumns(value).Error
+func (d *DO) UpdateColumns(value interface{}) (info resultInfo, err error) {
+	result := d.db.Model(d.model).UpdateColumns(value)
+	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
-func (d *DO) Delete() error {
-	return d.db.Delete(reflect.New(d.getModelType()).Interface()).Error
+func (d *DO) Delete() (info resultInfo, err error) {
+	result := d.db.Model(d.model).Delete(reflect.New(d.getModelType()).Interface())
+	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
 func (d *DO) Count() (count int64, err error) {
-	return count, d.db.Count(&count).Error
+	return count, d.db.Model(d.model).Count(&count).Error
 }
 
 func (d *DO) Row() *sql.Row {
-	return d.db.Row()
+	return d.db.Model(d.model).Row()
 }
 
 func (d *DO) Rows() (*sql.Rows, error) {
-	return d.db.Rows()
+	return d.db.Model(d.model).Rows()
 }
 
 func (d *DO) Scan(dest interface{}) error {
-	return d.db.Scan(dest).Error
+	return d.db.Model(d.model).Scan(dest).Error
 }
 
 func (d *DO) Pluck(column field.Expr, dest interface{}) error {
-	return d.db.Pluck(column.ColumnName().String(), dest).Error
+	return d.db.Model(d.model).Pluck(column.ColumnName().String(), dest).Error
 }
 
 func (d *DO) ScanRows(rows *sql.Rows, dest interface{}) error {
-	return d.db.ScanRows(rows, dest)
-}
-
-func (d *DO) Transaction(fc func(Dao) error, opts ...*sql.TxOptions) error {
-	return d.db.Transaction(func(tx *gorm.DB) error { return fc(d.getInstance(tx)) }, opts...)
-}
-
-func (d *DO) Begin(opts ...*sql.TxOptions) Dao {
-	d.db.Begin(opts...)
-	return d
-}
-
-func (d *DO) Commit() error {
-	return d.db.Commit().Error
-}
-
-func (d *DO) Rollback() error {
-	return d.db.Rollback().Error
-}
-
-func (d *DO) SavePoint(name string) error {
-	return d.db.SavePoint(name).Error
-}
-
-func (d *DO) RollbackTo(name string) error {
-	return d.db.RollbackTo(name).Error
+	return d.db.Model(d.model).ScanRows(rows, dest)
 }
 
 func (d *DO) newResultPointer() interface{} {

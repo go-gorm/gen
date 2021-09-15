@@ -14,9 +14,13 @@ import (
 
 var db, _ = gorm.Open(tests.DummyDialector{}, nil)
 
-func CheckBuildExpr(t *testing.T, e Expr, result string, vars []interface{}) {
+func GetStatement() *gorm.Statement {
 	user, _ := schema.Parse(&User{}, &sync.Map{}, db.NamingStrategy)
-	stmt := &gorm.Statement{DB: db, Table: user.Table, Schema: user, Clauses: map[string]clause.Clause{}}
+	return &gorm.Statement{DB: db, Table: user.Table, Schema: user, Clauses: map[string]clause.Clause{}}
+}
+
+func CheckBuildExpr(t *testing.T, e Expr, result string, vars []interface{}) {
+	stmt := GetStatement()
 
 	e.expression().Build(stmt)
 
