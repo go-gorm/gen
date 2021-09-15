@@ -49,7 +49,7 @@ func (m *InterfaceMethod) HasNeedNewResult() bool {
 	return !m.ResultData.IsArray && ((m.ResultData.IsNull() && m.ResultData.IsTime()) || m.ResultData.IsMap())
 }
 
-// HasNeedNewResult need pointer or not
+// GormRunMethodName return single data use Take() return array use Find
 func (m *InterfaceMethod) GormRunMethodName() string {
 	if m.ResultData.IsArray {
 		return "Find"
