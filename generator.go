@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 	"text/template"
@@ -354,13 +353,9 @@ func (g *Generator) generateQueryFile() (err error) {
 	if err != nil {
 		return err
 	}
-	keys := make([]string, 0, len(g.Data))
-	for key := range g.Data {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	for _, key := range keys {
-		err = g.generateSubQuery(g.Data[key])
+
+	for _, info := range g.Data {
+		err = g.generateSubQuery(info)
 		if err != nil {
 			return err
 		}
