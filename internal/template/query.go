@@ -17,7 +17,6 @@ func SetDefault(db *gorm.DB) {
 
 `
 
-// TODO remove pointer && query clone
 const QueryTmpl = `
 func Use(db *gorm.DB) *Query {
 	return &Query{
@@ -32,31 +31,55 @@ type Query struct{
 	db *gorm.DB
 
 	{{range $name,$d :=.Data -}}
-	{{$d.StructName}} *{{$d.NewStructName}}
+	{{$d.StructName}} {{$d.NewStructName}}
 	{{end}}
 }
 
+func (q *Query) clone(db *gorm.DB) *Query {
+	return &Query{
+		{{range $name,$d :=.Data -}}
+		{{$d.StructName}}: q.{{$d.StructName}}.clone(db),
+		{{end}}
+	}
+}
+
+type queryCtx struct{ 
+	{{range $name,$d :=.Data -}}
+	{{$d.StructName}} {{$d.NewStructName}}Do
+	{{end}}
+}
+
+func (q *Query) WithContext(ctx context.Context) *queryCtx  {
+	return &queryCtx{
+		{{range $name,$d :=.Data -}}
+		{{$d.StructName}}: q.{{$d.StructName}}.{{$d.NewStructName}}Do,
+		{{end}}
+	}
+}
+
 func (q *Query) Transaction(fc func(db *Query) error, opts ...*sql.TxOptions) error {
-	return q.db.Transaction(func(tx *gorm.DB) error { return fc(Use(tx)) }, opts...)
+	return q.db.Transaction(func(tx *gorm.DB) error { return fc(q.clone(tx)) }, opts...)
 }
 
-func (q *Query) Begin(opts ...*sql.TxOptions) *Query {
-	return Use(q.db.Begin(opts...))
+func (q *Query) Begin(opts ...*sql.TxOptions) *queryTx {
+	return &queryTx{q.clone(q.db.Begin(opts...))}
 }
 
-func (q *Query) Commit() error {
+type queryTx struct{ *Query }
+
+func (q *queryTx) Commit() error {
 	return q.db.Commit().Error
 }
 
-func (q *Query) Rollback() error {
+func (q *queryTx) Rollback() error {
 	return q.db.Rollback().Error
 }
 
-func (q *Query) SavePoint(name string) error {
+func (q *queryTx) SavePoint(name string) error {
 	return q.db.SavePoint(name).Error
 }
 
-func (q *Query) RollbackTo(name string) error {
+func (q *queryTx) RollbackTo(name string) error {
 	return q.db.RollbackTo(name).Error
 }
 

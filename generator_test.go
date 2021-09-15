@@ -252,11 +252,6 @@ func (u userDo) FindByPage(offset int, limit int) (result []*user, count int64, 
 	return
 }
 
-func (u userDo) Model(result *user) *userDo {
-	u.DO = *u.DO.Model(result).(*DO)
-	return &u
-}
-
 var u = func() *user {
 	u := user{
 		ID:         field.NewUint("", "id"),

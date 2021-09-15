@@ -176,9 +176,4 @@ func ({{.S}} {{.NewStructName}}Do) FindByPage(offset int, limit int) (result []*
 	return
 }
 
-func ({{.S}} {{.NewStructName}}Do) Model(result *{{.StructInfo.Package}}.{{.StructInfo.Type}}) *{{.NewStructName}}Do {
-	{{.S}}.DO = *{{.S}}.DO.Model(result).(*gen.DO)
-	return &{{.S}}
-}
-
 `
