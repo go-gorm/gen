@@ -57,12 +57,21 @@ var (
 
 	// WithAll build column with table and alias
 	WithAll BuildOpt = func(col clause.Column) interface{} { return col }
+
+	// WithoutQuote
+	WithoutQuote BuildOpt = func(col clause.Column) interface{} {
+		col.Raw = true
+		return col
+	}
 )
 
 func (e expr) BuildColumn(stmt *gorm.Statement, opts ...BuildOpt) sql {
 	var col interface{} = e.col.Name
 	for _, opt := range opts {
 		col = opt(e.col)
+	}
+	if col, ok := col.(clause.Column); ok && col.Raw {
+		return sql(col.Table + "." + col.Name)
 	}
 	return sql(stmt.Quote(col))
 }
