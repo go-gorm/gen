@@ -374,26 +374,29 @@ func (d *DO) FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batc
 	return d.db.Model(d.model).FindInBatches(dest, batchSize, func(tx *gorm.DB, batch int) error { return fc(d.getInstance(tx), batch) }).Error
 }
 
-func (d *DO) Update(column field.Expr, value interface{}) error {
+func (d *DO) Update(column field.Expr, value interface{}) (info resultInfo, err error) {
 	tx := d.db.Model(d.model)
 	columnStr := column.BuildColumn(d.db.Statement, field.WithTable, field.WithoutQuote).String()
 
+	var result *gorm.DB
 	switch value := value.(type) {
 	case field.Expr:
-		return tx.Update(columnStr, value.RawExpr()).Error
+		result = tx.Update(columnStr, value.RawExpr())
 	case subQuery:
-		return tx.Update(columnStr, value.underlyingDB()).Error
+		result = tx.Update(columnStr, value.underlyingDB())
 	default:
-		return tx.Update(columnStr, value).Error
+		result = tx.Update(columnStr, value)
 	}
+	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
-func (d *DO) UpdateSimple(column field.Expr) error {
+func (d *DO) UpdateSimple(column field.Expr) (info resultInfo, err error) {
 	expr, ok := column.RawExpr().(clause.Expression)
 	if !ok {
-		return ErrInvalidExpression
+		return resultInfo{Error: ErrInvalidExpression}, ErrInvalidExpression
 	}
-	return d.db.Update(column.BuildColumn(d.db.Statement, field.WithTable).String(), expr).Error
+	result := d.db.Model(d.model).Update(column.BuildColumn(d.db.Statement, field.WithTable, field.WithoutQuote).String(), expr)
+	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
 func (d *DO) Updates(value interface{}) (info resultInfo, err error) {
@@ -401,26 +404,29 @@ func (d *DO) Updates(value interface{}) (info resultInfo, err error) {
 	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
-func (d *DO) UpdateColumn(column field.Expr, value interface{}) error {
+func (d *DO) UpdateColumn(column field.Expr, value interface{}) (info resultInfo, err error) {
 	tx := d.db.Model(d.model)
 	columnStr := column.BuildColumn(d.db.Statement, field.WithTable, field.WithoutQuote).String()
 
+	var result *gorm.DB
 	switch value := value.(type) {
 	case field.Expr:
-		return tx.UpdateColumn(columnStr, value.RawExpr()).Error
+		result = tx.UpdateColumn(columnStr, value.RawExpr())
 	case subQuery:
-		return d.db.UpdateColumn(columnStr, value.underlyingDB()).Error
+		result = d.db.UpdateColumn(columnStr, value.underlyingDB())
 	default:
-		return d.db.UpdateColumn(columnStr, value).Error
+		result = d.db.UpdateColumn(columnStr, value)
 	}
+	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
-func (d *DO) UpdateColumnSimple(column field.Expr) error {
+func (d *DO) UpdateColumnSimple(column field.Expr) (info resultInfo, err error) {
 	expr, ok := column.RawExpr().(clause.Expression)
 	if !ok {
-		return ErrInvalidExpression
+		return resultInfo{Error: ErrInvalidExpression}, ErrInvalidExpression
 	}
-	return d.db.Model(d.model).UpdateColumn(column.BuildColumn(d.db.Statement, field.WithTable).String(), expr).Error
+	result := d.db.Model(d.model).UpdateColumn(column.BuildColumn(d.db.Statement, field.WithTable, field.WithoutQuote).String(), expr)
+	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
 func (d *DO) UpdateColumns(value interface{}) (info resultInfo, err error) {
