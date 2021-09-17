@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"text/template"
@@ -146,6 +147,21 @@ var (
 			return m
 		}
 	}
+	// FieldIgnoreReg ignore some columns by reg rule
+	FieldIgnoreReg = func(columnNameRegs ...string) check.MemberOpt {
+		regs := make([]regexp.Regexp, len(columnNameRegs))
+		for i, reg := range columnNameRegs {
+			regs[i] = *regexp.MustCompile(reg)
+		}
+		return func(m *check.Member) *check.Member {
+			for _, reg := range regs {
+				if reg.MatchString(m.Name) {
+					return nil
+				}
+			}
+			return m
+		}
+	}
 	// FieldRename specify field name in generated struct
 	FieldRename = func(columnName string, newName string) check.MemberOpt {
 		return func(m *check.Member) *check.Member {
@@ -165,7 +181,17 @@ var (
 			return m
 		}
 	}
-
+	// FieldIgnoreType ignore some columns by reg rule
+	FieldTypeReg = func(columnNameReg string, newType string) check.MemberOpt {
+		reg := regexp.MustCompile(columnNameReg)
+		return func(m *check.Member) *check.Member {
+			if reg.MatchString(m.Name) {
+				m.Type = newType
+				m.ModelType = newType
+			}
+			return m
+		}
+	}
 	// FieldTag specify json tag and gorm tag
 	FieldTag = func(columnName string, gormTag, jsonTag string) check.MemberOpt {
 		return func(m *check.Member) *check.Member {
@@ -199,6 +225,34 @@ var (
 			if m.Name == columnName {
 				m.NewTag += " " + newTag
 			}
+			return m
+		}
+	}
+	// FieldTrimPrefix trim column name's prefix
+	FieldTrimPrefix = func(prefix string) check.MemberOpt {
+		return func(m *check.Member) *check.Member {
+			m.Name = strings.TrimPrefix(m.Name, prefix)
+			return m
+		}
+	}
+	// FieldTrimSuffix trim column name's suffix
+	FieldTrimSuffix = func(suffix string) check.MemberOpt {
+		return func(m *check.Member) *check.Member {
+			m.Name = strings.TrimSuffix(m.Name, suffix)
+			return m
+		}
+	}
+	// FieldAddPrefix add prefix to struct's memeber name
+	FieldAddPrefix = func(prefix string) check.MemberOpt {
+		return func(m *check.Member) *check.Member {
+			m.Name = prefix + m.Name
+			return m
+		}
+	}
+	// FieldAddSuffix add suffix to struct's memeber name
+	FieldAddSuffix = func(suffix string) check.MemberOpt {
+		return func(m *check.Member) *check.Member {
+			m.Name += suffix
 			return m
 		}
 	}
