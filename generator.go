@@ -350,11 +350,9 @@ func (g *Generator) Execute() {
 	if g.OutFile == "" {
 		g.OutFile = g.OutPath + "/gen.go"
 	}
-	if _, err := os.Stat(g.OutPath); err != nil {
-		if err := os.MkdirAll(g.OutPath, os.ModePerm); err != nil {
-			g.db.Logger.Error(context.Background(), "create dir fail: %s", err)
-			panic("create query dir fail")
-		}
+	if err := os.MkdirAll(g.OutPath, os.ModePerm); err != nil {
+		g.db.Logger.Error(context.Background(), "create dir fail: %s", err)
+		panic("create query dir fail")
 	}
 	g.queryPkgName = filepath.Base(g.OutPath)
 
