@@ -851,13 +851,19 @@ u.WithContext(ctx).Where(u.ID.Eq(111)).Updates(map[string]interface{}{"name": "h
 // Update attributes with `struct`
 u.WithContext(ctx).Where(u.ID.Eq(111)).Updates(model.User{Name: "hello", Age: 18, Active: false})
 // UPDATE users SET name='hello', age=18, active=false, updated_at='2013-11-17 21:34:10' WHERE id=111;
+
+// Update with expression
+u.WithContext(ctx).Where(u.ID.Eq(111)).UpdateSimple(u.Age.Add(1), u.Number.Add(1))
+// UPDATE users SET age=age+1,number=number+1 updated_at='2013-11-17 21:34:10' WHERE id=111;
 ```
 
 > **NOTE** When update with struct, GEN will only update non-zero fields, you might want to use `map` to update attributes or use `Select` to specify fields to update
 
-##### Update selected fields
+##### ~~Update selected fields~~
 
-If you want to update selected fields or ignore some fields when updating, you can use `Select`, `Omit`
+Wait for GORM update to compatible with GEN
+
+~~If you want to update selected fields or ignore some fields when updating, you can use `Select`, `Omit`~~
 
 ```go
 u := query.Use(db).User
