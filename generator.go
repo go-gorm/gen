@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"text/template"
@@ -146,6 +147,21 @@ var (
 			return m
 		}
 	}
+	// FieldIgnoreReg ignore some columns by reg rule
+	FieldIgnoreReg = func(columnNameRegs ...string) check.MemberOpt {
+		regs := make([]regexp.Regexp, len(columnNameRegs))
+		for i, reg := range columnNameRegs {
+			regs[i] = *regexp.MustCompile(reg)
+		}
+		return func(m *check.Member) *check.Member {
+			for _, reg := range regs {
+				if reg.MatchString(m.Name) {
+					return nil
+				}
+			}
+			return m
+		}
+	}
 	// FieldRename specify field name in generated struct
 	FieldRename = func(columnName string, newName string) check.MemberOpt {
 		return func(m *check.Member) *check.Member {
@@ -165,7 +181,17 @@ var (
 			return m
 		}
 	}
-
+	// FieldIgnoreType ignore some columns by reg rule
+	FieldTypeReg = func(columnNameReg string, newType string) check.MemberOpt {
+		reg := regexp.MustCompile(columnNameReg)
+		return func(m *check.Member) *check.Member {
+			if reg.MatchString(m.Name) {
+				m.Type = newType
+				m.ModelType = newType
+			}
+			return m
+		}
+	}
 	// FieldTag specify json tag and gorm tag
 	FieldTag = func(columnName string, gormTag, jsonTag string) check.MemberOpt {
 		return func(m *check.Member) *check.Member {
@@ -202,6 +228,34 @@ var (
 			return m
 		}
 	}
+	// FieldTrimPrefix trim column name's prefix
+	FieldTrimPrefix = func(prefix string) check.MemberOpt {
+		return func(m *check.Member) *check.Member {
+			m.Name = strings.TrimPrefix(m.Name, prefix)
+			return m
+		}
+	}
+	// FieldTrimSuffix trim column name's suffix
+	FieldTrimSuffix = func(suffix string) check.MemberOpt {
+		return func(m *check.Member) *check.Member {
+			m.Name = strings.TrimSuffix(m.Name, suffix)
+			return m
+		}
+	}
+	// FieldAddPrefix add prefix to struct's memeber name
+	FieldAddPrefix = func(prefix string) check.MemberOpt {
+		return func(m *check.Member) *check.Member {
+			m.Name = prefix + m.Name
+			return m
+		}
+	}
+	// FieldAddSuffix add suffix to struct's memeber name
+	FieldAddSuffix = func(suffix string) check.MemberOpt {
+		return func(m *check.Member) *check.Member {
+			m.Name += suffix
+			return m
+		}
+	}
 )
 
 /*
@@ -224,9 +278,11 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, opts ...
 
 	s, err := check.GenBaseStructs(g.db, g.Config.ModelPkgPath, tableName, modelName, g.dbNameOpts, colNameOpts)
 	if err != nil {
-		g.db.Logger.Error(context.Background(), "generated struct from table has error: %s", err)
-		panic("panic with generated struct error")
+		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)
+		panic("generate struct fail")
 	}
+
+	g.successInfo(fmt.Sprintf("got %d columns from table <%s>", len(s.Members), s.TableName))
 	return s
 }
 
@@ -240,8 +296,8 @@ func (g *Generator) ApplyBasic(models ...interface{}) {
 func (g *Generator) ApplyInterface(fc interface{}, models ...interface{}) {
 	structs, err := check.CheckStructs(g.db, models...)
 	if err != nil {
-		g.db.Logger.Error(context.Background(), "check struct error: %v", err)
-		panic("panic with check struct error")
+		g.db.Logger.Error(context.Background(), "check struct fail: %v", err)
+		panic("check struct fail")
 	}
 	g.apply(fc, structs)
 }
@@ -250,14 +306,14 @@ func (g *Generator) apply(fc interface{}, structs []*check.BaseStruct) {
 	readInterface := new(parser.InterfaceSet)
 	interfacePaths, err := parser.GetInterfacePath(fc)
 	if err != nil {
-		g.db.Logger.Error(context.Background(), "can not get interface name or file: %s", err)
-		panic("panic with check interface error")
+		g.db.Logger.Error(context.Background(), "get interface name or file fail: %s", err)
+		panic("check interface fail")
 	}
 
 	err = readInterface.ParseFile(interfacePaths, check.GetNames(structs))
 	if err != nil {
-		g.db.Logger.Error(context.Background(), "can not parser interface file: %s", err)
-		panic("panic with parser interface file error")
+		g.db.Logger.Error(context.Background(), "parser interface file fail: %s", err)
+		panic("parser interface file fail")
 	}
 
 	for _, interfaceStruct := range structs {
@@ -267,19 +323,19 @@ func (g *Generator) apply(fc interface{}, structs []*check.BaseStruct) {
 
 		data, err := g.pushBaseStruct(interfaceStruct)
 		if err != nil {
-			g.db.Logger.Error(context.Background(), "gen struct error: %v", err)
-			panic("panic with gen struct error")
+			g.db.Logger.Error(context.Background(), "gen struct fail: %v", err)
+			panic("gen struct fail")
 		}
 
 		functions, err := check.CheckInterface(readInterface, interfaceStruct, data.Interfaces)
 		if err != nil {
-			g.db.Logger.Error(context.Background(), "check interface error: %v", err)
-			panic("panic with check interface error")
+			g.db.Logger.Error(context.Background(), "check interface fail: %v", err)
+			panic("check interface fail")
 		}
 		err = data.appendMethods(functions)
 		if err != nil {
-			g.db.Logger.Error(context.Background(), "check interface error: %v", err)
-			panic("panic with check interface error")
+			g.db.Logger.Error(context.Background(), "check interface fail: %v", err)
+			panic("check interface fail")
 		}
 	}
 }
@@ -296,27 +352,27 @@ func (g *Generator) Execute() {
 	}
 	if _, err := os.Stat(g.OutPath); err != nil {
 		if err := os.Mkdir(g.OutPath, os.ModePerm); err != nil {
-			g.db.Logger.Error(context.Background(), "mkdir failed: %s", err)
-			panic("panic with mkdir query dir error")
+			g.db.Logger.Error(context.Background(), "create dir fail: %s", err)
+			panic("create query dir fail")
 		}
 	}
 	g.queryPkgName = filepath.Base(g.OutPath)
 
 	err = g.generateBaseStruct()
 	if err != nil {
-		g.db.Logger.Error(context.Background(), "generate basic struct from table fail: %v", err)
-		panic("panic with generate basic struct from table error")
+		g.db.Logger.Error(context.Background(), "generate basic struct from table fail: %s", err)
+		panic("generate basic struct from table fail")
 	}
 	g.deleteHistoryGeneratedFile()
 	err = g.generateQueryFile()
 	if err != nil {
-		g.db.Logger.Error(context.Background(), "generate query to file: %v", err)
-		panic("panic with generate query to file error")
+		g.db.Logger.Error(context.Background(), "generate query code: %s", err)
+		panic("generate query code fail")
 	}
 
 	g.successInfo(
-		"Success generate query object file："+g.OutFile,
-		"Gorm generate successful",
+		"Successfully generate query file："+g.OutFile,
+		"Successfully generate code",
 	)
 }
 
@@ -436,8 +492,8 @@ func (g *Generator) generateBaseStruct() (err error) {
 
 		if !created {
 			if err := os.Mkdir(outPath, os.ModePerm); err != nil {
-				g.db.Logger.Error(context.Background(), "mkdir failed: %s", err)
-				panic("panic with mkdir base struct dir error")
+				g.db.Logger.Error(context.Background(), "create dir fail: %s", err)
+				panic("create base struct dir fail")
 			}
 			created = true
 		}
@@ -454,7 +510,7 @@ func (g *Generator) generateBaseStruct() (err error) {
 		}
 
 		g.successInfo(fmt.Sprintf("Generate struct [%s.%s] from table [%s]", data.StructInfo.Package, data.StructInfo.Type, data.TableName))
-		g.successInfo(fmt.Sprintf("Success generate struct file:%s", modelFile))
+		g.successInfo(fmt.Sprintf("Successfully generate struct file: %s", modelFile))
 	}
 	return nil
 }
@@ -474,7 +530,7 @@ func (g *Generator) output(fileName string, content []byte) error {
 		for i := startLine; i <= endLine; i++ {
 			fmt.Println(i+errLine, line[i+errLine])
 		}
-		return fmt.Errorf("can not format struct file: %w", err)
+		return fmt.Errorf("cannot format struct file: %w", err)
 	}
 	return outputFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, result)
 }
@@ -485,7 +541,7 @@ func (g *Generator) pushBaseStruct(base *check.BaseStruct) (*genInfo, error) {
 		g.Data[structName] = &genInfo{BaseStruct: base}
 	}
 	if g.Data[structName].Source != base.Source {
-		return nil, fmt.Errorf("can not generate struct with the same name from different source:%s.%s and %s.%s",
+		return nil, fmt.Errorf("cannot generate struct with the same name from different source:%s.%s and %s.%s",
 			base.StructInfo.Package, base.StructName, g.Data[structName].StructInfo.Package, g.Data[structName].StructName)
 	}
 	return g.Data[structName], nil
@@ -494,7 +550,7 @@ func (g *Generator) pushBaseStruct(base *check.BaseStruct) (*genInfo, error) {
 func outputFile(filename string, flag int, data []byte) error {
 	out, err := os.OpenFile(filename, flag, 0640)
 	if err != nil {
-		return fmt.Errorf("can not open out file: %w", err)
+		return fmt.Errorf("open out file fail: %w", err)
 	}
 	return output(out, data)
 }
@@ -502,12 +558,12 @@ func outputFile(filename string, flag int, data []byte) error {
 func output(wr io.WriteCloser, data []byte) (err error) {
 	defer func() {
 		if e := wr.Close(); e != nil {
-			err = fmt.Errorf("can not close: %w", e)
+			err = fmt.Errorf("close file fail: %w", e)
 		}
 	}()
 
 	if _, err = wr.Write(data); err != nil {
-		return fmt.Errorf("can not write: %w", err)
+		return fmt.Errorf("write file fail: %w", err)
 	}
 	return nil
 }

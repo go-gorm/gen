@@ -49,6 +49,14 @@ func (m *InterfaceMethod) HasNeedNewResult() bool {
 	return !m.ResultData.IsArray && ((m.ResultData.IsNull() && m.ResultData.IsTime()) || m.ResultData.IsMap())
 }
 
+// GormRunMethodName return single data use Take() return array use Find
+func (m *InterfaceMethod) GormRunMethodName() string {
+	if m.ResultData.IsArray {
+		return "Find"
+	}
+	return "Take"
+}
+
 // IsRepeatFromDifferentInterface check different interface has same mame method
 func (m *InterfaceMethod) IsRepeatFromDifferentInterface(newMethod *InterfaceMethod) bool {
 	return m.MethodName == newMethod.MethodName && m.InterfaceName != newMethod.InterfaceName && m.TargetStruct == newMethod.TargetStruct

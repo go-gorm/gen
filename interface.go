@@ -65,10 +65,11 @@ type Dao interface {
 	Find() (results interface{}, err error)
 	FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error
 	Update(column field.Expr, value interface{}) (info resultInfo, err error)
-	UpdateSimple(column field.Expr) (info resultInfo, err error)
+	UpdateSimple(columns ...field.Expr) (info resultInfo, err error)
 	Updates(values interface{}) (info resultInfo, err error)
 	UpdateColumn(column field.Expr, value interface{}) (info resultInfo, err error)
 	UpdateColumns(values interface{}) (info resultInfo, err error)
+	UpdateColumnSimple(columns ...field.Expr) (info resultInfo, err error)
 	Delete() (info resultInfo, err error)
 	Count() (int64, error)
 	Row() *sql.Row
