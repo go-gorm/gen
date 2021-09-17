@@ -282,7 +282,7 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, opts ...
 		panic("generate struct fail")
 	}
 
-	g.successInfo(fmt.Sprintf("Got %d columns from table <%s>", len(s.Members), s.TableName))
+	g.successInfo(fmt.Sprintf("got %d columns from table <%s>", len(s.Members), s.TableName))
 	return s
 }
 
