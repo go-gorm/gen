@@ -873,7 +873,7 @@ u.WithContext(ctx).Omit(u.Name).Where(u.ID.Eq(111)).Updates(map[string]interface
 result, err := u.WithContext(ctx).Where(u.ID.Eq(111)).Updates(map[string]interface{}{"name": "hello", "age": 18, "active": false})
 
 result.RowsAffected // affect rows number
-err 								// error
+err                 // error
 ```
 
 #### Delete
