@@ -390,12 +390,13 @@ func (d *DO) Update(column field.Expr, value interface{}) (info resultInfo, err 
 	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
-func (d *DO) UpdateSimple(column field.Expr) (info resultInfo, err error) {
-	expr, ok := column.RawExpr().(clause.Expression)
-	if !ok {
-		return resultInfo{Error: ErrInvalidExpression}, ErrInvalidExpression
+func (d *DO) UpdateSimple(columns ...field.Expr) (info resultInfo, err error) {
+	dest, err := parseExprs(d.db.Statement, columns)
+	if err != nil {
+		return resultInfo{Error: err}, err
 	}
-	result := d.db.Model(d.model).Update(column.BuildColumn(d.db.Statement, field.WithTable, field.WithoutQuote).String(), expr)
+
+	result := d.db.Model(d.model).Updates(dest)
 	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
@@ -420,12 +421,13 @@ func (d *DO) UpdateColumn(column field.Expr, value interface{}) (info resultInfo
 	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
-func (d *DO) UpdateColumnSimple(column field.Expr) (info resultInfo, err error) {
-	expr, ok := column.RawExpr().(clause.Expression)
-	if !ok {
-		return resultInfo{Error: ErrInvalidExpression}, ErrInvalidExpression
+func (d *DO) UpdateColumnSimple(columns ...field.Expr) (info resultInfo, err error) {
+	dest, err := parseExprs(d.db.Statement, columns)
+	if err != nil {
+		return resultInfo{Error: err}, err
 	}
-	result := d.db.Model(d.model).UpdateColumn(column.BuildColumn(d.db.Statement, field.WithTable, field.WithoutQuote).String(), expr)
+
+	result := d.db.Model(d.model).UpdateColumns(dest)
 	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
@@ -536,6 +538,18 @@ func toInterfaceSlice(value interface{}) []interface{} {
 	default:
 		return nil
 	}
+}
+
+func parseExprs(stmt *gorm.Statement, exprs []field.Expr) (map[string]interface{}, error) {
+	dest := make(map[string]interface{}, len(exprs))
+	for _, e := range exprs {
+		expr, ok := e.RawExpr().(clause.Expression)
+		if !ok {
+			return nil, ErrInvalidExpression
+		}
+		dest[e.BuildColumn(stmt, field.WithTable, field.WithoutQuote).String()] = expr
+	}
+	return dest, nil
 }
 
 // ======================== New Table ========================
