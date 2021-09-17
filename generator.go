@@ -351,7 +351,7 @@ func (g *Generator) Execute() {
 		g.OutFile = g.OutPath + "/gen.go"
 	}
 	if _, err := os.Stat(g.OutPath); err != nil {
-		if err := os.Mkdir(g.OutPath, os.ModePerm); err != nil {
+		if err := os.MkdirAll(g.OutPath, os.ModePerm); err != nil {
 			g.db.Logger.Error(context.Background(), "create dir fail: %s", err)
 			panic("create query dir fail")
 		}
@@ -491,7 +491,7 @@ func (g *Generator) generateBaseStruct() (err error) {
 		}
 
 		if !created {
-			if err := os.Mkdir(outPath, os.ModePerm); err != nil {
+			if err := os.MkdirAll(outPath, os.ModePerm); err != nil {
 				g.db.Logger.Error(context.Background(), "create dir fail: %s", err)
 				panic("create base struct dir fail")
 			}
