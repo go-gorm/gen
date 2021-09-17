@@ -189,19 +189,25 @@ g.GenerateModel("people")
 g.GenerateModelAs("people", "People")
 
 // add option to ignore field
-g.GenerateModel("people", gen.FieldIgnore("address"))
+g.GenerateModel("people", gen.FieldIgnore("address"), gen.FieldType("id", "int64"))
 ```
 
 Field Generate **Options**
 
 ```go
-FieldIgnore // ignore field
-FieldRename // rename field in struct
-FieldType // specify field type
-FieldTag // specify gorm and json tag
-FieldJSONTag // specify json tag
-FieldGORMTag // specify gorm tag
-FieldNewTag // append new tag
+FieldIgnore      // ignore field
+FieldIgnoreReg   // ignore field (match with regexp)
+FieldRename      // rename field in struct
+FieldType        // specify field type
+FieldTypeReg     // specify field type (match with regexp)
+FieldTag         // specify gorm and json tag
+FieldJSONTag     // specify json tag
+FieldGORMTag     // specify gorm tag
+FieldNewTag      // append new tag
+FieldTrimPrefix  // trim column prefix
+FieldTrimSuffix  // trim column suffix
+FieldAddPrefix   // add prefix to struct member's name
+FieldAddSuffix   // add suffix to struct member's name
 ```
 
 ### Field Expression
