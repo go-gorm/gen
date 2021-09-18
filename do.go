@@ -37,7 +37,10 @@ type DO struct {
 	schema *schema.Schema
 }
 
-func (d *DO) getInstance(db *gorm.DB) *DO { return &DO{db: db, alias: d.alias, model: d.model} }
+func (d DO) getInstance(db *gorm.DB) *DO {
+	d.db = db
+	return &d
+}
 
 type doOptions func(*gorm.DB) *gorm.DB
 
@@ -361,6 +364,10 @@ func (d *DO) Last() (result interface{}, err error) {
 }
 
 func (d *DO) singleQuery(query func(dest interface{}, conds ...interface{}) *gorm.DB) (result interface{}, err error) {
+	if d.model == nil {
+		return d.singleScan()
+	}
+
 	result = d.newResultPointer()
 	if err := query(result).Error; err != nil {
 		return nil, err
@@ -368,14 +375,30 @@ func (d *DO) singleQuery(query func(dest interface{}, conds ...interface{}) *gor
 	return result, nil
 }
 
+func (d *DO) singleScan() (result interface{}, err error) {
+	result = map[string]interface{}{}
+	err = d.db.Scan(result).Error
+	return
+}
+
 func (d *DO) Find() (results interface{}, err error) {
 	return d.multiQuery(d.db.Model(d.model).Find)
 }
 
 func (d *DO) multiQuery(query func(dest interface{}, conds ...interface{}) *gorm.DB) (results interface{}, err error) {
+	if d.model == nil {
+		return d.findToMap()
+	}
+
 	resultsPtr := d.newResultSlicePointer()
 	err = query(resultsPtr).Error
 	return reflect.Indirect(reflect.ValueOf(resultsPtr)).Interface(), err
+}
+
+func (d *DO) findToMap() (interface{}, error) {
+	var results []map[string]interface{}
+	err := d.db.Find(&results).Error
+	return results, err
 }
 
 func (d *DO) FindInBatch(batchSize int, fc func(tx Dao, batch int) error) (result interface{}, err error) {
