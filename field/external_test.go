@@ -309,8 +309,9 @@ func TestExpr_Build(t *testing.T) {
 			Result: "NOT `male`",
 		},
 		{
-			Expr:   field.NewBool("", "male").Is(true),
-			Result: "`male` IS true",
+			Expr:         field.NewBool("", "male").Is(true),
+			ExpectedVars: []interface{}{true},
+			Result:       "`male` = ?",
 		},
 		{
 			Expr:         field.NewBool("", "male").And(true),
