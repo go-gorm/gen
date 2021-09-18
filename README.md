@@ -9,7 +9,7 @@
 [![ClosedIssue](https://img.shields.io/github/issues-closed/go-gorm/gen)](https://github.com/go-gorm/gen/issues?q=is%3Aissue+is%3Aclosed)
 [![TODOs](https://badgen.net/https/api.tickgit.com/badgen/github.com/go-gorm/gen)](https://www.tickgit.com/browse?repo=github.com/go-gorm/gen)
 
-The code generator base on [GORM](https://github.com/go-gorm/gorm), aims to be developer friendly.
+A safer orm base on [GORM](https://github.com/go-gorm/gorm), aims to be developer friendly.
 
 ## Overview
 
@@ -68,7 +68,7 @@ The code generator base on [GORM](https://github.com/go-gorm/gorm), aims to be d
       - [Update](#update)
         - [Update single column](#update-single-column)
         - [Updates multiple columns](#updates-multiple-columns)
-        - [Update selected fields](#update-selected-fields)
+        - [~~Update selected fields~~](#update-selected-fields)
       - [Delete](#delete)
         - [Delete record](#delete-record)
         - [Delete with primary key](#delete-with-primary-key)
