@@ -21,79 +21,79 @@ func ({{.S}} {{.TargetStruct}}Do){{.MethodName}}({{.GetParamInTmpl}})({{.GetResu
 
 const CRUDMethod = `
 func ({{.S}} {{.NewStructName}}Do) Debug() *{{.NewStructName}}Do {
-	return {{.S}}.setDO({{.S}}.DO.Debug())
+	return {{.S}}.withDO({{.S}}.DO.Debug())
 }
 
 func ({{.S}} {{.NewStructName}}Do) WithContext(ctx context.Context) *{{.NewStructName}}Do {
-	return {{.S}}.setDO({{.S}}.DO.WithContext(ctx))
+	return {{.S}}.withDO({{.S}}.DO.WithContext(ctx))
 }
 
 func ({{.S}} {{.NewStructName}}Do) Clauses(conds ...clause.Expression) *{{.NewStructName}}Do {
-	return {{.S}}.setDO({{.S}}.DO.Clauses(conds...))
+	return {{.S}}.withDO({{.S}}.DO.Clauses(conds...))
 }
 
 func ({{.S}} {{.NewStructName}}Do) Not(conds ...gen.Condition) *{{.NewStructName}}Do {
-	return {{.S}}.setDO({{.S}}.DO.Not(conds...))
+	return {{.S}}.withDO({{.S}}.DO.Not(conds...))
 }
 
 func ({{.S}} {{.NewStructName}}Do) Or(conds ...gen.Condition) *{{.NewStructName}}Do {
-	return {{.S}}.setDO({{.S}}.DO.Or(conds...))
+	return {{.S}}.withDO({{.S}}.DO.Or(conds...))
 }
 
 func ({{.S}} {{.NewStructName}}Do) Select(conds ...field.Expr) *{{.NewStructName}}Do {
-	return {{.S}}.setDO({{.S}}.DO.Select(conds...))
+	return {{.S}}.withDO({{.S}}.DO.Select(conds...))
 }
 
 func ({{.S}} {{.NewStructName}}Do) Where(conds ...gen.Condition) *{{.NewStructName}}Do {
-	return {{.S}}.setDO({{.S}}.DO.Where(conds...))
+	return {{.S}}.withDO({{.S}}.DO.Where(conds...))
 }
 
 func ({{.S}} {{.NewStructName}}Do) Order(conds ...field.Expr) *{{.NewStructName}}Do {
-	return {{.S}}.setDO({{.S}}.DO.Order(conds...))
+	return {{.S}}.withDO({{.S}}.DO.Order(conds...))
 }
 
 func ({{.S}} {{.NewStructName}}Do) Distinct(cols ...field.Expr) *{{.NewStructName}}Do {
-	return {{.S}}.setDO({{.S}}.DO.Distinct(cols...))
+	return {{.S}}.withDO({{.S}}.DO.Distinct(cols...))
 }
 
 func ({{.S}} {{.NewStructName}}Do) Omit(cols ...field.Expr) *{{.NewStructName}}Do {
-	return {{.S}}.setDO({{.S}}.DO.Omit(cols...))
+	return {{.S}}.withDO({{.S}}.DO.Omit(cols...))
 }
 
 func ({{.S}} {{.NewStructName}}Do) Join(table schema.Tabler, on ...field.Expr) *{{.NewStructName}}Do {
-	return {{.S}}.setDO({{.S}}.DO.Join(table, on...))
+	return {{.S}}.withDO({{.S}}.DO.Join(table, on...))
 }
 
 func ({{.S}} {{.NewStructName}}Do) LeftJoin(table schema.Tabler, on ...field.Expr) *{{.NewStructName}}Do {
-	return {{.S}}.setDO({{.S}}.DO.LeftJoin(table, on...))
+	return {{.S}}.withDO({{.S}}.DO.LeftJoin(table, on...))
 }
 
 func ({{.S}} {{.NewStructName}}Do) RightJoin(table schema.Tabler, on ...field.Expr) *{{.NewStructName}}Do {
-	return {{.S}}.setDO({{.S}}.DO.RightJoin(table, on...))
+	return {{.S}}.withDO({{.S}}.DO.RightJoin(table, on...))
 }
 
 func ({{.S}} {{.NewStructName}}Do) Group(col field.Expr) *{{.NewStructName}}Do {
-	return {{.S}}.setDO({{.S}}.DO.Group(col))
+	return {{.S}}.withDO({{.S}}.DO.Group(col))
 }
 
 func ({{.S}} {{.NewStructName}}Do) Having(conds ...gen.Condition) *{{.NewStructName}}Do {
-	return {{.S}}.setDO({{.S}}.DO.Having(conds...))
+	return {{.S}}.withDO({{.S}}.DO.Having(conds...))
 }
 
 func ({{.S}} {{.NewStructName}}Do) Limit(limit int) *{{.NewStructName}}Do {
-	return {{.S}}.setDO({{.S}}.DO.Limit(limit))
+	return {{.S}}.withDO({{.S}}.DO.Limit(limit))
 }
 
 func ({{.S}} {{.NewStructName}}Do) Offset(offset int) *{{.NewStructName}}Do {
-	return {{.S}}.setDO({{.S}}.DO.Offset(offset))
+	return {{.S}}.withDO({{.S}}.DO.Offset(offset))
 }
 
 func ({{.S}} {{.NewStructName}}Do) Scopes(funcs ...func(gen.Dao) gen.Dao) *{{.NewStructName}}Do {
-	return {{.S}}.setDO({{.S}}.DO.Scopes(funcs...))
+	return {{.S}}.withDO({{.S}}.DO.Scopes(funcs...))
 }
 
 func ({{.S}} {{.NewStructName}}Do) Unscoped() *{{.NewStructName}}Do {
-	return {{.S}}.setDO({{.S}}.DO.Unscoped())
+	return {{.S}}.withDO({{.S}}.DO.Unscoped())
 }
 
 func ({{.S}} {{.NewStructName}}Do) Create(values ...*{{.StructInfo.Package}}.{{.StructInfo.Type}}) error {
@@ -153,11 +153,11 @@ func ({{.S}} {{.NewStructName}}Do) FindInBatches(result []*{{.StructInfo.Package
 }
 
 func ({{.S}} {{.NewStructName}}Do) Attrs(attrs ...field.Expr) *{{.NewStructName}}Do {
-	return {{.S}}.setDO({{.S}}.DO.Attrs(attrs...))
+	return {{.S}}.withDO({{.S}}.DO.Attrs(attrs...))
 }
 
 func ({{.S}} {{.NewStructName}}Do) Assign(attrs ...field.Expr) *{{.NewStructName}}Do {
-	return {{.S}}.setDO({{.S}}.DO.Assign(attrs...))
+	return {{.S}}.withDO({{.S}}.DO.Assign(attrs...))
 }
 
 func ({{.S}} {{.NewStructName}}Do) FirstOrInit() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
@@ -186,7 +186,7 @@ func ({{.S}} {{.NewStructName}}Do) FindByPage(offset int, limit int) (result []*
 	return
 }
 
-func ({{.S}} *{{.NewStructName}}Do) setDO(do gen.Dao) (*{{.NewStructName}}Do) {
+func ({{.S}} *{{.NewStructName}}Do) withDO(do gen.Dao) (*{{.NewStructName}}Do) {
 	{{.S}}.DO = *do.(*gen.DO)
 	return {{.S}}
 }
