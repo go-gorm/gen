@@ -183,8 +183,8 @@ func TestDO_methods(t *testing.T) {
 		},
 		{
 			Expr:         u.Where(u.Age.Lte(18)).Or(u.Name.Eq("tom"), u.Famous.Is(true)),
-			ExpectedVars: []interface{}{18, "tom"},
-			Result:       "WHERE `age` <= ? OR (`name` = ? AND `famous` IS true)",
+			ExpectedVars: []interface{}{18, "tom", true},
+			Result:       "WHERE `age` <= ? OR (`name` = ? AND `famous` = ?)",
 		},
 		{
 			Expr:         u.Where(u.Columns(u.ID, u.Age).In(field.Values([][]int{{1, 18}, {2, 19}}))),
@@ -203,8 +203,8 @@ func TestDO_methods(t *testing.T) {
 		},
 		{
 			Expr:         u.Where(u.Where(u.Name.Eq("tom"), u.Famous.Is(true))).Or(u.Age.Lte(18)),
-			ExpectedVars: []interface{}{"tom", 18},
-			Result:       "WHERE (`name` = ? AND `famous` IS true) OR `age` <= ?",
+			ExpectedVars: []interface{}{"tom", true, 18},
+			Result:       "WHERE (`name` = ? AND `famous` = ?) OR `age` <= ?",
 		},
 		{
 			Expr:         u.Where(Cond(datatypes.JSONQuery("attributes").HasKey("role", "name"))...),
@@ -225,8 +225,8 @@ func TestDO_methods(t *testing.T) {
 			).Or(
 				u.Where(u.Age.Lte(18)).Where(u.Name.Eq("tom")),
 			),
-			ExpectedVars: []interface{}{18, 100.0, 18, "tom"},
-			Result:       "WHERE (`age` > ? AND (`famous` IS true OR `score` >= ?)) OR (`age` <= ? AND `name` = ?)",
+			ExpectedVars: []interface{}{18, true, 100.0, 18, "tom"},
+			Result:       "WHERE (`age` > ? AND (`famous` = ? OR `score` >= ?)) OR (`age` <= ? AND `name` = ?)",
 		},
 		{
 			Expr:         u.Select(u.ID, u.Name).Where(u.Age.Gt(18), u.Score.Gte(100)),

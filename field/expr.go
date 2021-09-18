@@ -1,7 +1,6 @@
 package field
 
 import (
-	"fmt"
 	"time"
 
 	"gorm.io/gorm"
@@ -283,10 +282,7 @@ func (e expr) not() expr {
 }
 
 func (e expr) is(value interface{}) expr {
-	if value, ok := value.(bool); ok {
-		return e.setE(clause.Expr{SQL: fmt.Sprintf("? IS %t", value), Vars: []interface{}{e.RawExpr()}})
-	}
-	return e.setE(clause.Expr{SQL: "? IS ?", Vars: []interface{}{e.RawExpr(), value}})
+	return e.setE(clause.Eq{Column: e.RawExpr(), Value: value})
 }
 
 func (e expr) and(value interface{}) expr {
