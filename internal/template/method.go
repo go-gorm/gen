@@ -162,8 +162,39 @@ func ({{.S}} {{.NewStructName}}Do) Find() ([]*{{.StructInfo.Package}}.{{.StructI
 	return result.([]*{{.StructInfo.Package}}.{{.StructInfo.Type}}), err
 }
 
+func ({{.S}} {{.NewStructName}}Do) FindInBatch(batchSize int, fc func(tx gen.Dao, batch int) error) ([]*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
+	result, err := {{.S}}.DO.FindInBatch(batchSize, fc)
+	return result.([]*{{.StructInfo.Package}}.{{.StructInfo.Type}}), err
+}
+
 func ({{.S}} {{.NewStructName}}Do) FindInBatches(result []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, batchSize int, fc func(tx gen.Dao, batch int) error) error {
 	return {{.S}}.DO.FindInBatches(&result, batchSize, fc)
+}
+
+func ({{.S}} {{.NewStructName}}Do) Attrs(attrs ...field.Expr) *{{.NewStructName}}Do {
+	{{.S}}.DO = *{{.S}}.DO.Attrs(attrs...).(*gen.DO)
+	return &{{.S}}
+}
+
+func ({{.S}} {{.NewStructName}}Do) Assign(attrs ...field.Expr) *{{.NewStructName}}Do {
+	{{.S}}.DO = *{{.S}}.DO.Assign(attrs...).(*gen.DO)
+	return &{{.S}}
+}
+
+func ({{.S}} {{.NewStructName}}Do) FirstOrInit() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
+	if result, err := {{.S}}.DO.FirstOrInit(); err != nil {
+		return nil, err
+	} else {
+		return result.(*{{.StructInfo.Package}}.{{.StructInfo.Type}}), nil
+	}
+}
+
+func ({{.S}} {{.NewStructName}}Do) FirstOrCreate() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
+	if result, err := {{.S}}.DO.FirstOrCreate(); err != nil {
+		return nil, err
+	} else {
+		return result.(*{{.StructInfo.Package}}.{{.StructInfo.Type}}), nil
+	}
 }
 
 func ({{.S}} {{.NewStructName}}Do) FindByPage(offset int, limit int) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, count int64, err error) {
