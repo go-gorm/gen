@@ -60,6 +60,11 @@ func ({{.S}} {{.NewStructName}}Do) Omit(cols ...field.Expr) *{{.NewStructName}}D
 	return {{.S}}.withDO({{.S}}.DO.Omit(cols...))
 }
 
+// Joins eager preloading
+func ({{.S}} {{.NewStructName}}Do) Joins(tableName string, on ...field.Expr) *{{.NewStructName}}Do {
+	return {{.S}}.withDO({{.S}}.DO.Joins(tableName, on...))
+}
+
 func ({{.S}} {{.NewStructName}}Do) Join(table schema.Tabler, on ...field.Expr) *{{.NewStructName}}Do {
 	return {{.S}}.withDO({{.S}}.DO.Join(table, on...))
 }
@@ -158,6 +163,10 @@ func ({{.S}} {{.NewStructName}}Do) Attrs(attrs ...field.Expr) *{{.NewStructName}
 
 func ({{.S}} {{.NewStructName}}Do) Assign(attrs ...field.Expr) *{{.NewStructName}}Do {
 	return {{.S}}.withDO({{.S}}.DO.Assign(attrs...))
+}
+
+func ({{.S}} {{.NewStructName}}Do) Preload(tableName string, on ...field.Expr) *{{.NewStructName}}Do {
+	return {{.S}}.withDO({{.S}}.DO.Preload(tableName, on...))
 }
 
 func ({{.S}} {{.NewStructName}}Do) FirstOrInit() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {

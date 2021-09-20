@@ -33,7 +33,6 @@ type subQuery interface {
 }
 
 // TODO implement Associations api (ex: preload)
-// TODO implement FirstOrInit, FirstOrCreate
 
 // Dao CRUD methods
 type Dao interface {
@@ -49,6 +48,7 @@ type Dao interface {
 	Order(columns ...field.Expr) Dao
 	Distinct(columns ...field.Expr) Dao
 	Omit(columns ...field.Expr) Dao
+	Joins(tableName string, args ...field.Expr) Dao
 	Join(table schema.Tabler, conds ...field.Expr) Dao
 	LeftJoin(table schema.Tabler, conds ...field.Expr) Dao
 	RightJoin(table schema.Tabler, conds ...field.Expr) Dao
@@ -60,6 +60,7 @@ type Dao interface {
 	Unscoped() Dao
 	Attrs(attrs ...field.Expr) Dao
 	Assign(attrs ...field.Expr) Dao
+	Preload(tableName string, args ...field.Expr) Dao
 
 	Create(value interface{}) error
 	CreateInBatches(value interface{}, batchSize int) error
