@@ -79,9 +79,7 @@ func (d *DO) UseTable(tableName string) {
 }
 
 // TableName return table name
-func (d *DO) TableName() string {
-	return d.schema.Table
-}
+func (d *DO) TableName() string { return d.schema.Table }
 
 // UnderlyingDB return the underlying database connection
 func (d *DO) UnderlyingDB() *gorm.DB {
@@ -289,8 +287,8 @@ func (d *DO) Unscoped() Dao {
 	return d.getInstance(d.db.Unscoped())
 }
 
-func (d *DO) Joins(tableName string, args ...field.Expr) Dao {
-	return d.getInstance(d.db.Joins(tableName, toExpressionInterface(args...)...))
+func (d *DO) Joins(table schema.Tabler, on ...field.Expr) Dao {
+	return d.getInstance(d.db.Joins(table.TableName(), toExpressionInterface(on...)...))
 }
 
 func (d *DO) Join(table schema.Tabler, conds ...field.Expr) Dao {
@@ -327,8 +325,8 @@ func (d *DO) Assign(attrs ...field.Expr) Dao {
 	return d.getInstance(d.db.Assign(toExpressionInterface(attrs...)...))
 }
 
-func (d *DO) Preload(tableName string, args ...field.Expr) Dao {
-	return d.getInstance(d.db.Preload(tableName, toExpressionInterface(args...)...))
+func (d *DO) Preload(column field.Expr, on ...field.Expr) Dao {
+	return d.getInstance(d.db.Preload(column.ColumnName().String(), toExpressionInterface(on...)...))
 }
 
 func getFromClause(db *gorm.DB) *clause.From {
