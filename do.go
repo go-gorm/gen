@@ -81,6 +81,8 @@ func (d *DO) UseTable(tableName string) {
 // TableName return table name
 func (d *DO) TableName() string { return d.schema.Table }
 
+func (d *DO) Session(config *gorm.Session) Dao { return d.getInstance(d.db.Session(config)) }
+
 // UnderlyingDB return the underlying database connection
 func (d *DO) UnderlyingDB() *gorm.DB {
 	return d.db
