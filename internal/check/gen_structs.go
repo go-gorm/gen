@@ -67,6 +67,7 @@ var (
 
 type dataTypeMap map[string]func(string) string
 
+// TODO diy type map global or single
 func (m dataTypeMap) Get(dataType, detailType string) string {
 	if convert, ok := m[dataType]; ok {
 		return convert(detailType)
@@ -105,6 +106,7 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 		StructInfo:    parser.Param{Type: modelName, Package: pkg},
 	}
 
+	// TODO create new member
 	for _, field := range columns {
 		m := modifyMember(toMember(field), memberOpts)
 		if m == nil {
