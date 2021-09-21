@@ -10,6 +10,13 @@ import (
 
 type FieldOption func(clause.Column) clause.Column
 
+var (
+	banColumnRaw FieldOption = func(col clause.Column) clause.Column {
+		col.Raw = false
+		return col
+	}
+)
+
 // TODO implement validator options
 
 // ======================== generic field =======================
@@ -97,7 +104,7 @@ func toColumn(table, column string, opts ...FieldOption) clause.Column {
 	for _, opt := range opts {
 		col = opt(col)
 	}
-	return col
+	return banColumnRaw(col)
 }
 
 // ======================== boolean operate ========================
