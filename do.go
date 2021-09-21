@@ -37,7 +37,10 @@ type DO struct {
 	schema *schema.Schema
 }
 
-func (d *DO) getInstance(db *gorm.DB) *DO { return &DO{db: db, alias: d.alias, model: d.model} }
+func (d DO) getInstance(db *gorm.DB) *DO {
+	d.db = db
+	return &d
+}
 
 type doOptions func(*gorm.DB) *gorm.DB
 
@@ -312,6 +315,14 @@ func (d *DO) join(table schema.Tabler, joinType clause.JoinType, conds []field.E
 	return d.getInstance(d.db.Clauses(from))
 }
 
+func (d *DO) Attrs(attrs ...field.Expr) Dao {
+	return d.getInstance(d.db.Attrs(toExpression(attrs...)))
+}
+
+func (d *DO) Assign(attrs ...field.Expr) Dao {
+	return d.getInstance(d.db.Assign(toExpressionInterface(attrs...)...))
+}
+
 func getFromClause(db *gorm.DB) *clause.From {
 	if db == nil || db.Statement == nil {
 		return &clause.From{}
@@ -353,6 +364,10 @@ func (d *DO) Last() (result interface{}, err error) {
 }
 
 func (d *DO) singleQuery(query func(dest interface{}, conds ...interface{}) *gorm.DB) (result interface{}, err error) {
+	if d.model == nil {
+		return d.singleScan()
+	}
+
 	result = d.newResultPointer()
 	if err := query(result).Error; err != nil {
 		return nil, err
@@ -360,18 +375,48 @@ func (d *DO) singleQuery(query func(dest interface{}, conds ...interface{}) *gor
 	return result, nil
 }
 
+func (d *DO) singleScan() (result interface{}, err error) {
+	result = map[string]interface{}{}
+	err = d.db.Scan(result).Error
+	return
+}
+
 func (d *DO) Find() (results interface{}, err error) {
 	return d.multiQuery(d.db.Model(d.model).Find)
 }
 
 func (d *DO) multiQuery(query func(dest interface{}, conds ...interface{}) *gorm.DB) (results interface{}, err error) {
+	if d.model == nil {
+		return d.findToMap()
+	}
+
 	resultsPtr := d.newResultSlicePointer()
 	err = query(resultsPtr).Error
 	return reflect.Indirect(reflect.ValueOf(resultsPtr)).Interface(), err
 }
 
+func (d *DO) findToMap() (interface{}, error) {
+	var results []map[string]interface{}
+	err := d.db.Find(&results).Error
+	return results, err
+}
+
+func (d *DO) FindInBatch(batchSize int, fc func(tx Dao, batch int) error) (result interface{}, err error) {
+	resultsPtr := d.newResultSlicePointer()
+	err = d.db.Model(d.model).FindInBatches(resultsPtr, batchSize, func(tx *gorm.DB, batch int) error { return fc(d.getInstance(tx), batch) }).Error
+	return reflect.Indirect(reflect.ValueOf(resultsPtr)).Interface(), err
+}
+
 func (d *DO) FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error {
 	return d.db.Model(d.model).FindInBatches(dest, batchSize, func(tx *gorm.DB, batch int) error { return fc(d.getInstance(tx), batch) }).Error
+}
+
+func (d *DO) FirstOrInit() (result interface{}, err error) {
+	return d.singleQuery(d.db.Model(d.model).FirstOrInit)
+}
+
+func (d *DO) FirstOrCreate() (result interface{}, err error) {
+	return d.singleQuery(d.db.Model(d.model).FirstOrCreate)
 }
 
 func (d *DO) Update(column field.Expr, value interface{}) (info resultInfo, err error) {
@@ -509,14 +554,28 @@ func buildExpr(stmt *gorm.Statement, exprs ...field.Expr) []string {
 func toExpression(exprs ...field.Expr) []clause.Expression {
 	result := make([]clause.Expression, len(exprs))
 	for i, e := range exprs {
-		switch v := e.RawExpr().(type) {
-		case clause.Expression:
-			result[i] = v
-		case clause.Column:
-			result[i] = clause.NamedExpr{SQL: "?", Vars: []interface{}{v}}
-		}
+		result[i] = singleExpr(e)
 	}
 	return result
+}
+
+func toExpressionInterface(exprs ...field.Expr) []interface{} {
+	result := make([]interface{}, len(exprs))
+	for i, e := range exprs {
+		result[i] = singleExpr(e)
+	}
+	return result
+}
+
+func singleExpr(e field.Expr) clause.Expression {
+	switch v := e.RawExpr().(type) {
+	case clause.Expression:
+		return v
+	case clause.Column:
+		return clause.NamedExpr{SQL: "?", Vars: []interface{}{v}}
+	default:
+		return clause.Expr{}
+	}
 }
 
 func toInterfaceSlice(value interface{}) []interface{} {

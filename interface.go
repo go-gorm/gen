@@ -32,6 +32,9 @@ type subQuery interface {
 	Condition
 }
 
+// TODO implement Associations api (ex: preload)
+// TODO implement FirstOrInit, FirstOrCreate
+
 // Dao CRUD methods
 type Dao interface {
 	subQuery
@@ -55,6 +58,8 @@ type Dao interface {
 	Offset(offset int) Dao
 	Scopes(funcs ...func(Dao) Dao) Dao
 	Unscoped() Dao
+	Attrs(attrs ...field.Expr) Dao
+	Assign(attrs ...field.Expr) Dao
 
 	Create(value interface{}) error
 	CreateInBatches(value interface{}, batchSize int) error
@@ -63,7 +68,10 @@ type Dao interface {
 	Take() (result interface{}, err error)
 	Last() (result interface{}, err error)
 	Find() (results interface{}, err error)
+	FindInBatch(batchSize int, fc func(tx Dao, batch int) error) (results interface{}, err error)
 	FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error
+	FirstOrInit() (result interface{}, err error)
+	FirstOrCreate() (result interface{}, err error)
 	Update(column field.Expr, value interface{}) (info resultInfo, err error)
 	UpdateSimple(columns ...field.Expr) (info resultInfo, err error)
 	Updates(values interface{}) (info resultInfo, err error)

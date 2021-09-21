@@ -42,7 +42,7 @@ var keywords = []string{
 	"Find", "FindInBatches", "First", "Take", "Last", "Pluck", "Count",
 	"Scan", "ScanRows", "Row", "Rows",
 	"Delete", "Unscoped",
-	"Transaction", "Begin", "Commit", "SavePoint", "RollBack", "RollBackTo", "Scopes",
+	"Scopes",
 }
 
 // Member user input structures
