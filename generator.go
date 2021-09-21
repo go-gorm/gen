@@ -431,6 +431,7 @@ func (g *Generator) generateSubQuery(data *genInfo) (err error) {
 		structTmpl = tmpl.BaseStruct
 	}
 
+	// TODO create relation and method
 	err = render(structTmpl, &buf, data.BaseStruct)
 	if err != nil {
 		return err

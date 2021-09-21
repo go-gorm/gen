@@ -58,9 +58,7 @@ func (d *DO) UseDB(db *gorm.DB, opts ...doOptions) {
 	d.db = db
 }
 
-func (d *DO) ReplaceDB(db *gorm.DB) {
-	d.db = db
-}
+func (d *DO) ReplaceDB(db *gorm.DB) { d.db = db }
 
 // UseModel specify a data model structure as a source for table name
 func (d *DO) UseModel(model interface{}) {
@@ -74,24 +72,19 @@ func (d *DO) UseModel(model interface{}) {
 }
 
 // UseTable specify table name
-func (d *DO) UseTable(tableName string) {
-	d.db = d.db.Table(tableName).Session(new(gorm.Session))
-}
+func (d *DO) UseTable(tableName string) { d.db = d.db.Table(tableName).Session(new(gorm.Session)) }
 
 // TableName return table name
 func (d *DO) TableName() string { return d.schema.Table }
 
+// Session replace db with new session
 func (d *DO) Session(config *gorm.Session) Dao { return d.getInstance(d.db.Session(config)) }
 
 // UnderlyingDB return the underlying database connection
-func (d *DO) UnderlyingDB() *gorm.DB {
-	return d.db
-}
+func (d *DO) UnderlyingDB() *gorm.DB { return d.db }
 
 // Quote return qutoed data
-func (d *DO) Quote(raw string) string {
-	return d.db.Statement.Quote(raw)
-}
+func (d *DO) Quote(raw string) string { return d.db.Statement.Quote(raw) }
 
 // Build implement the interface of claues.Expression
 // only call WHERE clause's Build
