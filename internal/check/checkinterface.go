@@ -330,7 +330,9 @@ func (m *InterfaceMethod) methodParams(param string, s Status) (result slice, er
 			switch s {
 			case DATA:
 				str = fmt.Sprintf("\"@%s\"", param)
-				m.SqlData = append(m.SqlData, param)
+				if ok := m.isParamExist(param); !ok {
+					m.SqlData = append(m.SqlData, param)
+				}
 			case VARIABLE:
 				if p.Type != "string" {
 					err = fmt.Errorf("variable name must be string :%s type is %s", param, p.Type)
@@ -352,6 +354,16 @@ func (m *InterfaceMethod) methodParams(param string, s Status) (result slice, er
 		return
 	}
 	return result, fmt.Errorf("unknow variable param:%s", param)
+}
+
+// isParamExist check param duplicate
+func (m *InterfaceMethod) isParamExist(paramName string) bool {
+	for _, param := range m.SqlData {
+		if param == paramName {
+			return true
+		}
+	}
+	return false
 }
 
 // checkTemplate check sql template's syntax (check if/else/where/set)
