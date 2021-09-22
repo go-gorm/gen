@@ -37,6 +37,7 @@ type Query struct{
 
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
+		db: db,
 		{{range $name,$d :=.Data -}}
 		{{$d.StructName}}: q.{{$d.StructName}}.clone(db),
 		{{end}}
