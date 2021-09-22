@@ -61,32 +61,25 @@ func (q *Query) Transaction(fc func(db *Query) error, opts ...*sql.TxOptions) er
 	return q.db.Transaction(func(tx *gorm.DB) error { return fc(q.clone(tx)) }, opts...)
 }
 
-func (q *Query) Begin(opts ...*sql.TxOptions) QueryTx {
-	return &queryTx{q.clone(q.db.Begin(opts...))}
+func (q *Query) Begin(opts ...*sql.TxOptions) *QueryTx {
+	return &QueryTx{q.clone(q.db.Begin(opts...))}
 }
 
-type QueryTx interface {
-	Commit() error
-	Rollback() error
-	SavePoint(name string) error
-	RollbackTo(name string) error
-}
+type QueryTx struct{ *Query }
 
-type queryTx struct{ *Query }
-
-func (q *queryTx) Commit() error {
+func (q *QueryTx) Commit() error {
 	return q.db.Commit().Error
 }
 
-func (q *queryTx) Rollback() error {
+func (q *QueryTx) Rollback() error {
 	return q.db.Rollback().Error
 }
 
-func (q *queryTx) SavePoint(name string) error {
+func (q *QueryTx) SavePoint(name string) error {
 	return q.db.SavePoint(name).Error
 }
 
-func (q *queryTx) RollbackTo(name string) error {
+func (q *QueryTx) RollbackTo(name string) error {
 	return q.db.RollbackTo(name).Error
 }
 
