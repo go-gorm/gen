@@ -22,7 +22,7 @@ const (
 	ModelPkg = "model"
 
 	//query table structure
-	columnQuery = "SELECT COLUMN_NAME ,COLUMN_COMMENT ,DATA_TYPE ,IS_NULLABLE ,COLUMN_KEY,COLUMN_TYPE,EXTRA" +
+	columnQuery = "SELECT COLUMN_NAME ,COLUMN_COMMENT ,DATA_TYPE ,IS_NULLABLE ,COLUMN_KEY,COLUMN_TYPE,COLUMN_DEFAULT,EXTRA" +
 		" FROM information_schema.columns WHERE table_schema = ? AND table_name =?"
 )
 
@@ -130,11 +130,16 @@ func toMember(field *Column) *Member {
 		ColumnName:       field.ColumnName,
 		ColumnComment:    field.ColumnComment,
 		MultilineComment: containMultiline(field.ColumnComment),
-		GORMTag:          field.ColumnName,
+		GORMTag:          BuildGormTag(field.ColumnName, field.ColumnDefault),
 		JSONTag:          field.ColumnName,
 	}
 }
-
+func BuildGormTag(columnName, columnDefault string) string {
+	if columnDefault == "" {
+		return fmt.Sprintf("column:%s", columnName)
+	}
+	return fmt.Sprintf("column:%s;default:%s", columnName, columnDefault)
+}
 func modifyMember(m *Member, opts []MemberOpt) *Member {
 	for _, opt := range opts {
 		m = opt(m)

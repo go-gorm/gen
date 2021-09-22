@@ -196,7 +196,7 @@ var (
 	FieldTag = func(columnName string, gormTag, jsonTag string) check.MemberOpt {
 		return func(m *check.Member) *check.Member {
 			if m.Name == columnName {
-				m.GORMTag, m.JSONTag = gormTag, jsonTag
+				m.GORMTag, m.JSONTag = check.BuildGormTag(gormTag, ""), jsonTag
 			}
 			return m
 		}
@@ -214,7 +214,7 @@ var (
 	FieldGORMTag = func(columnName string, gormTag string) check.MemberOpt {
 		return func(m *check.Member) *check.Member {
 			if m.Name == columnName {
-				m.GORMTag = gormTag
+				m.GORMTag = check.BuildGormTag(gormTag, "")
 			}
 			return m
 		}

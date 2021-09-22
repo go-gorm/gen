@@ -16,7 +16,7 @@ type {{.StructName}} struct {
 {{.ColumnComment}}
     */
 	{{end -}}
-    {{.Name}} {{.ModelType}} ` + "`json:\"{{.JSONTag}}\" gorm:\"column:{{.GORMTag}}\"{{.NewTag}}` " +
+    {{.Name}} {{.ModelType}} ` + "`json:\"{{.JSONTag}}\" gorm:\"{{.GORMTag}}\"{{.NewTag}}` " +
 	"{{if not .MultilineComment}}{{if .ColumnComment}}// {{.ColumnComment}}{{end}}{{end}}" +
 	`{{end}}
 }
