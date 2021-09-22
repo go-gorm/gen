@@ -48,7 +48,6 @@ type Dao interface {
 	Order(columns ...field.Expr) Dao
 	Distinct(columns ...field.Expr) Dao
 	Omit(columns ...field.Expr) Dao
-	Joins(table schema.Tabler, on ...field.Expr) Dao
 	Join(table schema.Tabler, conds ...field.Expr) Dao
 	LeftJoin(table schema.Tabler, conds ...field.Expr) Dao
 	RightJoin(table schema.Tabler, conds ...field.Expr) Dao
@@ -60,7 +59,8 @@ type Dao interface {
 	Unscoped() Dao
 	Attrs(attrs ...field.Expr) Dao
 	Assign(attrs ...field.Expr) Dao
-	Preload(column field.Expr, on ...field.Expr) Dao
+	Joins(column field.RelationPath, on ...field.Expr) Dao
+	Preload(column field.RelationPath, on ...field.Expr) Dao
 
 	Create(value interface{}) error
 	CreateInBatches(value interface{}, batchSize int) error

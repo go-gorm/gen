@@ -282,10 +282,6 @@ func (d *DO) Unscoped() Dao {
 	return d.getInstance(d.db.Unscoped())
 }
 
-func (d *DO) Joins(table schema.Tabler, on ...field.Expr) Dao {
-	return d.getInstance(d.db.Joins(table.TableName(), toExpressionInterface(on...)...))
-}
-
 func (d *DO) Join(table schema.Tabler, conds ...field.Expr) Dao {
 	return d.join(table, clause.InnerJoin, conds)
 }
@@ -320,8 +316,12 @@ func (d *DO) Assign(attrs ...field.Expr) Dao {
 	return d.getInstance(d.db.Assign(toExpressionInterface(attrs...)...))
 }
 
-func (d *DO) Preload(column field.Expr, on ...field.Expr) Dao {
-	return d.getInstance(d.db.Preload(column.ColumnName().String(), toExpressionInterface(on...)...))
+func (d *DO) Joins(column field.RelationPath, on ...field.Expr) Dao {
+	return d.getInstance(d.db.Joins(string(column.Path()), toExpressionInterface(on...)...))
+}
+
+func (d *DO) Preload(column field.RelationPath, on ...field.Expr) Dao {
+	return d.getInstance(d.db.Preload(string(column.Path()), toExpressionInterface(on...)...))
 }
 
 func getFromClause(db *gorm.DB) *clause.From {
