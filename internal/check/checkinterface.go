@@ -330,7 +330,7 @@ func (m *InterfaceMethod) methodParams(param string, s Status) (result slice, er
 			switch s {
 			case DATA:
 				str = fmt.Sprintf("\"@%s\"", param)
-				if ok := m.isParamExist(param); !ok {
+				if !m.isParamExist(param) {
 					m.SqlData = append(m.SqlData, param)
 				}
 			case VARIABLE:
