@@ -22,6 +22,7 @@ const (
 	OTHER
 	EXPRESSION
 	LOGICAL
+	NIL
 )
 
 type sourceCode int
