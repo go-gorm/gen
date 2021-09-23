@@ -417,8 +417,9 @@ func (s *Slices) parseSQL(name string) (res SQLClause) {
 
 // sql fragment
 type fragment struct {
-	Type  Status
-	Value string
+	Type    Status
+	Value   string
+	IsArray bool
 }
 
 func checkFragment(s string, params []parser.Param) (f fragment, err error) {
@@ -451,7 +452,7 @@ func checkFragment(s string, params []parser.Param) (f fragment, err error) {
 	case "true", "false":
 		f.Type = BOOL
 	case "nil":
-		f.Type = OTHER
+		f.Type = NIL
 	default:
 		f.fragmentByParams(params)
 		if f.Type == UNKNOWN {
@@ -464,6 +465,7 @@ func checkFragment(s string, params []parser.Param) (f fragment, err error) {
 func (f *fragment) fragmentByParams(params []parser.Param) {
 	for _, param := range params {
 		if param.Name == f.Value {
+			f.IsArray = param.IsArray
 			switch param.Type {
 			case "bool":
 				f.Type = BOOL
@@ -576,9 +578,9 @@ func checkTempleFragmentValid(list []fragment) error {
 		switch list[i].Type {
 		case IF, ELSE, END, BOOL, LOGICAL, WHERE, SET:
 			continue
-		case INT, STRING, OTHER, TIME:
+		case INT, STRING, OTHER, TIME, NIL:
 			if i+2 < len(list) {
-				if list[i+1].Type == EXPRESSION && list[i+2].Type == list[i].Type {
+				if isExpressionValid(list[i : i+3]) {
 					i += 2
 				} else {
 					return fmt.Errorf("condition type not match：%s", fragmentToString(list[i:i+3]))
@@ -589,6 +591,22 @@ func checkTempleFragmentValid(list []fragment) error {
 		}
 	}
 	return nil
+}
+
+// isExpressionValid  check express valid
+func isExpressionValid(expr []fragment) bool {
+	if len(expr) != 3 {
+		return false
+	}
+	if expr[1].Type != EXPRESSION {
+		return false
+	}
+	//Only arrays can be compared with nil
+	if expr[0].Type == NIL || expr[2].Type == NIL {
+		return expr[0].IsArray || expr[2].IsArray
+	}
+
+	return expr[0].Type == expr[2].Type
 }
 
 func fragmentToString(list []fragment) string {

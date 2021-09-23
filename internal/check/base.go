@@ -22,6 +22,7 @@ const (
 	OTHER
 	EXPRESSION
 	LOGICAL
+	NIL
 )
 
 type sourceCode int
@@ -102,6 +103,7 @@ type Column struct {
 	DataType      string `gorm:"column:DATA_TYPE"`
 	ColumnKey     string `gorm:"column:COLUMN_KEY"`
 	ColumnType    string `gorm:"column:COLUMN_TYPE"`
+	ColumnDefault string `gorm:"column:COLUMN_DEFAULT"`
 	Extra         string `gorm:"column:EXTRA"`
 }
 
