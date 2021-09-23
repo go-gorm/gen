@@ -53,7 +53,7 @@ type queryCtx struct{
 func (q *Query) WithContext(ctx context.Context) *queryCtx  {
 	return &queryCtx{
 		{{range $name,$d :=.Data -}}
-		{{$d.StructName}}: q.{{$d.StructName}}.{{$d.NewStructName}}Do,
+		{{$d.StructName}}: *q.{{$d.StructName}}.WithContext(ctx),
 		{{end}}
 	}
 }
