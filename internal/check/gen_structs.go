@@ -23,7 +23,7 @@ const (
 
 	//query table structure
 	columnQuery = "SELECT COLUMN_NAME ,COLUMN_COMMENT ,DATA_TYPE ,IS_NULLABLE ,COLUMN_KEY,COLUMN_TYPE,COLUMN_DEFAULT,EXTRA" +
-		" FROM information_schema.columns WHERE table_schema = ? AND table_name =?"
+		" FROM information_schema.columns WHERE table_schema = ? AND table_name =? ORDER BY ORDINAL_POSITION"
 )
 
 var (
