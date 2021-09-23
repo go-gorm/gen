@@ -355,3 +355,113 @@ func BenchmarkExpr_Count(b *testing.B) {
 		_ = n
 	}
 }
+
+func TestRelation_StructMember(t *testing.T) {
+	var testdatas = []struct {
+		relation      *field.Relation
+		expectedValue string
+	}{
+		{
+			relation: field.NewRelation(
+				"CreditCards",
+				field.NewRelation("Owner"),
+				field.NewRelation("Bank",
+					field.NewRelation("City", field.NewRelation("State")),
+					field.NewRelation("Manager"),
+				),
+			),
+			expectedValue: "Owner struct {\nfield.Relation\n}\nBank struct {\nfield.Relation\nCity struct {\nfield.Relation\nState struct {\nfield.Relation\n}\n}\nManager struct {\nfield.Relation\n}\n}\n",
+		},
+	}
+
+	for _, testdata := range testdatas {
+		if result := testdata.relation.StructMember(); result != testdata.expectedValue {
+			t.Errorf("StructMember fail: except %q, got %q", testdata.expectedValue, result)
+		}
+	}
+}
+
+func TestRelation_StructMemberInit(t *testing.T) {
+	var testdatas = []struct {
+		relation      *field.Relation
+		expectedValue string
+	}{
+		{
+			relation: field.NewRelation(
+				"CreditCards",
+				field.NewRelation("Owner"),
+				field.NewRelation("Bank",
+					field.NewRelation("City", field.NewRelation("State")),
+					field.NewRelation("Manager")),
+			),
+			expectedValue: "Relation: *field.NewRelation(\"CreditCards\"),\nOwner: struct {\nfield.Relation\n}{\nRelation: *field.NewRelation(\"CreditCards.Owner\"),\n},\nBank: struct {\nfield.Relation\nCity struct {\nfield.Relation\nState struct {\nfield.Relation\n}\n}\nManager struct {\nfield.Relation\n}}{\nRelation: *field.NewRelation(\"CreditCards.Bank\"),\nCity: struct {\nfield.Relation\nState struct {\nfield.Relation\n}}{\nRelation: *field.NewRelation(\"CreditCards.Bank.City\"),\nState: struct {\nfield.Relation\n}{\nRelation: *field.NewRelation(\"CreditCards.Bank.City.State\"),\n},\n},\nManager: struct {\nfield.Relation\n}{\nRelation: *field.NewRelation(\"CreditCards.Bank.Manager\"),\n},\n},\n",
+		},
+	}
+
+	for _, testdata := range testdatas {
+		if result := testdata.relation.StructMemberInit(); result != testdata.expectedValue {
+			fmt.Println(result)
+			t.Errorf("StructMember fail: except %q, got %q", testdata.expectedValue, result)
+		}
+	}
+}
+
+func expectedStruct() { // nolint
+	_ = struct {
+		field.Relation
+		Owner struct {
+			field.Relation
+		}
+		Bank struct {
+			field.Relation
+			City struct {
+				field.Relation
+				State struct {
+					field.Relation
+				}
+			}
+			Manager struct {
+				field.Relation
+			}
+		}
+	}{
+		Relation: *field.NewRelation("CreditCards"),
+		Owner: struct {
+			field.Relation
+		}{
+			Relation: *field.NewRelation("CreditCards.Owner"),
+		},
+		Bank: struct {
+			field.Relation
+			City struct {
+				field.Relation
+				State struct {
+					field.Relation
+				}
+			}
+			Manager struct {
+				field.Relation
+			}
+		}{
+			Relation: *field.NewRelation("CreditCards.Bank"),
+			City: struct {
+				field.Relation
+				State struct {
+					field.Relation
+				}
+			}{
+				Relation: *field.NewRelation("CreditCards.Bank.City"),
+				State: struct {
+					field.Relation
+				}{
+					Relation: *field.NewRelation("CreditCards.Bank.City.State"),
+				},
+			},
+			Manager: struct {
+				field.Relation
+			}{
+				Relation: *field.NewRelation("CreditCards.Bank.Manager"),
+			},
+		},
+	}
+}

@@ -215,4 +215,6 @@ func ContainsValue(columns []Expr, value Value) Expr {
 
 func EmptyExpr() Expr { return expr{e: clause.Expr{}} }
 
-func NewRelation(varName string) Relation { return Relation{varName: varName} }
+func NewRelation(varName string, relations ...*Relation) *Relation {
+	return &Relation{varName: varName, path: varName, relations: wrapPath(varName, relations)}
+}
