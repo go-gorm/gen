@@ -335,7 +335,8 @@ func TestExpr_BuildColumn(t *testing.T) {
 	id := field.NewUint("user", "id")
 	expectColumnStr := "`id`"
 	expectColumnStrWithTable := "`user`.`id`"
-	expectColumnStrWithoutQuote := "user.id"
+	expectColumnStrWithoutQuote := "id"
+	expectColumnStrWithTableWithoutQuote := "user.id"
 
 	if colStr := id.BuildColumn(stmt).String(); colStr != expectColumnStr {
 		t.Errorf("id.BuildColumn(stmt).String() got: %q, except: %q", colStr, expectColumnStr)
@@ -345,6 +346,9 @@ func TestExpr_BuildColumn(t *testing.T) {
 	}
 	if colStr := id.BuildColumn(stmt, field.WithoutQuote).String(); colStr != expectColumnStrWithoutQuote {
 		t.Errorf("id.BuildColumn(stmt, field.WithoutQuote).String() got: %q, except: %q", colStr, expectColumnStrWithoutQuote)
+	}
+	if colStr := id.BuildColumn(stmt, field.WithTable, field.WithoutQuote).String(); colStr != expectColumnStrWithTableWithoutQuote {
+		t.Errorf("id.BuildColumn(stmt, field.WithTable, field.WithoutQuote).String() got: %q, except: %q", colStr, expectColumnStrWithTableWithoutQuote)
 	}
 }
 

@@ -421,7 +421,7 @@ func (d *DO) FirstOrCreate() (result interface{}, err error) {
 
 func (d *DO) Update(column field.Expr, value interface{}) (info resultInfo, err error) {
 	tx := d.db.Model(d.model)
-	columnStr := column.BuildColumn(d.db.Statement, field.WithTable, field.WithoutQuote).String()
+	columnStr := column.BuildColumn(d.db.Statement, field.WithoutQuote).String()
 
 	var result *gorm.DB
 	switch value := value.(type) {
@@ -452,7 +452,7 @@ func (d *DO) Updates(value interface{}) (info resultInfo, err error) {
 
 func (d *DO) UpdateColumn(column field.Expr, value interface{}) (info resultInfo, err error) {
 	tx := d.db.Model(d.model)
-	columnStr := column.BuildColumn(d.db.Statement, field.WithTable, field.WithoutQuote).String()
+	columnStr := column.BuildColumn(d.db.Statement, field.WithoutQuote).String()
 
 	var result *gorm.DB
 	switch value := value.(type) {
