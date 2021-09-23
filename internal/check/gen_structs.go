@@ -42,6 +42,8 @@ var (
 		"tinytext":   func(string) string { return "string" },
 		"mediumtext": func(string) string { return "string" },
 		"longtext":   func(string) string { return "string" },
+		"binary":     func(string) string { return "[]byte" },
+		"varbinary":  func(string) string { return "[]byte" },
 		"tinyblob":   func(string) string { return "[]byte" },
 		"blob":       func(string) string { return "[]byte" },
 		"mediumblob": func(string) string { return "[]byte" },
