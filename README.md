@@ -129,6 +129,8 @@ func main() {
     g := gen.NewGenerator(gen.Config{
         OutPath: "../dal/query",
         /* Mode: gen.WithoutContext,*/
+        //if you want the nullable field generation property to be pointer type, set FieldNullable true
+		//FieldNullable: true,
     })
   
     // reuse the database connection in Project or create a connection here
