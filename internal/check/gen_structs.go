@@ -80,7 +80,7 @@ type SchemaNameOpt func(*gorm.DB) string
 type MemberOpt func(*Member) *Member
 
 // GenBaseStructs generate db model by table name
-func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpts []SchemaNameOpt, memberOpts []MemberOpt) (bases *BaseStruct, err error) {
+func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpts []SchemaNameOpt, memberOpts []MemberOpt, nullable bool) (bases *BaseStruct, err error) {
 	if _, ok := db.Config.Dialector.(tests.DummyDialector); ok {
 		return nil, fmt.Errorf("UseDB() is necessary to generate model struct [%s] from database table [%s]", modelName, tableName)
 	}
@@ -108,7 +108,7 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 	}
 
 	for _, field := range columns {
-		m := modifyMember(toMember(field), memberOpts)
+		m := modifyMember(toMember(field, nullable), memberOpts)
 		if m == nil {
 			continue
 		}
@@ -120,10 +120,13 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 	return &base, nil
 }
 
-func toMember(field *Column) *Member {
+func toMember(field *Column, nullable bool) *Member {
 	memberType := dataType.Get(field.DataType, field.ColumnType)
 	if field.ColumnName == "deleted_at" && memberType == "time.Time" {
 		memberType = "gorm.DeletedAt"
+	}
+	if nullable && field.IsNullable == "YES" {
+		memberType = "*" + memberType
 	}
 	return &Member{
 		Name:             field.ColumnName,
