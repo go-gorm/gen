@@ -120,7 +120,7 @@ func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Append(values ...*{{.Ty
 	for i, v := range values {
 		targetValues[i] = v
 	}
-	return a.tx.Replace(targetValues...)
+	return a.tx.Append(targetValues...)
 }
 
 func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Replace(values ...*{{.Type}}) (err error) {
@@ -136,7 +136,7 @@ func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Delete(values ...*{{.Ty
 	for i, v := range values {
 		targetValues[i] = v
 	}
-	return a.tx.Replace(targetValues...)
+	return a.tx.Delete(targetValues...)
 }
 
 func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Clear() error {

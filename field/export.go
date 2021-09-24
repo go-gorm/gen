@@ -218,3 +218,5 @@ func EmptyExpr() Expr { return expr{e: clause.Expr{}} }
 func NewRelation(varName string, varType string, relations ...*Relation) *Relation {
 	return &Relation{varName: varName, path: varName, varType: varType, relations: wrapPath(varName, relations)}
 }
+
+var Associations RelationPath = NewRelation(clause.Associations, "")
