@@ -105,6 +105,7 @@ type Column struct {
 	ColumnType    string `gorm:"column:COLUMN_TYPE"`
 	ColumnDefault string `gorm:"column:COLUMN_DEFAULT"`
 	Extra         string `gorm:"column:EXTRA"`
+	IsNullable    string `gorm:"column:IS_NULLABLE"`
 }
 
 type sql struct{ bytes.Buffer }
