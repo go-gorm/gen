@@ -136,12 +136,14 @@ func toMember(field *Column) *Member {
 		JSONTag:          field.ColumnName,
 	}
 }
+
 func BuildGormTag(columnName, columnDefault string) string {
 	if columnDefault == "" {
 		return fmt.Sprintf("column:%s", columnName)
 	}
 	return fmt.Sprintf("column:%s;default:%s", columnName, columnDefault)
 }
+
 func modifyMember(m *Member, opts []MemberOpt) *Member {
 	for _, opt := range opts {
 		m = opt(m)

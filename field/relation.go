@@ -38,9 +38,9 @@ type Relation struct {
 	relations []*Relation
 }
 
-func (r Relation) Path() relationPath {
-	return relationPath(r.varName)
-}
+func (r Relation) Name() string { return r.varName }
+
+func (r Relation) Path() relationPath { return relationPath(r.varName) }
 
 func (r *Relation) StructMember() string {
 	var memberStr string

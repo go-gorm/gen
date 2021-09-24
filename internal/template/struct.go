@@ -1,84 +1,121 @@
 package template
 
-const createMethod = `
-func new{{.StructName}}(db *gorm.DB) {{.NewStructName}} {
-	_{{.NewStructName}} := {{.NewStructName}}{}
-
-	_{{.NewStructName}}.{{.NewStructName}}Do.UseDB(db)
-	_{{.NewStructName}}.{{.NewStructName}}Do.UseModel({{.StructInfo.Package}}.{{.StructInfo.Type}}{})
-
-	{{if .HasMember}}tableName := _{{.NewStructName}}.{{.NewStructName}}Do.TableName(){{end}}
-	{{range $p :=.Members}} _{{$.NewStructName}}.{{$p.Name}} = field.New{{$p.NewType}}(tableName, "{{$p.ColumnName}}")
-	{{end}}
-
-	{{if .HasMember}}tableName := _{{.NewStructName}}.{{.NewStructName}}Do.TableName(){{end}}
-	{{range $p :=.Members}} _{{$.NewStructName}}.{{$p.Name}} = field.New{{$p.NewType}}(tableName, "{{$p.ColumnName}}")
-	{{end}}
-	{{if .HasRelation}}
-	{{range $p :=.Relations}}_{{$.NewStructName}}.{{$p.Name}} = {{$p.RelationShip}}{{$p.Name}}{
-		Relation: field.NewRelation("{{$p.Name}}"),
-		db:       db.Session(&gorm.Session{}),
+const (
+	BaseStruct = createMethod + `
+	type {{.NewStructName}} struct {
+		{{.NewStructName}}Do` +
+		members + `
 	}
-	{{end}}
 	
-	return _{{.NewStructName}}
-}
+	` + cloneMethod + relationship + defineMethodStruct
 
+	BaseStructWithContext = createMethod + `
+	type {{.NewStructName}} struct {
+		{{.NewStructName}}Do {{.NewStructName}}Do` +
+		members + `
+	}
+	
+	func ({{.S}} *{{.NewStructName}}) WithContext(ctx context.Context) *{{.NewStructName}}Do { return {{.S}}.{{.NewStructName}}Do.WithContext(ctx)}
+	
+	` + cloneMethod + relationship + defineMethodStruct
+)
+
+const (
+	createMethod = `
+	func new{{.StructName}}(db *gorm.DB) {{.NewStructName}} {
+		_{{.NewStructName}} := {{.NewStructName}}{}
+	
+		_{{.NewStructName}}.{{.NewStructName}}Do.UseDB(db)
+		_{{.NewStructName}}.{{.NewStructName}}Do.UseModel({{.StructInfo.Package}}.{{.StructInfo.Type}}{})
+	
+		{{if .HasMember}}tableName := _{{.NewStructName}}.{{.NewStructName}}Do.TableName(){{end}}
+		{{range .Members}} _{{$.NewStructName}}.{{.Name}} = field.New{{.NewType}}(tableName, "{{.ColumnName}}")
+		{{end}}
+		{{range .Relations.HasOne}}
+			_{{$.NewStructName}}.{{.Name}} = {{$.NewStructName}}HasOne{{.Name}}{
+			db: db.Session(&gorm.Session{}),
+
+			{{.StructMemberInit}}
+		}
+		{{end}}
+		{{- range .Relations.HasMany}}
+			_{{$.NewStructName}}.{{.Name}} = {{$.NewStructName}}HasMany{{.Name}}{
+			db: db.Session(&gorm.Session{}),
+
+			{{.StructMemberInit}}
+		}
+		{{end}}
+		{{- range .Relations.BelongsTo}}
+			_{{$.NewStructName}}.{{.Name}} = {{$.NewStructName}}BelongsTo{{.Name}}{
+			db: db.Session(&gorm.Session{}),
+			
+			{{.StructMemberInit}}
+		}
+		{{end}}
+		{{- range .Relations.Many2Many}}
+			_{{$.NewStructName}}.{{.Name}} = {{$.NewStructName}}Many2Many{{.Name}}{
+			db: db.Session(&gorm.Session{}),
+			
+			{{.StructMemberInit}}
+		}
+		{{end}}
+	
+		return _{{.NewStructName}}
+	}
+	`
+	members = `
+	{{range .Members}}{{.Name}} field.{{.NewType}}
+	{{end}}
+	{{range .Relations.HasOne}}{{.Name}} {{$.NewStructName}}HasOne{{.Name}}
+	{{end}}
+	{{- range .Relations.HasMany}}{{.Name}} {{$.NewStructName}}HasMany{{.Name}}
+	{{end}}
+	{{- range .Relations.BelongsTo}}{{.Name}} {{$.NewStructName}}BelongsTo{{.Name}}
+	{{end}}
+	{{- range .Relations.Many2Many}}{{.Name}} {{$.NewStructName}}Many2Many{{.Name}}
+	{{end}}
 `
-
-const defineMethodStruct = `type {{.NewStructName}}Do struct { gen.DO }`
-
-const cloneMethod = `
+	cloneMethod = `
 func ({{.S}} {{.NewStructName}}) clone(db *gorm.DB) {{.NewStructName}} {
 	{{.S}}.{{.NewStructName}}Do.ReplaceDB(db)
 	return {{.S}}
 }
 `
+	relationship       = hasOneRelationship + hasManyRelationship + belongsToRelationship + many2ManyRelationship
+	defineMethodStruct = `type {{.NewStructName}}Do struct { gen.DO }`
+)
 
-const BaseStruct = createMethod + `
-type {{.NewStructName}} struct {
-	{{.NewStructName}}Do` +
-	Members + `
-}
-
-` + cloneMethod + defineMethodStruct
-
-const BaseStructWithContext = createMethod + `
-type {{.NewStructName}} struct {
-	{{.NewStructName}}Do {{.NewStructName}}Do` +
-	Members + `
-}
-
-func ({{.S}} *{{.NewStructName}}) WithContext(ctx context.Context) *{{.NewStructName}}Do { return {{.S}}.{{.NewStructName}}Do.WithContext(ctx)}
-
-` + cloneMethod + defineMethodStruct
-
-const Members = `
-	{{range $p :=.Members}}{{$p.Name}}  field.{{$p.NewType}}
-	{{end}}
-	{{range $p :=.Relations}}{{$p.Name}} {{$p.RelationShip}}{{$p.Name}}
-	{{end}}
-`
-
-const SingleRelation = Relation + SingleRelateFind
-const ManyRelation = Relation + ManyRelateFind
-
-const RelateStruct = `
-type {{$p.RelationShip}}{{$p.Name}} struct {
-	field.Relation
-
+const (
+	hasOneRelationship = `{{- $relationship := "HasOne"}}	
+{{range .Relations.HasOne}}` + relationStruct + `{{end}}`
+	hasManyRelationship = `{{- $relationship := "HasMany"}}	
+{{range .Relations.HasMany}}` + relationStruct + `{{end}}`
+	belongsToRelationship = `{{- $relationship := "BelongsTo"}}	
+{{range .Relations.BelongsTo}}` + relationStruct + `{{end}}`
+	many2ManyRelationship = `{{- $relationship := "Many2Many"}}	
+{{range .Relations.Many2Many}}` + relationStruct + `{{end}}`
+	relationStruct = `
+type {{$.NewStructName}}{{$relationship}}{{.Name}} struct{
 	db *gorm.DB
+	
+	field.Relation
+	
+	{{.StructMember}}
 }
 
-func (a {{$p.RelationShip}}{{$p.Name}}) Model(m *{{.StructInfo.Package}}.{{.StructInfo.Type}}) *{{$p.RelationShip}}{{$p.Name}}Tx {
-	return &{{$p.RelationShip}}{{$p.Name}}Tx{a.db.Model(m).Association(string(a.Path()))}
+func (a {{$.NewStructName}}{{$relationship}}{{.Name}}) Model(m *{{$.StructInfo.Package}}.{{$.StructInfo.Type}}) *{{$.NewStructName}}{{$relationship}}{{.Name}}Tx {
+	return &{{$.NewStructName}}{{$relationship}}{{.Name}}Tx{a.db.Model(m).Association(string(a.Path()))}
 }
-`
 
-const Relation = RelateStruct + `
-type {{$p.RelationShip}}{{$p.Name}}Tx struct{ tx *gorm.Association }
+` + relationTx
+	relationTx = `
+type {{$.NewStructName}}{{$relationship}}{{.Name}}Tx struct{ tx *gorm.Association }
 
-func (a {{$p.RelationShip}}{{$p.Name}}Tx) Append(values ...*{{.StructInfo.Package}}.{{.StructInfo.Type}})) (err error) {
+func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Find() (result {{if eq $relationship "HasMany" "Many2Many"}}[]{{end}}*{{$.StructInfo.Package}}.{{$.StructInfo.Type}}, err error) {
+	return result, a.tx.Find(&result)
+}
+
+func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Append(values ...*{{$.StructInfo.Package}}.{{$.StructInfo.Type}}) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -86,7 +123,7 @@ func (a {{$p.RelationShip}}{{$p.Name}}Tx) Append(values ...*{{.StructInfo.Packag
 	return a.tx.Replace(targetValues...)
 }
 
-func (a {{$p.RelationShip}}{{$p.Name}}Tx) Replace(values ...*{{.StructInfo.Package}}.{{.StructInfo.Type}})) (err error) {
+func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Replace(values ...*{{$.StructInfo.Package}}.{{$.StructInfo.Type}}) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -94,8 +131,7 @@ func (a {{$p.RelationShip}}{{$p.Name}}Tx) Replace(values ...*{{.StructInfo.Packa
 	return a.tx.Replace(targetValues...)
 }
 
-
-func (a {{$p.RelationShip}}{{$p.Name}}Tx) Delete(values ...*{{.StructInfo.Package}}.{{.StructInfo.Type}})) (err error) {
+func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Delete(values ...*{{$.StructInfo.Package}}.{{$.StructInfo.Type}}) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -103,22 +139,12 @@ func (a {{$p.RelationShip}}{{$p.Name}}Tx) Delete(values ...*{{.StructInfo.Packag
 	return a.tx.Replace(targetValues...)
 }
 
-func (a {{$p.RelationShip}}{{$p.Name}}Tx) Clear() error {
+func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Clear() error {
 	return a.tx.Clear()
 }
 
-func (a {{$p.RelationShip}}{{$p.Name}}Tx) Count() int64 {
+func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Count() int64 {
 	return a.tx.Count()
 }
 `
-const SingleRelateFind = `
-func (a {{$p.RelationShip}}{{$p.Name}}Tx) Find() (result *{{.StructInfo.Package}}.{{.StructInfo.Type}}), err error) {
-	return result, a.tx.Find(&result)
-}
-`
-
-const ManyRelateFind = `
-func (a {{$p.RelationShip}}{{$p.Name}}Tx) Find() (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}}), err error) {
-	return result, a.tx.Find(&result)
-}
-`
+)

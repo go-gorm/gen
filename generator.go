@@ -431,7 +431,6 @@ func (g *Generator) generateSubQuery(data *genInfo) (err error) {
 		structTmpl = tmpl.BaseStruct
 	}
 
-	// TODO create relation and method
 	err = render(structTmpl, &buf, data.BaseStruct)
 	if err != nil {
 		return err
@@ -448,8 +447,7 @@ func (g *Generator) generateSubQuery(data *genInfo) (err error) {
 	if err != nil {
 		return err
 	}
-	queryFile := fmt.Sprintf("%s/%s.gen.go", g.OutPath, strings.ToLower(data.TableName))
-	return g.output(queryFile, buf.Bytes())
+	return g.output(fmt.Sprintf("%s/%s.gen.go", g.OutPath, strings.ToLower(data.TableName)), buf.Bytes())
 }
 
 // remove history GEN generated file
