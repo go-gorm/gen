@@ -363,14 +363,16 @@ func TestRelation_StructMember(t *testing.T) {
 	}{
 		{
 			relation: field.NewRelation(
-				"CreditCards",
-				field.NewRelation("Owner"),
-				field.NewRelation("Bank",
-					field.NewRelation("City", field.NewRelation("State")),
-					field.NewRelation("Manager"),
+				"CreditCards", "model.CreditCard",
+				field.NewRelation("Owner", "model.Owner"),
+				field.NewRelation("Bank", "model.Bank",
+					field.NewRelation("Manager", "model.Bank"),
+					field.NewRelation("City", "model.City",
+						field.NewRelation("State", "model.Bank"),
+					),
 				),
 			),
-			expectedValue: "Owner struct {\nfield.Relation\n}\nBank struct {\nfield.Relation\nCity struct {\nfield.Relation\nState struct {\nfield.Relation\n}\n}\nManager struct {\nfield.Relation\n}\n}\n",
+			expectedValue: "Owner struct {\nfield.Relation\n}\nBank struct {\nfield.Relation\nManager struct {\nfield.Relation\n}\nCity struct {\nfield.Relation\nState struct {\nfield.Relation\n}\n}\n}\n",
 		},
 	}
 
@@ -388,13 +390,16 @@ func TestRelation_StructMemberInit(t *testing.T) {
 	}{
 		{
 			relation: field.NewRelation(
-				"CreditCards",
-				field.NewRelation("Owner"),
-				field.NewRelation("Bank",
-					field.NewRelation("City", field.NewRelation("State")),
-					field.NewRelation("Manager")),
+				"CreditCards", "model.CreditCard",
+				field.NewRelation("Owner", "model.Owner"),
+				field.NewRelation("Bank", "model.Bank",
+					field.NewRelation("Manager", "model.Manager"),
+					field.NewRelation("City", "model.City",
+						field.NewRelation("State", "model.State"),
+					),
+				),
 			),
-			expectedValue: "Relation: *field.NewRelation(\"CreditCards\"),\nOwner: struct {\nfield.Relation\n}{\nRelation: *field.NewRelation(\"CreditCards.Owner\"),\n},\nBank: struct {\nfield.Relation\nCity struct {\nfield.Relation\nState struct {\nfield.Relation\n}\n}\nManager struct {\nfield.Relation\n}}{\nRelation: *field.NewRelation(\"CreditCards.Bank\"),\nCity: struct {\nfield.Relation\nState struct {\nfield.Relation\n}}{\nRelation: *field.NewRelation(\"CreditCards.Bank.City\"),\nState: struct {\nfield.Relation\n}{\nRelation: *field.NewRelation(\"CreditCards.Bank.City.State\"),\n},\n},\nManager: struct {\nfield.Relation\n}{\nRelation: *field.NewRelation(\"CreditCards.Bank.Manager\"),\n},\n},\n",
+			expectedValue: "Relation: *field.NewRelation(\"CreditCards\", \"model.CreditCard\"),\nOwner: struct {\nfield.Relation\n}{\nRelation: *field.NewRelation(\"CreditCards.Owner\", \"model.Owner\"),\n},\nBank: struct {\nfield.Relation\nManager struct {\nfield.Relation\n}\nCity struct {\nfield.Relation\nState struct {\nfield.Relation\n}\n}}{\nRelation: *field.NewRelation(\"CreditCards.Bank\", \"model.Bank\"),\nManager: struct {\nfield.Relation\n}{\nRelation: *field.NewRelation(\"CreditCards.Bank.Manager\", \"model.Manager\"),\n},\nCity: struct {\nfield.Relation\nState struct {\nfield.Relation\n}}{\nRelation: *field.NewRelation(\"CreditCards.Bank.City\", \"model.City\"),\nState: struct {\nfield.Relation\n}{\nRelation: *field.NewRelation(\"CreditCards.Bank.City.State\", \"model.State\"),\n},\n},\n},\n",
 		},
 	}
 
@@ -414,53 +419,53 @@ func expectedStruct() { // nolint
 		}
 		Bank struct {
 			field.Relation
+			Manager struct {
+				field.Relation
+			}
 			City struct {
 				field.Relation
 				State struct {
 					field.Relation
 				}
-			}
-			Manager struct {
-				field.Relation
 			}
 		}
 	}{
-		Relation: *field.NewRelation("CreditCards"),
+		Relation: *field.NewRelation("CreditCards", "model.CreditCard"),
 		Owner: struct {
 			field.Relation
 		}{
-			Relation: *field.NewRelation("CreditCards.Owner"),
+			Relation: *field.NewRelation("CreditCards.Owner", "model.Owner"),
 		},
 		Bank: struct {
 			field.Relation
+			Manager struct {
+				field.Relation
+			}
 			City struct {
 				field.Relation
 				State struct {
 					field.Relation
 				}
 			}
-			Manager struct {
-				field.Relation
-			}
 		}{
-			Relation: *field.NewRelation("CreditCards.Bank"),
+			Relation: *field.NewRelation("CreditCards.Bank", "model.Bank"),
+			Manager: struct {
+				field.Relation
+			}{
+				Relation: *field.NewRelation("CreditCards.Bank.Manager", "model.Manager"),
+			},
 			City: struct {
 				field.Relation
 				State struct {
 					field.Relation
 				}
 			}{
-				Relation: *field.NewRelation("CreditCards.Bank.City"),
+				Relation: *field.NewRelation("CreditCards.Bank.City", "model.City"),
 				State: struct {
 					field.Relation
 				}{
-					Relation: *field.NewRelation("CreditCards.Bank.City.State"),
+					Relation: *field.NewRelation("CreditCards.Bank.City.State", "model.State"),
 				},
-			},
-			Manager: struct {
-				field.Relation
-			}{
-				Relation: *field.NewRelation("CreditCards.Bank.Manager"),
 			},
 		},
 	}

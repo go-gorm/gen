@@ -3,6 +3,7 @@ package check
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
@@ -67,6 +68,7 @@ func (b *BaseStruct) pullRelationShip(relationships []*schema.Relationship) []*f
 		subRelationships := relationship.FieldSchema.Relationships
 		relation := field.NewRelation(
 			relationship.Name,
+			strings.TrimLeft(relationship.Field.FieldType.String(), "[]*"),
 			b.pullRelationShip(append(append(append(append(
 				make([]*schema.Relationship, 0, 4),
 				subRelationships.BelongsTo...),

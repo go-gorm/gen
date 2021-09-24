@@ -104,18 +104,18 @@ type {{$.NewStructName}}{{$relationship}}{{.Name}} struct{
 }
 
 func (a {{$.NewStructName}}{{$relationship}}{{.Name}}) Model(m *{{$.StructInfo.Package}}.{{$.StructInfo.Type}}) *{{$.NewStructName}}{{$relationship}}{{.Name}}Tx {
-	return &{{$.NewStructName}}{{$relationship}}{{.Name}}Tx{a.db.Model(m).Association(string(a.Path()))}
+	return &{{$.NewStructName}}{{$relationship}}{{.Name}}Tx{a.db.Model(m).Association(a.Name())}
 }
 
 ` + relationTx
 	relationTx = `
 type {{$.NewStructName}}{{$relationship}}{{.Name}}Tx struct{ tx *gorm.Association }
 
-func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Find() (result {{if eq $relationship "HasMany" "Many2Many"}}[]{{end}}*{{$.StructInfo.Package}}.{{$.StructInfo.Type}}, err error) {
+func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Find() (result {{if eq $relationship "HasMany" "Many2Many"}}[]{{end}}*{{.Type}}, err error) {
 	return result, a.tx.Find(&result)
 }
 
-func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Append(values ...*{{$.StructInfo.Package}}.{{$.StructInfo.Type}}) (err error) {
+func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Append(values ...*{{.Type}}) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -123,7 +123,7 @@ func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Append(values ...*{{$.S
 	return a.tx.Replace(targetValues...)
 }
 
-func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Replace(values ...*{{$.StructInfo.Package}}.{{$.StructInfo.Type}}) (err error) {
+func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Replace(values ...*{{.Type}}) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -131,7 +131,7 @@ func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Replace(values ...*{{$.
 	return a.tx.Replace(targetValues...)
 }
 
-func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Delete(values ...*{{$.StructInfo.Package}}.{{$.StructInfo.Type}}) (err error) {
+func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Delete(values ...*{{.Type}}) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v

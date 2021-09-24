@@ -33,6 +33,7 @@ func (p relationPath) Path() relationPath { return p }
 
 type Relation struct {
 	varName string
+	varType string
 	path    string
 
 	relations []*Relation
@@ -40,7 +41,9 @@ type Relation struct {
 
 func (r Relation) Name() string { return r.varName }
 
-func (r Relation) Path() relationPath { return relationPath(r.varName) }
+func (r Relation) Path() relationPath { return relationPath(r.path) }
+
+func (r Relation) Type() string { return r.varType }
 
 func (r *Relation) StructMember() string {
 	var memberStr string
@@ -51,7 +54,7 @@ func (r *Relation) StructMember() string {
 }
 
 func (r *Relation) StructMemberInit() string {
-	initStr := fmt.Sprintf("Relation: *field.NewRelation(%q),\n", r.path)
+	initStr := fmt.Sprintf("Relation: *field.NewRelation(%q, %q),\n", r.path, r.varType)
 	for _, relation := range r.relations {
 		initStr += relation.varName + ": struct {\nfield.Relation\n" + strings.TrimPrefix(strings.TrimSpace(relation.StructMember()), relation.varName) + "}"
 		initStr += "{\n" + relation.StructMemberInit() + "},\n"
