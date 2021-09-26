@@ -160,13 +160,12 @@ func ({{.S}} {{.NewStructName}}Do) Assign(attrs ...field.Expr) *{{.NewStructName
 	return {{.S}}.withDO({{.S}}.DO.Assign(attrs...))
 }
 
-// Joins eager preloading
-func ({{.S}} {{.NewStructName}}Do) Joins(column field.RelationPath, on ...field.Expr) *{{.NewStructName}}Do {
-	return {{.S}}.withDO({{.S}}.DO.Joins(column, on...))
+func ({{.S}} {{.NewStructName}}Do) Joins(field field.RelationField) *{{.NewStructName}}Do {
+	return {{.S}}.withDO({{.S}}.DO.Joins(field))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Preload(column field.RelationPath, on ...field.Expr) *{{.NewStructName}}Do {
-	return {{.S}}.withDO({{.S}}.DO.Preload(column, on...))
+func ({{.S}} {{.NewStructName}}Do) Preload(field field.RelationField) *{{.NewStructName}}Do {
+	return {{.S}}.withDO({{.S}}.DO.Preload(field))
 }
 
 func ({{.S}} {{.NewStructName}}Do) FirstOrInit() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {

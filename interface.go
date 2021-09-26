@@ -59,8 +59,8 @@ type Dao interface {
 	Unscoped() Dao
 	Attrs(attrs ...field.Expr) Dao
 	Assign(attrs ...field.Expr) Dao
-	Joins(column field.RelationPath, on ...field.Expr) Dao
-	Preload(column field.RelationPath, on ...field.Expr) Dao
+	Joins(field field.RelationField) Dao
+	Preload(field field.RelationField) Dao
 
 	Create(value interface{}) error
 	CreateInBatches(value interface{}, batchSize int) error

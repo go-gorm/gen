@@ -372,12 +372,13 @@ func TestRelation_StructMember(t *testing.T) {
 					),
 				),
 			),
-			expectedValue: "Owner struct {\nfield.Relation\n}\nBank struct {\nfield.Relation\nManager struct {\nfield.Relation\n}\nCity struct {\nfield.Relation\nState struct {\nfield.Relation\n}\n}\n}\n",
+			expectedValue: "Owner struct {\nfield.RelationField\n}\nBank struct {\nfield.RelationField\nManager struct {\nfield.RelationField\n}\nCity struct {\nfield.RelationField\nState struct {\nfield.RelationField\n}\n}\n}\n",
 		},
 	}
 
 	for _, testdata := range testdatas {
 		if result := testdata.relation.StructMember(); result != testdata.expectedValue {
+			fmt.Println(result)
 			t.Errorf("StructMember fail: except %q, got %q", testdata.expectedValue, result)
 		}
 	}
@@ -399,13 +400,12 @@ func TestRelation_StructMemberInit(t *testing.T) {
 					),
 				),
 			),
-			expectedValue: "Relation: *field.NewRelation(\"CreditCards\", \"model.CreditCard\"),\nOwner: struct {\nfield.Relation\n}{\nRelation: *field.NewRelation(\"CreditCards.Owner\", \"model.Owner\"),\n},\nBank: struct {\nfield.Relation\nManager struct {\nfield.Relation\n}\nCity struct {\nfield.Relation\nState struct {\nfield.Relation\n}\n}}{\nRelation: *field.NewRelation(\"CreditCards.Bank\", \"model.Bank\"),\nManager: struct {\nfield.Relation\n}{\nRelation: *field.NewRelation(\"CreditCards.Bank.Manager\", \"model.Manager\"),\n},\nCity: struct {\nfield.Relation\nState struct {\nfield.Relation\n}}{\nRelation: *field.NewRelation(\"CreditCards.Bank.City\", \"model.City\"),\nState: struct {\nfield.Relation\n}{\nRelation: *field.NewRelation(\"CreditCards.Bank.City.State\", \"model.State\"),\n},\n},\n},\n",
+			expectedValue: "RelationField: field.NewRelation(\"CreditCards\", \"model.CreditCard\"),\nOwner: struct {\nfield.RelationField\n}{\nRelationField: field.NewRelation(\"CreditCards.Owner\", \"model.Owner\"),\n},\nBank: struct {\nfield.RelationField\nManager struct {\nfield.RelationField\n}\nCity struct {\nfield.RelationField\nState struct {\nfield.RelationField\n}\n}}{\nRelationField: field.NewRelation(\"CreditCards.Bank\", \"model.Bank\"),\nManager: struct {\nfield.RelationField\n}{\nRelationField: field.NewRelation(\"CreditCards.Bank.Manager\", \"model.Manager\"),\n},\nCity: struct {\nfield.RelationField\nState struct {\nfield.RelationField\n}}{\nRelationField: field.NewRelation(\"CreditCards.Bank.City\", \"model.City\"),\nState: struct {\nfield.RelationField\n}{\nRelationField: field.NewRelation(\"CreditCards.Bank.City.State\", \"model.State\"),\n},\n},\n},\n",
 		},
 	}
 
 	for _, testdata := range testdatas {
 		if result := testdata.relation.StructMemberInit(); result != testdata.expectedValue {
-			fmt.Println(result)
 			t.Errorf("StructMember fail: except %q, got %q", testdata.expectedValue, result)
 		}
 	}
@@ -413,58 +413,58 @@ func TestRelation_StructMemberInit(t *testing.T) {
 
 func expectedStruct() { // nolint
 	_ = struct {
-		field.Relation
+		field.RelationField
 		Owner struct {
-			field.Relation
+			field.RelationField
 		}
 		Bank struct {
-			field.Relation
+			field.RelationField
 			Manager struct {
-				field.Relation
+				field.RelationField
 			}
 			City struct {
-				field.Relation
+				field.RelationField
 				State struct {
-					field.Relation
+					field.RelationField
 				}
 			}
 		}
 	}{
-		Relation: *field.NewRelation("CreditCards", "model.CreditCard"),
+		RelationField: field.NewRelation("CreditCards", "model.CreditCard"),
 		Owner: struct {
-			field.Relation
+			field.RelationField
 		}{
-			Relation: *field.NewRelation("CreditCards.Owner", "model.Owner"),
+			RelationField: field.NewRelation("CreditCards.Owner", "model.Owner"),
 		},
 		Bank: struct {
-			field.Relation
+			field.RelationField
 			Manager struct {
-				field.Relation
+				field.RelationField
 			}
 			City struct {
-				field.Relation
+				field.RelationField
 				State struct {
-					field.Relation
+					field.RelationField
 				}
 			}
 		}{
-			Relation: *field.NewRelation("CreditCards.Bank", "model.Bank"),
+			RelationField: field.NewRelation("CreditCards.Bank", "model.Bank"),
 			Manager: struct {
-				field.Relation
+				field.RelationField
 			}{
-				Relation: *field.NewRelation("CreditCards.Bank.Manager", "model.Manager"),
+				RelationField: field.NewRelation("CreditCards.Bank.Manager", "model.Manager"),
 			},
 			City: struct {
-				field.Relation
+				field.RelationField
 				State struct {
-					field.Relation
+					field.RelationField
 				}
 			}{
-				Relation: *field.NewRelation("CreditCards.Bank.City", "model.City"),
+				RelationField: field.NewRelation("CreditCards.Bank.City", "model.City"),
 				State: struct {
-					field.Relation
+					field.RelationField
 				}{
-					Relation: *field.NewRelation("CreditCards.Bank.City.State", "model.State"),
+					RelationField: field.NewRelation("CreditCards.Bank.City.State", "model.State"),
 				},
 			},
 		},

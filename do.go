@@ -230,13 +230,16 @@ func (d *DO) Order(columns ...field.Expr) Dao {
 	// 	}
 	// }
 	// return d.newInstance(d.db.Clauses(clause.OrderBy{Expression: clause.CommaExpression{Exprs: toExpression(columns)}}))
+	return d.getInstance(d.db.Order(d.calcOrderValue(columns...)))
+}
 
+func (d *DO) calcOrderValue(columns ...field.Expr) string {
 	// eager build Columns
 	orderArray := make([]string, len(columns))
 	for i, c := range columns {
 		orderArray[i] = c.Build(d.db.Statement).String()
 	}
-	return d.getInstance(d.db.Order(strings.Join(orderArray, ",")))
+	return strings.Join(orderArray, ",")
 }
 
 func (d *DO) Distinct(columns ...field.Expr) Dao {
@@ -316,12 +319,33 @@ func (d *DO) Assign(attrs ...field.Expr) Dao {
 	return d.getInstance(d.db.Assign(toExpressionInterface(attrs...)...))
 }
 
-func (d *DO) Joins(column field.RelationPath, on ...field.Expr) Dao {
-	return d.getInstance(d.db.Joins(string(column.Path()), toExpressionInterface(on...)...))
+func (d *DO) Joins(field field.RelationField) Dao {
+	return d.getInstance(d.db.Joins(field.Path()))
 }
 
-func (d *DO) Preload(column field.RelationPath, on ...field.Expr) Dao {
-	return d.getInstance(d.db.Preload(string(column.Path()), toExpressionInterface(on...)...))
+// func (d *DO) Preload(column field.RelationPath, subQuery ...SubQuery) Dao {
+// 	if len(subQuery) > 0 {
+// 		return d.getInstance(d.db.Preload(string(column.Path()), subQuery[0].underlyingDB()))
+// 	}
+// 	return d.getInstance(d.db.Preload(string(column.Path())))
+// }
+
+func (d *DO) Preload(field field.RelationField) Dao {
+	var args []interface{}
+	if conds := field.GetConds(); len(conds) > 0 {
+		args = append(args, toExpressionInterface(conds...)...)
+	}
+	if columns := field.GetOrderCol(); len(columns) > 0 {
+		args = append(args, func(db *gorm.DB) *gorm.DB {
+			return db.Order(d.calcOrderValue(columns...))
+		})
+	}
+	if clauses := field.GetClauses(); len(clauses) > 0 {
+		args = append(args, func(db *gorm.DB) *gorm.DB {
+			return db.Clauses(clauses...)
+		})
+	}
+	return d.getInstance(d.db.Preload(field.Path(), args...))
 }
 
 func getFromClause(db *gorm.DB) *clause.From {

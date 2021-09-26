@@ -98,9 +98,22 @@ const (
 type {{$.NewStructName}}{{$relationship}}{{.Name}} struct{
 	db *gorm.DB
 	
-	field.Relation
+	field.RelationField
 	
 	{{.StructMember}}
+}
+
+func (a {{$.NewStructName}}{{$relationship}}{{.Name}}) Where(conds ...field.Expr) *{{$.NewStructName}}{{$relationship}}{{.Name}} {
+	if len(conds) == 0 {
+		return &a
+	}
+
+	exprs := make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		exprs = append(exprs, cond.BeCond().(clause.Expression))
+	}
+	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
+	return &a
 }
 
 func (a {{$.NewStructName}}{{$relationship}}{{.Name}}) Model(m *{{$.StructInfo.Package}}.{{$.StructInfo.Type}}) *{{$.NewStructName}}{{$relationship}}{{.Name}}Tx {

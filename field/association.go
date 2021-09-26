@@ -26,13 +26,18 @@ type Relations struct {
 	Many2Many []*Relation
 }
 
-type RelationPath interface {
-	Path() relationPath
+type RelationField interface {
+	Name() string
+	Path() string
+
+	On(conds ...Expr) RelationField
+	Order(columns ...Expr) RelationField
+	Clauses(hints ...clause.Expression) RelationField
+
+	GetConds() []Expr
+	GetOrderCol() []Expr
+	GetClauses() []clause.Expression
 }
-
-type relationPath string
-
-func (p relationPath) Path() relationPath { return p }
 
 type Relation struct {
 	varName string
@@ -40,26 +45,51 @@ type Relation struct {
 	path    string
 
 	relations []*Relation
+
+	conds   []Expr
+	order   []Expr
+	clauses []clause.Expression
 }
 
 func (r Relation) Name() string { return r.varName }
 
-func (r Relation) Path() relationPath { return relationPath(r.path) }
+func (r Relation) Path() string { return r.path }
 
 func (r Relation) Type() string { return r.varType }
+
+func (r *Relation) On(conds ...Expr) RelationField {
+	r.conds = append(r.conds, conds...)
+	return r
+}
+
+func (r *Relation) Order(columns ...Expr) RelationField {
+	r.order = append(r.order, columns...)
+	return r
+}
+
+func (r *Relation) Clauses(hints ...clause.Expression) RelationField {
+	r.clauses = append(r.clauses, hints...)
+	return r
+}
+
+func (r *Relation) GetConds() []Expr { return r.conds }
+
+func (r *Relation) GetOrderCol() []Expr { return r.order }
+
+func (r *Relation) GetClauses() []clause.Expression { return r.clauses }
 
 func (r *Relation) StructMember() string {
 	var memberStr string
 	for _, relation := range r.relations {
-		memberStr += relation.varName + " struct {\nfield.Relation\n" + relation.StructMember() + "}\n"
+		memberStr += relation.varName + " struct {\nfield.RelationField\n" + relation.StructMember() + "}\n"
 	}
 	return memberStr
 }
 
 func (r *Relation) StructMemberInit() string {
-	initStr := fmt.Sprintf("Relation: *field.NewRelation(%q, %q),\n", r.path, r.varType)
+	initStr := fmt.Sprintf("RelationField: field.NewRelation(%q, %q),\n", r.path, r.varType)
 	for _, relation := range r.relations {
-		initStr += relation.varName + ": struct {\nfield.Relation\n" + strings.TrimPrefix(strings.TrimSpace(relation.StructMember()), relation.varName) + "}"
+		initStr += relation.varName + ": struct {\nfield.RelationField\n" + strings.TrimPrefix(strings.TrimSpace(relation.StructMember()), relation.varName) + "}"
 		initStr += "{\n" + relation.StructMemberInit() + "},\n"
 	}
 	return initStr

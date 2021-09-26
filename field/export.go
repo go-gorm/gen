@@ -219,4 +219,4 @@ func NewRelation(varName string, varType string, relations ...*Relation) *Relati
 	return &Relation{varName: varName, path: varName, varType: varType, relations: wrapPath(varName, relations)}
 }
 
-var Associations RelationPath = NewRelation(clause.Associations, "")
+var Associations RelationField = NewRelation(clause.Associations, "")
