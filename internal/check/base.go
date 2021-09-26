@@ -108,6 +108,25 @@ type Column struct {
 	IsNullable    string `gorm:"column:IS_NULLABLE"`
 }
 
+func (c *Column) IsPrimaryKey() bool {
+	if c == nil {
+		return false
+	}
+	if c.ColumnKey == "PRI" {
+		return true
+	}
+	return false
+}
+func (c *Column) AutoIncrement() bool {
+	if c == nil {
+		return false
+	}
+	if c.Extra == "auto_increment" {
+		return true
+	}
+	return false
+}
+
 type sql struct{ bytes.Buffer }
 
 func (s *sql) WriteSql(b byte) {
