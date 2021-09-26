@@ -148,7 +148,9 @@ func buildGormTag(field *Column) string {
 	buf.WriteString(fmt.Sprintf("column:%s", field.ColumnName))
 	if field.IsPrimaryKey() {
 		buf.WriteString(";primaryKey")
-		if !field.AutoIncrement() { //主键默认自增，非自增加上tag
+		if !field.AutoIncrement() {
+			// integer PrioritizedPrimaryField enables AutoIncrement by default, 
+			// if not, we need to turn off autoIncrement for the fields
 			buf.WriteString(";autoIncrement:false")
 		}
 	}
