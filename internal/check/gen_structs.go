@@ -1,6 +1,7 @@
 package check
 
 import (
+	"bytes"
 	"fmt"
 	"path/filepath"
 	"regexp"
@@ -135,15 +136,26 @@ func toMember(field *Column, nullable bool) *Member {
 		ColumnName:       field.ColumnName,
 		ColumnComment:    field.ColumnComment,
 		MultilineComment: containMultiline(field.ColumnComment),
-		GORMTag:          BuildGormTag(field.ColumnName, field.ColumnDefault),
+		GORMTag:          buildGormTag(field),
 		JSONTag:          field.ColumnName,
 	}
 }
-func BuildGormTag(columnName, columnDefault string) string {
-	if columnDefault == "" {
-		return fmt.Sprintf("column:%s", columnName)
+func buildGormTag(field *Column) string {
+	if field == nil {
+		return ""
 	}
-	return fmt.Sprintf("column:%s;default:%s", columnName, columnDefault)
+	var buf bytes.Buffer
+	buf.WriteString(fmt.Sprintf("column:%s", field.ColumnName))
+	if field.IsPrimaryKey() {
+		buf.WriteString(";primaryKey")
+		if !field.AutoIncrement() { //主键默认自增，非自增加上tag
+			buf.WriteString(";autoIncrement:false")
+		}
+	}
+	if field.ColumnDefault != "" {
+		buf.WriteString(fmt.Sprintf(";default:%s", field.ColumnDefault))
+	}
+	return buf.String()
 }
 func modifyMember(m *Member, opts []MemberOpt) *Member {
 	for _, opt := range opts {
