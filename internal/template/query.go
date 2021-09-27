@@ -58,7 +58,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx  {
 	}
 }
 
-func (q *Query) Transaction(fc func(db *Query) error, opts ...*sql.TxOptions) error {
+func (q *Query) Transaction(fc func(tx *Query) error, opts ...*sql.TxOptions) error {
 	return q.db.Transaction(func(tx *gorm.DB) error { return fc(q.clone(tx)) }, opts...)
 }
 

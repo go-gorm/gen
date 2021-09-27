@@ -59,12 +59,19 @@ A safer orm base on [GORM](https://github.com/go-gorm/gorm), aims to be develope
         - [SubQuery](#subquery)
           - [From SubQuery](#from-subquery)
           - [Update from SubQuery](#update-from-subquery)
+        - [Transaction](#transaction)
+          - [Nested Transactions](#nested-transactions)
+          - [Transactions by manual](#transactions-by-manual)
+          - [SavePoint/RollbackTo](#savepointrollbackto)
+        - [Association](#association)
         - [Advanced Query](#advanced-query)
           - [Iteration](#iteration)
           - [FindInBatches](#findinbatches)
           - [Pluck](#pluck)
           - [Scopes](#scopes)
           - [Count](#count)
+          - [FirstOrInit](#firstorinit)
+          - [FirstOrCreate](#firstorcreate)
       - [Update](#update)
         - [Update single column](#update-single-column)
         - [Updates multiple columns](#updates-multiple-columns)
@@ -110,7 +117,7 @@ import "gorm.io/gen"
 
 ## Quick start
 
-<font color="red" size="4"><b>Emphasis</b></font>: All use cases in this doc are generated under `WithContext` mode. And if you generate code under `WithoutContext` mode, please remove `WithContext(ctx)` before you call any query method, it helps you make code more concise.
+**Emphasis**: All use cases in this doc are generated under `WithContext` mode. And if you generate code under `WithoutContext` mode, please remove `WithContext(ctx)` before you call any query method, it helps you make code more concise.
 
 ```bash
 # assume the following code in generate.go file
@@ -129,6 +136,8 @@ func main() {
     g := gen.NewGenerator(gen.Config{
         OutPath: "../dal/query",
         /* Mode: gen.WithoutContext,*/
+        //if you want the nullable field generation property to be pointer type, set FieldNullable true
+        /* FieldNullable: true,*/
     })
   
     // reuse the database connection in Project or create a connection here
@@ -696,6 +705,333 @@ u.WithContext(ctx).Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqCol(u.Com
 u.WithContext(ctx).Where(u.Name.Eq("modi")).Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqCol(u.CompanyID)))
 ```
 
+##### Transaction
+
+To perform a set of operations within a transaction, the general flow is as below.
+
+```go
+q := query.Use(db)
+
+q.Transaction(func(tx *query.Query) error {
+  if _, err := tx.User.WithContext(ctx).Where(tx.User.ID.Eq(100)).Delete(); err != nil {
+    return err
+  }
+  if _, err := tx.Article.WithContext(ctx).Create(&model.User{Name:"modi"}); err != nil {
+    return err
+  }
+  return nil
+})
+```
+
+###### Nested Transactions
+
+GEN supports nested transactions, you can rollback a subset of operations performed within the scope of a larger transaction, for example:
+
+```go
+q := query.Use(db)
+
+q.Transaction(func(tx *query.Query) error {
+  tx.User.WithContext(ctx).Create(&user1)
+
+  tx.Transaction(func(tx2 *query.Query) error {
+    tx2.User.WithContext(ctx).Create(&user2)
+    return errors.New("rollback user2") // Rollback user2
+  })
+
+  tx.Transaction(func(tx2 *query.Query) error {
+    tx2.User.WithContext(ctx).Create(&user3)
+    return nil
+  })
+
+  return nil
+})
+
+// Commit user1, user3
+```
+
+###### Transactions by manual
+
+```go
+q := query.Use(db)
+
+// begin a transaction
+tx := q.Begin()
+
+// do some database operations in the transaction (use 'tx' from this point, not 'db')
+tx.User.WithContext(ctx).Create(...)
+
+// ...
+
+// rollback the transaction in case of error
+tx.Rollback()
+
+// Or commit the transaction
+tx.Commit()
+```
+
+For example:
+
+```go
+q := query.Use(db)
+
+func doSomething(ctx context.Context, users ...*model.User) (err error) {
+    tx := q.Begin()
+    defer func() {
+        if recover() != nil || err != nil {
+            _ = tx.Rollback()
+        }
+    }()
+
+    err = tx.User.WithContext(ctx).Create(users...)
+    if err != nil {
+        return
+    }
+    return tx.Commit()
+}
+```
+
+###### SavePoint/RollbackTo
+
+GEN provides `SavePoint`, `RollbackTo` to save points and roll back to a savepoint, for example:
+
+```go
+tx := q.Begin()
+txCtx = tx.WithContext(ctx)
+
+txCtx.User.Create(&user1)
+
+tx.SavePoint("sp1")
+txCtx.Create(&user2)
+tx.RollbackTo("sp1") // Rollback user2
+
+tx.Commit() // Commit user1
+```
+
+##### Association
+
+GEN will auto-save associations as GORM do. The relationships (BelongsTo/HasOne/HasMany/Many2Many) reuse GORM's tag.
+
+###### Skip Auto Create/Update
+
+```go
+user := model.User{
+  Name:            "modi",
+  BillingAddress:  Address{Address1: "Billing Address - Address 1"},
+  ShippingAddress: Address{Address1: "Shipping Address - Address 1"},
+  Emails:          []Email{
+    {Email: "modi@example.com"},
+    {Email: "modi-2@example.com"},
+  },
+  Languages:       []Language{
+    {Name: "ZH"},
+    {Name: "EN"},
+  },
+}
+
+u := query.Use(db).User
+
+u.WithContext(ctx).Select(u.Name).Create(&user)
+// INSERT INTO "users" (name) VALUES ("jinzhu", 1, 2);
+
+u.WithContext(ctx).Omit(u.BillingAddress.Field()).Create(&user)
+// Skip create BillingAddress when creating a user
+
+u.WithContext(ctx).Omit(u.BillingAddress.Field("Address1")).Create(&user)
+// Skip create BillingAddress.Address1 when creating a user
+
+u.WithContext(ctx).Omit(field.AssociationFields).Create(&user)
+// Skip all associations when creating a user
+```
+
+Method `Field` will join a serious field name with ''.", for example: `u.BillingAddress.Field("Address1", "Street")` equals to `BillingAddress.Address1.Street`
+
+###### Find Associations
+
+Find matched associations
+
+```go
+u := query.Use(db).User
+
+languages, err = u.Languages.Model(&user).Find()
+```
+
+Find associations with conditions
+
+```go
+q := query.Use(db)
+u := q.User
+
+languages, err = u.Languages.Where(q.Language.Name.In([]string{"ZH","EN"})).Model(&user).Find()
+```
+
+###### Append Associations
+
+Append new associations for `many to many`, `has many`, replace current association for `has one`, `belongs to`
+
+```go
+u := query.Use(db).User
+
+u.Languages.Model(&user).Append(&languageZH, &languageEN)
+
+u.Languages.Model(&user).Append(&Language{Name: "DE"})
+
+u.CreditCards.Model(&user).Append(&CreditCard{Number: "411111111111"})
+```
+
+###### Replace Associations
+
+Replace current associations with new ones
+
+```go
+u.Languages.Model(&user).Replace(&languageZH, &languageEN)
+```
+
+###### Delete Associations
+
+Remove the relationship between source & arguments if exists, only delete the reference, won’t delete those objects from DB.
+
+```go
+u := query.Use(db).User
+
+u.Languages.Model(&user).Delete(&languageZH, &languageEN)
+
+u.Languages.Model(&user).Delete([]*Language{&languageZH, &languageEN}...)
+```
+
+###### Clear Associations
+
+Remove all reference between source & association, won’t delete those associations
+
+```go
+u.Languages.Model(&user).Clear()
+```
+
+###### Count Associations
+
+Return the count of current associations
+
+```go
+u.Languages.Model(&user).Count()
+```
+
+###### Delete with Select
+
+You are allowed to delete selected has one/has many/many2many relations with `Select` when deleting records, for example:
+
+```go
+u := query.Use(db).User
+
+// delete user's account when deleting user
+u.Select(u.Account).Delete(&user)
+
+// delete user's Orders, CreditCards relations when deleting user
+db.Select(u.Orders.Field(), u.CreditCards.Field()).Delete(&user)
+
+// delete user's has one/many/many2many relations when deleting user
+db.Select(field.AssociationsFields).Delete(&user)
+```
+
+##### Preloading
+
+###### Preload
+
+GEN allows eager loading relations in other SQL with `Preload`, for example:
+
+```go
+type User struct {
+  gorm.Model
+  Username string
+  Orders   []Order
+}
+
+type Order struct {
+  gorm.Model
+  UserID uint
+  Price  float64
+}
+
+q := query.Use(db)
+u := q.User
+o := q.Order
+
+// Preload Orders when find users
+users, err := u.WithContext(ctx).Preload(u.Orders).Find()
+// SELECT * FROM users;
+// SELECT * FROM orders WHERE user_id IN (1,2,3,4);
+
+users, err := u.WithContext(ctx).Preload(u.Orders).Preload(u.Profile).Preload(u.Role).Find()
+// SELECT * FROM users;
+// SELECT * FROM orders WHERE user_id IN (1,2,3,4); // has many
+// SELECT * FROM profiles WHERE user_id IN (1,2,3,4); // has one
+// SELECT * FROM roles WHERE id IN (4,5,6); // belongs to
+```
+
+###### Preload All
+
+`clause.Associations` can work with `Preload` similar like `Select` when creating/updating, you can use it to `Preload` all associations, for example:
+
+```go
+type User struct {
+  gorm.Model
+  Name       string
+  CompanyID  uint
+  Company    Company
+  Role       Role
+  Orders     []Order
+}
+
+users, err := u.WithContext(ctx).Preload(field.Associations).Find()
+```
+
+`clause.Associations` won’t preload nested associations, but you can use it with [Nested Preloading](#nested_preloading) together, e.g:
+
+```go
+users, err := u.WithContext(ctx).Preload(u.Orders.OrderItems.Product).Find()
+```
+
+###### Preload with conditions
+
+GORM allows Preload associations with conditions, it works similar to Inline Conditions.
+
+```go
+q := query.Use(db)
+u := q.User
+o := q.Order
+
+// Preload Orders with conditions
+users, err := u.WithContext(ctx).Preload(u.Orders.On(o.State.NotIn("cancelled")).Find()
+// SELECT * FROM users;
+// SELECT * FROM orders WHERE user_id IN (1,2,3,4) AND state NOT IN ('cancelled');
+
+users, err := u.WithContext(ctx).Where(u.State.Eq("active")).Preload(u.Orders.On(o.State.NotIn("cancelled")).Find()
+// SELECT * FROM users WHERE state = 'active';
+// SELECT * FROM orders WHERE user_id IN (1,2) AND state NOT IN ('cancelled');
+
+users, err := u.WithContext(ctx).Preload(u.Orders.Order(o.ID.Desc(), o.CreateTime).Find()
+// SELECT * FROM users;
+// SELECT * FROM orders WHERE user_id IN (1,2) Order By id DESC, create_time;
+
+users, err := u.WithContext(ctx).Preload(u.Orders.On(o.State.Eq("on")).Order(o.ID.Desc()).Find()
+// SELECT * FROM users;
+// SELECT * FROM orders WHERE user_id IN (1,2) AND state = "on" Order By id DESC;
+
+users, err := u.WithContext(ctx).Preload(u.Orders.Clauses(hints.UseIndex("idx_order_id"))).Find()
+// SELECT * FROM users;
+// SELECT * FROM orders WHERE user_id IN (1,2) USE INDEX (`idx_order_id`);
+```
+
+###### Nested Preloading
+
+GEN supports nested preloading, for example:
+
+```go
+db.Preload(u.Orders.OrderItems.Product).Preload(u.CreditCard).Find(&users)
+
+// Customize Preload conditions for `Orders`
+// And GEN won't preload unmatched order's OrderItems then
+db.Preload(u.Orders.On(o.State.Eq("paid"))).Preload(u.Orders.OrderItems).Find(&users)
+```
+
 ##### Advanced Query
 
 ###### Iteration
@@ -815,6 +1151,108 @@ count, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Count()
 // Count with Distinct
 u.WithContext(ctx).Distinct(u.Name).Count()
 // SELECT COUNT(DISTINCT(`name`)) FROM `users`
+```
+
+###### FirstOrInit
+
+Get first matched record or initialize a new instance with given conditions
+
+```go
+u := query.Use(db).User
+
+// User not found, initialize it with give conditions
+user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).FirstOrInit()
+// user -> User{Name: "non_existing"}
+
+// Found user with `name` = `modi`
+user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).FirstOrInit()
+// user -> User{ID: 1, Name: "modi", Age: 17}
+```
+
+initialize struct with more attributes if record not found, those `Attrs` won’t be used to build SQL query
+
+```go
+u := query.Use(db).User
+
+// User not found, initialize it with give conditions and Attrs
+user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).Attrs(u.Age.Eq(20)).FirstOrInit()
+// SELECT * FROM USERS WHERE name = 'non_existing' ORDER BY id LIMIT 1;
+// user -> User{Name: "non_existing", Age: 20}
+
+// User not found, initialize it with give conditions and Attrs
+user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).Attrs(u.Age.Eq(20)).FirstOrInit()
+// SELECT * FROM USERS WHERE name = 'non_existing' ORDER BY id LIMIT 1;
+// user -> User{Name: "non_existing", Age: 20}
+
+// Found user with `name` = `modi`, attributes will be ignored
+user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Attrs(u.Age.Eq(20)).FirstOrInit()
+// SELECT * FROM USERS WHERE name = modi' ORDER BY id LIMIT 1;
+// user -> User{ID: 1, Name: "modi", Age: 17}
+```
+
+`Assign` attributes to struct regardless it is found or not, those attributes won’t be used to build SQL query and the final data won’t be saved into database
+
+```go
+// User not found, initialize it with give conditions and Assign attributes
+user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).Assign(u.Age.Eq(20)).FirstOrInit()
+// user -> User{Name: "non_existing", Age: 20}
+
+// Found user with `name` = `modi`, update it with Assign attributes
+user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Assign(u.Age.Eq(20)).FirstOrInit()
+// SELECT * FROM USERS WHERE name = modi' ORDER BY id LIMIT 1;
+// user -> User{ID: 111, Name: "modi", Age: 20}
+```
+
+###### FirstOrCreate
+
+Get first matched record or create a new one with given conditions
+
+```go
+u := query.Use(db).User
+
+// User not found, create a new record with give conditions
+user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).FirstOrCreate()
+// INSERT INTO "users" (name) VALUES ("non_existing");
+// user -> User{ID: 112, Name: "non_existing"}
+
+// Found user with `name` = `modi`
+user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).FirstOrCreate()
+// user -> User{ID: 111, Name: "modi", "Age": 18}
+```
+
+Create struct with more attributes if record not found, those `Attrs` won’t be used to build SQL query
+
+```go
+u := query.Use(db).User
+
+// User not found, create it with give conditions and Attrs
+user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).Attrs(u.Age.Eq(20)).FirstOrCreate()
+// SELECT * FROM users WHERE name = 'non_existing' ORDER BY id LIMIT 1;
+// INSERT INTO "users" (name, age) VALUES ("non_existing", 20);
+// user -> User{ID: 112, Name: "non_existing", Age: 20}
+
+// Found user with `name` = `modi`, attributes will be ignored
+user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Attrs(u.Age.Eq(20)).FirstOrCreate()
+// SELECT * FROM users WHERE name = 'modi' ORDER BY id LIMIT 1;
+// user -> User{ID: 111, Name: "modi", Age: 18}
+```
+
+`Assign` attributes to the record regardless it is found or not and save them back to the database.
+
+```go
+u := query.Use(db).User
+
+// User not found, initialize it with give conditions and Assign attributes
+user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).Assign(u.Age.Eq(20)).FirstOrCreate()
+// SELECT * FROM users WHERE name = 'non_existing' ORDER BY id LIMIT 1;
+// INSERT INTO "users" (name, age) VALUES ("non_existing", 20);
+// user -> User{ID: 112, Name: "non_existing", Age: 20}
+
+// Found user with `name` = `modi`, update it with Assign attributes
+user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Assign(u.Age.Eq(20)).FirstOrCreate(&user)
+// SELECT * FROM users WHERE name = 'modi' ORDER BY id LIMIT 1;
+// UPDATE users SET age=20 WHERE id = 111;
+// user -> User{ID: 111, Name: "modi", Age: 20}
 ```
 
 #### Update

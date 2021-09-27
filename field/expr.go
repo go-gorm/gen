@@ -33,7 +33,8 @@ func (e sql) String() string { return string(e) }
 type expr struct {
 	col clause.Column
 
-	e clause.Expression
+	e         clause.Expression
+	buildOpts []BuildOpt
 }
 
 func (e expr) BeCond() interface{} { return e.expression() }
@@ -48,28 +49,33 @@ func (e expr) expression() clause.Expression {
 
 func (e expr) ColumnName() sql { return sql(e.col.Name) }
 
-type BuildOpt func(clause.Column) interface{}
+type BuildOpt uint
 
-var (
+const (
 	// WithTable build column with table
-	WithTable BuildOpt = func(col clause.Column) interface{} { return clause.Column{Table: col.Table, Name: col.Name} }
+	WithTable BuildOpt = iota
 
 	// WithAll build column with table and alias
-	WithAll BuildOpt = func(col clause.Column) interface{} { return col }
+	WithAll
 
 	// WithoutQuote
-	WithoutQuote BuildOpt = func(col clause.Column) interface{} {
-		col.Raw = true
-		return col
-	}
+	WithoutQuote
 )
 
 func (e expr) BuildColumn(stmt *gorm.Statement, opts ...BuildOpt) sql {
-	var col interface{} = e.col.Name
-	for _, opt := range opts {
-		col = opt(e.col)
+	col := clause.Column{Name: e.col.Name}
+	for _, opt := range append(e.buildOpts, opts...) {
+		switch opt {
+		case WithTable:
+			col.Table = e.col.Table
+		case WithAll:
+			col.Table = e.col.Table
+			col.Alias = e.col.Alias
+		case WithoutQuote:
+			col.Raw = true
+		}
 	}
-	if col, ok := col.(clause.Column); ok && col.Raw {
+	if col.Table != "" && col.Raw {
 		return sql(col.Table + "." + col.Name)
 	}
 	return sql(stmt.Quote(col))
@@ -93,6 +99,11 @@ func (e expr) RawExpr() expression {
 
 func (e expr) setE(expression clause.Expression) expr {
 	e.e = expression
+	return e
+}
+
+func (e expr) appendBuildOpts(opts ...BuildOpt) expr {
+	e.buildOpts = append(e.buildOpts, opts...)
 	return e
 }
 
@@ -137,6 +148,8 @@ func (e expr) WithTable(table string) Expr {
 	e.col.Table = table
 	return e
 }
+
+// TODO add value assign: Set(value)/SetNull()/SetZero()
 
 // ======================== comparison between columns ========================
 func (e expr) EqCol(col Expr) Expr {

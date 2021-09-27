@@ -1,9 +1,8 @@
 package template
 
 const DIYMethod = `
-/*
-{{.Doc -}}
-*/
+
+//{{.DocComment }}
 func ({{.S}} {{.TargetStruct}}Do){{.MethodName}}({{.GetParamInTmpl}})({{.GetResultParamInTmpl}}){
 	{{if .HasSqlData}}params := map[string]interface{}{ {{range $index,$data:=.SqlData}}
 		"{{$data}}":{{$data}},{{end}}
@@ -107,6 +106,8 @@ func ({{.S}} {{.NewStructName}}Do) CreateInBatches(values []*{{.StructInfo.Packa
 	return {{.S}}.DO.CreateInBatches(values, batchSize)
 }
 
+// Save : !!! underlying implementation is different with GORM
+// The method is equivalent to executing the statement: db.Clauses(clause.OnConflict{UpdateAll: true}).Create(values)
 func ({{.S}} {{.NewStructName}}Do) Save(values ...*{{.StructInfo.Package}}.{{.StructInfo.Type}}) error {
 	if len(values) == 0 {
 		return nil
@@ -158,6 +159,14 @@ func ({{.S}} {{.NewStructName}}Do) Attrs(attrs ...field.Expr) *{{.NewStructName}
 
 func ({{.S}} {{.NewStructName}}Do) Assign(attrs ...field.Expr) *{{.NewStructName}}Do {
 	return {{.S}}.withDO({{.S}}.DO.Assign(attrs...))
+}
+
+func ({{.S}} {{.NewStructName}}Do) Joins(field field.RelationField) *{{.NewStructName}}Do {
+	return {{.S}}.withDO({{.S}}.DO.Joins(field))
+}
+
+func ({{.S}} {{.NewStructName}}Do) Preload(field field.RelationField) *{{.NewStructName}}Do {
+	return {{.S}}.withDO({{.S}}.DO.Preload(field))
 }
 
 func ({{.S}} {{.NewStructName}}Do) FirstOrInit() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {

@@ -57,9 +57,10 @@ const (
 type Config struct {
 	db *gorm.DB //nolint
 
-	OutPath      string
-	OutFile      string
-	ModelPkgPath string // generated model code's package name
+	OutPath       string
+	OutFile       string
+	ModelPkgPath  string // generated model code's package name
+	FieldNullable bool
 
 	Mode GenerateMode // generate mode
 
@@ -140,7 +141,7 @@ var (
 	FieldIgnore = func(columnNames ...string) check.MemberOpt {
 		return func(m *check.Member) *check.Member {
 			for _, name := range columnNames {
-				if m.Name == name {
+				if m.ColumnName == name {
 					return nil
 				}
 			}
@@ -155,7 +156,7 @@ var (
 		}
 		return func(m *check.Member) *check.Member {
 			for _, reg := range regs {
-				if reg.MatchString(m.Name) {
+				if reg.MatchString(m.ColumnName) {
 					return nil
 				}
 			}
@@ -165,7 +166,7 @@ var (
 	// FieldRename specify field name in generated struct
 	FieldRename = func(columnName string, newName string) check.MemberOpt {
 		return func(m *check.Member) *check.Member {
-			if m.Name == columnName {
+			if m.ColumnName == columnName {
 				m.Name = newName
 			}
 			return m
@@ -174,7 +175,7 @@ var (
 	// FieldType specify field type in generated struct
 	FieldType = func(columnName string, newType string) check.MemberOpt {
 		return func(m *check.Member) *check.Member {
-			if m.Name == columnName {
+			if m.ColumnName == columnName {
 				m.Type = newType
 				m.ModelType = newType
 			}
@@ -185,7 +186,7 @@ var (
 	FieldTypeReg = func(columnNameReg string, newType string) check.MemberOpt {
 		reg := regexp.MustCompile(columnNameReg)
 		return func(m *check.Member) *check.Member {
-			if reg.MatchString(m.Name) {
+			if reg.MatchString(m.ColumnName) {
 				m.Type = newType
 				m.ModelType = newType
 			}
@@ -195,7 +196,7 @@ var (
 	// FieldTag specify json tag and gorm tag
 	FieldTag = func(columnName string, gormTag, jsonTag string) check.MemberOpt {
 		return func(m *check.Member) *check.Member {
-			if m.Name == columnName {
+			if m.ColumnName == columnName {
 				m.GORMTag, m.JSONTag = gormTag, jsonTag
 			}
 			return m
@@ -204,7 +205,7 @@ var (
 	// FieldJSONTag specify json tag
 	FieldJSONTag = func(columnName string, jsonTag string) check.MemberOpt {
 		return func(m *check.Member) *check.Member {
-			if m.Name == columnName {
+			if m.ColumnName == columnName {
 				m.JSONTag = jsonTag
 			}
 			return m
@@ -213,7 +214,7 @@ var (
 	// FieldGORMTag specify gorm tag
 	FieldGORMTag = func(columnName string, gormTag string) check.MemberOpt {
 		return func(m *check.Member) *check.Member {
-			if m.Name == columnName {
+			if m.ColumnName == columnName {
 				m.GORMTag = gormTag
 			}
 			return m
@@ -222,7 +223,7 @@ var (
 	// FieldNewTag add new tag
 	FieldNewTag = func(columnName string, newTag string) check.MemberOpt {
 		return func(m *check.Member) *check.Member {
-			if m.Name == columnName {
+			if m.ColumnName == columnName {
 				m.NewTag += " " + newTag
 			}
 			return m
@@ -276,7 +277,7 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, opts ...
 		colNameOpts[i] = opt
 	}
 
-	s, err := check.GenBaseStructs(g.db, g.Config.ModelPkgPath, tableName, modelName, g.dbNameOpts, colNameOpts)
+	s, err := check.GenBaseStructs(g.db, g.Config.ModelPkgPath, tableName, modelName, g.dbNameOpts, colNameOpts, g.Config.FieldNullable)
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)
 		panic("generate struct fail")
@@ -447,8 +448,7 @@ func (g *Generator) generateSubQuery(data *genInfo) (err error) {
 	if err != nil {
 		return err
 	}
-	queryFile := fmt.Sprintf("%s/%s.gen.go", g.OutPath, strings.ToLower(data.TableName))
-	return g.output(queryFile, buf.Bytes())
+	return g.output(fmt.Sprintf("%s/%s.gen.go", g.OutPath, strings.ToLower(data.TableName)), buf.Bytes())
 }
 
 // remove history GEN generated file

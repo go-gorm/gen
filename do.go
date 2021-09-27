@@ -58,9 +58,7 @@ func (d *DO) UseDB(db *gorm.DB, opts ...doOptions) {
 	d.db = db
 }
 
-func (d *DO) ReplaceDB(db *gorm.DB) {
-	d.db = db
-}
+func (d *DO) ReplaceDB(db *gorm.DB) { d.db = db }
 
 // UseModel specify a data model structure as a source for table name
 func (d *DO) UseModel(model interface{}) {
@@ -74,24 +72,24 @@ func (d *DO) UseModel(model interface{}) {
 }
 
 // UseTable specify table name
-func (d *DO) UseTable(tableName string) {
-	d.db = d.db.Table(tableName).Session(new(gorm.Session))
-}
+func (d *DO) UseTable(tableName string) { d.db = d.db.Table(tableName).Session(new(gorm.Session)) }
 
 // TableName return table name
-func (d *DO) TableName() string {
+func (d DO) TableName() string {
+	if d.schema == nil {
+		return ""
+	}
 	return d.schema.Table
 }
 
+// Session replace db with new session
+func (d *DO) Session(config *gorm.Session) Dao { return d.getInstance(d.db.Session(config)) }
+
 // UnderlyingDB return the underlying database connection
-func (d *DO) UnderlyingDB() *gorm.DB {
-	return d.db
-}
+func (d *DO) UnderlyingDB() *gorm.DB { return d.db }
 
 // Quote return qutoed data
-func (d *DO) Quote(raw string) string {
-	return d.db.Statement.Quote(raw)
-}
+func (d *DO) Quote(raw string) string { return d.db.Statement.Quote(raw) }
 
 // Build implement the interface of claues.Expression
 // only call WHERE clause's Build
@@ -237,13 +235,16 @@ func (d *DO) Order(columns ...field.Expr) Dao {
 	// 	}
 	// }
 	// return d.newInstance(d.db.Clauses(clause.OrderBy{Expression: clause.CommaExpression{Exprs: toExpression(columns)}}))
+	return d.getInstance(d.db.Order(d.calcOrderValue(columns...)))
+}
 
+func (d *DO) calcOrderValue(columns ...field.Expr) string {
 	// eager build Columns
 	orderArray := make([]string, len(columns))
 	for i, c := range columns {
 		orderArray[i] = c.Build(d.db.Statement).String()
 	}
-	return d.getInstance(d.db.Order(strings.Join(orderArray, ",")))
+	return strings.Join(orderArray, ",")
 }
 
 func (d *DO) Distinct(columns ...field.Expr) Dao {
@@ -289,6 +290,8 @@ func (d *DO) Unscoped() Dao {
 	return d.getInstance(d.db.Unscoped())
 }
 
+// TODO implement commonDo
+
 func (d *DO) Join(table schema.Tabler, conds ...field.Expr) Dao {
 	return d.join(table, clause.InnerJoin, conds)
 }
@@ -323,6 +326,35 @@ func (d *DO) Assign(attrs ...field.Expr) Dao {
 	return d.getInstance(d.db.Assign(toExpressionInterface(attrs...)...))
 }
 
+func (d *DO) Joins(field field.RelationField) Dao {
+	return d.getInstance(d.db.Joins(field.Path()))
+}
+
+// func (d *DO) Preload(column field.RelationPath, subQuery ...SubQuery) Dao {
+// 	if len(subQuery) > 0 {
+// 		return d.getInstance(d.db.Preload(string(column.Path()), subQuery[0].underlyingDB()))
+// 	}
+// 	return d.getInstance(d.db.Preload(string(column.Path())))
+// }
+
+func (d *DO) Preload(field field.RelationField) Dao {
+	var args []interface{}
+	if conds := field.GetConds(); len(conds) > 0 {
+		args = append(args, toExpressionInterface(conds...)...)
+	}
+	if columns := field.GetOrderCol(); len(columns) > 0 {
+		args = append(args, func(db *gorm.DB) *gorm.DB {
+			return db.Order(d.calcOrderValue(columns...))
+		})
+	}
+	if clauses := field.GetClauses(); len(clauses) > 0 {
+		args = append(args, func(db *gorm.DB) *gorm.DB {
+			return db.Clauses(clauses...)
+		})
+	}
+	return d.getInstance(d.db.Preload(field.Path(), args...))
+}
+
 func getFromClause(db *gorm.DB) *clause.From {
 	if db == nil || db.Statement == nil {
 		return &clause.From{}
@@ -340,27 +372,27 @@ func getFromClause(db *gorm.DB) *clause.From {
 
 // ======================== finisher api ========================
 func (d *DO) Create(value interface{}) error {
-	return d.db.Model(d.model).Create(value).Error
+	return d.db.Create(value).Error
 }
 
 func (d *DO) CreateInBatches(value interface{}, batchSize int) error {
-	return d.db.Model(d.model).CreateInBatches(value, batchSize).Error
+	return d.db.CreateInBatches(value, batchSize).Error
 }
 
 func (d *DO) Save(value interface{}) error {
-	return d.db.Model(d.model).Save(value).Error
+	return d.db.Clauses(clause.OnConflict{UpdateAll: true}).Create(value).Error
 }
 
 func (d *DO) First() (result interface{}, err error) {
-	return d.singleQuery(d.db.Model(d.model).First)
+	return d.singleQuery(d.db.First)
 }
 
 func (d *DO) Take() (result interface{}, err error) {
-	return d.singleQuery(d.db.Model(d.model).Take)
+	return d.singleQuery(d.db.Take)
 }
 
 func (d *DO) Last() (result interface{}, err error) {
-	return d.singleQuery(d.db.Model(d.model).Last)
+	return d.singleQuery(d.db.Last)
 }
 
 func (d *DO) singleQuery(query func(dest interface{}, conds ...interface{}) *gorm.DB) (result interface{}, err error) {
@@ -382,7 +414,7 @@ func (d *DO) singleScan() (result interface{}, err error) {
 }
 
 func (d *DO) Find() (results interface{}, err error) {
-	return d.multiQuery(d.db.Model(d.model).Find)
+	return d.multiQuery(d.db.Find)
 }
 
 func (d *DO) multiQuery(query func(dest interface{}, conds ...interface{}) *gorm.DB) (results interface{}, err error) {
@@ -403,25 +435,25 @@ func (d *DO) findToMap() (interface{}, error) {
 
 func (d *DO) FindInBatch(batchSize int, fc func(tx Dao, batch int) error) (result interface{}, err error) {
 	resultsPtr := d.newResultSlicePointer()
-	err = d.db.Model(d.model).FindInBatches(resultsPtr, batchSize, func(tx *gorm.DB, batch int) error { return fc(d.getInstance(tx), batch) }).Error
+	err = d.db.FindInBatches(resultsPtr, batchSize, func(tx *gorm.DB, batch int) error { return fc(d.getInstance(tx), batch) }).Error
 	return reflect.Indirect(reflect.ValueOf(resultsPtr)).Interface(), err
 }
 
 func (d *DO) FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error {
-	return d.db.Model(d.model).FindInBatches(dest, batchSize, func(tx *gorm.DB, batch int) error { return fc(d.getInstance(tx), batch) }).Error
+	return d.db.FindInBatches(dest, batchSize, func(tx *gorm.DB, batch int) error { return fc(d.getInstance(tx), batch) }).Error
 }
 
 func (d *DO) FirstOrInit() (result interface{}, err error) {
-	return d.singleQuery(d.db.Model(d.model).FirstOrInit)
+	return d.singleQuery(d.db.FirstOrInit)
 }
 
 func (d *DO) FirstOrCreate() (result interface{}, err error) {
-	return d.singleQuery(d.db.Model(d.model).FirstOrCreate)
+	return d.singleQuery(d.db.FirstOrCreate)
 }
 
 func (d *DO) Update(column field.Expr, value interface{}) (info resultInfo, err error) {
 	tx := d.db.Model(d.model)
-	columnStr := column.BuildColumn(d.db.Statement, field.WithTable, field.WithoutQuote).String()
+	columnStr := column.BuildColumn(d.db.Statement, field.WithoutQuote).String()
 
 	var result *gorm.DB
 	switch value := value.(type) {
@@ -452,7 +484,7 @@ func (d *DO) Updates(value interface{}) (info resultInfo, err error) {
 
 func (d *DO) UpdateColumn(column field.Expr, value interface{}) (info resultInfo, err error) {
 	tx := d.db.Model(d.model)
-	columnStr := column.BuildColumn(d.db.Statement, field.WithTable, field.WithoutQuote).String()
+	columnStr := column.BuildColumn(d.db.Statement, field.WithoutQuote).String()
 
 	var result *gorm.DB
 	switch value := value.(type) {
@@ -606,7 +638,7 @@ func parseExprs(stmt *gorm.Statement, exprs []field.Expr) (map[string]interface{
 		if !ok {
 			return nil, ErrInvalidExpression
 		}
-		dest[e.BuildColumn(stmt, field.WithTable, field.WithoutQuote).String()] = expr
+		dest[e.BuildColumn(stmt, field.WithoutQuote).String()] = expr
 	}
 	return dest, nil
 }
