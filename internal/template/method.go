@@ -106,12 +106,11 @@ func ({{.S}} {{.NewStructName}}Do) CreateInBatches(values []*{{.StructInfo.Packa
 	return {{.S}}.DO.CreateInBatches(values, batchSize)
 }
 
+// Save : !!! underlying implementation is different with GORM
+// The method is equivalent to executing the statement: db.Clauses(clause.OnConflict{UpdateAll: true}).Create(values)
 func ({{.S}} {{.NewStructName}}Do) Save(values ...*{{.StructInfo.Package}}.{{.StructInfo.Type}}) error {
 	if len(values) == 0 {
 		return nil
-	}
-	if len(values) == 1 {
-		return {{.S}}.DO.Save(values[0])
 	}
 	return {{.S}}.DO.Save(values)
 }
