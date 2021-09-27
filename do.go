@@ -370,27 +370,27 @@ func getFromClause(db *gorm.DB) *clause.From {
 
 // ======================== finisher api ========================
 func (d *DO) Create(value interface{}) error {
-	return d.db.Model(d.model).Create(value).Error
+	return d.db.Create(value).Error
 }
 
 func (d *DO) CreateInBatches(value interface{}, batchSize int) error {
-	return d.db.Model(d.model).CreateInBatches(value, batchSize).Error
+	return d.db.CreateInBatches(value, batchSize).Error
 }
 
 func (d *DO) Save(value interface{}) error {
-	return d.db.Model(d.model).Save(value).Error
+	return d.db.Save(value).Error
 }
 
 func (d *DO) First() (result interface{}, err error) {
-	return d.singleQuery(d.db.Model(d.model).First)
+	return d.singleQuery(d.db.First)
 }
 
 func (d *DO) Take() (result interface{}, err error) {
-	return d.singleQuery(d.db.Model(d.model).Take)
+	return d.singleQuery(d.db.Take)
 }
 
 func (d *DO) Last() (result interface{}, err error) {
-	return d.singleQuery(d.db.Model(d.model).Last)
+	return d.singleQuery(d.db.Last)
 }
 
 func (d *DO) singleQuery(query func(dest interface{}, conds ...interface{}) *gorm.DB) (result interface{}, err error) {
@@ -412,7 +412,7 @@ func (d *DO) singleScan() (result interface{}, err error) {
 }
 
 func (d *DO) Find() (results interface{}, err error) {
-	return d.multiQuery(d.db.Model(d.model).Find)
+	return d.multiQuery(d.db.Find)
 }
 
 func (d *DO) multiQuery(query func(dest interface{}, conds ...interface{}) *gorm.DB) (results interface{}, err error) {
@@ -433,20 +433,20 @@ func (d *DO) findToMap() (interface{}, error) {
 
 func (d *DO) FindInBatch(batchSize int, fc func(tx Dao, batch int) error) (result interface{}, err error) {
 	resultsPtr := d.newResultSlicePointer()
-	err = d.db.Model(d.model).FindInBatches(resultsPtr, batchSize, func(tx *gorm.DB, batch int) error { return fc(d.getInstance(tx), batch) }).Error
+	err = d.db.FindInBatches(resultsPtr, batchSize, func(tx *gorm.DB, batch int) error { return fc(d.getInstance(tx), batch) }).Error
 	return reflect.Indirect(reflect.ValueOf(resultsPtr)).Interface(), err
 }
 
 func (d *DO) FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error {
-	return d.db.Model(d.model).FindInBatches(dest, batchSize, func(tx *gorm.DB, batch int) error { return fc(d.getInstance(tx), batch) }).Error
+	return d.db.FindInBatches(dest, batchSize, func(tx *gorm.DB, batch int) error { return fc(d.getInstance(tx), batch) }).Error
 }
 
 func (d *DO) FirstOrInit() (result interface{}, err error) {
-	return d.singleQuery(d.db.Model(d.model).FirstOrInit)
+	return d.singleQuery(d.db.FirstOrInit)
 }
 
 func (d *DO) FirstOrCreate() (result interface{}, err error) {
-	return d.singleQuery(d.db.Model(d.model).FirstOrCreate)
+	return d.singleQuery(d.db.FirstOrCreate)
 }
 
 func (d *DO) Update(column field.Expr, value interface{}) (info resultInfo, err error) {

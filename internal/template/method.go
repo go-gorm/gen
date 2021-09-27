@@ -110,6 +110,9 @@ func ({{.S}} {{.NewStructName}}Do) Save(values ...*{{.StructInfo.Package}}.{{.St
 	if len(values) == 0 {
 		return nil
 	}
+	if len(values) == 1 {
+		return {{.S}}.DO.Save(values[0])
+	}
 	return {{.S}}.DO.Save(values)
 }
 
