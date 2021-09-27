@@ -1,6 +1,7 @@
 package check
 
 import (
+	"bytes"
 	"fmt"
 	"path/filepath"
 	"regexp"
@@ -23,7 +24,7 @@ const (
 
 	//query table structure
 	columnQuery = "SELECT COLUMN_NAME ,COLUMN_COMMENT ,DATA_TYPE ,IS_NULLABLE ,COLUMN_KEY,COLUMN_TYPE,COLUMN_DEFAULT,EXTRA" +
-		" FROM information_schema.columns WHERE table_schema = ? AND table_name =?"
+		" FROM information_schema.columns WHERE table_schema = ? AND table_name =? ORDER BY ORDINAL_POSITION"
 )
 
 var (
@@ -42,6 +43,8 @@ var (
 		"tinytext":   func(string) string { return "string" },
 		"mediumtext": func(string) string { return "string" },
 		"longtext":   func(string) string { return "string" },
+		"binary":     func(string) string { return "[]byte" },
+		"varbinary":  func(string) string { return "[]byte" },
 		"tinyblob":   func(string) string { return "[]byte" },
 		"blob":       func(string) string { return "[]byte" },
 		"mediumblob": func(string) string { return "[]byte" },
@@ -79,7 +82,7 @@ type SchemaNameOpt func(*gorm.DB) string
 type MemberOpt func(*Member) *Member
 
 // GenBaseStructs generate db model by table name
-func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpts []SchemaNameOpt, memberOpts []MemberOpt) (bases *BaseStruct, err error) {
+func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpts []SchemaNameOpt, memberOpts []MemberOpt, nullable bool) (bases *BaseStruct, err error) {
 	if _, ok := db.Config.Dialector.(tests.DummyDialector); ok {
 		return nil, fmt.Errorf("UseDB() is necessary to generate model struct [%s] from database table [%s]", modelName, tableName)
 	}
@@ -108,7 +111,7 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 
 	// TODO create new member
 	for _, field := range columns {
-		m := modifyMember(toMember(field), memberOpts)
+		m := modifyMember(toMember(field, nullable), memberOpts)
 		if m == nil {
 			continue
 		}
@@ -120,10 +123,13 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 	return &base, nil
 }
 
-func toMember(field *Column) *Member {
+func toMember(field *Column, nullable bool) *Member {
 	memberType := dataType.Get(field.DataType, field.ColumnType)
 	if field.ColumnName == "deleted_at" && memberType == "time.Time" {
 		memberType = "gorm.DeletedAt"
+	}
+	if nullable && field.IsNullable == "YES" {
+		memberType = "*" + memberType
 	}
 	return &Member{
 		Name:             field.ColumnName,
@@ -132,16 +138,29 @@ func toMember(field *Column) *Member {
 		ColumnName:       field.ColumnName,
 		ColumnComment:    field.ColumnComment,
 		MultilineComment: containMultiline(field.ColumnComment),
-		GORMTag:          BuildGormTag(field.ColumnName, field.ColumnDefault),
+		GORMTag:          buildGormTag(field),
 		JSONTag:          field.ColumnName,
 	}
 }
 
-func BuildGormTag(columnName, columnDefault string) string {
-	if columnDefault == "" {
-		return fmt.Sprintf("column:%s", columnName)
+func buildGormTag(field *Column) string {
+	if field == nil {
+		return ""
 	}
-	return fmt.Sprintf("column:%s;default:%s", columnName, columnDefault)
+	var buf bytes.Buffer
+	buf.WriteString(fmt.Sprintf("column:%s", field.ColumnName))
+	if field.IsPrimaryKey() {
+		buf.WriteString(";primaryKey")
+		if !field.AutoIncrement() {
+			// integer PrioritizedPrimaryField enables AutoIncrement by default, 
+			// if not, we need to turn off autoIncrement for the fields
+			buf.WriteString(";autoIncrement:false")
+		}
+	}
+	if field.ColumnDefault != "" {
+		buf.WriteString(fmt.Sprintf(";default:%s", field.ColumnDefault))
+	}
+	return buf.String()
 }
 
 func modifyMember(m *Member, opts []MemberOpt) *Member {

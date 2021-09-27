@@ -1,9 +1,8 @@
 package template
 
 const DIYMethod = `
-/*
-{{.Doc -}}
-*/
+
+//{{.DocComment }}
 func ({{.S}} {{.TargetStruct}}Do){{.MethodName}}({{.GetParamInTmpl}})({{.GetResultParamInTmpl}}){
 	{{if .HasSqlData}}params := map[string]interface{}{ {{range $index,$data:=.SqlData}}
 		"{{$data}}":{{$data}},{{end}}

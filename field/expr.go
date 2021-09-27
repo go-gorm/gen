@@ -48,28 +48,33 @@ func (e expr) expression() clause.Expression {
 
 func (e expr) ColumnName() sql { return sql(e.col.Name) }
 
-type BuildOpt func(clause.Column) interface{}
+type BuildOpt uint
 
-var (
+const (
 	// WithTable build column with table
-	WithTable BuildOpt = func(col clause.Column) interface{} { return clause.Column{Table: col.Table, Name: col.Name} }
+	WithTable BuildOpt = iota
 
 	// WithAll build column with table and alias
-	WithAll BuildOpt = func(col clause.Column) interface{} { return col }
+	WithAll
 
 	// WithoutQuote
-	WithoutQuote BuildOpt = func(col clause.Column) interface{} {
-		col.Raw = true
-		return col
-	}
+	WithoutQuote
 )
 
 func (e expr) BuildColumn(stmt *gorm.Statement, opts ...BuildOpt) sql {
-	var col interface{} = e.col.Name
+	col := clause.Column{Name: e.col.Name}
 	for _, opt := range opts {
-		col = opt(e.col)
+		switch opt {
+		case WithTable:
+			col.Table = e.col.Table
+		case WithAll:
+			col.Table = e.col.Table
+			col.Alias = e.col.Alias
+		case WithoutQuote:
+			col.Raw = true
+		}
 	}
-	if col, ok := col.(clause.Column); ok && col.Raw {
+	if col.Table != "" && col.Raw {
 		return sql(col.Table + "." + col.Name)
 	}
 	return sql(stmt.Quote(col))

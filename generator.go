@@ -57,9 +57,10 @@ const (
 type Config struct {
 	db *gorm.DB //nolint
 
-	OutPath      string
-	OutFile      string
-	ModelPkgPath string // generated model code's package name
+	OutPath       string
+	OutFile       string
+	ModelPkgPath  string // generated model code's package name
+	FieldNullable bool
 
 	Mode GenerateMode // generate mode
 
@@ -276,7 +277,7 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, opts ...
 		colNameOpts[i] = opt
 	}
 
-	s, err := check.GenBaseStructs(g.db, g.Config.ModelPkgPath, tableName, modelName, g.dbNameOpts, colNameOpts)
+	s, err := check.GenBaseStructs(g.db, g.Config.ModelPkgPath, tableName, modelName, g.dbNameOpts, colNameOpts, g.Config.FieldNullable)
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)
 		panic("generate struct fail")

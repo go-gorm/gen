@@ -97,6 +97,11 @@ func paramToString(params []parser.Param) string {
 	return strings.Join(res, ",")
 }
 
+// DocComment return comment sql add "//" every line
+func (m *InterfaceMethod) DocComment() string {
+	return strings.Replace(strings.TrimSpace(m.Doc), "\n", "\n//", -1)
+}
+
 // checkParams check all parameters
 func (m *InterfaceMethod) checkMethod(methods []*InterfaceMethod, s *BaseStruct) (err error) {
 	for _, method := range methods {
