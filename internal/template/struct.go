@@ -116,6 +116,11 @@ func (a {{$.NewStructName}}{{$relationship}}{{.Name}}) Where(conds ...field.Expr
 	return &a
 }
 
+func (a {{$.NewStructName}}{{$relationship}}{{.Name}}) WithContext(ctx context.Context) *{{$.NewStructName}}{{$relationship}}{{.Name}} {
+	a.db = a.db.WithContext(ctx)
+	return &a
+}
+
 func (a {{$.NewStructName}}{{$relationship}}{{.Name}}) Model(m *{{$.StructInfo.Package}}.{{$.StructInfo.Type}}) *{{$.NewStructName}}{{$relationship}}{{.Name}}Tx {
 	return &{{$.NewStructName}}{{$relationship}}{{.Name}}Tx{a.db.Model(m).Association(a.Name())}
 }
