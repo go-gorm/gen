@@ -3,8 +3,10 @@ package check
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 
 	"gorm.io/gen/field"
 	"gorm.io/gen/internal/parser"
@@ -12,6 +14,8 @@ import (
 
 // BaseStruct struct info in generated code
 type BaseStruct struct {
+	db *gorm.DB
+
 	GenBaseStruct bool   // whether to generate db model
 	S             string // the first letter(lower case)of simple Name
 	NewStructName string // new struct name
@@ -20,7 +24,8 @@ type BaseStruct struct {
 	StructInfo    parser.Param
 	Members       []*Member
 	Source        sourceCode
-	db            *gorm.DB
+
+	Relations field.Relations
 }
 
 // parseStruct get all elements of struct with gorm's Parse, ignore unexported elements
@@ -39,7 +44,42 @@ func (b *BaseStruct) parseStruct(st interface{}) error {
 			ColumnName: f.DBName,
 		}).Revise())
 	}
+
+	b.Relations = b.parseStructRelationShip(stmt.Schema.Relationships)
+
 	return nil
+}
+
+func (b *BaseStruct) parseStructRelationShip(relationship schema.Relationships) field.Relations {
+	return field.Relations{
+		HasOne:    b.pullRelationShip(relationship.HasOne),
+		BelongsTo: b.pullRelationShip(relationship.BelongsTo),
+		HasMany:   b.pullRelationShip(relationship.HasMany),
+		Many2Many: b.pullRelationShip(relationship.Many2Many),
+	}
+}
+
+func (b *BaseStruct) pullRelationShip(relationships []*schema.Relationship) []*field.Relation {
+	if len(relationships) == 0 {
+		return nil
+	}
+	result := make([]*field.Relation, len(relationships))
+	for i, relationship := range relationships {
+		subRelationships := relationship.FieldSchema.Relationships
+		relation := field.NewRelation(
+			relationship.Name,
+			strings.TrimLeft(relationship.Field.FieldType.String(), "[]*"),
+			b.pullRelationShip(append(append(append(append(
+				make([]*schema.Relationship, 0, 4),
+				subRelationships.BelongsTo...),
+				subRelationships.HasOne...),
+				subRelationships.HasMany...),
+				subRelationships.Many2Many...),
+			)...,
+		)
+		result[i] = relation
+	}
+	return result
 }
 
 // getMemberRealType  get basic type of member
@@ -79,9 +119,7 @@ func (b *BaseStruct) appendOrUpdateMember(member *Member) {
 }
 
 // HasMember check if BaseStruct has members
-func (b *BaseStruct) HasMember() bool {
-	return len(b.Members) > 0
-}
+func (b *BaseStruct) HasMember() bool { return len(b.Members) > 0 }
 
 // check if struct is exportable and if struct in main package and if member's type is regular
 func (b *BaseStruct) check() (err error) {

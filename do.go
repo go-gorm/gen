@@ -58,9 +58,7 @@ func (d *DO) UseDB(db *gorm.DB, opts ...doOptions) {
 	d.db = db
 }
 
-func (d *DO) ReplaceDB(db *gorm.DB) {
-	d.db = db
-}
+func (d *DO) ReplaceDB(db *gorm.DB) { d.db = db }
 
 // UseModel specify a data model structure as a source for table name
 func (d *DO) UseModel(model interface{}) {
@@ -74,24 +72,19 @@ func (d *DO) UseModel(model interface{}) {
 }
 
 // UseTable specify table name
-func (d *DO) UseTable(tableName string) {
-	d.db = d.db.Table(tableName).Session(new(gorm.Session))
-}
+func (d *DO) UseTable(tableName string) { d.db = d.db.Table(tableName).Session(new(gorm.Session)) }
 
 // TableName return table name
-func (d *DO) TableName() string {
-	return d.schema.Table
-}
+func (d *DO) TableName() string { return d.schema.Table }
+
+// Session replace db with new session
+func (d *DO) Session(config *gorm.Session) Dao { return d.getInstance(d.db.Session(config)) }
 
 // UnderlyingDB return the underlying database connection
-func (d *DO) UnderlyingDB() *gorm.DB {
-	return d.db
-}
+func (d *DO) UnderlyingDB() *gorm.DB { return d.db }
 
 // Quote return qutoed data
-func (d *DO) Quote(raw string) string {
-	return d.db.Statement.Quote(raw)
-}
+func (d *DO) Quote(raw string) string { return d.db.Statement.Quote(raw) }
 
 // Build implement the interface of claues.Expression
 // only call WHERE clause's Build
@@ -237,13 +230,16 @@ func (d *DO) Order(columns ...field.Expr) Dao {
 	// 	}
 	// }
 	// return d.newInstance(d.db.Clauses(clause.OrderBy{Expression: clause.CommaExpression{Exprs: toExpression(columns)}}))
+	return d.getInstance(d.db.Order(d.calcOrderValue(columns...)))
+}
 
+func (d *DO) calcOrderValue(columns ...field.Expr) string {
 	// eager build Columns
 	orderArray := make([]string, len(columns))
 	for i, c := range columns {
 		orderArray[i] = c.Build(d.db.Statement).String()
 	}
-	return d.getInstance(d.db.Order(strings.Join(orderArray, ",")))
+	return strings.Join(orderArray, ",")
 }
 
 func (d *DO) Distinct(columns ...field.Expr) Dao {
@@ -321,6 +317,35 @@ func (d *DO) Attrs(attrs ...field.Expr) Dao {
 
 func (d *DO) Assign(attrs ...field.Expr) Dao {
 	return d.getInstance(d.db.Assign(toExpressionInterface(attrs...)...))
+}
+
+func (d *DO) Joins(field field.RelationField) Dao {
+	return d.getInstance(d.db.Joins(field.Path()))
+}
+
+// func (d *DO) Preload(column field.RelationPath, subQuery ...SubQuery) Dao {
+// 	if len(subQuery) > 0 {
+// 		return d.getInstance(d.db.Preload(string(column.Path()), subQuery[0].underlyingDB()))
+// 	}
+// 	return d.getInstance(d.db.Preload(string(column.Path())))
+// }
+
+func (d *DO) Preload(field field.RelationField) Dao {
+	var args []interface{}
+	if conds := field.GetConds(); len(conds) > 0 {
+		args = append(args, toExpressionInterface(conds...)...)
+	}
+	if columns := field.GetOrderCol(); len(columns) > 0 {
+		args = append(args, func(db *gorm.DB) *gorm.DB {
+			return db.Order(d.calcOrderValue(columns...))
+		})
+	}
+	if clauses := field.GetClauses(); len(clauses) > 0 {
+		args = append(args, func(db *gorm.DB) *gorm.DB {
+			return db.Clauses(clauses...)
+		})
+	}
+	return d.getInstance(d.db.Preload(field.Path(), args...))
 }
 
 func getFromClause(db *gorm.DB) *clause.From {

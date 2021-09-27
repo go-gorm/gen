@@ -159,6 +159,14 @@ func ({{.S}} {{.NewStructName}}Do) Assign(attrs ...field.Expr) *{{.NewStructName
 	return {{.S}}.withDO({{.S}}.DO.Assign(attrs...))
 }
 
+func ({{.S}} {{.NewStructName}}Do) Joins(field field.RelationField) *{{.NewStructName}}Do {
+	return {{.S}}.withDO({{.S}}.DO.Joins(field))
+}
+
+func ({{.S}} {{.NewStructName}}Do) Preload(field field.RelationField) *{{.NewStructName}}Do {
+	return {{.S}}.withDO({{.S}}.DO.Preload(field))
+}
+
 func ({{.S}} {{.NewStructName}}Do) FirstOrInit() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
 	if result, err := {{.S}}.DO.FirstOrInit(); err != nil {
 		return nil, err
