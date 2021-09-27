@@ -29,6 +29,7 @@ type Relations struct {
 type RelationField interface {
 	Name() string
 	Path() string
+	Field(member ...string) Expr
 
 	On(conds ...Expr) RelationField
 	Order(columns ...Expr) RelationField
@@ -56,6 +57,10 @@ func (r Relation) Name() string { return r.varName }
 func (r Relation) Path() string { return r.path }
 
 func (r Relation) Type() string { return r.varType }
+
+func (r Relation) Field(member ...string) Expr {
+	return NewString("", r.varName+"."+strings.Join(member, "."))
+}
 
 func (r *Relation) On(conds ...Expr) RelationField {
 	r.conds = append(r.conds, conds...)
