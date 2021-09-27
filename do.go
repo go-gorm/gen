@@ -75,7 +75,7 @@ func (d *DO) UseModel(model interface{}) {
 func (d *DO) UseTable(tableName string) { d.db = d.db.Table(tableName).Session(new(gorm.Session)) }
 
 // TableName return table name
-func (d *DO) TableName() string {
+func (d DO) TableName() string {
 	if d.schema == nil {
 		return ""
 	}
@@ -289,6 +289,8 @@ func (d *DO) Scopes(funcs ...func(Dao) Dao) Dao {
 func (d *DO) Unscoped() Dao {
 	return d.getInstance(d.db.Unscoped())
 }
+
+// TODO implement commonDo
 
 func (d *DO) Join(table schema.Tabler, conds ...field.Expr) Dao {
 	return d.join(table, clause.InnerJoin, conds)
