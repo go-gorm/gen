@@ -823,6 +823,7 @@ tx.Commit() // Commit user1
 ##### Association
 
 GEN will auto-save associations as GORM do. The relationships (BelongsTo/HasOne/HasMany/Many2Many) reuse GORM's tag.
+This feature only support exist model for now.
 
 ###### Skip Auto Create/Update
 
@@ -945,6 +946,8 @@ db.Select(field.AssociationsFields).Delete(&user)
 ```
 
 ##### Preloading
+
+This feature only support exist model for now.
 
 ###### Preload
 
