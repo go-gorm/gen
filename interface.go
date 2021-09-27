@@ -32,8 +32,6 @@ type subQuery interface {
 	Condition
 }
 
-// TODO implement Associations api (ex: preload)
-
 // Dao CRUD methods
 type Dao interface {
 	subQuery

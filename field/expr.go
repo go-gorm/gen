@@ -143,6 +143,8 @@ func (e expr) WithTable(table string) Expr {
 	return e
 }
 
+// TODO add value assign: Set(value)/SetNull()/SetZero()
+
 // ======================== comparison between columns ========================
 func (e expr) EqCol(col Expr) Expr {
 	return e.setE(clause.Expr{SQL: "? = ?", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})
