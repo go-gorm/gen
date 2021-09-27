@@ -1155,11 +1155,105 @@ u.WithContext(ctx).Distinct(u.Name).Count()
 
 ###### FirstOrInit
 
-comming soon
+Get first matched record or initialize a new instance with given conditions
+
+```go
+u := query.Use(db).User
+
+// User not found, initialize it with give conditions
+user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).FirstOrInit()
+// user -> User{Name: "non_existing"}
+
+// Found user with `name` = `modi`
+user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).FirstOrInit()
+// user -> User{ID: 1, Name: "modi", Age: 17}
+```
+
+initialize struct with more attributes if record not found, those `Attrs` won’t be used to build SQL query
+
+```go
+u := query.Use(db).User
+
+// User not found, initialize it with give conditions and Attrs
+user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).Attrs(u.Age.Eq(20)).FirstOrInit()
+// SELECT * FROM USERS WHERE name = 'non_existing' ORDER BY id LIMIT 1;
+// user -> User{Name: "non_existing", Age: 20}
+
+// User not found, initialize it with give conditions and Attrs
+user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).Attrs(u.Age.Eq(20)).FirstOrInit()
+// SELECT * FROM USERS WHERE name = 'non_existing' ORDER BY id LIMIT 1;
+// user -> User{Name: "non_existing", Age: 20}
+
+// Found user with `name` = `modi`, attributes will be ignored
+user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Attrs(u.Age.Eq(20)).FirstOrInit()
+// SELECT * FROM USERS WHERE name = modi' ORDER BY id LIMIT 1;
+// user -> User{ID: 1, Name: "modi", Age: 17}
+```
+
+`Assign` attributes to struct regardless it is found or not, those attributes won’t be used to build SQL query and the final data won’t be saved into database
+
+```go
+// User not found, initialize it with give conditions and Assign attributes
+user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).Assign(u.Age.Eq(20)).FirstOrInit()
+// user -> User{Name: "non_existing", Age: 20}
+
+// Found user with `name` = `modi`, update it with Assign attributes
+user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Assign(u.Age.Eq(20)).FirstOrInit()
+// SELECT * FROM USERS WHERE name = modi' ORDER BY id LIMIT 1;
+// user -> User{ID: 111, Name: "modi", Age: 20}
+```
 
 ###### FirstOrCreate
 
-comming soon
+Get first matched record or create a new one with given conditions
+
+```go
+u := query.Use(db).User
+
+// User not found, create a new record with give conditions
+user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).FirstOrCreate()
+// INSERT INTO "users" (name) VALUES ("non_existing");
+// user -> User{ID: 112, Name: "non_existing"}
+
+// Found user with `name` = `modi`
+user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).FirstOrCreate()
+// user -> User{ID: 111, Name: "modi", "Age": 18}
+```
+
+Create struct with more attributes if record not found, those `Attrs` won’t be used to build SQL query
+
+```go
+u := query.Use(db).User
+
+// User not found, create it with give conditions and Attrs
+user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).Attrs(u.Age.Eq(20)).FirstOrCreate()
+// SELECT * FROM users WHERE name = 'non_existing' ORDER BY id LIMIT 1;
+// INSERT INTO "users" (name, age) VALUES ("non_existing", 20);
+// user -> User{ID: 112, Name: "non_existing", Age: 20}
+
+// Found user with `name` = `modi`, attributes will be ignored
+user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Attrs(u.Age.Eq(20)).FirstOrCreate()
+// SELECT * FROM users WHERE name = 'modi' ORDER BY id LIMIT 1;
+// user -> User{ID: 111, Name: "modi", Age: 18}
+```
+
+`Assign` attributes to the record regardless it is found or not and save them back to the database.
+
+```go
+u := query.Use(db).User
+
+// User not found, initialize it with give conditions and Assign attributes
+user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).Assign(u.Age.Eq(20)).FirstOrCreate()
+// SELECT * FROM users WHERE name = 'non_existing' ORDER BY id LIMIT 1;
+// INSERT INTO "users" (name, age) VALUES ("non_existing", 20);
+// user -> User{ID: 112, Name: "non_existing", Age: 20}
+
+// Found user with `name` = `modi`, update it with Assign attributes
+user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Assign(u.Age.Eq(20)).FirstOrCreate(&user)
+// SELECT * FROM users WHERE name = 'modi' ORDER BY id LIMIT 1;
+// UPDATE users SET age=20 WHERE id = 111;
+// user -> User{ID: 111, Name: "modi", Age: 20}
+```
 
 #### Update
 
