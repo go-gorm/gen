@@ -75,7 +75,12 @@ func (d *DO) UseModel(model interface{}) {
 func (d *DO) UseTable(tableName string) { d.db = d.db.Table(tableName).Session(new(gorm.Session)) }
 
 // TableName return table name
-func (d *DO) TableName() string { return d.schema.Table }
+func (d *DO) TableName() string {
+	if d.schema == nil {
+		return ""
+	}
+	return d.schema.Table
+}
 
 // Session replace db with new session
 func (d *DO) Session(config *gorm.Session) Dao { return d.getInstance(d.db.Session(config)) }
