@@ -59,7 +59,10 @@ func (r Relation) Path() string { return r.path }
 func (r Relation) Type() string { return r.varType }
 
 func (r Relation) Field(member ...string) Expr {
-	return NewString("", r.varName+"."+strings.Join(member, "."))
+	if len(member) > 0 {
+		return NewString("", r.varName+"."+strings.Join(member, ".")).appendBuildOpts(WithoutQuote)
+	}
+	return NewString("", r.varName).appendBuildOpts(WithoutQuote)
 }
 
 func (r *Relation) On(conds ...Expr) RelationField {

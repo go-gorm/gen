@@ -33,7 +33,8 @@ func (e sql) String() string { return string(e) }
 type expr struct {
 	col clause.Column
 
-	e clause.Expression
+	e         clause.Expression
+	buildOpts []BuildOpt
 }
 
 func (e expr) BeCond() interface{} { return e.expression() }
@@ -63,7 +64,7 @@ const (
 
 func (e expr) BuildColumn(stmt *gorm.Statement, opts ...BuildOpt) sql {
 	col := clause.Column{Name: e.col.Name}
-	for _, opt := range opts {
+	for _, opt := range append(e.buildOpts, opts...) {
 		switch opt {
 		case WithTable:
 			col.Table = e.col.Table
@@ -98,6 +99,11 @@ func (e expr) RawExpr() expression {
 
 func (e expr) setE(expression clause.Expression) expr {
 	e.e = expression
+	return e
+}
+
+func (e expr) appendBuildOpts(opts ...BuildOpt) expr {
+	e.buildOpts = append(e.buildOpts, opts...)
 	return e
 }
 
