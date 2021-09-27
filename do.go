@@ -636,7 +636,7 @@ func parseExprs(stmt *gorm.Statement, exprs []field.Expr) (map[string]interface{
 		if !ok {
 			return nil, ErrInvalidExpression
 		}
-		dest[e.BuildColumn(stmt, field.WithTable, field.WithoutQuote).String()] = expr
+		dest[e.BuildColumn(stmt, field.WithoutQuote).String()] = expr
 	}
 	return dest, nil
 }
