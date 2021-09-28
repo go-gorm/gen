@@ -3,16 +3,16 @@ package template
 const (
 	BaseStruct = createMethod + `
 	type {{.NewStructName}} struct {
-		{{.NewStructName}}Do` +
-		members + `
+		{{.NewStructName}}Do
+		` + members + `
 	}
 	
 	` + cloneMethod + relationship + defineMethodStruct
 
 	BaseStructWithContext = createMethod + `
 	type {{.NewStructName}} struct {
-		{{.NewStructName}}Do {{.NewStructName}}Do` +
-		members + `
+		{{.NewStructName}}Do {{.NewStructName}}Do
+		` + members + `
 	}
 	
 	func ({{.S}} *{{.NewStructName}}) WithContext(ctx context.Context) *{{.NewStructName}}Do { return {{.S}}.{{.NewStructName}}Do.WithContext(ctx)}
