@@ -102,6 +102,14 @@ func (field Int) BitFlip() Int {
 	return Int{field.bitFlip()}
 }
 
+func (field Int) Value(value int) AssignExpr {
+	return field.value(value)
+}
+
+func (field Int) Zero() AssignExpr {
+	return field.value(0)
+}
+
 func (field Int) toSlice(values ...int) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
@@ -206,6 +214,14 @@ func (field Int8) BitOr(value int8) Int8 {
 
 func (field Int8) BitFlip() Int8 {
 	return Int8{field.bitFlip()}
+}
+
+func (field Int8) Value(value int8) AssignExpr {
+	return field.value(value)
+}
+
+func (field Int8) Zero() AssignExpr {
+	return field.value(0)
 }
 
 func (field Int8) toSlice(values ...int8) []interface{} {
@@ -314,6 +330,14 @@ func (field Int16) BitFlip() Int16 {
 	return Int16{field.bitFlip()}
 }
 
+func (field Int16) Value(value int16) AssignExpr {
+	return field.value(value)
+}
+
+func (field Int16) Zero() AssignExpr {
+	return field.value(0)
+}
+
 func (field Int16) toSlice(values ...int16) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
@@ -418,6 +442,14 @@ func (field Int32) BitOr(value int32) Int32 {
 
 func (field Int32) BitFlip() Int32 {
 	return Int32{field.bitFlip()}
+}
+
+func (field Int32) Value(value int32) AssignExpr {
+	return field.value(value)
+}
+
+func (field Int32) Zero() AssignExpr {
+	return field.value(0)
 }
 
 func (field Int32) toSlice(values ...int32) []interface{} {
@@ -526,6 +558,14 @@ func (field Int64) BitFlip() Int64 {
 	return Int64{field.bitFlip()}
 }
 
+func (field Int64) Value(value int64) AssignExpr {
+	return field.value(value)
+}
+
+func (field Int64) Zero() AssignExpr {
+	return field.value(0)
+}
+
 func (field Int64) toSlice(values ...int64) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
@@ -630,6 +670,14 @@ func (field Uint) BitOr(value uint) Uint {
 
 func (field Uint) BitFlip() Uint {
 	return Uint{field.bitFlip()}
+}
+
+func (field Uint) Value(value uint) AssignExpr {
+	return field.value(value)
+}
+
+func (field Uint) Zero() AssignExpr {
+	return field.value(0)
 }
 
 func (field Uint) toSlice(values ...uint) []interface{} {
@@ -738,6 +786,14 @@ func (field Uint8) BitFlip() Uint8 {
 	return Uint8{field.bitFlip()}
 }
 
+func (field Uint8) Value(value uint8) AssignExpr {
+	return field.value(value)
+}
+
+func (field Uint8) Zero() AssignExpr {
+	return field.value(0)
+}
+
 func (field Uint8) toSlice(values ...uint8) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
@@ -842,6 +898,14 @@ func (field Uint16) BitOr(value uint16) Uint16 {
 
 func (field Uint16) BitFlip() Uint16 {
 	return Uint16{field.bitFlip()}
+}
+
+func (field Uint16) Value(value uint16) AssignExpr {
+	return field.value(value)
+}
+
+func (field Uint16) Zero() AssignExpr {
+	return field.value(0)
 }
 
 func (field Uint16) toSlice(values ...uint16) []interface{} {
@@ -950,6 +1014,14 @@ func (field Uint32) BitFlip() Uint32 {
 	return Uint32{field.bitFlip()}
 }
 
+func (field Uint32) Value(value uint32) AssignExpr {
+	return field.value(value)
+}
+
+func (field Uint32) Zero() AssignExpr {
+	return field.value(0)
+}
+
 func (field Uint32) toSlice(values ...uint32) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
@@ -1054,6 +1126,14 @@ func (field Uint64) BitOr(value uint64) Uint64 {
 
 func (field Uint64) BitFlip() Uint64 {
 	return Uint64{field.bitFlip()}
+}
+
+func (field Uint64) Value(value uint64) AssignExpr {
+	return field.value(value)
+}
+
+func (field Uint64) Zero() AssignExpr {
+	return field.value(0)
 }
 
 func (field Uint64) toSlice(values ...uint64) []interface{} {

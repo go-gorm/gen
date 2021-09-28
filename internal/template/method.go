@@ -153,11 +153,11 @@ func ({{.S}} {{.NewStructName}}Do) FindInBatches(result []*{{.StructInfo.Package
 	return {{.S}}.DO.FindInBatches(&result, batchSize, fc)
 }
 
-func ({{.S}} {{.NewStructName}}Do) Attrs(attrs ...field.Expr) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Attrs(attrs ...field.AssignExpr) *{{.NewStructName}}Do {
 	return {{.S}}.withDO({{.S}}.DO.Attrs(attrs...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Assign(attrs ...field.Expr) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Assign(attrs ...field.AssignExpr) *{{.NewStructName}}Do {
 	return {{.S}}.withDO({{.S}}.DO.Assign(attrs...))
 }
 

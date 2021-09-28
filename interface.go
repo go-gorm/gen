@@ -55,8 +55,8 @@ type Dao interface {
 	Offset(offset int) Dao
 	Scopes(funcs ...func(Dao) Dao) Dao
 	Unscoped() Dao
-	Attrs(attrs ...field.Expr) Dao
-	Assign(attrs ...field.Expr) Dao
+	Attrs(attrs ...field.AssignExpr) Dao
+	Assign(attrs ...field.AssignExpr) Dao
 	Joins(field field.RelationField) Dao
 	Preload(field field.RelationField) Dao
 
@@ -72,11 +72,11 @@ type Dao interface {
 	FirstOrInit() (result interface{}, err error)
 	FirstOrCreate() (result interface{}, err error)
 	Update(column field.Expr, value interface{}) (info resultInfo, err error)
-	UpdateSimple(columns ...field.Expr) (info resultInfo, err error)
+	UpdateSimple(columns ...field.AssignExpr) (info resultInfo, err error)
 	Updates(values interface{}) (info resultInfo, err error)
 	UpdateColumn(column field.Expr, value interface{}) (info resultInfo, err error)
 	UpdateColumns(values interface{}) (info resultInfo, err error)
-	UpdateColumnSimple(columns ...field.Expr) (info resultInfo, err error)
+	UpdateColumnSimple(columns ...field.AssignExpr) (info resultInfo, err error)
 	Delete() (info resultInfo, err error)
 	Count() (int64, error)
 	Row() *sql.Row

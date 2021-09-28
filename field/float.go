@@ -76,6 +76,14 @@ func (field Float64) Floor() Int {
 	return Int{field.floor()}
 }
 
+func (field Float64) Value(value float64) AssignExpr {
+	return field.value(value)
+}
+
+func (field Float64) Zero() AssignExpr {
+	return field.value(0)
+}
+
 func (field Float64) toSlice(values ...float64) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
@@ -156,6 +164,14 @@ func (field Float32) FloorDiv(value float32) Int {
 
 func (field Float32) Floor() Int {
 	return Int{field.floor()}
+}
+
+func (field Float32) Value(value float32) AssignExpr {
+	return field.value(value)
+}
+
+func (field Float32) Zero() AssignExpr {
+	return field.value(0)
 }
 
 func (field Float32) toSlice(values ...float32) []interface{} {

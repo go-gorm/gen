@@ -133,6 +133,14 @@ func (field Time) FromUnixtime(value int) Time {
 	return Time{expr{e: clause.Expr{SQL: fmt.Sprintf("FROM_UNIXTIME(%d)", value)}}}
 }
 
+func (field Time) Value(value time.Time) AssignExpr {
+	return field.value(value)
+}
+
+func (field Time) Zero() AssignExpr {
+	return field.value(time.Time{})
+}
+
 func (field Time) toSlice(values ...time.Time) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
