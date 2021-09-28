@@ -8,8 +8,6 @@ import (
 	"gorm.io/gorm/schema"
 )
 
-var s = clause.Associations
-
 type RelationshipType schema.RelationshipType
 
 const (

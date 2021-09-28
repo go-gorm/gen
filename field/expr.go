@@ -9,6 +9,12 @@ import (
 
 var _ Expr = new(Field)
 
+type AssignExpr interface {
+	Expr
+
+	AssignExpr() expression
+}
+
 // Expr a query expression about field
 type Expr interface {
 	As(alias string) Expr
@@ -39,6 +45,10 @@ type expr struct {
 
 func (e expr) BeCond() interface{} { return e.expression() }
 func (expr) CondError() error      { return nil }
+
+func (e expr) AssignExpr() expression {
+	return e.expression()
+}
 
 func (e expr) expression() clause.Expression {
 	if e.e == nil {
@@ -144,12 +154,14 @@ func (e expr) Sum() Float64 {
 	return Float64{e.setE(clause.Expr{SQL: "SUM(?)", Vars: []interface{}{e.RawExpr()}})}
 }
 
+func (e expr) Null() AssignExpr {
+	return e.setE(clause.Eq{Column: e.col.Name, Value: nil})
+}
+
 func (e expr) WithTable(table string) Expr {
 	e.col.Table = table
 	return e
 }
-
-// TODO add value assign: Set(value)/SetNull()/SetZero()
 
 // ======================== comparison between columns ========================
 func (e expr) EqCol(col Expr) Expr {
@@ -190,6 +202,10 @@ func (e expr) Desc() Expr {
 }
 
 // ======================== general experssion ========================
+func (e expr) value(value interface{}) AssignExpr {
+	return e.setE(clause.Eq{Column: e.col.Name, Value: value})
+}
+
 func (e expr) between(values []interface{}) expr {
 	return e.setE(clause.Expr{SQL: "? BETWEEN ? AND ?", Vars: append([]interface{}{e.RawExpr()}, values...)})
 }

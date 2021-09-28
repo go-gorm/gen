@@ -33,3 +33,11 @@ func (field Bool) BitAnd(value bool) Expr {
 func (field Bool) BitOr(value bool) Expr {
 	return Bool{field.bitOr(value)}
 }
+
+func (field Bool) Value(value bool) AssignExpr {
+	return field.value(value)
+}
+
+func (field Bool) Zero() AssignExpr {
+	return field.value(false)
+}
