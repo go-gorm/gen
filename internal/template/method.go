@@ -71,8 +71,8 @@ func ({{.S}} {{.NewStructName}}Do) RightJoin(table schema.Tabler, on ...field.Ex
 	return {{.S}}.withDO({{.S}}.DO.RightJoin(table, on...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Group(col field.Expr) *{{.NewStructName}}Do {
-	return {{.S}}.withDO({{.S}}.DO.Group(col))
+func ({{.S}} {{.NewStructName}}Do) Group(cols ...field.Expr) *{{.NewStructName}}Do {
+	return {{.S}}.withDO({{.S}}.DO.Group(cols...))
 }
 
 func ({{.S}} {{.NewStructName}}Do) Having(conds ...gen.Condition) *{{.NewStructName}}Do {
