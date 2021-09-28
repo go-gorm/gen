@@ -62,6 +62,14 @@ func (field String) NotRegxp(value string) Expr {
 	return expr{e: clause.Not(field.Regexp(value).expression())}
 }
 
+func (field String) Value(value string) AssignExpr {
+	return field.value(value)
+}
+
+func (field String) Zero() AssignExpr {
+	return field.value("")
+}
+
 func (field String) toSlice(values []string) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
@@ -126,6 +134,14 @@ func (field Bytes) Regexp(value string) Expr {
 
 func (field Bytes) NotRegxp(value string) Expr {
 	return Not(field.Regexp(value))
+}
+
+func (field Bytes) Value(value []byte) AssignExpr {
+	return field.value(value)
+}
+
+func (field Bytes) Zero() AssignExpr {
+	return field.value([]byte{})
 }
 
 func (field Bytes) toSlice(values [][]byte) []interface{} {

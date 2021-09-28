@@ -71,8 +71,8 @@ func ({{.S}} {{.NewStructName}}Do) RightJoin(table schema.Tabler, on ...field.Ex
 	return {{.S}}.withDO({{.S}}.DO.RightJoin(table, on...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Group(col field.Expr) *{{.NewStructName}}Do {
-	return {{.S}}.withDO({{.S}}.DO.Group(col))
+func ({{.S}} {{.NewStructName}}Do) Group(cols ...field.Expr) *{{.NewStructName}}Do {
+	return {{.S}}.withDO({{.S}}.DO.Group(cols...))
 }
 
 func ({{.S}} {{.NewStructName}}Do) Having(conds ...gen.Condition) *{{.NewStructName}}Do {
@@ -153,11 +153,11 @@ func ({{.S}} {{.NewStructName}}Do) FindInBatches(result []*{{.StructInfo.Package
 	return {{.S}}.DO.FindInBatches(&result, batchSize, fc)
 }
 
-func ({{.S}} {{.NewStructName}}Do) Attrs(attrs ...field.Expr) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Attrs(attrs ...field.AssignExpr) *{{.NewStructName}}Do {
 	return {{.S}}.withDO({{.S}}.DO.Attrs(attrs...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Assign(attrs ...field.Expr) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Assign(attrs ...field.AssignExpr) *{{.NewStructName}}Do {
 	return {{.S}}.withDO({{.S}}.DO.Assign(attrs...))
 }
 

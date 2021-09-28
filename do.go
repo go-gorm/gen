@@ -255,8 +255,16 @@ func (d *DO) Omit(columns ...field.Expr) Dao {
 	return d.getInstance(d.db.Omit(toColNames(d.db.Statement, columns...)...))
 }
 
-func (d *DO) Group(column field.Expr) Dao {
-	return d.getInstance(d.db.Group(column.ColumnName().String()))
+func (d *DO) Group(columns ...field.Expr) Dao {
+	if len(columns) == 0 {
+		return d
+	}
+
+	name := columns[0].ColumnName().String()
+	for _, col := range columns[1:] {
+		name += "," + col.ColumnName().String()
+	}
+	return d.getInstance(d.db.Group(name))
 }
 
 func (d *DO) Having(conds ...Condition) Dao {
@@ -318,12 +326,22 @@ func (d *DO) join(table schema.Tabler, joinType clause.JoinType, conds []field.E
 	return d.getInstance(d.db.Clauses(from))
 }
 
-func (d *DO) Attrs(attrs ...field.Expr) Dao {
-	return d.getInstance(d.db.Attrs(toExpression(attrs...)))
+func (d *DO) Attrs(attrs ...field.AssignExpr) Dao {
+	return d.getInstance(d.db.Attrs(d.attrsValue(attrs)...))
 }
 
-func (d *DO) Assign(attrs ...field.Expr) Dao {
-	return d.getInstance(d.db.Assign(toExpressionInterface(attrs...)...))
+func (d *DO) Assign(attrs ...field.AssignExpr) Dao {
+	return d.getInstance(d.db.Assign(d.attrsValue(attrs)...))
+}
+
+func (d *DO) attrsValue(attrs []field.AssignExpr) []interface{} {
+	values := make([]interface{}, 0, len(attrs))
+	for _, attr := range attrs {
+		if expr, ok := attr.AssignExpr().(clause.Eq); ok {
+			values = append(values, expr)
+		}
+	}
+	return values
 }
 
 func (d *DO) Joins(field field.RelationField) Dao {
@@ -457,8 +475,8 @@ func (d *DO) Update(column field.Expr, value interface{}) (info resultInfo, err 
 
 	var result *gorm.DB
 	switch value := value.(type) {
-	case field.Expr:
-		result = tx.Update(columnStr, value.RawExpr())
+	case field.AssignExpr:
+		result = tx.Update(columnStr, value.AssignExpr())
 	case subQuery:
 		result = tx.Update(columnStr, value.underlyingDB())
 	default:
@@ -467,8 +485,8 @@ func (d *DO) Update(column field.Expr, value interface{}) (info resultInfo, err 
 	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
-func (d *DO) UpdateSimple(columns ...field.Expr) (info resultInfo, err error) {
-	dest, err := parseExprs(d.db.Statement, columns)
+func (d *DO) UpdateSimple(columns ...field.AssignExpr) (info resultInfo, err error) {
+	dest, err := assignMap(d.db.Statement, columns)
 	if err != nil {
 		return resultInfo{Error: err}, err
 	}
@@ -498,8 +516,8 @@ func (d *DO) UpdateColumn(column field.Expr, value interface{}) (info resultInfo
 	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
-func (d *DO) UpdateColumnSimple(columns ...field.Expr) (info resultInfo, err error) {
-	dest, err := parseExprs(d.db.Statement, columns)
+func (d *DO) UpdateColumnSimple(columns ...field.AssignExpr) (info resultInfo, err error) {
+	dest, err := assignMap(d.db.Statement, columns)
 	if err != nil {
 		return resultInfo{Error: err}, err
 	}
@@ -631,14 +649,16 @@ func toInterfaceSlice(value interface{}) []interface{} {
 	}
 }
 
-func parseExprs(stmt *gorm.Statement, exprs []field.Expr) (map[string]interface{}, error) {
+func assignMap(stmt *gorm.Statement, exprs []field.AssignExpr) (map[string]interface{}, error) {
 	dest := make(map[string]interface{}, len(exprs))
-	for _, e := range exprs {
-		expr, ok := e.RawExpr().(clause.Expression)
-		if !ok {
-			return nil, ErrInvalidExpression
+	for _, expr := range exprs {
+		target := expr.BuildColumn(stmt, field.WithoutQuote).String()
+		switch e := expr.AssignExpr().(type) {
+		case clause.Expr:
+			dest[target] = e
+		case clause.Eq:
+			dest[target] = e.Value
 		}
-		dest[e.BuildColumn(stmt, field.WithoutQuote).String()] = expr
 	}
 	return dest, nil
 }
