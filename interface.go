@@ -49,7 +49,7 @@ type Dao interface {
 	Join(table schema.Tabler, conds ...field.Expr) Dao
 	LeftJoin(table schema.Tabler, conds ...field.Expr) Dao
 	RightJoin(table schema.Tabler, conds ...field.Expr) Dao
-	Group(columns field.Expr) Dao
+	Group(columns ...field.Expr) Dao
 	Having(conds ...Condition) Dao
 	Limit(limit int) Dao
 	Offset(offset int) Dao

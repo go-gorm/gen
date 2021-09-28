@@ -255,8 +255,16 @@ func (d *DO) Omit(columns ...field.Expr) Dao {
 	return d.getInstance(d.db.Omit(toColNames(d.db.Statement, columns...)...))
 }
 
-func (d *DO) Group(column field.Expr) Dao {
-	return d.getInstance(d.db.Group(column.ColumnName().String()))
+func (d *DO) Group(columns ...field.Expr) Dao {
+	if len(columns) == 0 {
+		return d
+	}
+
+	name := columns[0].ColumnName().String()
+	for _, col := range columns[1:] {
+		name += "," + col.ColumnName().String()
+	}
+	return d.getInstance(d.db.Group(name))
 }
 
 func (d *DO) Having(conds ...Condition) Dao {
