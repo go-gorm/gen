@@ -1289,6 +1289,9 @@ u.WithContext(ctx).Where(u.Activate.Is(true)).Update(u.Age, u.Age.Add(1))
 // or
 u.WithContext(ctx).Where(u.Activate.Is(true)).UpdateSimple(u.Age.Add(1))
 // UPDATE users SET age=age+1, updated_at='2013-11-17 21:34:10' WHERE active=true;
+
+u.WithContext(ctx).Where(u.Activate.Is(true)).UpdateSimple(u.Age.Zero())
+// UPDATE users SET age=0, updated_at='2013-11-17 21:34:10' WHERE active=true;
 ```
 
 ##### Updates multiple columns
@@ -1308,7 +1311,10 @@ u.WithContext(ctx).Where(u.ID.Eq(111)).Updates(model.User{Name: "hello", Age: 18
 
 // Update with expression
 u.WithContext(ctx).Where(u.ID.Eq(111)).UpdateSimple(u.Age.Add(1), u.Number.Add(1))
-// UPDATE users SET age=age+1,number=number+1 updated_at='2013-11-17 21:34:10' WHERE id=111;
+// UPDATE users SET age=age+1,number=number+1, updated_at='2013-11-17 21:34:10' WHERE id=111;
+
+u.WithContext(ctx).Where(u.Activate.Is(true)).UpdateSimple(u.Age.Value(17), u.Number.Zero(), u.Birthday.Null())
+// UPDATE users SET age=17, number=0, birthday=NULL, updated_at='2013-11-17 21:34:10' WHERE active=true;
 ```
 
 > **NOTE** When update with struct, GEN will only update non-zero fields, you might want to use `map` to update attributes or use `Select` to specify fields to update
