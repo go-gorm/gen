@@ -1434,15 +1434,19 @@ o.WithContext(ctx).Unscoped().Where(o.ID.Eq(10)).Delete()
 Method interface is an abstraction of query methods, all functions it contains are query methods and above comments describe the specific query conditions or logic.
 SQL supports simple `where` query or execute raw SQL. Simple query conditions wrapped by `where()`, and raw SQL wrapped by `sql()`（not required）
 
+Method interface supports descriptive comment that describes how the method works.It starts with method name and followed descriptive message (not required). It is distinguished from query comment by blank line (with descriptive message) or space (without descriptive message).
+
 ```go
 type Method interface {
     // where("name=@name and age=@age")
     SimpleFindByNameAndAge(name string, age int) (gen.T, error)
-    
+	
+    // FindUserToMap query by id and return id->instance
+    // 
     // sql(select * from users where id=@id)
     FindUserToMap(id int) (gen.M, error)
     
-    // insert into users (name,age) values (@name,@age)
+    // InsertValue insert into users (name,age) values (@name,@age)
     InsertValue(age int, name string) error
 }
 ```
