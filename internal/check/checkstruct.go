@@ -42,7 +42,7 @@ func (b *BaseStruct) parseStruct(st interface{}) error {
 			Name:       f.Name,
 			Type:       b.getMemberRealType(f.FieldType),
 			ColumnName: f.DBName,
-		}).Revise())
+		}))
 	}
 
 	b.Relations = b.parseStructRelationShip(stmt.Schema.Relationships)
@@ -101,7 +101,7 @@ func (b *BaseStruct) getMemberRealType(member reflect.Type) string {
 
 func (b *BaseStruct) ReviseMemberName() {
 	for _, m := range b.Members {
-		m.ReviseKeyword()
+		m.EscapeKeyword()
 	}
 }
 

@@ -137,8 +137,18 @@ func (g *Generator) UseDB(db *gorm.DB) {
 }
 
 var (
+	// FieldNew add new field
+	FieldNew = func(fieldName, fieldType, fieldTag string) check.CreateMemberOpt {
+		return func(*check.Member) *check.Member {
+			return &check.Member{
+				Name:         fieldName,
+				Type:         fieldType,
+				OverwriteTag: fieldTag,
+			}
+		}
+	}
 	// FieldIgnore ignore some columns by name
-	FieldIgnore = func(columnNames ...string) check.MemberOpt {
+	FieldIgnore = func(columnNames ...string) check.FilterMemberOpt {
 		return func(m *check.Member) *check.Member {
 			for _, name := range columnNames {
 				if m.ColumnName == name {
@@ -149,7 +159,7 @@ var (
 		}
 	}
 	// FieldIgnoreReg ignore some columns by reg rule
-	FieldIgnoreReg = func(columnNameRegs ...string) check.MemberOpt {
+	FieldIgnoreReg = func(columnNameRegs ...string) check.FilterMemberOpt {
 		regs := make([]regexp.Regexp, len(columnNameRegs))
 		for i, reg := range columnNameRegs {
 			regs[i] = *regexp.MustCompile(reg)
@@ -164,7 +174,7 @@ var (
 		}
 	}
 	// FieldRename specify field name in generated struct
-	FieldRename = func(columnName string, newName string) check.MemberOpt {
+	FieldRename = func(columnName string, newName string) check.ModifyMemberOpt {
 		return func(m *check.Member) *check.Member {
 			if m.ColumnName == columnName {
 				m.Name = newName
@@ -173,28 +183,26 @@ var (
 		}
 	}
 	// FieldType specify field type in generated struct
-	FieldType = func(columnName string, newType string) check.MemberOpt {
+	FieldType = func(columnName string, newType string) check.ModifyMemberOpt {
 		return func(m *check.Member) *check.Member {
 			if m.ColumnName == columnName {
 				m.Type = newType
-				m.ModelType = newType
 			}
 			return m
 		}
 	}
 	// FieldIgnoreType ignore some columns by reg rule
-	FieldTypeReg = func(columnNameReg string, newType string) check.MemberOpt {
+	FieldTypeReg = func(columnNameReg string, newType string) check.ModifyMemberOpt {
 		reg := regexp.MustCompile(columnNameReg)
 		return func(m *check.Member) *check.Member {
 			if reg.MatchString(m.ColumnName) {
 				m.Type = newType
-				m.ModelType = newType
 			}
 			return m
 		}
 	}
 	// FieldTag specify json tag and gorm tag
-	FieldTag = func(columnName string, gormTag, jsonTag string) check.MemberOpt {
+	FieldTag = func(columnName string, gormTag, jsonTag string) check.ModifyMemberOpt {
 		return func(m *check.Member) *check.Member {
 			if m.ColumnName == columnName {
 				m.GORMTag, m.JSONTag = gormTag, jsonTag
@@ -203,7 +211,7 @@ var (
 		}
 	}
 	// FieldJSONTag specify json tag
-	FieldJSONTag = func(columnName string, jsonTag string) check.MemberOpt {
+	FieldJSONTag = func(columnName string, jsonTag string) check.ModifyMemberOpt {
 		return func(m *check.Member) *check.Member {
 			if m.ColumnName == columnName {
 				m.JSONTag = jsonTag
@@ -212,7 +220,7 @@ var (
 		}
 	}
 	// FieldGORMTag specify gorm tag
-	FieldGORMTag = func(columnName string, gormTag string) check.MemberOpt {
+	FieldGORMTag = func(columnName string, gormTag string) check.ModifyMemberOpt {
 		return func(m *check.Member) *check.Member {
 			if m.ColumnName == columnName {
 				m.GORMTag = gormTag
@@ -221,7 +229,7 @@ var (
 		}
 	}
 	// FieldNewTag add new tag
-	FieldNewTag = func(columnName string, newTag string) check.MemberOpt {
+	FieldNewTag = func(columnName string, newTag string) check.ModifyMemberOpt {
 		return func(m *check.Member) *check.Member {
 			if m.ColumnName == columnName {
 				m.NewTag += " " + newTag
@@ -230,28 +238,28 @@ var (
 		}
 	}
 	// FieldTrimPrefix trim column name's prefix
-	FieldTrimPrefix = func(prefix string) check.MemberOpt {
+	FieldTrimPrefix = func(prefix string) check.ModifyMemberOpt {
 		return func(m *check.Member) *check.Member {
 			m.Name = strings.TrimPrefix(m.Name, prefix)
 			return m
 		}
 	}
 	// FieldTrimSuffix trim column name's suffix
-	FieldTrimSuffix = func(suffix string) check.MemberOpt {
+	FieldTrimSuffix = func(suffix string) check.ModifyMemberOpt {
 		return func(m *check.Member) *check.Member {
 			m.Name = strings.TrimSuffix(m.Name, suffix)
 			return m
 		}
 	}
 	// FieldAddPrefix add prefix to struct's memeber name
-	FieldAddPrefix = func(prefix string) check.MemberOpt {
+	FieldAddPrefix = func(prefix string) check.ModifyMemberOpt {
 		return func(m *check.Member) *check.Member {
 			m.Name = prefix + m.Name
 			return m
 		}
 	}
 	// FieldAddSuffix add suffix to struct's memeber name
-	FieldAddSuffix = func(suffix string) check.MemberOpt {
+	FieldAddSuffix = func(suffix string) check.ModifyMemberOpt {
 		return func(m *check.Member) *check.Member {
 			m.Name += suffix
 			return m
@@ -270,14 +278,8 @@ func (g *Generator) GenerateModel(tableName string, opts ...check.MemberOpt) *ch
 }
 
 // GenerateModel catch table info from db, return a BaseStruct
-func (g *Generator) GenerateModelAs(tableName string, modelName string, opts ...check.MemberOpt) *check.BaseStruct {
-	colNameOpts := make([]check.MemberOpt, len(opts))
-	for i, opt := range opts {
-		opt := opt
-		colNameOpts[i] = opt
-	}
-
-	s, err := check.GenBaseStructs(g.db, g.Config.ModelPkgPath, tableName, modelName, g.dbNameOpts, colNameOpts, g.Config.FieldNullable)
+func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...check.MemberOpt) *check.BaseStruct {
+	s, err := check.GenBaseStructs(g.db, g.Config.ModelPkgPath, tableName, modelName, g.dbNameOpts, fieldOpts, g.Config.FieldNullable)
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)
 		panic("generate struct fail")

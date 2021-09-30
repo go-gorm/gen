@@ -29,7 +29,7 @@ const (
 		_{{.NewStructName}}.{{.NewStructName}}Do.UseModel({{.StructInfo.Package}}.{{.StructInfo.Type}}{})
 	
 		{{if .HasMember}}tableName := _{{.NewStructName}}.{{.NewStructName}}Do.TableName(){{end}}
-		{{range .Members}} _{{$.NewStructName}}.{{.Name}} = field.New{{.NewType}}(tableName, "{{.ColumnName}}")
+		{{range .Members}} _{{$.NewStructName}}.{{.Name}} = field.New{{.GenType}}(tableName, "{{.ColumnName}}")
 		{{end}}
 		{{range .Relations.HasOne}}
 			_{{$.NewStructName}}.{{.Name}} = {{$.NewStructName}}HasOne{{.Name}}{
@@ -64,7 +64,7 @@ const (
 	}
 	`
 	members = `
-	{{range .Members}}{{.Name}} field.{{.NewType}}
+	{{range .Members}}{{.Name}} field.{{.GenType}}
 	{{end}}
 	{{range .Relations.HasOne}}{{.Name}} {{$.NewStructName}}HasOne{{.Name}}
 	{{end}}
