@@ -194,7 +194,7 @@ func (c *Column) multilineComment() bool { return strings.Contains(c.ColumnComme
 
 func (c *Column) buildGormTag() string {
 	var buf bytes.Buffer
-	buf.WriteString(fmt.Sprintf("column:%s", c.ColumnName))
+	buf.WriteString(fmt.Sprintf("column:%s;type:%s", c.ColumnName, c.ColumnType))
 	if c.IsPrimaryKey() {
 		buf.WriteString(";primaryKey")
 		if !c.AutoIncrement() {
