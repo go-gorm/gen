@@ -11,10 +11,10 @@ import (
 type RelationshipType schema.RelationshipType
 
 const (
-	HasOne    RelationshipType = "has_one"      // HasOneRel has one relationship
-	HasMany   RelationshipType = "has_many"     // HasManyRel has many relationship
-	BelongsTo RelationshipType = "belongs_to"   // BelongsToRel belongs to relationship
-	Many2Many RelationshipType = "many_to_many" // Many2ManyRel many to many relationship
+	HasOne    RelationshipType = RelationshipType(schema.HasOne)    // HasOneRel has one relationship
+	HasMany   RelationshipType = RelationshipType(schema.HasMany)   // HasManyRel has many relationships
+	BelongsTo RelationshipType = RelationshipType(schema.BelongsTo) // BelongsToRel belongs to relationship
+	Many2Many RelationshipType = RelationshipType(schema.Many2Many) // Many2ManyRel many to many relationship
 )
 
 type Relations struct {
@@ -95,7 +95,7 @@ func (r *Relation) StructMember() string {
 func (r *Relation) StructMemberInit() string {
 	initStr := fmt.Sprintf("RelationField: field.NewRelation(%q, %q),\n", r.path, r.varType)
 	for _, relation := range r.relations {
-		initStr += relation.varName + ": struct {\nfield.RelationField\n" + strings.TrimPrefix(strings.TrimSpace(relation.StructMember()), relation.varName) + "}"
+		initStr += relation.varName + ": struct {\nfield.RelationField\n" + strings.TrimSpace(relation.StructMember()) + "}"
 		initStr += "{\n" + relation.StructMemberInit() + "},\n"
 	}
 	return initStr

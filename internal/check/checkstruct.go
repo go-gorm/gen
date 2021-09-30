@@ -51,33 +51,34 @@ func (b *BaseStruct) parseStruct(st interface{}) error {
 }
 
 func (b *BaseStruct) parseStructRelationShip(relationship schema.Relationships) field.Relations {
+	cache := make(map[string]bool)
 	return field.Relations{
-		HasOne:    b.pullRelationShip(relationship.HasOne),
-		BelongsTo: b.pullRelationShip(relationship.BelongsTo),
-		HasMany:   b.pullRelationShip(relationship.HasMany),
-		Many2Many: b.pullRelationShip(relationship.Many2Many),
+		HasOne:    b.pullRelationShip(cache, relationship.HasOne),
+		BelongsTo: b.pullRelationShip(cache, relationship.BelongsTo),
+		HasMany:   b.pullRelationShip(cache, relationship.HasMany),
+		Many2Many: b.pullRelationShip(cache, relationship.Many2Many),
 	}
 }
 
-func (b *BaseStruct) pullRelationShip(relationships []*schema.Relationship) []*field.Relation {
+func (b *BaseStruct) pullRelationShip(cache map[string]bool, relationships []*schema.Relationship) []*field.Relation {
 	if len(relationships) == 0 {
 		return nil
 	}
 	result := make([]*field.Relation, len(relationships))
 	for i, relationship := range relationships {
-		subRelationships := relationship.FieldSchema.Relationships
-		relation := field.NewRelation(
-			relationship.Name,
-			strings.TrimLeft(relationship.Field.FieldType.String(), "[]*"),
-			b.pullRelationShip(append(append(append(append(
+		var childRelations []*field.Relation
+		varType := strings.TrimLeft(relationship.Field.FieldType.String(), "[]*")
+		if !cache[varType] {
+			cache[varType] = true
+			childRelations = b.pullRelationShip(cache, append(append(append(append(
 				make([]*schema.Relationship, 0, 4),
-				subRelationships.BelongsTo...),
-				subRelationships.HasOne...),
-				subRelationships.HasMany...),
-				subRelationships.Many2Many...),
-			)...,
-		)
-		result[i] = relation
+				relationship.FieldSchema.Relationships.BelongsTo...),
+				relationship.FieldSchema.Relationships.HasOne...),
+				relationship.FieldSchema.Relationships.HasMany...),
+				relationship.FieldSchema.Relationships.Many2Many...),
+			)
+		}
+		result[i] = field.NewRelation(relationship.Name, varType, childRelations...)
 	}
 	return result
 }

@@ -382,7 +382,6 @@ func TestRelation_StructMember(t *testing.T) {
 
 	for _, testdata := range testdatas {
 		if result := testdata.relation.StructMember(); result != testdata.expectedValue {
-			fmt.Println(result)
 			t.Errorf("StructMember fail: except %q, got %q", testdata.expectedValue, result)
 		}
 	}
