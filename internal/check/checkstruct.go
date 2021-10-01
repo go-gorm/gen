@@ -45,12 +45,12 @@ func (b *BaseStruct) parseStruct(st interface{}) error {
 		}))
 	}
 
-	b.Relations = b.parseStructRelationShip(stmt.Schema.Relationships)
+	b.Relations = b.parseStructRelationShip(&stmt.Schema.Relationships)
 
 	return nil
 }
 
-func (b *BaseStruct) parseStructRelationShip(relationship schema.Relationships) field.Relations {
+func (b *BaseStruct) parseStructRelationShip(relationship *schema.Relationships) field.Relations {
 	cache := make(map[string]bool)
 	return field.Relations{
 		HasOne:    b.pullRelationShip(cache, relationship.HasOne),

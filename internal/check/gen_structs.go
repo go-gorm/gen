@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils/tests"
 
+	"gorm.io/gen/field"
 	"gorm.io/gen/internal/parser"
 )
 
@@ -54,16 +55,11 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 		NewStructName: uncaptialize(modelName),
 		S:             strings.ToLower(modelName[0:1]),
 		StructInfo:    parser.Param{Type: modelName, Package: pkg},
+
+		Relations: field.Relations{},
 	}
 
 	modifyOpts, filterOpts, createOpts := sortOpt(memberOpts)
-	for _, create := range createOpts {
-		m := create.self()(nil)
-		m.Name = db.NamingStrategy.SchemaName(m.Name)
-
-		base.Members = append(base.Members, m)
-	}
-
 	for _, field := range columns {
 		m := field.toMember(nullable)
 
@@ -74,6 +70,17 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 		m = modifyMember(m, modifyOpts)
 		m.Name = db.NamingStrategy.SchemaName(m.Name)
 
+		base.Members = append(base.Members, m)
+	}
+
+	for _, create := range createOpts {
+		m := create.self()(nil)
+
+		if m.Relation != nil {
+			base.Relations.Accept(m.Relation)
+		}
+
+		m.Name = db.NamingStrategy.SchemaName(m.Name)
 		base.Members = append(base.Members, m)
 	}
 

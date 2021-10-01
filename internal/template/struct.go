@@ -29,7 +29,8 @@ const (
 		_{{.NewStructName}}.{{.NewStructName}}Do.UseModel({{.StructInfo.Package}}.{{.StructInfo.Type}}{})
 	
 		{{if .HasMember}}tableName := _{{.NewStructName}}.{{.NewStructName}}Do.TableName(){{end}}
-		{{range .Members}} _{{$.NewStructName}}.{{.Name}} = field.New{{.GenType}}(tableName, "{{.ColumnName}}")
+		{{range .Members -}}
+		{{if not .IsRelation}}_{{$.NewStructName}}.{{.Name}} = field.New{{.GenType}}(tableName, "{{.ColumnName}}"){{end}}
 		{{end}}
 		{{range .Relations.HasOne}}
 			_{{$.NewStructName}}.{{.Name}} = {{$.NewStructName}}HasOne{{.Name}}{
@@ -64,15 +65,20 @@ const (
 	}
 	`
 	members = `
-	{{range .Members}}{{.Name}} field.{{.GenType}}
+	{{range .Members -}}
+	{{if not .IsRelation}}{{.Name}} field.{{.GenType}}{{end}}
 	{{end}}
-	{{range .Relations.HasOne}}{{.Name}} {{$.NewStructName}}HasOne{{.Name}}
+	{{range .Relations.HasOne -}}
+	{{.Name}} {{$.NewStructName}}HasOne{{.Name}}
 	{{end}}
-	{{- range .Relations.HasMany}}{{.Name}} {{$.NewStructName}}HasMany{{.Name}}
+	{{- range .Relations.HasMany -}}
+	{{.Name}} {{$.NewStructName}}HasMany{{.Name}}
 	{{end}}
-	{{- range .Relations.BelongsTo}}{{.Name}} {{$.NewStructName}}BelongsTo{{.Name}}
+	{{- range .Relations.BelongsTo -}}
+	{{.Name}} {{$.NewStructName}}BelongsTo{{.Name}}
 	{{end}}
-	{{- range .Relations.Many2Many}}{{.Name}} {{$.NewStructName}}Many2Many{{.Name}}
+	{{- range .Relations.Many2Many -}}
+	{{.Name}} {{$.NewStructName}}Many2Many{{.Name}}
 	{{end}}
 `
 	cloneMethod = `

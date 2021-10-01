@@ -15,8 +15,10 @@ import (
 
 	"golang.org/x/tools/imports"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 	"gorm.io/gorm/utils/tests"
 
+	"gorm.io/gen/field"
 	"gorm.io/gen/internal/check"
 	"gorm.io/gen/internal/parser"
 	tmpl "gorm.io/gen/internal/template"
@@ -263,6 +265,28 @@ var (
 		return func(m *check.Member) *check.Member {
 			m.Name += suffix
 			return m
+		}
+	}
+	FieldRelate = func(relationship field.RelationshipType, fieldName string, table *check.BaseStruct, config *field.RelateConfig) check.CreateMemberOpt {
+		if config == nil {
+			config = &field.RelateConfig{}
+		}
+		if config.JSONTag == "" {
+			config.JSONTag = schema.NamingStrategy{}.ColumnName("", fieldName)
+		}
+		return func(*check.Member) *check.Member {
+			return &check.Member{
+				Name:         fieldName,
+				Type:         config.RelateFieldPrefix(relationship) + table.StructInfo.Type,
+				JSONTag:      config.JSONTag,
+				GORMTag:      config.GORMTag,
+				NewTag:       config.NewTag,
+				OverwriteTag: config.OverwriteTag,
+
+				Relation: field.NewRelationWithCopy(
+					relationship, fieldName, table.StructInfo.Package+"."+table.StructInfo.Type,
+					table.Relations.SingleRelation()...),
+			}
 		}
 	}
 )
