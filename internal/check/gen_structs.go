@@ -78,9 +78,10 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 
 		if m.Relation != nil {
 			base.Relations.Accept(m.Relation)
+		} else { // Relation Field do not need SchemaName convert
+			m.Name = db.NamingStrategy.SchemaName(m.Name)
 		}
 
-		m.Name = db.NamingStrategy.SchemaName(m.Name)
 		base.Members = append(base.Members, m)
 	}
 
