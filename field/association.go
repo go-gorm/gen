@@ -60,9 +60,10 @@ type RelationField interface {
 type Relation struct {
 	relationship RelationshipType
 
-	fieldName string
-	fieldType string
-	path      string
+	fieldName  string
+	fieldType  string
+	fieldPath  string
+	fieldModel interface{} // store relaiton model
 
 	childRelations []*Relation
 
@@ -73,9 +74,11 @@ type Relation struct {
 
 func (r Relation) Name() string { return r.fieldName }
 
-func (r Relation) Path() string { return r.path }
+func (r Relation) Path() string { return r.fieldPath }
 
 func (r Relation) Type() string { return r.fieldType }
+
+func (r Relation) Model() interface{} { return r.fieldModel }
 
 func (r Relation) Relationship() RelationshipType { return r.relationship }
 
@@ -84,6 +87,10 @@ func (r Relation) Field(member ...string) Expr {
 		return NewString("", r.fieldName+"."+strings.Join(member, ".")).appendBuildOpts(WithoutQuote)
 	}
 	return NewString("", r.fieldName).appendBuildOpts(WithoutQuote)
+}
+
+func (r *Relation) AppendChildRelation(relations ...*Relation) {
+	r.childRelations = append(r.childRelations, wrapPath(r.fieldPath, relations)...)
 }
 
 func (r *Relation) On(conds ...Expr) RelationField {
@@ -116,7 +123,7 @@ func (r *Relation) StructMember() string {
 }
 
 func (r *Relation) StructMemberInit() string {
-	initStr := fmt.Sprintf("RelationField: field.NewRelation(%q, %q),\n", r.path, r.fieldType)
+	initStr := fmt.Sprintf("RelationField: field.NewRelation(%q, %q),\n", r.fieldPath, r.fieldType)
 	for _, relation := range r.childRelations {
 		initStr += relation.fieldName + ": struct {\nfield.RelationField\n" + strings.TrimSpace(relation.StructMember()) + "}"
 		initStr += "{\n" + relation.StructMemberInit() + "},\n"
@@ -126,7 +133,7 @@ func (r *Relation) StructMemberInit() string {
 
 func wrapPath(root string, rs []*Relation) []*Relation {
 	for _, r := range rs {
-		r.path = root + "." + r.path
+		r.fieldPath = root + "." + r.fieldPath
 		r.childRelations = wrapPath(root, r.childRelations)
 	}
 	return rs

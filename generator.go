@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -81,7 +82,7 @@ func (cfg *Config) WithDbNameOpts(opts ...check.SchemaNameOpt) {
 
 func (cfg *Config) Revise() (err error) {
 	if cfg.ModelPkgPath == "" {
-		cfg.ModelPkgPath = check.ModelPkg
+		cfg.ModelPkgPath = check.DefaultModelPkg
 	}
 
 	cfg.OutPath, err = filepath.Abs(cfg.OutPath)
@@ -283,9 +284,36 @@ var (
 				NewTag:       config.NewTag,
 				OverwriteTag: config.OverwriteTag,
 
-				Relation: field.NewRelationWithCopy(
+				Relation: field.NewRelationAndCopy(
 					relationship, fieldName, table.StructInfo.Package+"."+table.StructInfo.Type,
 					table.Relations.SingleRelation()...),
+			}
+		}
+	}
+	FieldRelateModel = func(relationship field.RelationshipType, fieldName string, model interface{}, config *field.RelateConfig) check.CreateMemberOpt {
+		st := reflect.TypeOf(model)
+		if st.Kind() == reflect.Ptr {
+			st = st.Elem()
+		}
+		fieldType := st.String()
+
+		if config == nil {
+			config = &field.RelateConfig{}
+		}
+		if config.JSONTag == "" {
+			config.JSONTag = schema.NamingStrategy{}.ColumnName("", fieldName)
+		}
+
+		return func(*check.Member) *check.Member {
+			return &check.Member{
+				Name:         fieldName,
+				Type:         config.RelateFieldPrefix(relationship) + fieldType,
+				JSONTag:      config.JSONTag,
+				GORMTag:      config.GORMTag,
+				NewTag:       config.NewTag,
+				OverwriteTag: config.OverwriteTag,
+
+				Relation: field.NewRelationWithModel(relationship, fieldName, fieldType, model),
 			}
 		}
 	}
@@ -337,7 +365,7 @@ func (g *Generator) apply(fc interface{}, structs []*check.BaseStruct) {
 		panic("check interface fail")
 	}
 
-	err = readInterface.ParseFile(interfacePaths, check.GetNames(structs))
+	err = readInterface.ParseFile(interfacePaths, check.GetStructNames(structs))
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "parser interface file fail: %s", err)
 		panic("parser interface file fail")
@@ -494,7 +522,7 @@ func (g *Generator) generateBaseStruct() (err error) {
 	}
 	path := filepath.Clean(g.ModelPkgPath)
 	if path == "" {
-		path = check.ModelPkg
+		path = check.DefaultModelPkg
 	}
 	if strings.Contains(path, "/") {
 		outPath, err = filepath.Abs(path)
@@ -546,11 +574,7 @@ func (g *Generator) output(fileName string, content []byte) error {
 	result, err := imports.Process(fileName, content, nil)
 	if err != nil {
 		errLine, _ := strconv.Atoi(strings.Split(err.Error(), ":")[1])
-		startLine, endLine := errLine-3, errLine+3
-		if startLine < 0 {
-			startLine = 0
-		}
-
+		startLine, endLine := 0, errLine+3
 		fmt.Println("Format fail:")
 		line := strings.Split(string(content), "\n")
 		for i := startLine; i <= endLine; i++ {

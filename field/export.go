@@ -221,12 +221,23 @@ var Associations RelationField = NewRelation(clause.Associations, "")
 func NewRelation(fieldName string, fieldType string, relations ...*Relation) *Relation {
 	return &Relation{
 		fieldName:      fieldName,
-		path:           fieldName,
+		fieldPath:      fieldName,
 		fieldType:      fieldType,
-		childRelations: wrapPath(fieldName, relations)}
+		childRelations: wrapPath(fieldName, relations),
+	}
 }
 
-func NewRelationWithCopy(relationship RelationshipType, fieldName string, fieldType string, relations ...*Relation) *Relation {
+func NewRelationWithModel(relationship RelationshipType, fieldName string, fieldType string, fieldModel interface{}, relations ...*Relation) *Relation {
+	return &Relation{
+		relationship: relationship,
+		fieldName:    fieldName,
+		fieldType:    fieldType,
+		fieldPath:    fieldName,
+		fieldModel:   fieldModel,
+	}
+}
+
+func NewRelationAndCopy(relationship RelationshipType, fieldName string, fieldType string, relations ...*Relation) *Relation {
 	copiedRelations := make([]*Relation, len(relations))
 	for i, r := range relations {
 		copy := *r
@@ -236,6 +247,7 @@ func NewRelationWithCopy(relationship RelationshipType, fieldName string, fieldT
 		relationship:   relationship,
 		fieldName:      fieldName,
 		fieldType:      fieldType,
-		path:           fieldName,
-		childRelations: wrapPath(fieldName, copiedRelations)}
+		fieldPath:      fieldName,
+		childRelations: wrapPath(fieldName, copiedRelations),
+	}
 }

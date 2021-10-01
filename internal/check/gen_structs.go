@@ -10,7 +10,6 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils/tests"
 
-	"gorm.io/gen/field"
 	"gorm.io/gen/internal/parser"
 )
 
@@ -20,7 +19,7 @@ import (
  */
 
 const (
-	ModelPkg = "model"
+	DefaultModelPkg = "model"
 
 	//query table structure
 	columnQuery = "SELECT COLUMN_NAME ,COLUMN_COMMENT ,DATA_TYPE ,IS_NULLABLE ,COLUMN_KEY,COLUMN_TYPE,COLUMN_DEFAULT,EXTRA" +
@@ -30,7 +29,7 @@ const (
 type SchemaNameOpt func(*gorm.DB) string
 
 // GenBaseStructs generate db model by table name
-func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpts []SchemaNameOpt, memberOpts []MemberOpt, nullable bool) (bases *BaseStruct, err error) {
+func GenBaseStructs(db *gorm.DB, modelPkg, tableName, modelName string, schemaNameOpts []SchemaNameOpt, memberOpts []MemberOpt, nullable bool) (bases *BaseStruct, err error) {
 	if _, ok := db.Config.Dialector.(tests.DummyDialector); ok {
 		return nil, fmt.Errorf("UseDB() is necessary to generate model struct [%s] from database table [%s]", modelName, tableName)
 	}
@@ -38,10 +37,10 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 	if err = checkModelName(modelName); err != nil {
 		return nil, fmt.Errorf("model name %q is invalid: %w", modelName, err)
 	}
-	if pkg == "" {
-		pkg = ModelPkg
+	if modelPkg == "" {
+		modelPkg = DefaultModelPkg
 	}
-	pkg = filepath.Base(pkg)
+	modelPkg = filepath.Base(modelPkg)
 	dbName := getSchemaName(db, schemaNameOpts...)
 	columns, err := getTbColumns(db, dbName, tableName)
 	if err != nil {
@@ -54,9 +53,7 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 		StructName:    modelName,
 		NewStructName: uncaptialize(modelName),
 		S:             strings.ToLower(modelName[0:1]),
-		StructInfo:    parser.Param{Type: modelName, Package: pkg},
-
-		Relations: field.Relations{},
+		StructInfo:    parser.Param{Type: modelName, Package: modelPkg},
 	}
 
 	modifyOpts, filterOpts, createOpts := sortOpt(memberOpts)
@@ -77,6 +74,14 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 		m := create.self()(nil)
 
 		if m.Relation != nil {
+			if m.Relation.Model() != nil {
+				stmt := gorm.Statement{DB: db}
+				_ = stmt.Parse(m.Relation.Model())
+				if stmt.Schema != nil {
+					m.Relation.AppendChildRelation(ParseStructRelationShip(&stmt.Schema.Relationships).SingleRelation()...)
+				}
+			}
+			m.Type = strings.ReplaceAll(m.Type, modelPkg+".", "") // remove modelPkg in field's Type, avoid import error
 			base.Relations.Accept(m.Relation)
 		} else { // Relation Field do not need SchemaName convert
 			m.Name = db.NamingStrategy.SchemaName(m.Name)
