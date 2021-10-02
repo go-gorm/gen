@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
+
+	"gorm.io/gen/field"
 )
 
 type Status int
@@ -112,9 +114,17 @@ type Member struct {
 	GORMTag          string
 	NewTag           string
 	OverwriteTag     string
+
+	Relation *field.Relation
 }
 
+func (m *Member) IsRelation() bool { return m.Relation != nil }
+
 func (m *Member) GenType() string {
+	if m.IsRelation() {
+		return m.Type
+	}
+
 	switch m.Type {
 	case "string", "bytes":
 		return strings.Title(m.Type)

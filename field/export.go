@@ -218,6 +218,36 @@ func EmptyExpr() Expr { return expr{e: clause.Expr{}} }
 var AssociationFields Expr = NewString("", clause.Associations)
 var Associations RelationField = NewRelation(clause.Associations, "")
 
-func NewRelation(varName string, varType string, relations ...*Relation) *Relation {
-	return &Relation{varName: varName, path: varName, varType: varType, relations: wrapPath(varName, relations)}
+func NewRelation(fieldName string, fieldType string, relations ...*Relation) *Relation {
+	return &Relation{
+		fieldName:      fieldName,
+		fieldPath:      fieldName,
+		fieldType:      fieldType,
+		childRelations: wrapPath(fieldName, relations),
+	}
+}
+
+func NewRelationWithModel(relationship RelationshipType, fieldName string, fieldType string, fieldModel interface{}, relations ...*Relation) *Relation {
+	return &Relation{
+		relationship: relationship,
+		fieldName:    fieldName,
+		fieldType:    fieldType,
+		fieldPath:    fieldName,
+		fieldModel:   fieldModel,
+	}
+}
+
+func NewRelationAndCopy(relationship RelationshipType, fieldName string, fieldType string, relations ...*Relation) *Relation {
+	copiedRelations := make([]*Relation, len(relations))
+	for i, r := range relations {
+		copy := *r
+		copiedRelations[i] = &copy
+	}
+	return &Relation{
+		relationship:   relationship,
+		fieldName:      fieldName,
+		fieldType:      fieldType,
+		fieldPath:      fieldName,
+		childRelations: wrapPath(fieldName, copiedRelations),
+	}
 }
