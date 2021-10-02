@@ -30,35 +30,15 @@ const (
 	
 		{{if .HasMember}}tableName := _{{.NewStructName}}.{{.NewStructName}}Do.TableName(){{end}}
 		{{range .Members -}}
-		{{if not .IsRelation}}_{{$.NewStructName}}.{{.Name}} = field.New{{.GenType}}(tableName, "{{.ColumnName}}"){{end}}
-		{{end}}
-		{{range .Relations.HasOne}}
-			_{{$.NewStructName}}.{{.Name}} = {{$.NewStructName}}HasOne{{.Name}}{
-			db: db.Session(&gorm.Session{}),
+		{{if not .IsRelation -}}
+			_{{$.NewStructName}}.{{.Name}} = field.New{{.GenType}}(tableName, "{{.ColumnName}}")
+		{{- else -}}
+			_{{$.NewStructName}}.{{.Relation.Name}} = {{$.NewStructName}}{{.Relation.RelationshipName}}{{.Relation.Name}}{
+				db: db.Session(&gorm.Session{}),
 
-			{{.StructMemberInit}}
-		}
+				{{.Relation.StructMemberInit}}
+			}
 		{{end}}
-		{{- range .Relations.HasMany}}
-			_{{$.NewStructName}}.{{.Name}} = {{$.NewStructName}}HasMany{{.Name}}{
-			db: db.Session(&gorm.Session{}),
-
-			{{.StructMemberInit}}
-		}
-		{{end}}
-		{{- range .Relations.BelongsTo}}
-			_{{$.NewStructName}}.{{.Name}} = {{$.NewStructName}}BelongsTo{{.Name}}{
-			db: db.Session(&gorm.Session{}),
-			
-			{{.StructMemberInit}}
-		}
-		{{end}}
-		{{- range .Relations.Many2Many}}
-			_{{$.NewStructName}}.{{.Name}} = {{$.NewStructName}}Many2Many{{.Name}}{
-			db: db.Session(&gorm.Session{}),
-			
-			{{.StructMemberInit}}
-		}
 		{{end}}
 	
 		return _{{.NewStructName}}
@@ -66,19 +46,11 @@ const (
 	`
 	members = `
 	{{range .Members -}}
-	{{if not .IsRelation}}{{.Name}} field.{{.GenType}}{{end}}
+	{{if not .IsRelation -}}
+		{{.Name}} field.{{.GenType}}
+	{{- else -}}
+		{{.Relation.Name}} {{$.NewStructName}}{{.Relation.RelationshipName}}{{.Relation.Name}}
 	{{end}}
-	{{range .Relations.HasOne -}}
-	{{.Name}} {{$.NewStructName}}HasOne{{.Name}}
-	{{end}}
-	{{- range .Relations.HasMany -}}
-	{{.Name}} {{$.NewStructName}}HasMany{{.Name}}
-	{{end}}
-	{{- range .Relations.BelongsTo -}}
-	{{.Name}} {{$.NewStructName}}BelongsTo{{.Name}}
-	{{end}}
-	{{- range .Relations.Many2Many -}}
-	{{.Name}} {{$.NewStructName}}Many2Many{{.Name}}
 	{{end}}
 `
 	cloneMethod = `
@@ -87,29 +59,24 @@ func ({{.S}} {{.NewStructName}}) clone(db *gorm.DB) {{.NewStructName}} {
 	return {{.S}}
 }
 `
-	relationship       = hasOneRelationship + hasManyRelationship + belongsToRelationship + many2ManyRelationship
+	relationship = `{{range .Members}}{{if .IsRelation}}` +
+		`{{- $relation := .Relation }}{{- $relationship := $relation.RelationshipName}}` +
+		relationStruct + relationTx +
+		`{{end}}{{end}}`
 	defineMethodStruct = `type {{.NewStructName}}Do struct { gen.DO }`
 )
 
 const (
-	hasOneRelationship = `{{- $relationship := "HasOne"}}	
-{{range .Relations.HasOne}}` + relationStruct + `{{end}}`
-	hasManyRelationship = `{{- $relationship := "HasMany"}}	
-{{range .Relations.HasMany}}` + relationStruct + `{{end}}`
-	belongsToRelationship = `{{- $relationship := "BelongsTo"}}	
-{{range .Relations.BelongsTo}}` + relationStruct + `{{end}}`
-	many2ManyRelationship = `{{- $relationship := "Many2Many"}}	
-{{range .Relations.Many2Many}}` + relationStruct + `{{end}}`
 	relationStruct = `
-type {{$.NewStructName}}{{$relationship}}{{.Name}} struct{
+type {{$.NewStructName}}{{$relationship}}{{$relation.Name}} struct{
 	db *gorm.DB
 	
 	field.RelationField
 	
-	{{.StructMember}}
+	{{$relation.StructMember}}
 }
 
-func (a {{$.NewStructName}}{{$relationship}}{{.Name}}) Where(conds ...field.Expr) *{{$.NewStructName}}{{$relationship}}{{.Name}} {
+func (a {{$.NewStructName}}{{$relationship}}{{$relation.Name}}) Where(conds ...field.Expr) *{{$.NewStructName}}{{$relationship}}{{$relation.Name}} {
 	if len(conds) == 0 {
 		return &a
 	}
@@ -122,24 +89,24 @@ func (a {{$.NewStructName}}{{$relationship}}{{.Name}}) Where(conds ...field.Expr
 	return &a
 }
 
-func (a {{$.NewStructName}}{{$relationship}}{{.Name}}) WithContext(ctx context.Context) *{{$.NewStructName}}{{$relationship}}{{.Name}} {
+func (a {{$.NewStructName}}{{$relationship}}{{$relation.Name}}) WithContext(ctx context.Context) *{{$.NewStructName}}{{$relationship}}{{$relation.Name}} {
 	a.db = a.db.WithContext(ctx)
 	return &a
 }
 
-func (a {{$.NewStructName}}{{$relationship}}{{.Name}}) Model(m *{{$.StructInfo.Package}}.{{$.StructInfo.Type}}) *{{$.NewStructName}}{{$relationship}}{{.Name}}Tx {
-	return &{{$.NewStructName}}{{$relationship}}{{.Name}}Tx{a.db.Model(m).Association(a.Name())}
+func (a {{$.NewStructName}}{{$relationship}}{{$relation.Name}}) Model(m *{{$.StructInfo.Package}}.{{$.StructInfo.Type}}) *{{$.NewStructName}}{{$relationship}}{{$relation.Name}}Tx {
+	return &{{$.NewStructName}}{{$relationship}}{{$relation.Name}}Tx{a.db.Model(m).Association(a.Name())}
 }
 
-` + relationTx
+`
 	relationTx = `
-type {{$.NewStructName}}{{$relationship}}{{.Name}}Tx struct{ tx *gorm.Association }
+type {{$.NewStructName}}{{$relationship}}{{$relation.Name}}Tx struct{ tx *gorm.Association }
 
-func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Find() (result {{if eq $relationship "HasMany" "Many2Many"}}[]{{end}}*{{.Type}}, err error) {
+func (a {{$.NewStructName}}{{$relationship}}{{$relation.Name}}Tx) Find() (result {{if eq $relationship "HasMany" "Many2Many"}}[]{{end}}*{{$relation.Type}}, err error) {
 	return result, a.tx.Find(&result)
 }
 
-func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Append(values ...*{{.Type}}) (err error) {
+func (a {{$.NewStructName}}{{$relationship}}{{$relation.Name}}Tx) Append(values ...*{{$relation.Type}}) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -147,7 +114,7 @@ func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Append(values ...*{{.Ty
 	return a.tx.Append(targetValues...)
 }
 
-func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Replace(values ...*{{.Type}}) (err error) {
+func (a {{$.NewStructName}}{{$relationship}}{{$relation.Name}}Tx) Replace(values ...*{{$relation.Type}}) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -155,7 +122,7 @@ func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Replace(values ...*{{.T
 	return a.tx.Replace(targetValues...)
 }
 
-func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Delete(values ...*{{.Type}}) (err error) {
+func (a {{$.NewStructName}}{{$relationship}}{{$relation.Name}}Tx) Delete(values ...*{{$relation.Type}}) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -163,11 +130,11 @@ func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Delete(values ...*{{.Ty
 	return a.tx.Delete(targetValues...)
 }
 
-func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Clear() error {
+func (a {{$.NewStructName}}{{$relationship}}{{$relation.Name}}Tx) Clear() error {
 	return a.tx.Clear()
 }
 
-func (a {{$.NewStructName}}{{$relationship}}{{.Name}}Tx) Count() int64 {
+func (a {{$.NewStructName}}{{$relationship}}{{$relation.Name}}Tx) Count() int64 {
 	return a.tx.Count()
 }
 `
