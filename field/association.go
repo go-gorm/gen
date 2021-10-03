@@ -17,31 +17,7 @@ const (
 	Many2Many RelationshipType = RelationshipType(schema.Many2Many) // Many2ManyRel many to many relationship
 )
 
-type Relations struct {
-	HasOne    []*Relation
-	BelongsTo []*Relation
-	HasMany   []*Relation
-	Many2Many []*Relation
-}
-
-func (r *Relations) Accept(relations ...*Relation) {
-	for _, relation := range relations {
-		switch relation.Relationship() {
-		case HasOne:
-			r.HasOne = append(r.HasOne, relation)
-		case HasMany:
-			r.HasMany = append(r.HasMany, relation)
-		case BelongsTo:
-			r.BelongsTo = append(r.BelongsTo, relation)
-		case Many2Many:
-			r.Many2Many = append(r.Many2Many, relation)
-		}
-	}
-}
-
-func (r *Relations) SingleRelation() []*Relation {
-	return append(append(append(append(make([]*Relation, 0, 4), r.HasOne...), r.BelongsTo...), r.HasMany...), r.Many2Many...)
-}
+var ns = schema.NamingStrategy{}
 
 type RelationField interface {
 	Name() string
@@ -65,7 +41,7 @@ type Relation struct {
 	fieldPath  string
 	fieldModel interface{} // store relaiton model
 
-	childRelations []*Relation
+	childRelations []Relation
 
 	conds   []Expr
 	order   []Expr
@@ -82,6 +58,10 @@ func (r Relation) Model() interface{} { return r.fieldModel }
 
 func (r Relation) Relationship() RelationshipType { return r.relationship }
 
+func (r Relation) RelationshipName() string { return ns.SchemaName(string(r.relationship)) }
+
+func (r Relation) ChildRelations() []Relation { return r.childRelations }
+
 func (r Relation) Field(member ...string) Expr {
 	if len(member) > 0 {
 		return NewString("", r.fieldName+"."+strings.Join(member, ".")).appendBuildOpts(WithoutQuote)
@@ -89,7 +69,7 @@ func (r Relation) Field(member ...string) Expr {
 	return NewString("", r.fieldName).appendBuildOpts(WithoutQuote)
 }
 
-func (r *Relation) AppendChildRelation(relations ...*Relation) {
+func (r *Relation) AppendChildRelation(relations ...Relation) {
 	r.childRelations = append(r.childRelations, wrapPath(r.fieldPath, relations)...)
 }
 
@@ -131,12 +111,14 @@ func (r *Relation) StructMemberInit() string {
 	return initStr
 }
 
-func wrapPath(root string, rs []*Relation) []*Relation {
-	for _, r := range rs {
+func wrapPath(root string, rs []Relation) []Relation {
+	result := make([]Relation, len(rs))
+	for i, r := range rs {
 		r.fieldPath = root + "." + r.fieldPath
 		r.childRelations = wrapPath(root, r.childRelations)
+		result[i] = r
 	}
-	return rs
+	return result
 }
 
 var defaultRelationshipPrefix = map[RelationshipType]string{

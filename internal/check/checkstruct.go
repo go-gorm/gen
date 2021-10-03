@@ -24,8 +24,6 @@ type BaseStruct struct {
 	StructInfo    parser.Param
 	Members       []*Member
 	Source        sourceCode
-
-	Relations field.Relations
 }
 
 // parseStruct get all elements of struct with gorm's Parse, ignore unexported elements
@@ -44,9 +42,9 @@ func (b *BaseStruct) parseStruct(st interface{}) error {
 			ColumnName: f.DBName,
 		}))
 	}
-
-	b.Relations = *ParseStructRelationShip(&stmt.Schema.Relationships)
-
+	for _, r := range ParseStructRelationShip(&stmt.Schema.Relationships) {
+		b.appendOrUpdateMember(&Member{Relation: &r})
+	}
 	return nil
 }
 
@@ -74,6 +72,9 @@ func (b *BaseStruct) ReviseMemberName() {
 
 // check member if in BaseStruct update else append
 func (b *BaseStruct) appendOrUpdateMember(member *Member) {
+	if member.IsRelation() {
+		b.appendMember(member)
+	}
 	if member.ColumnName == "" {
 		return
 	}
@@ -83,6 +84,10 @@ func (b *BaseStruct) appendOrUpdateMember(member *Member) {
 			return
 		}
 	}
+	b.appendMember(member)
+}
+
+func (b *BaseStruct) appendMember(member *Member) {
 	b.Members = append(b.Members, member)
 }
 
@@ -101,6 +106,16 @@ func (b *BaseStruct) check() (err error) {
 	return nil
 }
 
+func (b *BaseStruct) Relations() []field.Relation {
+	result := make([]field.Relation, 0, 4)
+	for _, m := range b.Members {
+		if m.IsRelation() {
+			result = append(result, *m.Relation)
+		}
+	}
+	return result
+}
+
 func GetStructNames(bases []*BaseStruct) (res []string) {
 	for _, base := range bases {
 		res = append(res, base.StructName)
@@ -115,23 +130,24 @@ func isStructType(data reflect.Value) bool {
 
 // ParseStructRelationShip parse struct's relationship
 // No one should use it directly in project
-func ParseStructRelationShip(relationship *schema.Relationships) *field.Relations {
+func ParseStructRelationShip(relationship *schema.Relationships) []field.Relation {
 	cache := make(map[string]bool)
-	return &field.Relations{
-		HasOne:    pullRelationShip(cache, relationship.HasOne),
-		BelongsTo: pullRelationShip(cache, relationship.BelongsTo),
-		HasMany:   pullRelationShip(cache, relationship.HasMany),
-		Many2Many: pullRelationShip(cache, relationship.Many2Many),
-	}
+	return append(append(append(append(
+		make([]field.Relation, 0, 4),
+		pullRelationShip(cache, relationship.HasOne)...),
+		pullRelationShip(cache, relationship.HasMany)...),
+		pullRelationShip(cache, relationship.BelongsTo)...),
+		pullRelationShip(cache, relationship.Many2Many)...,
+	)
 }
 
-func pullRelationShip(cache map[string]bool, relationships []*schema.Relationship) []*field.Relation {
+func pullRelationShip(cache map[string]bool, relationships []*schema.Relationship) []field.Relation {
 	if len(relationships) == 0 {
 		return nil
 	}
-	result := make([]*field.Relation, len(relationships))
+	result := make([]field.Relation, len(relationships))
 	for i, relationship := range relationships {
-		var childRelations []*field.Relation
+		var childRelations []field.Relation
 		varType := strings.TrimLeft(relationship.Field.FieldType.String(), "[]*")
 		if !cache[varType] {
 			cache[varType] = true
@@ -143,7 +159,7 @@ func pullRelationShip(cache map[string]bool, relationships []*schema.Relationshi
 				relationship.FieldSchema.Relationships.Many2Many...),
 			)
 		}
-		result[i] = field.NewRelation(relationship.Name, varType, childRelations...)
+		result[i] = *field.NewRelation(relationship.Name, varType, childRelations...)
 	}
 	return result
 }

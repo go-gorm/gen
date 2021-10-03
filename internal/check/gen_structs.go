@@ -78,11 +78,10 @@ func GenBaseStructs(db *gorm.DB, modelPkg, tableName, modelName string, schemaNa
 				stmt := gorm.Statement{DB: db}
 				_ = stmt.Parse(m.Relation.Model())
 				if stmt.Schema != nil {
-					m.Relation.AppendChildRelation(ParseStructRelationShip(&stmt.Schema.Relationships).SingleRelation()...)
+					m.Relation.AppendChildRelation(ParseStructRelationShip(&stmt.Schema.Relationships)...)
 				}
 			}
 			m.Type = strings.ReplaceAll(m.Type, modelPkg+".", "") // remove modelPkg in field's Type, avoid import error
-			base.Relations.Accept(m.Relation)
 		} else { // Relation Field do not need SchemaName convert
 			m.Name = db.NamingStrategy.SchemaName(m.Name)
 		}
