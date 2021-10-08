@@ -186,7 +186,7 @@ func (m *InterfaceMethod) checkResult(result []parser.Param) (err error) {
 			m.ResultData = param
 		case param.IsInterface():
 			return fmt.Errorf("query method can not return interface in [%s.%s]", m.InterfaceName, m.MethodName)
-		case param.IsGenR():
+		case param.IsGenRowsAffected():
 			param.Type = "int64"
 			param.Package = ""
 			param.SetName("rowsAffected")
