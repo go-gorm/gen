@@ -1122,7 +1122,7 @@ customer := g.GenerateModel("customers", gen.FieldRelate(field.HasMany, "CreditC
 g.ApplyBasic(card, custormer)
 ```
 
-GEN will generate models with related field:
+GEN will generate models with associated field:
 
 ```go
 // customers
@@ -1143,6 +1143,19 @@ type CreditCard struct {
     DeletedAt     gorm.DeletedAt `gorm:"column:deleted_at;type:datetime(3)" json:"deleted_at"`
     CustomerRefer int64          `gorm:"column:customer_refer;type:bigint(20) unsigned" json:"customer_refer"`
 }
+```
+
+If associated model already exists, `gen.FieldRelateModel` can help you build associations between them.
+
+```go
+customer := g.GenerateModel("customers", gen.FieldRelateModel(field.HasMany, "CreditCards", model.CreditCard{}, 
+    &field.RelateConfig{
+        // RelateSlice: true,
+        GORMTag: "foreignKey:CustomerRefer",
+    }),
+)
+
+g.ApplyBasic(custormer)
 ```
 
 ###### Relate Config
