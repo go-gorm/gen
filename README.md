@@ -63,7 +63,20 @@ A safer orm base on [GORM](https://github.com/go-gorm/gorm), aims to be develope
           - [Nested Transactions](#nested-transactions)
           - [Transactions by manual](#transactions-by-manual)
           - [SavePoint/RollbackTo](#savepointrollbackto)
-        - [Association](#association)
+        - [Advanced Query](#advanced-query)
+          - [Iteration](#iteration)
+          - [FindInBatches](#findinbatches)
+          - [Pluck](#pluck)
+          - [Scopes](#scopes)
+          - [Count](#count)
+          - [FirstOrInit](#firstorinit)
+          - [FirstOrCreate](#firstorcreate)
+      - [Association](#association)
+        - [Relation](#relation)
+          - [Relate to exist model](#relate-to-exist-model)
+          - [Relate to table in database](#relate-to-table-in-database)
+          - [Relate Config](#relate-config)
+        - [Operation](#operation)
           - [Skip Auto Create/Update](#skip-auto-createupdate)
           - [Find Associations](#find-associations)
           - [Append Associations](#append-associations)
@@ -77,14 +90,6 @@ A safer orm base on [GORM](https://github.com/go-gorm/gorm), aims to be develope
           - [Preload All](#preload-all)
           - [Preload with conditions](#preload-with-conditions)
           - [Nested Preloading](#nested-preloading)
-        - [Advanced Query](#advanced-query)
-          - [Iteration](#iteration)
-          - [FindInBatches](#findinbatches)
-          - [Pluck](#pluck)
-          - [Scopes](#scopes)
-          - [Count](#count)
-          - [FirstOrInit](#firstorinit)
-          - [FirstOrCreate](#firstorcreate)
       - [Update](#update)
         - [Update single column](#update-single-column)
         - [Updates multiple columns](#updates-multiple-columns)
@@ -217,6 +222,7 @@ g.GenerateModel("people", gen.FieldIgnore("address"), gen.FieldType("id", "int64
 Field Generate **Options**
 
 ```go
+FieldNew         // create new field
 FieldIgnore      // ignore field
 FieldIgnoreReg   // ignore field (match with regexp)
 FieldRename      // rename field in struct
@@ -230,6 +236,8 @@ FieldTrimPrefix  // trim column prefix
 FieldTrimSuffix  // trim column suffix
 FieldAddPrefix   // add prefix to struct member's name
 FieldAddSuffix   // add suffix to struct member's name
+FieldRelate      // specify relationship with other tables
+FieldRelateModel // specify relationship with exist models
 ```
 
 ### Field Expression
@@ -820,10 +828,340 @@ tx.RollbackTo("sp1") // Rollback user2
 tx.Commit() // Commit user1
 ```
 
-##### Association
+##### Advanced Query
+
+###### Iteration
+
+GEN supports iterating through Rows
+
+```go
+u := query.Use(db).User
+do := u.WithContext(ctx)
+rows, err := do.Where(u.Name.Eq("modi")).Rows()
+defer rows.Close()
+
+for rows.Next() {
+    var user User
+    // ScanRows is a method of `gorm.DB`, it can be used to scan a row into a struct
+    do.ScanRows(rows, &user)
+
+    // do something
+}
+```
+
+###### FindInBatches
+
+Query and process records in batch
+
+```go
+u := query.Use(db).User
+
+// batch size 100
+err := u.WithContext(ctx).Where(u.ID.Gt(9)).FindInBatches(&results, 100, func(tx gen.Dao, batch int) error {
+    for _, result := range results {
+      // batch processing found records
+    }
+  
+    // build a new `u` to use it's api
+    // queryUsery := query.NewUser(tx.UnderlyingDB())
+
+    tx.Save(&results)
+
+    batch // Batch 1, 2, 3
+
+    // returns error will stop future batches
+    return nil
+})
+```
+
+###### Pluck
+
+Query single column from database and scan into a slice, if you want to query multiple columns, use `Select` with `Scan` instead
+
+```go
+u := query.Use(db).User
+
+var ages []int64
+u.WithContext(ctx).Pluck(u.Age, &ages)
+
+var names []string
+u.WithContext(ctx).Pluck(u.Name, &names)
+
+// Distinct Pluck
+u.WithContext(ctx).Distinct().Pluck(u.Name, &names)
+// SELECT DISTINCT `name` FROM `users`
+
+// Requesting more than one column, use `Scan` or `Find` like this:
+db.WithContext(ctx).Select(u.Name, u.Age).Scan(&users)
+users, err := db.Select(u.Name, u.Age).Find()
+```
+
+###### Scopes
+
+`Scopes` allows you to specify commonly-used queries which can be referenced as method calls
+
+```go
+o := query.Use(db).Order
+
+func AmountGreaterThan1000(tx gen.Dao) gen.Dao {
+    return tx.Where(o.Amount.Gt(1000))
+}
+
+func PaidWithCreditCard(tx gen.Dao) gen.Dao {
+    return tx.Where(o.PayModeSign.Eq("C"))
+}
+
+func PaidWithCod(tx gen.Dao) gen.Dao {
+    return tx.Where(o.PayModeSign.Eq("C"))
+}
+
+func OrderStatus(status []string) func (tx gen.Dao) gen.Dao {
+    return func (tx gen.Dao) gen.Dao {
+      return tx.Where(o.Status.In(status...))
+    }
+}
+
+orders, err := o.WithContext(ctx).Scopes(AmountGreaterThan1000, PaidWithCreditCard).Find()
+// Find all credit card orders and amount greater than 1000
+
+orders, err := o.WithContext(ctx).Scopes(AmountGreaterThan1000, PaidWithCod).Find()
+// Find all COD orders and amount greater than 1000
+
+orders, err := o.WithContext(ctx).Scopes(AmountGreaterThan1000, OrderStatus([]string{"paid", "shipped"})).Find()
+// Find all paid, shipped orders that amount greater than 1000
+```
+
+###### Count
+
+Get matched records count
+
+```go
+u := query.Use(db).User
+
+count, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Or(u.Name.Eq("zhangqiang")).Count()
+// SELECT count(1) FROM users WHERE name = 'modi' OR name = 'zhangqiang'
+
+count, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Count()
+// SELECT count(1) FROM users WHERE name = 'modi'; (count)
+
+// Count with Distinct
+u.WithContext(ctx).Distinct(u.Name).Count()
+// SELECT COUNT(DISTINCT(`name`)) FROM `users`
+```
+
+###### FirstOrInit
+
+Get first matched record or initialize a new instance with given conditions
+
+```go
+u := query.Use(db).User
+
+// User not found, initialize it with give conditions
+user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).FirstOrInit()
+// user -> User{Name: "non_existing"}
+
+// Found user with `name` = `modi`
+user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).FirstOrInit()
+// user -> User{ID: 1, Name: "modi", Age: 17}
+```
+
+initialize struct with more attributes if record not found, those `Attrs` won’t be used to build SQL query
+
+```go
+u := query.Use(db).User
+
+// User not found, initialize it with give conditions and Attrs
+user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).Attrs(u.Age.Value(20)).FirstOrInit()
+// SELECT * FROM USERS WHERE name = 'non_existing' ORDER BY id LIMIT 1;
+// user -> User{Name: "non_existing", Age: 20}
+
+// User not found, initialize it with give conditions and Attrs
+user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).Attrs(u.Age.Value(20)).FirstOrInit()
+// SELECT * FROM USERS WHERE name = 'non_existing' ORDER BY id LIMIT 1;
+// user -> User{Name: "non_existing", Age: 20}
+
+// Found user with `name` = `modi`, attributes will be ignored
+user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Attrs(u.Age.Value(20)).FirstOrInit()
+// SELECT * FROM USERS WHERE name = modi' ORDER BY id LIMIT 1;
+// user -> User{ID: 1, Name: "modi", Age: 17}
+```
+
+`Assign` attributes to struct regardless it is found or not, those attributes won’t be used to build SQL query and the final data won’t be saved into database
+
+```go
+// User not found, initialize it with give conditions and Assign attributes
+user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).Assign(u.Age.Value(20)).FirstOrInit()
+// user -> User{Name: "non_existing", Age: 20}
+
+// Found user with `name` = `modi`, update it with Assign attributes
+user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Assign(u.Age.Value(20)).FirstOrInit()
+// SELECT * FROM USERS WHERE name = modi' ORDER BY id LIMIT 1;
+// user -> User{ID: 111, Name: "modi", Age: 20}
+```
+
+###### FirstOrCreate
+
+Get first matched record or create a new one with given conditions
+
+```go
+u := query.Use(db).User
+
+// User not found, create a new record with give conditions
+user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).FirstOrCreate()
+// INSERT INTO "users" (name) VALUES ("non_existing");
+// user -> User{ID: 112, Name: "non_existing"}
+
+// Found user with `name` = `modi`
+user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).FirstOrCreate()
+// user -> User{ID: 111, Name: "modi", "Age": 18}
+```
+
+Create struct with more attributes if record not found, those `Attrs` won’t be used to build SQL query
+
+```go
+u := query.Use(db).User
+
+// User not found, create it with give conditions and Attrs
+user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).Attrs(u.Age.Value(20)).FirstOrCreate()
+// SELECT * FROM users WHERE name = 'non_existing' ORDER BY id LIMIT 1;
+// INSERT INTO "users" (name, age) VALUES ("non_existing", 20);
+// user -> User{ID: 112, Name: "non_existing", Age: 20}
+
+// Found user with `name` = `modi`, attributes will be ignored
+user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Attrs(u.Age.Value(20)).FirstOrCreate()
+// SELECT * FROM users WHERE name = 'modi' ORDER BY id LIMIT 1;
+// user -> User{ID: 111, Name: "modi", Age: 18}
+```
+
+`Assign` attributes to the record regardless it is found or not and save them back to the database.
+
+```go
+u := query.Use(db).User
+
+// User not found, initialize it with give conditions and Assign attributes
+user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).Assign(u.Age.Value(20)).FirstOrCreate()
+// SELECT * FROM users WHERE name = 'non_existing' ORDER BY id LIMIT 1;
+// INSERT INTO "users" (name, age) VALUES ("non_existing", 20);
+// user -> User{ID: 112, Name: "non_existing", Age: 20}
+
+// Found user with `name` = `modi`, update it with Assign attributes
+user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Assign(u.Age.Value(20)).FirstOrCreate(&user)
+// SELECT * FROM users WHERE name = 'modi' ORDER BY id LIMIT 1;
+// UPDATE users SET age=20 WHERE id = 111;
+// user -> User{ID: 111, Name: "modi", Age: 20}
+```
+
+#### Association
 
 GEN will auto-save associations as GORM do. The relationships (BelongsTo/HasOne/HasMany/Many2Many) reuse GORM's tag.
 This feature only support exist model for now.
+
+##### Relation
+
+There are 4 kind of relationship.
+
+```go
+const (
+    HasOne    RelationshipType = RelationshipType(schema.HasOne)    // HasOneRel has one relationship
+    HasMany   RelationshipType = RelationshipType(schema.HasMany)   // HasManyRel has many relationships
+    BelongsTo RelationshipType = RelationshipType(schema.BelongsTo) // BelongsToRel belongs to relationship
+    Many2Many RelationshipType = RelationshipType(schema.Many2Many) // Many2ManyRel many to many relationship
+)
+```
+
+###### Relate to exist model
+
+```go
+package model
+
+// exist model
+type Customer struct {
+    gorm.Model
+    CreditCards []CreditCard `gorm:"foreignKey:CustomerRefer"`
+}
+
+type CreditCard struct {
+    gorm.Model
+    Number        string
+    CustomerRefer uint
+}
+```
+
+GEN will detect model's associations:
+
+```go
+// specify model
+g.ApplyBasic(model.Customer{}, model.CreditCard{})
+
+// assoications will be detected and converted to code 
+package query
+
+type customer struct {
+    ...
+    CreditCards customerHasManyCreditCards
+}
+
+type creditCard struct{
+    ...
+}
+```
+
+###### Relate to table in database
+
+The association have to be speified by `gen.FieldRelate`
+
+```go
+card := g.GenerateModel("credit_cards")
+customer := g.GenerateModel("customers", gen.FieldRelate(field.HasMany, "CreditCards", b, 
+    &field.RelateConfig{
+        // RelateSlice: true,
+        GORMTag: "foreignKey:CustomerRefer",
+    }),
+)
+
+g.ApplyBasic(card, custormer)
+```
+
+GEN will generate models with related field:
+
+```go
+// customers
+type Customer struct {
+    ID          int64          `gorm:"column:id;type:bigint(20) unsigned;primaryKey" json:"id"`
+    CreatedAt   time.Time      `gorm:"column:created_at;type:datetime(3)" json:"created_at"`
+    UpdatedAt   time.Time      `gorm:"column:updated_at;type:datetime(3)" json:"updated_at"`
+    DeletedAt   gorm.DeletedAt `gorm:"column:deleted_at;type:datetime(3)" json:"deleted_at"`
+    CreditCards []CreditCard   `gorm:"foreignKey:CustomerRefer" json:"credit_cards"`
+}
+
+
+// credit_cards
+type CreditCard struct {
+    ID            int64          `gorm:"column:id;type:bigint(20) unsigned;primaryKey" json:"id"`
+    CreatedAt     time.Time      `gorm:"column:created_at;type:datetime(3)" json:"created_at"`
+    UpdatedAt     time.Time      `gorm:"column:updated_at;type:datetime(3)" json:"updated_at"`
+    DeletedAt     gorm.DeletedAt `gorm:"column:deleted_at;type:datetime(3)" json:"deleted_at"`
+    CustomerRefer int64          `gorm:"column:customer_refer;type:bigint(20) unsigned" json:"customer_refer"`
+}
+```
+
+###### Relate Config
+
+```go
+type RelateConfig struct {
+    // specify field's type
+    RelatePointer      bool // ex: CreditCard  *CreditCard
+    RelateSlice        bool // ex: CreditCards []CreditCard
+    RelateSlicePointer bool // ex: CreditCards []*CreditCard
+
+    JSONTag      string // related field's JSON tag
+    GORMTag      string // related field's GORM tag
+    NewTag       string // related field's new tag
+    OverwriteTag string // related field's tag
+}
+```
+
+##### Operation
 
 ###### Skip Auto Create/Update
 
@@ -1048,229 +1386,6 @@ db.Preload(u.Orders.OrderItems.Product).Preload(u.CreditCard).Find(&users)
 db.Preload(u.Orders.On(o.State.Eq("paid"))).Preload(u.Orders.OrderItems).Find(&users)
 ```
 
-##### Advanced Query
-
-###### Iteration
-
-GEN supports iterating through Rows
-
-```go
-u := query.Use(db).User
-do := u.WithContext(ctx)
-rows, err := do.Where(u.Name.Eq("modi")).Rows()
-defer rows.Close()
-
-for rows.Next() {
-    var user User
-    // ScanRows is a method of `gorm.DB`, it can be used to scan a row into a struct
-    do.ScanRows(rows, &user)
-
-    // do something
-}
-```
-
-###### FindInBatches
-
-Query and process records in batch
-
-```go
-u := query.Use(db).User
-
-// batch size 100
-err := u.WithContext(ctx).Where(u.ID.Gt(9)).FindInBatches(&results, 100, func(tx gen.Dao, batch int) error {
-    for _, result := range results {
-      // batch processing found records
-    }
-  
-    // build a new `u` to use it's api
-    // queryUsery := query.NewUser(tx.UnderlyingDB())
-
-    tx.Save(&results)
-
-    batch // Batch 1, 2, 3
-
-    // returns error will stop future batches
-    return nil
-})
-```
-
-###### Pluck
-
-Query single column from database and scan into a slice, if you want to query multiple columns, use `Select` with `Scan` instead
-
-```go
-u := query.Use(db).User
-
-var ages []int64
-u.WithContext(ctx).Pluck(u.Age, &ages)
-
-var names []string
-u.WithContext(ctx).Pluck(u.Name, &names)
-
-// Distinct Pluck
-u.WithContext(ctx).Distinct().Pluck(u.Name, &names)
-// SELECT DISTINCT `name` FROM `users`
-
-// Requesting more than one column, use `Scan` or `Find` like this:
-db.WithContext(ctx).Select(u.Name, u.Age).Scan(&users)
-users, err := db.Select(u.Name, u.Age).Find()
-```
-
-###### Scopes
-
-`Scopes` allows you to specify commonly-used queries which can be referenced as method calls
-
-```go
-o := query.Use(db).Order
-
-func AmountGreaterThan1000(tx gen.Dao) gen.Dao {
-    return tx.Where(o.Amount.Gt(1000))
-}
-
-func PaidWithCreditCard(tx gen.Dao) gen.Dao {
-    return tx.Where(o.PayModeSign.Eq("C"))
-}
-
-func PaidWithCod(tx gen.Dao) gen.Dao {
-    return tx.Where(o.PayModeSign.Eq("C"))
-}
-
-func OrderStatus(status []string) func (tx gen.Dao) gen.Dao {
-    return func (tx gen.Dao) gen.Dao {
-      return tx.Where(o.Status.In(status...))
-    }
-}
-
-orders, err := o.WithContext(ctx).Scopes(AmountGreaterThan1000, PaidWithCreditCard).Find()
-// Find all credit card orders and amount greater than 1000
-
-orders, err := o.WithContext(ctx).Scopes(AmountGreaterThan1000, PaidWithCod).Find()
-// Find all COD orders and amount greater than 1000
-
-orders, err := o.WithContext(ctx).Scopes(AmountGreaterThan1000, OrderStatus([]string{"paid", "shipped"})).Find()
-// Find all paid, shipped orders that amount greater than 1000
-```
-
-###### Count
-
-Get matched records count
-
-```go
-u := query.Use(db).User
-
-count, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Or(u.Name.Eq("zhangqiang")).Count()
-// SELECT count(1) FROM users WHERE name = 'modi' OR name = 'zhangqiang'
-
-count, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Count()
-// SELECT count(1) FROM users WHERE name = 'modi'; (count)
-
-// Count with Distinct
-u.WithContext(ctx).Distinct(u.Name).Count()
-// SELECT COUNT(DISTINCT(`name`)) FROM `users`
-```
-
-###### FirstOrInit
-
-Get first matched record or initialize a new instance with given conditions
-
-```go
-u := query.Use(db).User
-
-// User not found, initialize it with give conditions
-user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).FirstOrInit()
-// user -> User{Name: "non_existing"}
-
-// Found user with `name` = `modi`
-user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).FirstOrInit()
-// user -> User{ID: 1, Name: "modi", Age: 17}
-```
-
-initialize struct with more attributes if record not found, those `Attrs` won’t be used to build SQL query
-
-```go
-u := query.Use(db).User
-
-// User not found, initialize it with give conditions and Attrs
-user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).Attrs(u.Age.Value(20)).FirstOrInit()
-// SELECT * FROM USERS WHERE name = 'non_existing' ORDER BY id LIMIT 1;
-// user -> User{Name: "non_existing", Age: 20}
-
-// User not found, initialize it with give conditions and Attrs
-user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).Attrs(u.Age.Value(20)).FirstOrInit()
-// SELECT * FROM USERS WHERE name = 'non_existing' ORDER BY id LIMIT 1;
-// user -> User{Name: "non_existing", Age: 20}
-
-// Found user with `name` = `modi`, attributes will be ignored
-user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Attrs(u.Age.Value(20)).FirstOrInit()
-// SELECT * FROM USERS WHERE name = modi' ORDER BY id LIMIT 1;
-// user -> User{ID: 1, Name: "modi", Age: 17}
-```
-
-`Assign` attributes to struct regardless it is found or not, those attributes won’t be used to build SQL query and the final data won’t be saved into database
-
-```go
-// User not found, initialize it with give conditions and Assign attributes
-user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).Assign(u.Age.Value(20)).FirstOrInit()
-// user -> User{Name: "non_existing", Age: 20}
-
-// Found user with `name` = `modi`, update it with Assign attributes
-user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Assign(u.Age.Value(20)).FirstOrInit()
-// SELECT * FROM USERS WHERE name = modi' ORDER BY id LIMIT 1;
-// user -> User{ID: 111, Name: "modi", Age: 20}
-```
-
-###### FirstOrCreate
-
-Get first matched record or create a new one with given conditions
-
-```go
-u := query.Use(db).User
-
-// User not found, create a new record with give conditions
-user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).FirstOrCreate()
-// INSERT INTO "users" (name) VALUES ("non_existing");
-// user -> User{ID: 112, Name: "non_existing"}
-
-// Found user with `name` = `modi`
-user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).FirstOrCreate()
-// user -> User{ID: 111, Name: "modi", "Age": 18}
-```
-
-Create struct with more attributes if record not found, those `Attrs` won’t be used to build SQL query
-
-```go
-u := query.Use(db).User
-
-// User not found, create it with give conditions and Attrs
-user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).Attrs(u.Age.Value(20)).FirstOrCreate()
-// SELECT * FROM users WHERE name = 'non_existing' ORDER BY id LIMIT 1;
-// INSERT INTO "users" (name, age) VALUES ("non_existing", 20);
-// user -> User{ID: 112, Name: "non_existing", Age: 20}
-
-// Found user with `name` = `modi`, attributes will be ignored
-user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Attrs(u.Age.Value(20)).FirstOrCreate()
-// SELECT * FROM users WHERE name = 'modi' ORDER BY id LIMIT 1;
-// user -> User{ID: 111, Name: "modi", Age: 18}
-```
-
-`Assign` attributes to the record regardless it is found or not and save them back to the database.
-
-```go
-u := query.Use(db).User
-
-// User not found, initialize it with give conditions and Assign attributes
-user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).Assign(u.Age.Value(20)).FirstOrCreate()
-// SELECT * FROM users WHERE name = 'non_existing' ORDER BY id LIMIT 1;
-// INSERT INTO "users" (name, age) VALUES ("non_existing", 20);
-// user -> User{ID: 112, Name: "non_existing", Age: 20}
-
-// Found user with `name` = `modi`, update it with Assign attributes
-user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Assign(u.Age.Value(20)).FirstOrCreate(&user)
-// SELECT * FROM users WHERE name = 'modi' ORDER BY id LIMIT 1;
-// UPDATE users SET age=20 WHERE id = 111;
-// user -> User{ID: 111, Name: "modi", Age: 20}
-```
-
 #### Update
 
 ##### Update single column
@@ -1440,7 +1555,7 @@ Method interface supports descriptive comment that describes how the method work
 type Method interface {
     // where("name=@name and age=@age")
     SimpleFindByNameAndAge(name string, age int) (gen.T, error)
-	
+
     // FindUserToMap query by id and return id->instance
     // 
     // sql(select * from users where id=@id)
