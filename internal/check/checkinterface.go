@@ -16,22 +16,21 @@ type slice struct {
 
 // InterfaceMethod interface's method
 type InterfaceMethod struct {
-	Doc           string
-	S             string
-	OriginStruct  parser.Param
-	TargetStruct  string
-	MethodName    string
-	Params        []parser.Param
-	Result        []parser.Param
-	ResultData    parser.Param
-	ExecuteResult string
-	SqlTmplList   []string
-	SqlData       []string
-	SqlString     string
-	GormOption    string
-	Table         string // specified by user. if empty, generate it with gorm
-	InterfaceName string
-	Package       string
+	Doc           string         //comment
+	S             string         //First letter of
+	OriginStruct  parser.Param   // origin struct name
+	TargetStruct  string         // generated query struct bane
+	MethodName    string         // generated function name
+	Params        []parser.Param // function input params
+	Result        []parser.Param // function output params
+	ResultData    parser.Param   // output data
+	SqlTmplList   []string       // generated function content
+	SqlData       []string       // variable in sql need function input
+	SqlString     string         // SQL
+	GormOption    string         // gorm execute method Find or Exec or Take
+	Table         string         // specified by user. if empty, generate it with gorm
+	InterfaceName string         // origin interface name
+	Package       string         // interface package name
 }
 
 // HasSqlData has variable or not
@@ -55,6 +54,24 @@ func (m *InterfaceMethod) GormRunMethodName() string {
 		return "Find"
 	}
 	return "Take"
+}
+
+func (m *InterfaceMethod) ReturnRowsAffected() bool {
+	for _, res := range m.Result {
+		if res.Name == "rowsAffected" {
+			return true
+		}
+	}
+	return false
+}
+
+func (m *InterfaceMethod) ReturnError() bool {
+	for _, res := range m.Result {
+		if res.IsError() {
+			return true
+		}
+	}
+	return false
 }
 
 // IsRepeatFromDifferentInterface check different interface has same mame method
@@ -157,7 +174,6 @@ func (m *InterfaceMethod) checkResult(result []parser.Param) (err error) {
 				return fmt.Errorf("query method cannot return more than 1 error value in [%s.%s]", m.InterfaceName, m.MethodName)
 			}
 			param.SetName("err")
-			m.ExecuteResult = "err"
 			hasError = true
 		case param.Eq(m.OriginStruct) || param.IsGenT():
 			if !m.ResultData.IsNull() {
@@ -170,6 +186,11 @@ func (m *InterfaceMethod) checkResult(result []parser.Param) (err error) {
 			m.ResultData = param
 		case param.IsInterface():
 			return fmt.Errorf("query method can not return interface in [%s.%s]", m.InterfaceName, m.MethodName)
+		case param.IsGenR():
+			param.Type = "int64"
+			param.Package = ""
+			param.SetName("rowsAffected")
+			m.GormOption = "Exec"
 		default:
 			if !m.ResultData.IsNull() {
 				return fmt.Errorf("query method cannot return more than 1 data value in [%s.%s]", m.InterfaceName, m.MethodName)
