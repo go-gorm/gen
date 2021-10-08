@@ -85,6 +85,12 @@ func (e expr) BuildColumn(stmt *gorm.Statement, opts ...BuildOpt) sql {
 			col.Raw = true
 		}
 	}
+	if col.Name == "*" {
+		if col.Table != "" {
+			return sql(stmt.Quote(col.Table)) + ".*"
+		}
+		return "*"
+	}
 	if col.Table != "" && col.Raw {
 		return sql(col.Table + "." + col.Name)
 	}
