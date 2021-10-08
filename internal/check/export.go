@@ -57,7 +57,6 @@ func CheckInterface(f *parser.InterfaceSet, s *BaseStruct, data []*InterfaceMeth
 					MethodName:    method.MethodName,
 					Params:        method.Params,
 					Doc:           method.Doc,
-					ExecuteResult: "_",
 					Table:         s.TableName,
 					InterfaceName: interfaceInfo.Name,
 					Package:       getPackageName(interfaceInfo.Package),
