@@ -1566,7 +1566,7 @@ type Method interface {
 }
 ```
 
-Return values must contains less than 1 `gen.T`/`gen.M` and less than 1 error. You can also use bulitin type (like `string`/ `int`) as the return parameter，`gen.T` represents return a single result struct's pointer, `[]gen.T` represents return an array of result structs' pointer，
+Return values must contains less than 1 `gen.T`/`gen.M`/`gen.RowsAffected` and less than 1 error. You can also use bulitin type (like `string`/ `int`) as the return parameter，`gen.T` represents return a single result struct's pointer, `[]gen.T` represents return an array of result structs' pointer，
 
 ##### Syntax of template
 
@@ -1574,6 +1574,7 @@ Return values must contains less than 1 `gen.T`/`gen.M` and less than 1 error. Y
 
 - `gen.T` represents specified `struct` or `table`
 - `gen.M` represents `map[string]interface`
+- `gen.RowsAffected` represents SQL executed `rowsAffected` (type:int64)
 - `@@table`  represents table's name (if method's parameter doesn't contains variable `table`, GEN will generate `table` from model struct)
 - `@@<columnName>` represents column's name or table's name
 - `@<name>` represents normal query variable
@@ -1710,7 +1711,7 @@ type Method interface {
     //  {{where}}
     //      id=@id
     //  {{end}}
-    UpdateName(name string, id int) error
+    UpdateName(name string, id int) (gen.RowsAffected,error)
 }
 ```
 
