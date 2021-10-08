@@ -252,7 +252,7 @@ func (d *DO) Distinct(columns ...field.Expr) Dao {
 }
 
 func (d *DO) Omit(columns ...field.Expr) Dao {
-	return d.getInstance(d.db.Omit(toColNames(d.db.Statement, columns...)...))
+	return d.getInstance(d.db.Omit(getColumnName(columns...)...))
 }
 
 func (d *DO) Group(columns ...field.Expr) Dao {
@@ -581,8 +581,11 @@ func toColumnFullName(stmt *gorm.Statement, columns ...field.Expr) []string {
 	return buildColumn(stmt, columns, field.WithAll)
 }
 
-func toColNames(stmt *gorm.Statement, columns ...field.Expr) []string {
-	return buildColumn(stmt, columns)
+func getColumnName(columns ...field.Expr) (result []string) {
+	for _, c := range columns {
+		result = append(result, c.ColumnName().String())
+	}
+	return result
 }
 
 func buildColumn(stmt *gorm.Statement, cols []field.Expr, opts ...field.BuildOpt) []string {
