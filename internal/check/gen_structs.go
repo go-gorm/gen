@@ -1,7 +1,6 @@
 package check
 
 import (
-	"bytes"
 	"fmt"
 	"path/filepath"
 	"regexp"
@@ -20,69 +19,17 @@ import (
  */
 
 const (
-	ModelPkg = "model"
+	DefaultModelPkg = "model"
 
 	//query table structure
 	columnQuery = "SELECT COLUMN_NAME ,COLUMN_COMMENT ,DATA_TYPE ,IS_NULLABLE ,COLUMN_KEY,COLUMN_TYPE,COLUMN_DEFAULT,EXTRA" +
 		" FROM information_schema.columns WHERE table_schema = ? AND table_name =? ORDER BY ORDINAL_POSITION"
 )
 
-var (
-	defaultDataType             = "string"
-	dataType        dataTypeMap = map[string]func(detailType string) string{
-		"int":        func(string) string { return "int32" },
-		"integer":    func(string) string { return "int32" },
-		"smallint":   func(string) string { return "int32" },
-		"mediumint":  func(string) string { return "int32" },
-		"bigint":     func(string) string { return "int64" },
-		"float":      func(string) string { return "float32" },
-		"double":     func(string) string { return "float64" },
-		"decimal":    func(string) string { return "float64" },
-		"char":       func(string) string { return "string" },
-		"varchar":    func(string) string { return "string" },
-		"tinytext":   func(string) string { return "string" },
-		"mediumtext": func(string) string { return "string" },
-		"longtext":   func(string) string { return "string" },
-		"binary":     func(string) string { return "[]byte" },
-		"varbinary":  func(string) string { return "[]byte" },
-		"tinyblob":   func(string) string { return "[]byte" },
-		"blob":       func(string) string { return "[]byte" },
-		"mediumblob": func(string) string { return "[]byte" },
-		"longblob":   func(string) string { return "[]byte" },
-		"text":       func(string) string { return "string" },
-		"json":       func(string) string { return "string" },
-		"enum":       func(string) string { return "string" },
-		"time":       func(string) string { return "time.Time" },
-		"date":       func(string) string { return "time.Time" },
-		"datetime":   func(string) string { return "time.Time" },
-		"timestamp":  func(string) string { return "time.Time" },
-		"year":       func(string) string { return "int32" },
-		"bit":        func(string) string { return "[]uint8" },
-		"boolean":    func(string) string { return "bool" },
-		"tinyint": func(detailType string) string {
-			if strings.HasPrefix(detailType, "tinyint(1)") {
-				return "bool"
-			}
-			return "int32"
-		},
-	}
-)
-
-type dataTypeMap map[string]func(string) string
-
-// TODO diy type map global or single
-func (m dataTypeMap) Get(dataType, detailType string) string {
-	if convert, ok := m[dataType]; ok {
-		return convert(detailType)
-	}
-	return defaultDataType
-}
-
 type SchemaNameOpt func(*gorm.DB) string
-type MemberOpt func(*Member) *Member
 
 // GenBaseStructs generate db model by table name
-func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpts []SchemaNameOpt, memberOpts []MemberOpt, nullable bool) (bases *BaseStruct, err error) {
+func GenBaseStructs(db *gorm.DB, modelPkg, tableName, modelName string, schemaNameOpts []SchemaNameOpt, memberOpts []MemberOpt, nullable bool) (bases *BaseStruct, err error) {
 	if _, ok := db.Config.Dialector.(tests.DummyDialector); ok {
 		return nil, fmt.Errorf("UseDB() is necessary to generate model struct [%s] from database table [%s]", modelName, tableName)
 	}
@@ -90,10 +37,10 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 	if err = checkModelName(modelName); err != nil {
 		return nil, fmt.Errorf("model name %q is invalid: %w", modelName, err)
 	}
-	if pkg == "" {
-		pkg = ModelPkg
+	if modelPkg == "" {
+		modelPkg = DefaultModelPkg
 	}
-	pkg = filepath.Base(pkg)
+	modelPkg = filepath.Base(modelPkg)
 	dbName := getSchemaName(db, schemaNameOpts...)
 	columns, err := getTbColumns(db, dbName, tableName)
 	if err != nil {
@@ -106,77 +53,64 @@ func GenBaseStructs(db *gorm.DB, pkg, tableName, modelName string, schemaNameOpt
 		StructName:    modelName,
 		NewStructName: uncaptialize(modelName),
 		S:             strings.ToLower(modelName[0:1]),
-		StructInfo:    parser.Param{Type: modelName, Package: pkg},
+		StructInfo:    parser.Param{Type: modelName, Package: modelPkg},
 	}
 
-	// TODO create new member
+	modifyOpts, filterOpts, createOpts := sortOpt(memberOpts)
 	for _, field := range columns {
-		m := modifyMember(toMember(field, nullable), memberOpts)
-		if m == nil {
+		m := field.toMember(nullable)
+
+		if filterMember(m, filterOpts) == nil {
 			continue
 		}
+
+		m = modifyMember(m, modifyOpts)
 		m.Name = db.NamingStrategy.SchemaName(m.Name)
 
-		base.Members = append(base.Members, m.Revise())
+		base.Members = append(base.Members, m)
+	}
+
+	for _, create := range createOpts {
+		m := create.self()(nil)
+
+		if m.Relation != nil {
+			if m.Relation.Model() != nil {
+				stmt := gorm.Statement{DB: db}
+				_ = stmt.Parse(m.Relation.Model())
+				if stmt.Schema != nil {
+					m.Relation.AppendChildRelation(ParseStructRelationShip(&stmt.Schema.Relationships)...)
+				}
+			}
+			m.Type = strings.ReplaceAll(m.Type, modelPkg+".", "") // remove modelPkg in field's Type, avoid import error
+		} else { // Relation Field do not need SchemaName convert
+			m.Name = db.NamingStrategy.SchemaName(m.Name)
+		}
+
+		base.Members = append(base.Members, m)
 	}
 
 	return &base, nil
 }
 
-func toMember(field *Column, nullable bool) *Member {
-	memberType := dataType.Get(field.DataType, field.ColumnType)
-	if field.ColumnName == "deleted_at" && memberType == "time.Time" {
-		memberType = "gorm.DeletedAt"
-	}
-	if nullable && field.IsNullable == "YES" {
-		memberType = "*" + memberType
-	}
-	return &Member{
-		Name:             field.ColumnName,
-		Type:             memberType,
-		ModelType:        memberType,
-		ColumnName:       field.ColumnName,
-		ColumnComment:    field.ColumnComment,
-		MultilineComment: containMultiline(field.ColumnComment),
-		GORMTag:          buildGormTag(field),
-		JSONTag:          field.ColumnName,
-	}
-}
-
-func buildGormTag(field *Column) string {
-	if field == nil {
-		return ""
-	}
-	var buf bytes.Buffer
-	buf.WriteString(fmt.Sprintf("column:%s", field.ColumnName))
-	if field.IsPrimaryKey() {
-		buf.WriteString(";primaryKey")
-		if !field.AutoIncrement() {
-			// integer PrioritizedPrimaryField enables AutoIncrement by default, 
-			// if not, we need to turn off autoIncrement for the fields
-			buf.WriteString(";autoIncrement:false")
+func filterMember(m *Member, opts []MemberOpt) *Member {
+	for _, opt := range opts {
+		if opt.self()(m) == nil {
+			return nil
 		}
 	}
-	if field.ColumnDefault != "" {
-		buf.WriteString(fmt.Sprintf(";default:%s", field.ColumnDefault))
-	}
-	return buf.String()
+	return m
 }
 
 func modifyMember(m *Member, opts []MemberOpt) *Member {
 	for _, opt := range opts {
-		m = opt(m)
-		if m == nil {
-			break
-		}
+		m = opt.self()(m)
 	}
 	return m
 }
 
 //Mysql
 func getTbColumns(db *gorm.DB, schemaName string, tableName string) (result []*Column, err error) {
-	err = db.Raw(columnQuery, schemaName, tableName).Scan(&result).Error
-	return
+	return result, db.Raw(columnQuery, schemaName, tableName).Scan(&result).Error
 }
 
 // get mysql db' name

@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 	"text/template"
@@ -79,7 +78,7 @@ func (cfg *Config) WithDbNameOpts(opts ...check.SchemaNameOpt) {
 
 func (cfg *Config) Revise() (err error) {
 	if cfg.ModelPkgPath == "" {
-		cfg.ModelPkgPath = check.ModelPkg
+		cfg.ModelPkgPath = check.DefaultModelPkg
 	}
 
 	cfg.OutPath, err = filepath.Abs(cfg.OutPath)
@@ -136,129 +135,6 @@ func (g *Generator) UseDB(db *gorm.DB) {
 	}
 }
 
-var (
-	// FieldIgnore ignore some columns by name
-	FieldIgnore = func(columnNames ...string) check.MemberOpt {
-		return func(m *check.Member) *check.Member {
-			for _, name := range columnNames {
-				if m.ColumnName == name {
-					return nil
-				}
-			}
-			return m
-		}
-	}
-	// FieldIgnoreReg ignore some columns by reg rule
-	FieldIgnoreReg = func(columnNameRegs ...string) check.MemberOpt {
-		regs := make([]regexp.Regexp, len(columnNameRegs))
-		for i, reg := range columnNameRegs {
-			regs[i] = *regexp.MustCompile(reg)
-		}
-		return func(m *check.Member) *check.Member {
-			for _, reg := range regs {
-				if reg.MatchString(m.ColumnName) {
-					return nil
-				}
-			}
-			return m
-		}
-	}
-	// FieldRename specify field name in generated struct
-	FieldRename = func(columnName string, newName string) check.MemberOpt {
-		return func(m *check.Member) *check.Member {
-			if m.ColumnName == columnName {
-				m.Name = newName
-			}
-			return m
-		}
-	}
-	// FieldType specify field type in generated struct
-	FieldType = func(columnName string, newType string) check.MemberOpt {
-		return func(m *check.Member) *check.Member {
-			if m.ColumnName == columnName {
-				m.Type = newType
-				m.ModelType = newType
-			}
-			return m
-		}
-	}
-	// FieldIgnoreType ignore some columns by reg rule
-	FieldTypeReg = func(columnNameReg string, newType string) check.MemberOpt {
-		reg := regexp.MustCompile(columnNameReg)
-		return func(m *check.Member) *check.Member {
-			if reg.MatchString(m.ColumnName) {
-				m.Type = newType
-				m.ModelType = newType
-			}
-			return m
-		}
-	}
-	// FieldTag specify json tag and gorm tag
-	FieldTag = func(columnName string, gormTag, jsonTag string) check.MemberOpt {
-		return func(m *check.Member) *check.Member {
-			if m.ColumnName == columnName {
-				m.GORMTag, m.JSONTag = gormTag, jsonTag
-			}
-			return m
-		}
-	}
-	// FieldJSONTag specify json tag
-	FieldJSONTag = func(columnName string, jsonTag string) check.MemberOpt {
-		return func(m *check.Member) *check.Member {
-			if m.ColumnName == columnName {
-				m.JSONTag = jsonTag
-			}
-			return m
-		}
-	}
-	// FieldGORMTag specify gorm tag
-	FieldGORMTag = func(columnName string, gormTag string) check.MemberOpt {
-		return func(m *check.Member) *check.Member {
-			if m.ColumnName == columnName {
-				m.GORMTag = gormTag
-			}
-			return m
-		}
-	}
-	// FieldNewTag add new tag
-	FieldNewTag = func(columnName string, newTag string) check.MemberOpt {
-		return func(m *check.Member) *check.Member {
-			if m.ColumnName == columnName {
-				m.NewTag += " " + newTag
-			}
-			return m
-		}
-	}
-	// FieldTrimPrefix trim column name's prefix
-	FieldTrimPrefix = func(prefix string) check.MemberOpt {
-		return func(m *check.Member) *check.Member {
-			m.Name = strings.TrimPrefix(m.Name, prefix)
-			return m
-		}
-	}
-	// FieldTrimSuffix trim column name's suffix
-	FieldTrimSuffix = func(suffix string) check.MemberOpt {
-		return func(m *check.Member) *check.Member {
-			m.Name = strings.TrimSuffix(m.Name, suffix)
-			return m
-		}
-	}
-	// FieldAddPrefix add prefix to struct's memeber name
-	FieldAddPrefix = func(prefix string) check.MemberOpt {
-		return func(m *check.Member) *check.Member {
-			m.Name = prefix + m.Name
-			return m
-		}
-	}
-	// FieldAddSuffix add suffix to struct's memeber name
-	FieldAddSuffix = func(suffix string) check.MemberOpt {
-		return func(m *check.Member) *check.Member {
-			m.Name += suffix
-			return m
-		}
-	}
-)
-
 /*
 ** The feature of mapping table from database server to Golang struct
 ** Provided by @qqxhb
@@ -270,14 +146,8 @@ func (g *Generator) GenerateModel(tableName string, opts ...check.MemberOpt) *ch
 }
 
 // GenerateModel catch table info from db, return a BaseStruct
-func (g *Generator) GenerateModelAs(tableName string, modelName string, opts ...check.MemberOpt) *check.BaseStruct {
-	colNameOpts := make([]check.MemberOpt, len(opts))
-	for i, opt := range opts {
-		opt := opt
-		colNameOpts[i] = opt
-	}
-
-	s, err := check.GenBaseStructs(g.db, g.Config.ModelPkgPath, tableName, modelName, g.dbNameOpts, colNameOpts, g.Config.FieldNullable)
+func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...check.MemberOpt) *check.BaseStruct {
+	s, err := check.GenBaseStructs(g.db, g.Config.ModelPkgPath, tableName, modelName, g.dbNameOpts, fieldOpts, g.Config.FieldNullable)
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)
 		panic("generate struct fail")
@@ -311,7 +181,7 @@ func (g *Generator) apply(fc interface{}, structs []*check.BaseStruct) {
 		panic("check interface fail")
 	}
 
-	err = readInterface.ParseFile(interfacePaths, check.GetNames(structs))
+	err = readInterface.ParseFile(interfacePaths, check.GetStructNames(structs))
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "parser interface file fail: %s", err)
 		panic("parser interface file fail")
@@ -468,7 +338,7 @@ func (g *Generator) generateBaseStruct() (err error) {
 	}
 	path := filepath.Clean(g.ModelPkgPath)
 	if path == "" {
-		path = check.ModelPkg
+		path = check.DefaultModelPkg
 	}
 	if strings.Contains(path, "/") {
 		outPath, err = filepath.Abs(path)
@@ -520,11 +390,7 @@ func (g *Generator) output(fileName string, content []byte) error {
 	result, err := imports.Process(fileName, content, nil)
 	if err != nil {
 		errLine, _ := strconv.Atoi(strings.Split(err.Error(), ":")[1])
-		startLine, endLine := errLine-3, errLine+3
-		if startLine < 0 {
-			startLine = 0
-		}
-
+		startLine, endLine := 0, errLine+3
 		fmt.Println("Format fail:")
 		line := strings.Split(string(content), "\n")
 		for i := startLine; i <= endLine; i++ {

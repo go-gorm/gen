@@ -56,11 +56,6 @@ func getPureName(s string) string {
 	return string(strings.ToLower(delPointerSym(s))[0])
 }
 
-func getNewTypeName(t string) string {
-	list := strings.Split(t, ".")
-	return strings.Title(list[len(list)-1])
-}
-
 // not need capitalize
 func getStructName(t string) string {
 	list := strings.Split(t, ".")
@@ -82,8 +77,4 @@ func contains(target string, list []string) bool {
 		}
 	}
 	return false
-}
-
-func containMultiline(s string) bool {
-	return strings.Contains(s, "\n")
 }

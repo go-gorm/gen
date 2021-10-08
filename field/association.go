@@ -11,18 +11,13 @@ import (
 type RelationshipType schema.RelationshipType
 
 const (
-	HasOne    RelationshipType = "has_one"      // HasOneRel has one relationship
-	HasMany   RelationshipType = "has_many"     // HasManyRel has many relationship
-	BelongsTo RelationshipType = "belongs_to"   // BelongsToRel belongs to relationship
-	Many2Many RelationshipType = "many_to_many" // Many2ManyRel many to many relationship
+	HasOne    RelationshipType = RelationshipType(schema.HasOne)    // HasOneRel has one relationship
+	HasMany   RelationshipType = RelationshipType(schema.HasMany)   // HasManyRel has many relationships
+	BelongsTo RelationshipType = RelationshipType(schema.BelongsTo) // BelongsToRel belongs to relationship
+	Many2Many RelationshipType = RelationshipType(schema.Many2Many) // Many2ManyRel many to many relationship
 )
 
-type Relations struct {
-	HasOne    []*Relation
-	BelongsTo []*Relation
-	HasMany   []*Relation
-	Many2Many []*Relation
-}
+var ns = schema.NamingStrategy{}
 
 type RelationField interface {
 	Name() string
@@ -39,28 +34,43 @@ type RelationField interface {
 }
 
 type Relation struct {
-	varName string
-	varType string
-	path    string
+	relationship RelationshipType
 
-	relations []*Relation
+	fieldName  string
+	fieldType  string
+	fieldPath  string
+	fieldModel interface{} // store relaiton model
+
+	childRelations []Relation
 
 	conds   []Expr
 	order   []Expr
 	clauses []clause.Expression
 }
 
-func (r Relation) Name() string { return r.varName }
+func (r Relation) Name() string { return r.fieldName }
 
-func (r Relation) Path() string { return r.path }
+func (r Relation) Path() string { return r.fieldPath }
 
-func (r Relation) Type() string { return r.varType }
+func (r Relation) Type() string { return r.fieldType }
+
+func (r Relation) Model() interface{} { return r.fieldModel }
+
+func (r Relation) Relationship() RelationshipType { return r.relationship }
+
+func (r Relation) RelationshipName() string { return ns.SchemaName(string(r.relationship)) }
+
+func (r Relation) ChildRelations() []Relation { return r.childRelations }
 
 func (r Relation) Field(member ...string) Expr {
 	if len(member) > 0 {
-		return NewString("", r.varName+"."+strings.Join(member, ".")).appendBuildOpts(WithoutQuote)
+		return NewString("", r.fieldName+"."+strings.Join(member, ".")).appendBuildOpts(WithoutQuote)
 	}
-	return NewString("", r.varName).appendBuildOpts(WithoutQuote)
+	return NewString("", r.fieldName).appendBuildOpts(WithoutQuote)
+}
+
+func (r *Relation) AppendChildRelation(relations ...Relation) {
+	r.childRelations = append(r.childRelations, wrapPath(r.fieldPath, relations)...)
 }
 
 func (r *Relation) On(conds ...Expr) RelationField {
@@ -86,25 +96,58 @@ func (r *Relation) GetClauses() []clause.Expression { return r.clauses }
 
 func (r *Relation) StructMember() string {
 	var memberStr string
-	for _, relation := range r.relations {
-		memberStr += relation.varName + " struct {\nfield.RelationField\n" + relation.StructMember() + "}\n"
+	for _, relation := range r.childRelations {
+		memberStr += relation.fieldName + " struct {\nfield.RelationField\n" + relation.StructMember() + "}\n"
 	}
 	return memberStr
 }
 
 func (r *Relation) StructMemberInit() string {
-	initStr := fmt.Sprintf("RelationField: field.NewRelation(%q, %q),\n", r.path, r.varType)
-	for _, relation := range r.relations {
-		initStr += relation.varName + ": struct {\nfield.RelationField\n" + strings.TrimPrefix(strings.TrimSpace(relation.StructMember()), relation.varName) + "}"
+	initStr := fmt.Sprintf("RelationField: field.NewRelation(%q, %q),\n", r.fieldPath, r.fieldType)
+	for _, relation := range r.childRelations {
+		initStr += relation.fieldName + ": struct {\nfield.RelationField\n" + strings.TrimSpace(relation.StructMember()) + "}"
 		initStr += "{\n" + relation.StructMemberInit() + "},\n"
 	}
 	return initStr
 }
 
-func wrapPath(root string, rs []*Relation) []*Relation {
-	for _, r := range rs {
-		r.path = root + "." + r.path
-		r.relations = wrapPath(root, r.relations)
+func wrapPath(root string, rs []Relation) []Relation {
+	result := make([]Relation, len(rs))
+	for i, r := range rs {
+		r.fieldPath = root + "." + r.fieldPath
+		r.childRelations = wrapPath(root, r.childRelations)
+		result[i] = r
 	}
-	return rs
+	return result
+}
+
+var defaultRelationshipPrefix = map[RelationshipType]string{
+	// HasOne:    "",
+	// BelongsTo: "",
+	HasMany:   "[]",
+	Many2Many: "[]",
+}
+
+type RelateConfig struct {
+	RelatePointer      bool
+	RelateSlice        bool
+	RelateSlicePointer bool
+
+	JSONTag      string
+	GORMTag      string
+	NewTag       string
+	OverwriteTag string
+}
+
+func (c *RelateConfig) RelateFieldPrefix(relationshipType RelationshipType) string {
+	switch {
+	case c.RelatePointer:
+		return "*"
+	case c.RelateSlice:
+		return "[]"
+	case c.RelateSlicePointer:
+		return "[]*"
+	default:
+		return defaultRelationshipPrefix[relationshipType]
+	}
 }

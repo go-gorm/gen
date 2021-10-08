@@ -24,8 +24,6 @@ type BaseStruct struct {
 	StructInfo    parser.Param
 	Members       []*Member
 	Source        sourceCode
-
-	Relations field.Relations
 }
 
 // parseStruct get all elements of struct with gorm's Parse, ignore unexported elements
@@ -42,44 +40,12 @@ func (b *BaseStruct) parseStruct(st interface{}) error {
 			Name:       f.Name,
 			Type:       b.getMemberRealType(f.FieldType),
 			ColumnName: f.DBName,
-		}).Revise())
+		}))
 	}
-
-	b.Relations = b.parseStructRelationShip(stmt.Schema.Relationships)
-
+	for _, r := range ParseStructRelationShip(&stmt.Schema.Relationships) {
+		b.appendOrUpdateMember(&Member{Relation: &r})
+	}
 	return nil
-}
-
-func (b *BaseStruct) parseStructRelationShip(relationship schema.Relationships) field.Relations {
-	return field.Relations{
-		HasOne:    b.pullRelationShip(relationship.HasOne),
-		BelongsTo: b.pullRelationShip(relationship.BelongsTo),
-		HasMany:   b.pullRelationShip(relationship.HasMany),
-		Many2Many: b.pullRelationShip(relationship.Many2Many),
-	}
-}
-
-func (b *BaseStruct) pullRelationShip(relationships []*schema.Relationship) []*field.Relation {
-	if len(relationships) == 0 {
-		return nil
-	}
-	result := make([]*field.Relation, len(relationships))
-	for i, relationship := range relationships {
-		subRelationships := relationship.FieldSchema.Relationships
-		relation := field.NewRelation(
-			relationship.Name,
-			strings.TrimLeft(relationship.Field.FieldType.String(), "[]*"),
-			b.pullRelationShip(append(append(append(append(
-				make([]*schema.Relationship, 0, 4),
-				subRelationships.BelongsTo...),
-				subRelationships.HasOne...),
-				subRelationships.HasMany...),
-				subRelationships.Many2Many...),
-			)...,
-		)
-		result[i] = relation
-	}
-	return result
 }
 
 // getMemberRealType  get basic type of member
@@ -100,12 +66,15 @@ func (b *BaseStruct) getMemberRealType(member reflect.Type) string {
 
 func (b *BaseStruct) ReviseMemberName() {
 	for _, m := range b.Members {
-		m.ReviseKeyword()
+		m.EscapeKeyword()
 	}
 }
 
 // check member if in BaseStruct update else append
 func (b *BaseStruct) appendOrUpdateMember(member *Member) {
+	if member.IsRelation() {
+		b.appendMember(member)
+	}
 	if member.ColumnName == "" {
 		return
 	}
@@ -115,6 +84,10 @@ func (b *BaseStruct) appendOrUpdateMember(member *Member) {
 			return
 		}
 	}
+	b.appendMember(member)
+}
+
+func (b *BaseStruct) appendMember(member *Member) {
 	b.Members = append(b.Members, member)
 }
 
@@ -133,7 +106,17 @@ func (b *BaseStruct) check() (err error) {
 	return nil
 }
 
-func GetNames(bases []*BaseStruct) (res []string) {
+func (b *BaseStruct) Relations() []field.Relation {
+	result := make([]field.Relation, 0, 4)
+	for _, m := range b.Members {
+		if m.IsRelation() {
+			result = append(result, *m.Relation)
+		}
+	}
+	return result
+}
+
+func GetStructNames(bases []*BaseStruct) (res []string) {
 	for _, base := range bases {
 		res = append(res, base.StructName)
 	}
@@ -143,4 +126,40 @@ func GetNames(bases []*BaseStruct) (res []string) {
 func isStructType(data reflect.Value) bool {
 	return data.Kind() == reflect.Struct ||
 		(data.Kind() == reflect.Ptr && data.Elem().Kind() == reflect.Struct)
+}
+
+// ParseStructRelationShip parse struct's relationship
+// No one should use it directly in project
+func ParseStructRelationShip(relationship *schema.Relationships) []field.Relation {
+	cache := make(map[string]bool)
+	return append(append(append(append(
+		make([]field.Relation, 0, 4),
+		pullRelationShip(cache, relationship.HasOne)...),
+		pullRelationShip(cache, relationship.HasMany)...),
+		pullRelationShip(cache, relationship.BelongsTo)...),
+		pullRelationShip(cache, relationship.Many2Many)...,
+	)
+}
+
+func pullRelationShip(cache map[string]bool, relationships []*schema.Relationship) []field.Relation {
+	if len(relationships) == 0 {
+		return nil
+	}
+	result := make([]field.Relation, len(relationships))
+	for i, relationship := range relationships {
+		var childRelations []field.Relation
+		varType := strings.TrimLeft(relationship.Field.FieldType.String(), "[]*")
+		if !cache[varType] {
+			cache[varType] = true
+			childRelations = pullRelationShip(cache, append(append(append(append(
+				make([]*schema.Relationship, 0, 4),
+				relationship.FieldSchema.Relationships.BelongsTo...),
+				relationship.FieldSchema.Relationships.HasOne...),
+				relationship.FieldSchema.Relationships.HasMany...),
+				relationship.FieldSchema.Relationships.Many2Many...),
+			)
+		}
+		result[i] = *field.NewRelation(relationship.Name, varType, childRelations...)
+	}
+	return result
 }

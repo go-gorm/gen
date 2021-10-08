@@ -196,7 +196,7 @@ func (m *InterfaceMethod) checkSQL() (err error) {
 }
 
 func (m *InterfaceMethod) parseDocString() string {
-	docString := strings.TrimSpace(m.Doc)
+	docString := strings.TrimSpace(m.getSQLDocString())
 	switch {
 	case strings.HasPrefix(strings.ToLower(docString), "sql("):
 		docString = docString[4 : len(docString)-1]
@@ -218,6 +218,28 @@ func (m *InterfaceMethod) parseDocString() string {
 	if strings.HasPrefix(docString, `"`) && strings.HasSuffix(docString, `"`) {
 		docString = docString[1 : len(docString)-1]
 	}
+	return docString
+}
+
+func (m *InterfaceMethod) getSQLDocString() string {
+	docString := strings.TrimSpace(m.Doc)
+	/*
+		// methodName descriptive message
+		// (this blank line is needed)
+		// sql
+	*/
+	if index := strings.Index(docString, "\n\n"); index != -1 {
+		if strings.Contains(docString[index+2:], m.MethodName) {
+			docString = docString[:index]
+		} else {
+			docString = docString[index+2:]
+		}
+	}
+	/* //methodName sql */
+	if strings.HasPrefix(docString, m.MethodName) {
+		docString = docString[len(m.MethodName):]
+	}
+	// TODO: using sql key word to split comment
 	return docString
 }
 

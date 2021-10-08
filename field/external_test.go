@@ -368,11 +368,11 @@ func TestRelation_StructMember(t *testing.T) {
 		{
 			relation: field.NewRelation(
 				"CreditCards", "model.CreditCard",
-				field.NewRelation("Owner", "model.Owner"),
-				field.NewRelation("Bank", "model.Bank",
-					field.NewRelation("Manager", "model.Bank"),
-					field.NewRelation("City", "model.City",
-						field.NewRelation("State", "model.Bank"),
+				*field.NewRelation("Owner", "model.Owner"),
+				*field.NewRelation("Bank", "model.Bank",
+					*field.NewRelation("Manager", "model.Bank"),
+					*field.NewRelation("City", "model.City",
+						*field.NewRelation("State", "model.Bank"),
 					),
 				),
 			),
@@ -382,7 +382,6 @@ func TestRelation_StructMember(t *testing.T) {
 
 	for _, testdata := range testdatas {
 		if result := testdata.relation.StructMember(); result != testdata.expectedValue {
-			fmt.Println(result)
 			t.Errorf("StructMember fail: except %q, got %q", testdata.expectedValue, result)
 		}
 	}
@@ -396,11 +395,11 @@ func TestRelation_StructMemberInit(t *testing.T) {
 		{
 			relation: field.NewRelation(
 				"CreditCards", "model.CreditCard",
-				field.NewRelation("Owner", "model.Owner"),
-				field.NewRelation("Bank", "model.Bank",
-					field.NewRelation("Manager", "model.Manager"),
-					field.NewRelation("City", "model.City",
-						field.NewRelation("State", "model.State"),
+				*field.NewRelation("Owner", "model.Owner"),
+				*field.NewRelation("Bank", "model.Bank",
+					*field.NewRelation("Manager", "model.Manager"),
+					*field.NewRelation("City", "model.City",
+						*field.NewRelation("State", "model.State"),
 					),
 				),
 			),
