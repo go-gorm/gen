@@ -29,6 +29,9 @@ type T interface{}
 // M map[string]interface{}
 type M map[string]interface{}
 
+// RowsAffected execute affected raws
+type RowsAffected int64
+
 // NewGenerator create a new generator
 func NewGenerator(cfg Config) *Generator {
 	err := cfg.Revise()

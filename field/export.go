@@ -8,6 +8,9 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+// Star a symbol of "*"
+var Star = NewString("", "*")
+
 type FieldOption func(clause.Column) clause.Column
 
 var (

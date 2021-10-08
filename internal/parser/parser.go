@@ -132,6 +132,10 @@ func (p *Param) IsGenM() bool {
 	return p.Package == "gen" && p.Type == "M"
 }
 
+func (p *Param) IsGenRowsAffected() bool {
+	return p.Package == "gen" && p.Type == "RowsAffected"
+}
+
 func (p *Param) IsMap() bool {
 	return strings.HasPrefix(p.Type, "map[")
 }
