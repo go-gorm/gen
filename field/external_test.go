@@ -97,7 +97,7 @@ func TestExpr_Build(t *testing.T) {
 		},
 		{
 			Expr:   field.NewUint("", "i`d"),
-			Result: "`i`d`", // should be `i``d`
+			Result: "`i``d`",
 		},
 		{
 			Expr:   field.NewUint("", "id").Avg(),
