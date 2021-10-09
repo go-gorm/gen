@@ -93,7 +93,7 @@ A safer orm base on [GORM](https://github.com/go-gorm/gorm), aims to be develope
       - [Update](#update)
         - [Update single column](#update-single-column)
         - [Updates multiple columns](#updates-multiple-columns)
-        - [~~Update selected fields~~](#update-selected-fields)
+        - [Update selected fields](#update-selected-fields)
       - [Delete](#delete)
         - [Delete record](#delete-record)
         - [Delete with primary key](#delete-with-primary-key)
@@ -1447,11 +1447,9 @@ u.WithContext(ctx).Where(u.Activate.Is(true)).UpdateSimple(u.Age.Value(17), u.Nu
 
 > **NOTE** When update with struct, GEN will only update non-zero fields, you might want to use `map` to update attributes or use `Select` to specify fields to update
 
-##### ~~Update selected fields~~
+##### Update selected fields
 
-Wait for GORM update to compatible with GEN
-
-~~If you want to update selected fields or ignore some fields when updating, you can use `Select`, `Omit`~~
+If you want to update selected fields or ignore some fields when updating, you can use `Select`, `Omit`
 
 ```go
 u := query.Use(db).User
