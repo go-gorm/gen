@@ -91,9 +91,6 @@ func (e expr) BuildColumn(stmt *gorm.Statement, opts ...BuildOpt) sql {
 		}
 		return "*"
 	}
-	if col.Table != "" && col.Raw {
-		return sql(col.Table + "." + col.Name)
-	}
 	return sql(stmt.Quote(col))
 }
 
