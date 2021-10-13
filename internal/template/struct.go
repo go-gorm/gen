@@ -26,7 +26,7 @@ const (
 		_{{.NewStructName}} := {{.NewStructName}}{}
 	
 		_{{.NewStructName}}.{{.NewStructName}}Do.UseDB(db)
-		_{{.NewStructName}}.{{.NewStructName}}Do.UseModel({{.StructInfo.Package}}.{{.StructInfo.Type}}{})
+		_{{.NewStructName}}.{{.NewStructName}}Do.UseModel(&{{.StructInfo.Package}}.{{.StructInfo.Type}}{})
 	
 		{{if .HasMember}}tableName := _{{.NewStructName}}.{{.NewStructName}}Do.TableName(){{end}}
 		{{range .Members -}}
