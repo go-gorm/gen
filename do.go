@@ -235,6 +235,9 @@ func (d *DO) Order(columns ...field.Expr) Dao {
 	// 	}
 	// }
 	// return d.newInstance(d.db.Clauses(clause.OrderBy{Expression: clause.CommaExpression{Exprs: toExpression(columns)}}))
+	if len(columns) == 0 {
+		return d
+	}
 	return d.getInstance(d.db.Order(d.calcOrderValue(columns...)))
 }
 
