@@ -279,10 +279,8 @@ func TestDO_methods(t *testing.T) {
 			Result:       "SELECT AVG(`age`) AS `avgage` FROM `users_info` GROUP BY `name` HAVING AVG(`age`) > (SELECT AVG(`age`) FROM `users_info` WHERE `name` LIKE ?)",
 		},
 		{
-			Expr:         student.Select().LeftJoin(teacher, teacher.ID.EqCol(student.Instructor)).Group(student.ID),
-			Opts:         []stmtOpt{withFROM},
-			ExpectedVars: []interface{}{},
-			Result:       "SELECT * FROM `student` LEFT JOIN `teacher` ON `teacher`.`id` = `student`.`instructor` WHERE `student`.`id` GROUP BY `student`.`id`",
+			Expr:   student.Select().LeftJoin(teacher, teacher.ID.EqCol(student.Instructor)).Group(student.ID),
+			Result: "SELECT * FROM `student` LEFT JOIN `teacher` ON `teacher`.`id` = `student`.`instructor` GROUP BY `student`.`id`",
 		},
 		// ======================== from subquery ========================
 		{
