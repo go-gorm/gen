@@ -263,9 +263,9 @@ func (d *DO) Group(columns ...field.Expr) Dao {
 		return d
 	}
 
-	name := columns[0].ColumnName().String()
+	name := columns[0].Build(d.db.Statement).String()
 	for _, col := range columns[1:] {
-		name += "," + col.ColumnName().String()
+		name += "," + col.Build(d.db.Statement).String()
 	}
 	return d.getInstance(d.db.Group(name))
 }
