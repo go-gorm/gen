@@ -8,6 +8,7 @@ import (
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 	"gorm.io/gorm/utils/tests"
 
 	"gorm.io/gen/internal/parser"
@@ -65,7 +66,12 @@ func GenBaseStructs(db *gorm.DB, modelPkg, tableName, modelName string, schemaNa
 		}
 
 		m = modifyMember(m, modifyOpts)
-		m.Name = db.NamingStrategy.SchemaName(m.Name)
+		if ns, ok := db.NamingStrategy.(schema.NamingStrategy); ok {
+			ns.SingularTable = true
+			m.Name = ns.SchemaName(m.Name)
+		} else {
+			m.Name = db.NamingStrategy.SchemaName(m.Name)
+		}
 
 		base.Members = append(base.Members, m)
 	}
