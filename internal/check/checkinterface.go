@@ -257,9 +257,7 @@ func (m *InterfaceMethod) getSQLDocString() string {
 		}
 	}
 	/* //methodName sql */
-	if strings.HasPrefix(docString, m.MethodName) {
-		docString = docString[len(m.MethodName):]
-	}
+	docString = strings.TrimPrefix(docString, m.MethodName)
 	// TODO: using sql key word to split comment
 	return docString
 }
