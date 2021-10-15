@@ -207,6 +207,16 @@ func TestDO_methods(t *testing.T) {
 			Result:       "WHERE (`name` = ? AND `famous` = ?) OR `age` <= ?",
 		},
 		{
+			Expr:         u.Where(u.Name.Eq("tom")).Where(u.Where(u.Famous.Is(true)).Or(u.Age.Lte(18))),
+			ExpectedVars: []interface{}{"tom", true, 18},
+			Result:       "WHERE `name` = ? AND (`famous` = ? OR `age` <= ?)",
+		},
+		{
+			Expr:         u.Where(u.Name.Eq("tom"), field.Or(u.Famous.Is(true), u.Age.Lte(18))),
+			ExpectedVars: []interface{}{"tom", true, 18},
+			Result:       "WHERE `name` = ? AND (`famous` = ? OR `age` <= ?)",
+		},
+		{
 			Expr:         u.Where(Cond(datatypes.JSONQuery("attributes").HasKey("role", "name"))...),
 			ExpectedVars: []interface{}{"$.role.name"},
 			Result:       "WHERE JSON_EXTRACT(`attributes`,?) IS NOT NULL",
