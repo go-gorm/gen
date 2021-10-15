@@ -242,10 +242,7 @@ func (g *Generator) Execute() {
 		panic("generate query code fail")
 	}
 
-	g.successInfo(
-		"Successfully generate query file："+g.OutFile,
-		"Successfully generate code",
-	)
+	g.successInfo("Generate code done.")
 }
 
 // successInfo logger
@@ -277,17 +274,19 @@ func (g *Generator) generateQueryFile() (err error) {
 		return err
 	}
 
-	err = g.output(g.OutFile, buf.Bytes())
-	if err != nil {
-		return err
-	}
-
 	for _, info := range g.Data {
 		err = g.generateSubQuery(info)
 		if err != nil {
 			return err
 		}
 	}
+
+	err = g.output(g.OutFile, buf.Bytes())
+	if err != nil {
+		return err
+	}
+	g.successInfo("generate query file: " + g.OutFile)
+
 	return nil
 }
 
@@ -321,6 +320,8 @@ func (g *Generator) generateSubQuery(data *genInfo) (err error) {
 	if err != nil {
 		return err
 	}
+
+	defer g.successInfo(fmt.Sprintf("generate query file: %s/%s.gen.go", g.OutPath, strings.ToLower(data.TableName)))
 	return g.output(fmt.Sprintf("%s/%s.gen.go", g.OutPath, strings.ToLower(data.TableName)), buf.Bytes())
 }
 
@@ -382,8 +383,7 @@ func (g *Generator) generateBaseStruct() (err error) {
 			return err
 		}
 
-		g.successInfo(fmt.Sprintf("Generate struct [%s.%s] from table [%s]", data.StructInfo.Package, data.StructInfo.Type, data.TableName))
-		g.successInfo(fmt.Sprintf("Successfully generate struct file: %s", modelFile))
+		g.successInfo(fmt.Sprintf("generate struct(table %q -> {%s.%s}) file: %s", data.TableName, data.StructInfo.Package, data.StructInfo.Type, modelFile))
 	}
 	return nil
 }
