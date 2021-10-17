@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 
+	"gorm.io/gen/internal/models"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 
@@ -22,8 +23,8 @@ type BaseStruct struct {
 	StructName    string // origin struct name
 	TableName     string
 	StructInfo    parser.Param
-	Members       []*Member
-	Source        sourceCode
+	Members       []*models.Member
+	Source        models.SourceCode
 }
 
 // parseStruct get all elements of struct with gorm's Parse, ignore unexported elements
@@ -36,14 +37,14 @@ func (b *BaseStruct) parseStruct(st interface{}) error {
 	b.TableName = stmt.Table
 
 	for _, f := range stmt.Schema.Fields {
-		b.appendOrUpdateMember((&Member{
+		b.appendOrUpdateMember((&models.Member{
 			Name:       f.Name,
 			Type:       b.getMemberRealType(f.FieldType),
 			ColumnName: f.DBName,
 		}))
 	}
 	for _, r := range ParseStructRelationShip(&stmt.Schema.Relationships) {
-		b.appendOrUpdateMember(&Member{Relation: &r})
+		b.appendOrUpdateMember(&models.Member{Relation: &r})
 	}
 	return nil
 }
@@ -71,7 +72,7 @@ func (b *BaseStruct) ReviseMemberName() {
 }
 
 // check member if in BaseStruct update else append
-func (b *BaseStruct) appendOrUpdateMember(member *Member) {
+func (b *BaseStruct) appendOrUpdateMember(member *models.Member) {
 	if member.IsRelation() {
 		b.appendMember(member)
 	}
@@ -87,7 +88,7 @@ func (b *BaseStruct) appendOrUpdateMember(member *Member) {
 	b.appendMember(member)
 }
 
-func (b *BaseStruct) appendMember(member *Member) {
+func (b *BaseStruct) appendMember(member *models.Member) {
 	b.Members = append(b.Members, member)
 }
 

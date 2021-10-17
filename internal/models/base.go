@@ -1,11 +1,11 @@
-package check
+package models
 
 import (
 	"bytes"
-	"fmt"
 	"strings"
 
 	"gorm.io/gen/field"
+	"gorm.io/gen/internal/utils"
 )
 
 type Status int
@@ -31,10 +31,10 @@ const (
 	NIL
 )
 
-type sourceCode int
+type SourceCode int
 
 const (
-	Struct sourceCode = iota
+	Struct SourceCode = iota
 	TableName
 )
 
@@ -142,86 +142,15 @@ func (m *Member) GenType() string {
 }
 
 func (m *Member) EscapeKeyword() *Member {
-	if contains(m.Name, keywords) {
+	if utils.ListContain(m.Name, keywords) {
 		m.Name += "_"
 	}
 	return m
 }
 
-// Column table column's info
-type Column struct {
-	TableName     string `gorm:"column:TABLE_NAME"`
-	ColumnName    string `gorm:"column:COLUMN_NAME"`
-	ColumnComment string `gorm:"column:COLUMN_COMMENT"`
-	DataType      string `gorm:"column:DATA_TYPE"`
-	ColumnKey     string `gorm:"column:COLUMN_KEY"`
-	ColumnType    string `gorm:"column:COLUMN_TYPE"`
-	ColumnDefault string `gorm:"column:COLUMN_DEFAULT"`
-	Extra         string `gorm:"column:EXTRA"`
-	IsNullable    string `gorm:"column:IS_NULLABLE"`
-}
+type Sql struct{ bytes.Buffer }
 
-func (c *Column) IsPrimaryKey() bool {
-	if c == nil {
-		return false
-	}
-	if c.ColumnKey == "PRI" {
-		return true
-	}
-	return false
-}
-
-func (c *Column) AutoIncrement() bool {
-	if c == nil {
-		return false
-	}
-	if c.Extra == "auto_increment" {
-		return true
-	}
-	return false
-}
-
-func (c *Column) toMember(nullable bool) *Member {
-	memberType := dataType.Get(c.DataType, c.ColumnType)
-	if c.ColumnName == "deleted_at" && memberType == "time.Time" {
-		memberType = "gorm.DeletedAt"
-	}
-	if nullable && c.IsNullable == "YES" {
-		memberType = "*" + memberType
-	}
-	return &Member{
-		Name:             c.ColumnName,
-		Type:             memberType,
-		ColumnName:       c.ColumnName,
-		ColumnComment:    c.ColumnComment,
-		MultilineComment: c.multilineComment(),
-		GORMTag:          c.buildGormTag(),
-		JSONTag:          c.ColumnName,
-	}
-}
-
-func (c *Column) multilineComment() bool { return strings.Contains(c.ColumnComment, "\n") }
-
-func (c *Column) buildGormTag() string {
-	var buf bytes.Buffer
-	buf.WriteString(fmt.Sprintf("column:%s;type:%s", c.ColumnName, c.ColumnType))
-	if c.IsPrimaryKey() {
-		buf.WriteString(";primaryKey")
-		if !c.AutoIncrement() {
-			// integer PrioritizedPrimaryField enables AutoIncrement by default,
-			// if not, we need to turn off autoIncrement for the fields
-			buf.WriteString(";autoIncrement:false")
-		}
-	}
-	if c.ColumnDefault != "" {
-		buf.WriteString(fmt.Sprintf(";default:%s", c.ColumnDefault))
-	}
-	return buf.String()
-}
-
-type sql struct{ bytes.Buffer }
-
-func (s *sql) WriteSql(b byte) {
+func (s *Sql) WriteSql(b byte) {
 	switch b {
 	case '\n', '\t', ' ':
 		if s.Len() == 0 || s.Bytes()[s.Len()-1] != ' ' {
@@ -232,7 +161,7 @@ func (s *sql) WriteSql(b byte) {
 	}
 }
 
-func (s *sql) Dump() string {
+func (s *Sql) Dump() string {
 	defer s.Reset()
 	return s.String()
 }

@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"gorm.io/driver/mysql"
+	"gorm.io/gen/internal/models"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 	"gorm.io/gorm/utils/tests"
@@ -21,16 +21,12 @@ import (
 
 const (
 	DefaultModelPkg = "model"
-
-	//query table structure
-	columnQuery = "SELECT COLUMN_NAME ,COLUMN_COMMENT ,DATA_TYPE ,IS_NULLABLE ,COLUMN_KEY,COLUMN_TYPE,COLUMN_DEFAULT,EXTRA" +
-		" FROM information_schema.columns WHERE table_schema = ? AND table_name =? ORDER BY ORDINAL_POSITION"
 )
 
-type SchemaNameOpt func(*gorm.DB) string
-
 // GenBaseStructs generate db model by table name
-func GenBaseStructs(db *gorm.DB, modelPkg, tableName, modelName string, schemaNameOpts []SchemaNameOpt, memberOpts []MemberOpt, nullable bool) (bases *BaseStruct, err error) {
+func GenBaseStructs(db *gorm.DB, conf models.DbModelConf) (bases *BaseStruct, err error) {
+	modelName := conf.ModelName
+	tableName := conf.TableName
 	if _, ok := db.Config.Dialector.(tests.DummyDialector); ok {
 		return nil, fmt.Errorf("UseDB() is necessary to generate model struct [%s] from database table [%s]", modelName, tableName)
 	}
@@ -38,17 +34,18 @@ func GenBaseStructs(db *gorm.DB, modelPkg, tableName, modelName string, schemaNa
 	if err = checkModelName(modelName); err != nil {
 		return nil, fmt.Errorf("model name %q is invalid: %w", modelName, err)
 	}
+	modelPkg := conf.ModelPkg
 	if modelPkg == "" {
 		modelPkg = DefaultModelPkg
 	}
 	modelPkg = filepath.Base(modelPkg)
-	dbName := getSchemaName(db, schemaNameOpts...)
-	columns, err := getTbColumns(db, dbName, tableName)
+	dbName := conf.GetSchemaName(db)
+	columns, err := getTbColumns(db, dbName, tableName, conf.IndexTag)
 	if err != nil {
 		return nil, err
 	}
 	base := BaseStruct{
-		Source:        TableName,
+		Source:        models.TableName,
 		GenBaseStruct: true,
 		TableName:     tableName,
 		StructName:    modelName,
@@ -56,10 +53,9 @@ func GenBaseStructs(db *gorm.DB, modelPkg, tableName, modelName string, schemaNa
 		S:             strings.ToLower(modelName[0:1]),
 		StructInfo:    parser.Param{Type: modelName, Package: modelPkg},
 	}
-
-	modifyOpts, filterOpts, createOpts := sortOpt(memberOpts)
+	modifyOpts, filterOpts, createOpts := conf.SortOpt()
 	for _, field := range columns {
-		m := field.toMember(nullable)
+		m := field.ToMember(conf.Nullable)
 
 		if filterMember(m, filterOpts) == nil {
 			continue
@@ -77,7 +73,7 @@ func GenBaseStructs(db *gorm.DB, modelPkg, tableName, modelName string, schemaNa
 	}
 
 	for _, create := range createOpts {
-		m := create.self()(nil)
+		m := create.Self()(nil)
 
 		if m.Relation != nil {
 			if m.Relation.Model() != nil {
@@ -98,52 +94,20 @@ func GenBaseStructs(db *gorm.DB, modelPkg, tableName, modelName string, schemaNa
 	return &base, nil
 }
 
-func filterMember(m *Member, opts []MemberOpt) *Member {
+func filterMember(m *models.Member, opts []models.MemberOpt) *models.Member {
 	for _, opt := range opts {
-		if opt.self()(m) == nil {
+		if opt.Self()(m) == nil {
 			return nil
 		}
 	}
 	return m
 }
 
-func modifyMember(m *Member, opts []MemberOpt) *Member {
+func modifyMember(m *models.Member, opts []models.MemberOpt) *models.Member {
 	for _, opt := range opts {
-		m = opt.self()(m)
+		m = opt.Self()(m)
 	}
 	return m
-}
-
-//Mysql
-func getTbColumns(db *gorm.DB, schemaName string, tableName string) (result []*Column, err error) {
-	return result, db.Raw(columnQuery, schemaName, tableName).Scan(&result).Error
-}
-
-// get mysql db' name
-var dbNameReg = regexp.MustCompile(`/\w+\??`)
-
-func getSchemaName(db *gorm.DB, opts ...SchemaNameOpt) string {
-	for _, opt := range opts {
-		if name := opt(db); name != "" {
-			return name
-		}
-	}
-	if db == nil || db.Dialector == nil {
-		return ""
-	}
-	myDia, ok := db.Dialector.(*mysql.Dialector)
-	if !ok || myDia == nil || myDia.Config == nil {
-		return ""
-	}
-	dbName := dbNameReg.FindString(myDia.DSN)
-	if len(dbName) < 3 {
-		return ""
-	}
-	end := len(dbName)
-	if strings.HasSuffix(dbName, "?") {
-		end--
-	}
-	return dbName[1:end]
 }
 
 // get mysql db' name
