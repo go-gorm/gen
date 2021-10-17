@@ -6,6 +6,10 @@ import (
 	"regexp"
 	"strings"
 
+<<<<<<< HEAD
+=======
+	"gorm.io/gen/internal/models"
+>>>>>>> feat: index tag
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 	"gorm.io/gorm/utils/tests"
@@ -24,9 +28,15 @@ const (
 )
 
 // GenBaseStructs generate db model by table name
+<<<<<<< HEAD
 func GenBaseStructs(db *gorm.DB, conf model.DBConf) (bases *BaseStruct, err error) {
 	modelName, tableName := conf.ModelName, conf.TableName
 
+=======
+func GenBaseStructs(db *gorm.DB, conf models.DbModelConf) (bases *BaseStruct, err error) {
+	modelName := conf.ModelName
+	tableName := conf.TableName
+>>>>>>> feat: index tag
 	if _, ok := db.Config.Dialector.(tests.DummyDialector); ok {
 		return nil, fmt.Errorf("UseDB() is necessary to generate model struct [%s] from database table [%s]", modelName, tableName)
 	}
@@ -34,20 +44,32 @@ func GenBaseStructs(db *gorm.DB, conf model.DBConf) (bases *BaseStruct, err erro
 	if err = checkModelName(modelName); err != nil {
 		return nil, fmt.Errorf("model name %q is invalid: %w", modelName, err)
 	}
+<<<<<<< HEAD
 
+=======
+>>>>>>> feat: index tag
 	modelPkg := conf.ModelPkg
 	if modelPkg == "" {
 		modelPkg = DefaultModelPkg
 	}
 	modelPkg = filepath.Base(modelPkg)
+<<<<<<< HEAD
 
 	columns, err := getTbColumns(db, conf.GetSchemaName(db), tableName, conf.FieldWithIndexTag)
+=======
+	dbName := conf.GetSchemaName(db)
+	columns, err := getTbColumns(db, dbName, tableName, conf.IndexTag)
+>>>>>>> feat: index tag
 	if err != nil {
 		return nil, err
 	}
 
 	base := BaseStruct{
+<<<<<<< HEAD
 		Source:        model.TableName,
+=======
+		Source:        models.TableName,
+>>>>>>> feat: index tag
 		GenBaseStruct: true,
 		TableName:     tableName,
 		StructName:    modelName,
@@ -55,10 +77,16 @@ func GenBaseStructs(db *gorm.DB, conf model.DBConf) (bases *BaseStruct, err erro
 		S:             strings.ToLower(modelName[0:1]),
 		StructInfo:    parser.Param{Type: modelName, Package: modelPkg},
 	}
+<<<<<<< HEAD
 
 	modifyOpts, filterOpts, createOpts := conf.SortOpt()
 	for _, field := range columns {
 		m := field.ToMember(conf.FieldNullable)
+=======
+	modifyOpts, filterOpts, createOpts := conf.SortOpt()
+	for _, field := range columns {
+		m := field.ToMember(conf.Nullable)
+>>>>>>> feat: index tag
 
 		if filterMember(m, filterOpts) == nil {
 			continue
@@ -97,7 +125,11 @@ func GenBaseStructs(db *gorm.DB, conf model.DBConf) (bases *BaseStruct, err erro
 	return &base, nil
 }
 
+<<<<<<< HEAD
 func filterMember(m *model.Member, opts []model.MemberOpt) *model.Member {
+=======
+func filterMember(m *models.Member, opts []models.MemberOpt) *models.Member {
+>>>>>>> feat: index tag
 	for _, opt := range opts {
 		if opt.Self()(m) == nil {
 			return nil
@@ -106,7 +138,11 @@ func filterMember(m *model.Member, opts []model.MemberOpt) *model.Member {
 	return m
 }
 
+<<<<<<< HEAD
 func modifyMember(m *model.Member, opts []model.MemberOpt) *model.Member {
+=======
+func modifyMember(m *models.Member, opts []models.MemberOpt) *models.Member {
+>>>>>>> feat: index tag
 	for _, opt := range opts {
 		m = opt.Self()(m)
 	}

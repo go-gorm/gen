@@ -5,12 +5,20 @@ import (
 	"strconv"
 	"strings"
 
+<<<<<<< HEAD
 	"gorm.io/gen/internal/model"
+=======
+	"gorm.io/gen/internal/models"
+>>>>>>> feat: index tag
 	"gorm.io/gen/internal/parser"
 )
 
 type slice struct {
+<<<<<<< HEAD
 	Type   model.Status
+=======
+	Type   models.Status
+>>>>>>> feat: index tag
 	Value  string
 	Origin string
 }
@@ -267,7 +275,11 @@ func (m *InterfaceMethod) getSQLDocString() string {
 func (m *InterfaceMethod) sqlStateCheck() error {
 	sqlString := m.SqlString
 	result := NewSlices()
+<<<<<<< HEAD
 	var buf model.SQLBuffer
+=======
+	var buf models.Sql
+>>>>>>> feat: index tag
 	for i := 0; !strOutrange(i, sqlString); i++ {
 		b := sqlString[i]
 		switch b {
@@ -285,7 +297,11 @@ func (m *InterfaceMethod) sqlStateCheck() error {
 		case '{', '@':
 			if sqlClause := buf.Dump(); strings.TrimSpace(sqlClause) != "" {
 				result.slices = append(result.slices, slice{
+<<<<<<< HEAD
 					Type:  model.SQL,
+=======
+					Type:  models.SQL,
+>>>>>>> feat: index tag
 					Value: strconv.Quote(sqlClause),
 				})
 			}
@@ -331,10 +347,17 @@ func (m *InterfaceMethod) sqlStateCheck() error {
 			}
 			if b == '@' {
 				i++
+<<<<<<< HEAD
 				status := model.DATA
 				if sqlString[i] == '@' {
 					i++
 					status = model.VARIABLE
+=======
+				status := models.DATA
+				if sqlString[i] == '@' {
+					i++
+					status = models.VARIABLE
+>>>>>>> feat: index tag
 				}
 				for ; ; i++ {
 					if strOutrange(i, sqlString) || isEnd(sqlString[i]) {
@@ -356,7 +379,11 @@ func (m *InterfaceMethod) sqlStateCheck() error {
 	}
 	if sqlClause := buf.Dump(); strings.TrimSpace(sqlClause) != "" {
 		result.slices = append(result.slices, slice{
+<<<<<<< HEAD
 			Type:  model.SQL,
+=======
+			Type:  models.SQL,
+>>>>>>> feat: index tag
 			Value: strconv.Quote(sqlClause),
 		})
 	}
@@ -370,17 +397,29 @@ func (m *InterfaceMethod) sqlStateCheck() error {
 }
 
 // methodParams return extrenal parameters, table name
+<<<<<<< HEAD
 func (m *InterfaceMethod) methodParams(param string, s model.Status) (result slice, err error) {
+=======
+func (m *InterfaceMethod) methodParams(param string, s models.Status) (result slice, err error) {
+>>>>>>> feat: index tag
 	for _, p := range m.Params {
 		if p.Name == param {
 			var str string
 			switch s {
+<<<<<<< HEAD
 			case model.DATA:
+=======
+			case models.DATA:
+>>>>>>> feat: index tag
 				str = fmt.Sprintf("\"@%s\"", param)
 				if !m.isParamExist(param) {
 					m.SqlData = append(m.SqlData, param)
 				}
+<<<<<<< HEAD
 			case model.VARIABLE:
+=======
+			case models.VARIABLE:
+>>>>>>> feat: index tag
 				if p.Type != "string" {
 					err = fmt.Errorf("variable name must be string :%s type is %s", param, p.Type)
 				}
@@ -395,7 +434,11 @@ func (m *InterfaceMethod) methodParams(param string, s model.Status) (result sli
 	}
 	if param == "table" {
 		result = slice{
+<<<<<<< HEAD
 			Type:  model.SQL,
+=======
+			Type:  models.SQL,
+>>>>>>> feat: index tag
 			Value: strconv.Quote(m.Table),
 		}
 		return
