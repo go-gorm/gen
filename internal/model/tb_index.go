@@ -10,10 +10,7 @@ type Index struct {
 }
 
 func (c *Index) IsPrimaryKey() bool {
-	if c == nil {
-		return false
-	}
-	if c.IndexName == "PRIMARY" {
+	if c != nil && c.IndexName == "PRIMARY" {
 		return true
 	}
 	return false
@@ -21,10 +18,7 @@ func (c *Index) IsPrimaryKey() bool {
 
 // not primary key but unique key
 func (c *Index) NotPriButUnique() bool {
-	if c == nil {
-		return false
-	}
-	return !c.IsPrimaryKey() && c.NonUnique == 0
+	return c != nil && !c.IsPrimaryKey() && c.NonUnique == 0
 }
 
 func GroupByColumn(indexList []*Index) map[string][]*Index {

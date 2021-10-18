@@ -487,7 +487,7 @@ func (f *fragment) fragmentByParams(params []parser.Param) {
 }
 
 func splitTemplate(tmpl string, params []parser.Param) (fragList []fragment, err error) {
-	var buf model.Sql
+	var buf model.SQLBuffer
 	var f fragment
 	for i := 0; !strOutrange(i, tmpl); i++ {
 		switch tmpl[i] {

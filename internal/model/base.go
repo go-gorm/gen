@@ -148,9 +148,9 @@ func (m *Member) EscapeKeyword() *Member {
 	return m
 }
 
-type Sql struct{ bytes.Buffer }
+type SQLBuffer struct{ bytes.Buffer }
 
-func (s *Sql) WriteSql(b byte) {
+func (s *SQLBuffer) WriteSql(b byte) {
 	switch b {
 	case '\n', '\t', ' ':
 		if s.Len() == 0 || s.Bytes()[s.Len()-1] != ' ' {
@@ -161,7 +161,7 @@ func (s *Sql) WriteSql(b byte) {
 	}
 }
 
-func (s *Sql) Dump() string {
+func (s *SQLBuffer) Dump() string {
 	defer s.Reset()
 	return s.String()
 }

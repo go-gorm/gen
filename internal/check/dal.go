@@ -51,7 +51,7 @@ func getTbColumns(db *gorm.DB, schemaName string, tableName string, indexTag boo
 	}
 	im := model.GroupByColumn(index)
 	for _, c := range result {
-		c.Index = im[c.ColumnName]
+		c.Indexes = im[c.ColumnName]
 	}
 	return result, nil
 }

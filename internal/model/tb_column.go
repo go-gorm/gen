@@ -17,24 +17,18 @@ type Column struct {
 	ColumnDefault string   `gorm:"column:COLUMN_DEFAULT"`
 	Extra         string   `gorm:"column:EXTRA"`
 	IsNullable    string   `gorm:"column:IS_NULLABLE"`
-	Index         []*Index `gorm:"-"`
+	Indexes       []*Index `gorm:"-"`
 }
 
 func (c *Column) IsPrimaryKey() bool {
-	if c == nil {
-		return false
-	}
-	if c.ColumnKey == "PRI" {
+	if c != nil && c.ColumnKey == "PRI" {
 		return true
 	}
 	return false
 }
 
 func (c *Column) AutoIncrement() bool {
-	if c == nil {
-		return false
-	}
-	if c.Extra == "auto_increment" {
+	if c != nil && c.Extra == "auto_increment" {
 		return true
 	}
 	return false
@@ -72,7 +66,7 @@ func (c *Column) buildGormTag() string {
 			buf.WriteString(";autoIncrement:false")
 		}
 	}
-	for _, idx := range c.Index {
+	for _, idx := range c.Indexes {
 		if idx == nil || idx.IsPrimaryKey() {
 			continue
 		}

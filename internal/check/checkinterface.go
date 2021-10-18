@@ -267,7 +267,7 @@ func (m *InterfaceMethod) getSQLDocString() string {
 func (m *InterfaceMethod) sqlStateCheck() error {
 	sqlString := m.SqlString
 	result := NewSlices()
-	var buf model.Sql
+	var buf model.SQLBuffer
 	for i := 0; !strOutrange(i, sqlString); i++ {
 		b := sqlString[i]
 		switch b {
