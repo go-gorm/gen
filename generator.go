@@ -13,6 +13,7 @@ import (
 	"text/template"
 
 	"golang.org/x/tools/imports"
+	"gorm.io/gen/internal/model"
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils/tests"
 
@@ -59,19 +60,20 @@ const (
 type Config struct {
 	db *gorm.DB //nolint
 
-	OutPath       string
-	OutFile       string
-	ModelPkgPath  string // generated model code's package name
-	FieldNullable bool
+	OutPath           string
+	OutFile           string
+	ModelPkgPath      string // generated model code's package name
+	FieldNullable     bool
+	FieldWithIndexTag bool
 
 	Mode GenerateMode // generate mode
 
 	queryPkgName string // generated query code's package name
-	dbNameOpts   []check.SchemaNameOpt
+	dbNameOpts   []model.SchemaNameOpt
 }
 
 // WithDbNameOpts set get database name function
-func (cfg *Config) WithDbNameOpts(opts ...check.SchemaNameOpt) {
+func (cfg *Config) WithDbNameOpts(opts ...model.SchemaNameOpt) {
 	if cfg.dbNameOpts == nil {
 		cfg.dbNameOpts = opts
 	} else {
@@ -144,13 +146,21 @@ func (g *Generator) UseDB(db *gorm.DB) {
  */
 
 // GenerateModel catch table info from db, return a BaseStruct
-func (g *Generator) GenerateModel(tableName string, opts ...check.MemberOpt) *check.BaseStruct {
+func (g *Generator) GenerateModel(tableName string, opts ...model.MemberOpt) *check.BaseStruct {
 	return g.GenerateModelAs(tableName, g.db.Config.NamingStrategy.SchemaName(tableName), opts...)
 }
 
 // GenerateModel catch table info from db, return a BaseStruct
-func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...check.MemberOpt) *check.BaseStruct {
-	s, err := check.GenBaseStructs(g.db, g.Config.ModelPkgPath, tableName, modelName, g.dbNameOpts, fieldOpts, g.Config.FieldNullable)
+func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...model.MemberOpt) *check.BaseStruct {
+	s, err := check.GenBaseStructs(g.db, model.DBConf{
+		ModelPkg:          g.Config.ModelPkgPath,
+		TableName:         tableName,
+		ModelName:         modelName,
+		SchemaNameOpts:    g.dbNameOpts,
+		MemberOpts:        fieldOpts,
+		FieldNullable:     g.FieldNullable,
+		FieldWithIndexTag: g.FieldWithIndexTag,
+	})
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)
 		panic("generate struct fail")
@@ -242,10 +252,7 @@ func (g *Generator) Execute() {
 		panic("generate query code fail")
 	}
 
-	g.successInfo(
-		"Successfully generate query file："+g.OutFile,
-		"Successfully generate code",
-	)
+	g.successInfo("Generate code done.")
 }
 
 // successInfo logger
@@ -277,17 +284,19 @@ func (g *Generator) generateQueryFile() (err error) {
 		return err
 	}
 
-	err = g.output(g.OutFile, buf.Bytes())
-	if err != nil {
-		return err
-	}
-
 	for _, info := range g.Data {
 		err = g.generateSubQuery(info)
 		if err != nil {
 			return err
 		}
 	}
+
+	err = g.output(g.OutFile, buf.Bytes())
+	if err != nil {
+		return err
+	}
+	g.successInfo("generate query file: " + g.OutFile)
+
 	return nil
 }
 
@@ -321,6 +330,8 @@ func (g *Generator) generateSubQuery(data *genInfo) (err error) {
 	if err != nil {
 		return err
 	}
+
+	defer g.successInfo(fmt.Sprintf("generate query file: %s/%s.gen.go", g.OutPath, strings.ToLower(data.TableName)))
 	return g.output(fmt.Sprintf("%s/%s.gen.go", g.OutPath, strings.ToLower(data.TableName)), buf.Bytes())
 }
 
@@ -382,8 +393,7 @@ func (g *Generator) generateBaseStruct() (err error) {
 			return err
 		}
 
-		g.successInfo(fmt.Sprintf("Generate struct [%s.%s] from table [%s]", data.StructInfo.Package, data.StructInfo.Type, data.TableName))
-		g.successInfo(fmt.Sprintf("Successfully generate struct file: %s", modelFile))
+		g.successInfo(fmt.Sprintf("generate struct(table %q -> {%s.%s}) file: %s", data.TableName, data.StructInfo.Package, data.StructInfo.Type, modelFile))
 	}
 	return nil
 }

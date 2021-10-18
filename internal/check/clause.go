@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"gorm.io/gen/internal/model"
 	"gorm.io/gen/internal/parser"
 )
 
@@ -22,7 +23,7 @@ var (
 
 type clause struct {
 	VarName string
-	Type    Status
+	Type    model.Status
 }
 
 // SQLClause sql condition clause
@@ -87,16 +88,16 @@ type Slices struct {
 	slices       []slice
 	tmpl         []string
 	currentIndex int
-	Names        map[Status]int
+	Names        map[model.Status]int
 }
 
 // NewSlices create and initialize Slices
 func NewSlices() *Slices {
 	return &Slices{
-		Names: map[Status]int{
-			IF:    0,
-			WHERE: 0,
-			SET:   0,
+		Names: map[model.Status]int{
+			model.IF:    0,
+			model.WHERE: 0,
+			model.SET:   0,
 		},
 	}
 }
@@ -133,17 +134,17 @@ func (s *Slices) Current() slice {
 }
 
 // GetName ...
-func (s *Slices) GetName(status Status) string {
+func (s *Slices) GetName(status model.Status) string {
 	switch status {
-	case IF:
-		defer func() { s.Names[IF]++ }()
-		return fmt.Sprintf("ifCond%d", s.Names[IF])
-	case WHERE:
-		defer func() { s.Names[WHERE]++ }()
-		return fmt.Sprintf("whereCond%d", s.Names[WHERE])
-	case SET:
-		defer func() { s.Names[SET]++ }()
-		return fmt.Sprintf("setCond%d", s.Names[SET])
+	case model.IF:
+		defer func() { s.Names[model.IF]++ }()
+		return fmt.Sprintf("ifCond%d", s.Names[model.IF])
+	case model.WHERE:
+		defer func() { s.Names[model.WHERE]++ }()
+		return fmt.Sprintf("whereCond%d", s.Names[model.WHERE])
+	case model.SET:
+		defer func() { s.Names[model.SET]++ }()
+		return fmt.Sprintf("setCond%d", s.Names[model.SET])
 	default:
 		return fmt.Sprintf("Cond%d", s.currentIndex)
 	}
@@ -178,32 +179,32 @@ func (s *Slices) parse() ([]Clause, error) {
 	for slice := s.Current(); ; slice = s.Next() {
 		s.tmpl = append(s.tmpl, "")
 		switch slice.Type {
-		case SQL, DATA, VARIABLE:
+		case model.SQL, model.DATA, model.VARIABLE:
 			sqlClause := s.parseSQL(name)
 			res = append(res, sqlClause)
 			s.tmpl = append(s.tmpl, fmt.Sprintf("%s+=%s", name, sqlClause.String()))
-		case IF:
+		case model.IF:
 			ifClause, err := s.parseIF()
 			if err != nil {
 				return nil, err
 			}
 			res = append(res, ifClause)
 			s.tmpl = append(s.tmpl, fmt.Sprintf("%s+=helper.IfClause(%s)", name, ifClause.VarName))
-		case WHERE:
+		case model.WHERE:
 			whereClause, err := s.parseWhere()
 			if err != nil {
 				return nil, err
 			}
 			res = append(res, whereClause)
 			s.tmpl = append(s.tmpl, fmt.Sprintf("%s+=helper.WhereClause(%s)", name, whereClause.VarName))
-		case SET:
+		case model.SET:
 			setClause, err := s.parseSet()
 			if err != nil {
 				return nil, err
 			}
 			res = append(res, setClause)
 			s.tmpl = append(s.tmpl, fmt.Sprintf("%s+=helper.SetClause(%s)", name, setClause.VarName))
-		case END:
+		case model.END:
 		default:
 			return nil, fmt.Errorf("unknow clause:%s", slice.Origin)
 		}
@@ -228,11 +229,11 @@ func (s *Slices) parseIF() (res IfClause, err error) {
 	for s.HasMore() {
 		n := s.Next()
 		switch n.Type {
-		case SQL, DATA, VARIABLE:
+		case model.SQL, model.DATA, model.VARIABLE:
 			str := s.parseSQL(name)
 			res.Value = append(res.Value, str)
 			s.appendIfCond(name, res.Cond, str.String())
-		case IF:
+		case model.IF:
 			var ifClause IfClause
 			ifClause, err = s.parseIF()
 			if err != nil {
@@ -240,7 +241,7 @@ func (s *Slices) parseIF() (res IfClause, err error) {
 			}
 			res.Value = append(res.Value, ifClause)
 			s.appendIfCond(name, res.Cond, ifClause.String())
-		case WHERE:
+		case model.WHERE:
 			var whereClause WhereClause
 			whereClause, err = s.parseWhere()
 			if err != nil {
@@ -248,7 +249,7 @@ func (s *Slices) parseIF() (res IfClause, err error) {
 			}
 			res.Value = append(res.Value, whereClause)
 			s.appendIfCond(name, res.Cond, whereClause.String())
-		case SET:
+		case model.SET:
 			var setClause SetClause
 			setClause, err = s.parseSet()
 			if err != nil {
@@ -256,26 +257,26 @@ func (s *Slices) parseIF() (res IfClause, err error) {
 			}
 			res.Value = append(res.Value, setClause)
 			s.appendIfCond(name, res.Cond, setClause.String())
-		case ELSEIF:
+		case model.ELSEIF:
 			elseClause := s.parseElSE(name)
 			elseCond := elseClause.Cond
 			elseClause.Cond = fmt.Sprintf("!(%s) && %s", strings.Join(cond, " || "), elseCond)
 			res.Else = append(res.Else, elseClause)
 			s.appendIfCond(name, elseClause.Cond, elseClause.String())
 			cond = append(cond, elseCond)
-		case ELSE:
+		case model.ELSE:
 			elseClause := s.parseElSE(name)
 			elseClause.Cond = fmt.Sprintf("!(%s)", strings.Join(cond, " || "))
 			res.Else = append(res.Else, elseClause)
 			s.appendIfCond(name, elseClause.Cond, elseClause.String())
-		case END:
+		case model.END:
 			return
 		default:
 			err = fmt.Errorf("unknow clause : %s", n.Origin)
 			return
 		}
 	}
-	if s.Current().Type == END {
+	if s.Current().Type == model.END {
 		return
 	}
 	err = fmt.Errorf("incomplete SQL,if not end")
@@ -294,21 +295,21 @@ func (s *Slices) parseElSE(name string) (res ElseClause) {
 	}
 	for n := s.Next(); s.HasMore(); n = s.Next() {
 		switch n.Type {
-		case SQL, DATA, VARIABLE:
+		case model.SQL, model.DATA, model.VARIABLE:
 			res.Value = append(res.Value, s.parseSQL(name))
-		case IF:
+		case model.IF:
 			ifClause, err := s.parseIF()
 			if err != nil {
 				return
 			}
 			res.Value = append(res.Value, ifClause)
-		case WHERE:
+		case model.WHERE:
 			whereClause, err := s.parseWhere()
 			if err != nil {
 				return
 			}
 			res.Value = append(res.Value, whereClause)
-		case SET:
+		case model.SET:
 			setClause, err := s.parseSet()
 			if err != nil {
 				return
@@ -333,11 +334,11 @@ func (s *Slices) parseWhere() (res WhereClause, err error) {
 	for s.HasMore() {
 		n := s.Next()
 		switch n.Type {
-		case SQL, DATA, VARIABLE:
+		case model.SQL, model.DATA, model.VARIABLE:
 			strClause := s.parseSQL(name)
 			res.Value = append(res.Value, strClause)
 			s.appendSetValue(name, strClause.String())
-		case IF:
+		case model.IF:
 			var ifClause IfClause
 			ifClause, err = s.parseIF()
 			if err != nil {
@@ -345,14 +346,14 @@ func (s *Slices) parseWhere() (res WhereClause, err error) {
 			}
 			res.Value = append(res.Value, ifClause)
 			s.appendSetValue(name, ifClause.String())
-		case END:
+		case model.END:
 			return
 		default:
 			err = fmt.Errorf("unknow clause : %s", n.Origin)
 			return
 		}
 	}
-	if s.Current().Type == END {
+	if s.Current().Type == model.END {
 		return
 	}
 	err = fmt.Errorf("incomplete SQL,where not end")
@@ -370,11 +371,11 @@ func (s *Slices) parseSet() (res SetClause, err error) {
 	for s.HasMore() {
 		n := s.Next()
 		switch n.Type {
-		case SQL, DATA, VARIABLE:
+		case model.SQL, model.DATA, model.VARIABLE:
 			strClause := s.parseSQL(name)
 			res.Value = append(res.Value, strClause)
 			s.appendSetValue(name, strClause.String())
-		case IF:
+		case model.IF:
 			var ifClause IfClause
 			ifClause, err = s.parseIF()
 			if err != nil {
@@ -382,14 +383,14 @@ func (s *Slices) parseSet() (res SetClause, err error) {
 			}
 			res.Value = append(res.Value, ifClause)
 			s.appendSetValue(name, ifClause.String())
-		case END:
+		case model.END:
 			return
 		default:
 			err = fmt.Errorf("unknow clause : %s", n.Origin)
 			return
 		}
 	}
-	if s.Current().Type == END {
+	if s.Current().Type == model.END {
 		return
 	}
 	err = fmt.Errorf("incomplete SQL,set not end")
@@ -399,10 +400,10 @@ func (s *Slices) parseSet() (res SetClause, err error) {
 // parseSQL parse sql condition, the clause' type must be one of SQL condition, VARIABLE, Data
 func (s *Slices) parseSQL(name string) (res SQLClause) {
 	res.VarName = name
-	res.Type = SQL
+	res.Type = model.SQL
 	for slice := s.Current(); ; slice = s.Next() {
 		switch slice.Type {
-		case SQL, VARIABLE, DATA:
+		case model.SQL, model.VARIABLE, model.DATA:
 			res.Value = append(res.Value, slice.Value)
 		default:
 			s.SubIndex()
@@ -417,7 +418,7 @@ func (s *Slices) parseSQL(name string) (res SQLClause) {
 
 // sql fragment
 type fragment struct {
-	Type    Status
+	Type    model.Status
 	Value   string
 	IsArray bool
 }
@@ -430,32 +431,32 @@ func checkFragment(s string, params []parser.Param) (f fragment, err error) {
 		return str
 	}
 
-	f = fragment{Type: UNKNOWN, Value: strings.Trim(s, " ")}
+	f = fragment{Type: model.UNKNOWN, Value: strings.Trim(s, " ")}
 	str := strings.ToLower(strings.Trim(s, " "))
 	switch digital(str) {
 	case "<integer>":
-		f.Type = INT
+		f.Type = model.INT
 	case "&&", "||":
-		f.Type = LOGICAL
+		f.Type = model.LOGICAL
 	case ">", "<", ">=", "<=", "==", "!=":
-		f.Type = EXPRESSION
+		f.Type = model.EXPRESSION
 	case "end":
-		f.Type = END
+		f.Type = model.END
 	case "if":
-		f.Type = IF
+		f.Type = model.IF
 	case "set":
-		f.Type = SET
+		f.Type = model.SET
 	case "else":
-		f.Type = ELSE
+		f.Type = model.ELSE
 	case "where":
-		f.Type = WHERE
+		f.Type = model.WHERE
 	case "true", "false":
-		f.Type = BOOL
+		f.Type = model.BOOL
 	case "nil":
-		f.Type = NIL
+		f.Type = model.NIL
 	default:
 		f.fragmentByParams(params)
-		if f.Type == UNKNOWN {
+		if f.Type == model.UNKNOWN {
 			err = fmt.Errorf("unknow parameter: %s", s)
 		}
 	}
@@ -468,25 +469,25 @@ func (f *fragment) fragmentByParams(params []parser.Param) {
 			f.IsArray = param.IsArray
 			switch param.Type {
 			case "bool":
-				f.Type = BOOL
+				f.Type = model.BOOL
 				return
 			case "int":
-				f.Type = INT
+				f.Type = model.INT
 				return
 			case "string":
-				f.Type = STRING
+				f.Type = model.STRING
 				return
 			case "Time":
-				f.Type = TIME
+				f.Type = model.TIME
 			default:
-				f.Type = OTHER
+				f.Type = model.OTHER
 			}
 		}
 	}
 }
 
 func splitTemplate(tmpl string, params []parser.Param) (fragList []fragment, err error) {
-	var buf sql
+	var buf model.SQLBuffer
 	var f fragment
 	for i := 0; !strOutrange(i, tmpl); i++ {
 		switch tmpl[i] {
@@ -499,7 +500,7 @@ func splitTemplate(tmpl string, params []parser.Param) (fragList []fragment, err
 				_ = buf.WriteByte(tmpl[i])
 
 				if tmpl[i] == '"' && tmpl[i-1] != '\\' {
-					fragList = append(fragList, fragment{Type: STRING, Value: buf.Dump()})
+					fragList = append(fragList, fragment{Type: model.STRING, Value: buf.Dump()})
 					break
 				}
 			}
@@ -553,7 +554,7 @@ func splitTemplate(tmpl string, params []parser.Param) (fragList []fragment, err
 
 				// write && or ||
 				fragList = append(fragList, fragment{
-					Type:  LOGICAL,
+					Type:  model.LOGICAL,
 					Value: tmpl[i-1 : i+1],
 				})
 			}
@@ -576,9 +577,9 @@ func splitTemplate(tmpl string, params []parser.Param) (fragList []fragment, err
 func checkTempleFragmentValid(list []fragment) error {
 	for i := 1; i < len(list); i++ {
 		switch list[i].Type {
-		case IF, ELSE, END, BOOL, LOGICAL, WHERE, SET:
+		case model.IF, model.ELSE, model.END, model.BOOL, model.LOGICAL, model.WHERE, model.SET:
 			continue
-		case INT, STRING, OTHER, TIME, NIL:
+		case model.INT, model.STRING, model.OTHER, model.TIME, model.NIL:
 			if i+2 < len(list) {
 				if isExpressionValid(list[i : i+3]) {
 					i += 2
@@ -598,11 +599,11 @@ func isExpressionValid(expr []fragment) bool {
 	if len(expr) != 3 {
 		return false
 	}
-	if expr[1].Type != EXPRESSION {
+	if expr[1].Type != model.EXPRESSION {
 		return false
 	}
 	//Only arrays can be compared with nil
-	if expr[0].Type == NIL || expr[2].Type == NIL {
+	if expr[0].Type == model.NIL || expr[2].Type == model.NIL {
 		return expr[0].IsArray || expr[2].IsArray
 	}
 
@@ -634,29 +635,29 @@ func fragmentToSLice(list []fragment) (part slice, err error) {
 	switch strings.ToLower(values[0]) {
 	case "if":
 		if len(values) > 1 {
-			part.Type = IF
+			part.Type = model.IF
 			part.Value = strings.Join(values[1:], " ")
 			return
 		}
 	case "else":
 		if len(values) == 1 {
-			part.Type = ELSE
+			part.Type = model.ELSE
 			return
 		} else {
 			if strings.ToLower(values[1]) == "if" && len(values) > 2 {
 				part.Value = strings.Join(values[2:], " ")
-				part.Type = ELSEIF
+				part.Type = model.ELSEIF
 				return
 			}
 		}
 	case "where":
-		part.Type = WHERE
+		part.Type = model.WHERE
 		return
 	case "set":
-		part.Type = SET
+		part.Type = model.SET
 		return
 	case "end":
-		part.Type = END
+		part.Type = model.END
 		return
 	}
 
