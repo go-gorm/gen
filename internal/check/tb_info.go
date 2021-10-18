@@ -13,7 +13,7 @@ const (
 	//query table structure
 	columnQuery = "SELECT COLUMN_NAME,COLUMN_COMMENT,DATA_TYPE,IS_NULLABLE,COLUMN_KEY,COLUMN_TYPE,COLUMN_DEFAULT,EXTRA " +
 		"FROM information_schema.COLUMNS " +
-		"WHERE TABLE_SCHEMA = ? AND TABLE_NAME =? " +
+		"WHERE TABLE_SCHEMA = ? AND TABLE_ =? " +
 		"ORDER BY ORDINAL_POSITION"
 
 	//query table index
