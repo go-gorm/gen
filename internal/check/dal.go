@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"gorm.io/gen/internal/models"
+	"gorm.io/gen/internal/model"
 	"gorm.io/gorm"
 )
 
@@ -19,18 +19,16 @@ const (
 )
 
 type ITableInfo interface {
-	GetTbColumns(schemaName string, tableName string) (result []*models.Column, err error)
+	GetTbColumns(schemaName string, tableName string) (result []*model.Column, err error)
 
-	GetTbIndex(schemaName string, tableName string) (result []*models.Index, err error)
+	GetTbIndex(schemaName string, tableName string) (result []*model.Index, err error)
 }
-
-var mti = &mysqlTableInfo{}
 
 func getITableInfo(db *gorm.DB) ITableInfo {
 	return &mysqlTableInfo{db: db}
 }
 
-func getTbColumns(db *gorm.DB, schemaName string, tableName string, indexTag bool) (result []*models.Column, err error) {
+func getTbColumns(db *gorm.DB, schemaName string, tableName string, indexTag bool) (result []*model.Column, err error) {
 	if db == nil {
 		return nil, errors.New("gorm db is nil")
 	}
@@ -51,7 +49,7 @@ func getTbColumns(db *gorm.DB, schemaName string, tableName string, indexTag boo
 	if len(index) == 0 {
 		return result, nil
 	}
-	im := models.GroupByColumn(index)
+	im := model.GroupByColumn(index)
 	for _, c := range result {
 		c.Index = im[c.ColumnName]
 	}
@@ -63,11 +61,11 @@ type mysqlTableInfo struct {
 }
 
 //GetTbColumns Mysql struct
-func (t *mysqlTableInfo) GetTbColumns(schemaName string, tableName string) (result []*models.Column, err error) {
+func (t *mysqlTableInfo) GetTbColumns(schemaName string, tableName string) (result []*model.Column, err error) {
 	return result, t.db.Raw(columnQuery, schemaName, tableName).Scan(&result).Error
 }
 
 //GetTbIndex Mysql index
-func (t *mysqlTableInfo) GetTbIndex(schemaName string, tableName string) (result []*models.Index, err error) {
+func (t *mysqlTableInfo) GetTbIndex(schemaName string, tableName string) (result []*model.Index, err error) {
 	return result, t.db.Raw(indexQuery, schemaName, tableName).Scan(&result).Error
 }

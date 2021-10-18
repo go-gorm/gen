@@ -1,4 +1,4 @@
-package models
+package model
 
 // Index table index info
 type Index struct {

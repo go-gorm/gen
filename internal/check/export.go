@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"gorm.io/gen/internal/models"
+	"gorm.io/gen/internal/model"
 	"gorm.io/gorm"
 
 	"gorm.io/gen/internal/parser"
@@ -30,7 +30,7 @@ func CheckStructs(db *gorm.DB, structs ...interface{}) (bases []*BaseStruct, err
 			StructName:    name,
 			NewStructName: uncaptialize(name),
 			StructInfo:    parser.Param{Type: name, Package: getPackageName(structType.String())},
-			Source:        models.Struct,
+			Source:        model.Struct,
 			db:            db,
 		}
 		if err := base.parseStruct(st); err != nil {

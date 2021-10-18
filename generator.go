@@ -13,7 +13,7 @@ import (
 	"text/template"
 
 	"golang.org/x/tools/imports"
-	"gorm.io/gen/internal/models"
+	"gorm.io/gen/internal/model"
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils/tests"
 
@@ -60,20 +60,20 @@ const (
 type Config struct {
 	db *gorm.DB //nolint
 
-	OutPath       string
-	OutFile       string
-	ModelPkgPath  string // generated model code's package name
-	FieldNullable bool
-	NeedIndexTag  bool
+	OutPath           string
+	OutFile           string
+	ModelPkgPath      string // generated model code's package name
+	FieldNullable     bool
+	FieldWithIndexTag bool
 
 	Mode GenerateMode // generate mode
 
 	queryPkgName string // generated query code's package name
-	dbNameOpts   []models.SchemaNameOpt
+	dbNameOpts   []model.SchemaNameOpt
 }
 
 // WithDbNameOpts set get database name function
-func (cfg *Config) WithDbNameOpts(opts ...models.SchemaNameOpt) {
+func (cfg *Config) WithDbNameOpts(opts ...model.SchemaNameOpt) {
 	if cfg.dbNameOpts == nil {
 		cfg.dbNameOpts = opts
 	} else {
@@ -146,14 +146,14 @@ func (g *Generator) UseDB(db *gorm.DB) {
  */
 
 // GenerateModel catch table info from db, return a BaseStruct
-func (g *Generator) GenerateModel(tableName string, opts ...models.MemberOpt) *check.BaseStruct {
+func (g *Generator) GenerateModel(tableName string, opts ...model.MemberOpt) *check.BaseStruct {
 	return g.GenerateModelAs(tableName, g.db.Config.NamingStrategy.SchemaName(tableName), opts...)
 }
 
 // GenerateModel catch table info from db, return a BaseStruct
-func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...models.MemberOpt) *check.BaseStruct {
-	mc := models.DbModelConf{ModelPkg: g.Config.ModelPkgPath, TableName: tableName, ModelName: modelName,
-		SchemaNameOpts: g.dbNameOpts, MemberOpts: fieldOpts, Nullable: g.FieldNullable, IndexTag: g.NeedIndexTag}
+func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...model.MemberOpt) *check.BaseStruct {
+	mc := model.DbModelConf{ModelPkg: g.Config.ModelPkgPath, TableName: tableName, ModelName: modelName,
+		SchemaNameOpts: g.dbNameOpts, MemberOpts: fieldOpts, Nullable: g.FieldNullable, IndexTag: g.FieldWithIndexTag}
 
 	s, err := check.GenBaseStructs(g.db, mc)
 	if err != nil {

@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"gorm.io/gen/internal/models"
+	"gorm.io/gen/internal/model"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 	"gorm.io/gorm/utils/tests"
@@ -24,7 +24,7 @@ const (
 )
 
 // GenBaseStructs generate db model by table name
-func GenBaseStructs(db *gorm.DB, conf models.DbModelConf) (bases *BaseStruct, err error) {
+func GenBaseStructs(db *gorm.DB, conf model.DbModelConf) (bases *BaseStruct, err error) {
 	modelName := conf.ModelName
 	tableName := conf.TableName
 	if _, ok := db.Config.Dialector.(tests.DummyDialector); ok {
@@ -45,7 +45,7 @@ func GenBaseStructs(db *gorm.DB, conf models.DbModelConf) (bases *BaseStruct, er
 		return nil, err
 	}
 	base := BaseStruct{
-		Source:        models.TableName,
+		Source:        model.TableName,
 		GenBaseStruct: true,
 		TableName:     tableName,
 		StructName:    modelName,
@@ -94,7 +94,7 @@ func GenBaseStructs(db *gorm.DB, conf models.DbModelConf) (bases *BaseStruct, er
 	return &base, nil
 }
 
-func filterMember(m *models.Member, opts []models.MemberOpt) *models.Member {
+func filterMember(m *model.Member, opts []model.MemberOpt) *model.Member {
 	for _, opt := range opts {
 		if opt.Self()(m) == nil {
 			return nil
@@ -103,7 +103,7 @@ func filterMember(m *models.Member, opts []models.MemberOpt) *models.Member {
 	return m
 }
 
-func modifyMember(m *models.Member, opts []models.MemberOpt) *models.Member {
+func modifyMember(m *model.Member, opts []model.MemberOpt) *model.Member {
 	for _, opt := range opts {
 		m = opt.Self()(m)
 	}
