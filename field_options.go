@@ -7,6 +7,7 @@ import (
 
 	"gorm.io/gen/field"
 	"gorm.io/gen/internal/check"
+	"gorm.io/gen/internal/model"
 	"gorm.io/gorm/schema"
 )
 
@@ -14,9 +15,9 @@ var ns = schema.NamingStrategy{}
 
 var (
 	// FieldNew add new field
-	FieldNew = func(fieldName, fieldType, fieldTag string) check.CreateMemberOpt {
-		return func(*check.Member) *check.Member {
-			return &check.Member{
+	FieldNew = func(fieldName, fieldType, fieldTag string) model.CreateMemberOpt {
+		return func(*model.Member) *model.Member {
+			return &model.Member{
 				Name:         fieldName,
 				Type:         fieldType,
 				OverwriteTag: fieldTag,
@@ -24,8 +25,8 @@ var (
 		}
 	}
 	// FieldIgnore ignore some columns by name
-	FieldIgnore = func(columnNames ...string) check.FilterMemberOpt {
-		return func(m *check.Member) *check.Member {
+	FieldIgnore = func(columnNames ...string) model.FilterMemberOpt {
+		return func(m *model.Member) *model.Member {
 			for _, name := range columnNames {
 				if m.ColumnName == name {
 					return nil
@@ -35,12 +36,12 @@ var (
 		}
 	}
 	// FieldIgnoreReg ignore some columns by reg rule
-	FieldIgnoreReg = func(columnNameRegs ...string) check.FilterMemberOpt {
+	FieldIgnoreReg = func(columnNameRegs ...string) model.FilterMemberOpt {
 		regs := make([]regexp.Regexp, len(columnNameRegs))
 		for i, reg := range columnNameRegs {
 			regs[i] = *regexp.MustCompile(reg)
 		}
-		return func(m *check.Member) *check.Member {
+		return func(m *model.Member) *model.Member {
 			for _, reg := range regs {
 				if reg.MatchString(m.ColumnName) {
 					return nil
@@ -50,8 +51,8 @@ var (
 		}
 	}
 	// FieldRename specify field name in generated struct
-	FieldRename = func(columnName string, newName string) check.ModifyMemberOpt {
-		return func(m *check.Member) *check.Member {
+	FieldRename = func(columnName string, newName string) model.ModifyMemberOpt {
+		return func(m *model.Member) *model.Member {
 			if m.ColumnName == columnName {
 				m.Name = newName
 			}
@@ -59,8 +60,8 @@ var (
 		}
 	}
 	// FieldType specify field type in generated struct
-	FieldType = func(columnName string, newType string) check.ModifyMemberOpt {
-		return func(m *check.Member) *check.Member {
+	FieldType = func(columnName string, newType string) model.ModifyMemberOpt {
+		return func(m *model.Member) *model.Member {
 			if m.ColumnName == columnName {
 				m.Type = newType
 			}
@@ -68,9 +69,9 @@ var (
 		}
 	}
 	// FieldIgnoreType ignore some columns by reg rule
-	FieldTypeReg = func(columnNameReg string, newType string) check.ModifyMemberOpt {
+	FieldTypeReg = func(columnNameReg string, newType string) model.ModifyMemberOpt {
 		reg := regexp.MustCompile(columnNameReg)
-		return func(m *check.Member) *check.Member {
+		return func(m *model.Member) *model.Member {
 			if reg.MatchString(m.ColumnName) {
 				m.Type = newType
 			}
@@ -78,8 +79,8 @@ var (
 		}
 	}
 	// FieldTag specify json tag and gorm tag
-	FieldTag = func(columnName string, gormTag, jsonTag string) check.ModifyMemberOpt {
-		return func(m *check.Member) *check.Member {
+	FieldTag = func(columnName string, gormTag, jsonTag string) model.ModifyMemberOpt {
+		return func(m *model.Member) *model.Member {
 			if m.ColumnName == columnName {
 				m.GORMTag, m.JSONTag = gormTag, jsonTag
 			}
@@ -87,8 +88,8 @@ var (
 		}
 	}
 	// FieldJSONTag specify json tag
-	FieldJSONTag = func(columnName string, jsonTag string) check.ModifyMemberOpt {
-		return func(m *check.Member) *check.Member {
+	FieldJSONTag = func(columnName string, jsonTag string) model.ModifyMemberOpt {
+		return func(m *model.Member) *model.Member {
 			if m.ColumnName == columnName {
 				m.JSONTag = jsonTag
 			}
@@ -96,8 +97,8 @@ var (
 		}
 	}
 	// FieldGORMTag specify gorm tag
-	FieldGORMTag = func(columnName string, gormTag string) check.ModifyMemberOpt {
-		return func(m *check.Member) *check.Member {
+	FieldGORMTag = func(columnName string, gormTag string) model.ModifyMemberOpt {
+		return func(m *model.Member) *model.Member {
 			if m.ColumnName == columnName {
 				m.GORMTag = gormTag
 			}
@@ -105,8 +106,8 @@ var (
 		}
 	}
 	// FieldNewTag add new tag
-	FieldNewTag = func(columnName string, newTag string) check.ModifyMemberOpt {
-		return func(m *check.Member) *check.Member {
+	FieldNewTag = func(columnName string, newTag string) model.ModifyMemberOpt {
+		return func(m *model.Member) *model.Member {
 			if m.ColumnName == columnName {
 				m.NewTag += " " + newTag
 			}
@@ -114,42 +115,42 @@ var (
 		}
 	}
 	// FieldTrimPrefix trim column name's prefix
-	FieldTrimPrefix = func(prefix string) check.ModifyMemberOpt {
-		return func(m *check.Member) *check.Member {
+	FieldTrimPrefix = func(prefix string) model.ModifyMemberOpt {
+		return func(m *model.Member) *model.Member {
 			m.Name = strings.TrimPrefix(m.Name, prefix)
 			return m
 		}
 	}
 	// FieldTrimSuffix trim column name's suffix
-	FieldTrimSuffix = func(suffix string) check.ModifyMemberOpt {
-		return func(m *check.Member) *check.Member {
+	FieldTrimSuffix = func(suffix string) model.ModifyMemberOpt {
+		return func(m *model.Member) *model.Member {
 			m.Name = strings.TrimSuffix(m.Name, suffix)
 			return m
 		}
 	}
 	// FieldAddPrefix add prefix to struct's memeber name
-	FieldAddPrefix = func(prefix string) check.ModifyMemberOpt {
-		return func(m *check.Member) *check.Member {
+	FieldAddPrefix = func(prefix string) model.ModifyMemberOpt {
+		return func(m *model.Member) *model.Member {
 			m.Name = prefix + m.Name
 			return m
 		}
 	}
 	// FieldAddSuffix add suffix to struct's memeber name
-	FieldAddSuffix = func(suffix string) check.ModifyMemberOpt {
-		return func(m *check.Member) *check.Member {
+	FieldAddSuffix = func(suffix string) model.ModifyMemberOpt {
+		return func(m *model.Member) *model.Member {
 			m.Name += suffix
 			return m
 		}
 	}
-	FieldRelate = func(relationship field.RelationshipType, fieldName string, table *check.BaseStruct, config *field.RelateConfig) check.CreateMemberOpt {
+	FieldRelate = func(relationship field.RelationshipType, fieldName string, table *check.BaseStruct, config *field.RelateConfig) model.CreateMemberOpt {
 		if config == nil {
 			config = &field.RelateConfig{}
 		}
 		if config.JSONTag == "" {
 			config.JSONTag = ns.ColumnName("", fieldName)
 		}
-		return func(*check.Member) *check.Member {
-			return &check.Member{
+		return func(*model.Member) *model.Member {
+			return &model.Member{
 				Name:         fieldName,
 				Type:         config.RelateFieldPrefix(relationship) + table.StructInfo.Type,
 				JSONTag:      config.JSONTag,
@@ -163,8 +164,8 @@ var (
 			}
 		}
 	}
-	FieldRelateModel = func(relationship field.RelationshipType, fieldName string, model interface{}, config *field.RelateConfig) check.CreateMemberOpt {
-		st := reflect.TypeOf(model)
+	FieldRelateModel = func(relationship field.RelationshipType, fieldName string, relModel interface{}, config *field.RelateConfig) model.CreateMemberOpt {
+		st := reflect.TypeOf(relModel)
 		if st.Kind() == reflect.Ptr {
 			st = st.Elem()
 		}
@@ -177,8 +178,8 @@ var (
 			config.JSONTag = ns.ColumnName("", fieldName)
 		}
 
-		return func(*check.Member) *check.Member {
-			return &check.Member{
+		return func(*model.Member) *model.Member {
+			return &model.Member{
 				Name:         fieldName,
 				Type:         config.RelateFieldPrefix(relationship) + fieldType,
 				JSONTag:      config.JSONTag,
@@ -186,7 +187,7 @@ var (
 				NewTag:       config.NewTag,
 				OverwriteTag: config.OverwriteTag,
 
-				Relation: field.NewRelationWithModel(relationship, fieldName, fieldType, model),
+				Relation: field.NewRelationWithModel(relationship, fieldName, fieldType, relModel),
 			}
 		}
 	}

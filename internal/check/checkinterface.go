@@ -5,11 +5,12 @@ import (
 	"strconv"
 	"strings"
 
+	"gorm.io/gen/internal/model"
 	"gorm.io/gen/internal/parser"
 )
 
 type slice struct {
-	Type   Status
+	Type   model.Status
 	Value  string
 	Origin string
 }
@@ -266,7 +267,7 @@ func (m *InterfaceMethod) getSQLDocString() string {
 func (m *InterfaceMethod) sqlStateCheck() error {
 	sqlString := m.SqlString
 	result := NewSlices()
-	var buf sql
+	var buf model.SQLBuffer
 	for i := 0; !strOutrange(i, sqlString); i++ {
 		b := sqlString[i]
 		switch b {
@@ -284,7 +285,7 @@ func (m *InterfaceMethod) sqlStateCheck() error {
 		case '{', '@':
 			if sqlClause := buf.Dump(); strings.TrimSpace(sqlClause) != "" {
 				result.slices = append(result.slices, slice{
-					Type:  SQL,
+					Type:  model.SQL,
 					Value: strconv.Quote(sqlClause),
 				})
 			}
@@ -330,10 +331,10 @@ func (m *InterfaceMethod) sqlStateCheck() error {
 			}
 			if b == '@' {
 				i++
-				status := DATA
+				status := model.DATA
 				if sqlString[i] == '@' {
 					i++
-					status = VARIABLE
+					status = model.VARIABLE
 				}
 				for ; ; i++ {
 					if strOutrange(i, sqlString) || isEnd(sqlString[i]) {
@@ -355,7 +356,7 @@ func (m *InterfaceMethod) sqlStateCheck() error {
 	}
 	if sqlClause := buf.Dump(); strings.TrimSpace(sqlClause) != "" {
 		result.slices = append(result.slices, slice{
-			Type:  SQL,
+			Type:  model.SQL,
 			Value: strconv.Quote(sqlClause),
 		})
 	}
@@ -369,17 +370,17 @@ func (m *InterfaceMethod) sqlStateCheck() error {
 }
 
 // methodParams return extrenal parameters, table name
-func (m *InterfaceMethod) methodParams(param string, s Status) (result slice, err error) {
+func (m *InterfaceMethod) methodParams(param string, s model.Status) (result slice, err error) {
 	for _, p := range m.Params {
 		if p.Name == param {
 			var str string
 			switch s {
-			case DATA:
+			case model.DATA:
 				str = fmt.Sprintf("\"@%s\"", param)
 				if !m.isParamExist(param) {
 					m.SqlData = append(m.SqlData, param)
 				}
-			case VARIABLE:
+			case model.VARIABLE:
 				if p.Type != "string" {
 					err = fmt.Errorf("variable name must be string :%s type is %s", param, p.Type)
 				}
@@ -394,7 +395,7 @@ func (m *InterfaceMethod) methodParams(param string, s Status) (result slice, er
 	}
 	if param == "table" {
 		result = slice{
-			Type:  SQL,
+			Type:  model.SQL,
 			Value: strconv.Quote(m.Table),
 		}
 		return

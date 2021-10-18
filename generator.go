@@ -13,6 +13,7 @@ import (
 	"text/template"
 
 	"golang.org/x/tools/imports"
+	"gorm.io/gen/internal/model"
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils/tests"
 
@@ -59,19 +60,20 @@ const (
 type Config struct {
 	db *gorm.DB //nolint
 
-	OutPath       string
-	OutFile       string
-	ModelPkgPath  string // generated model code's package name
-	FieldNullable bool
+	OutPath           string
+	OutFile           string
+	ModelPkgPath      string // generated model code's package name
+	FieldNullable     bool
+	FieldWithIndexTag bool
 
 	Mode GenerateMode // generate mode
 
 	queryPkgName string // generated query code's package name
-	dbNameOpts   []check.SchemaNameOpt
+	dbNameOpts   []model.SchemaNameOpt
 }
 
 // WithDbNameOpts set get database name function
-func (cfg *Config) WithDbNameOpts(opts ...check.SchemaNameOpt) {
+func (cfg *Config) WithDbNameOpts(opts ...model.SchemaNameOpt) {
 	if cfg.dbNameOpts == nil {
 		cfg.dbNameOpts = opts
 	} else {
@@ -144,13 +146,16 @@ func (g *Generator) UseDB(db *gorm.DB) {
  */
 
 // GenerateModel catch table info from db, return a BaseStruct
-func (g *Generator) GenerateModel(tableName string, opts ...check.MemberOpt) *check.BaseStruct {
+func (g *Generator) GenerateModel(tableName string, opts ...model.MemberOpt) *check.BaseStruct {
 	return g.GenerateModelAs(tableName, g.db.Config.NamingStrategy.SchemaName(tableName), opts...)
 }
 
 // GenerateModel catch table info from db, return a BaseStruct
-func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...check.MemberOpt) *check.BaseStruct {
-	s, err := check.GenBaseStructs(g.db, g.Config.ModelPkgPath, tableName, modelName, g.dbNameOpts, fieldOpts, g.Config.FieldNullable)
+func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...model.MemberOpt) *check.BaseStruct {
+	mc := model.DBConf{ModelPkg: g.Config.ModelPkgPath, TableName: tableName, ModelName: modelName,
+		SchemaNameOpts: g.dbNameOpts, MemberOpts: fieldOpts, Nullable: g.FieldNullable, WithIndexTag: g.FieldWithIndexTag}
+
+	s, err := check.GenBaseStructs(g.db, mc)
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)
 		panic("generate struct fail")
