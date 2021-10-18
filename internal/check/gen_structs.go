@@ -6,11 +6,11 @@ import (
 	"regexp"
 	"strings"
 
-	"gorm.io/gen/internal/model"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 	"gorm.io/gorm/utils/tests"
 
+	"gorm.io/gen/internal/model"
 	"gorm.io/gen/internal/parser"
 )
 

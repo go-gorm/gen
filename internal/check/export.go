@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"reflect"
 
-	"gorm.io/gen/internal/model"
 	"gorm.io/gorm"
 
+	"gorm.io/gen/internal/model"
 	"gorm.io/gen/internal/parser"
 )
 

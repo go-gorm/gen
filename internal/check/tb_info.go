@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"gorm.io/gen/internal/model"
 	"gorm.io/gorm"
+
+	"gorm.io/gen/internal/model"
 )
 
 const (
