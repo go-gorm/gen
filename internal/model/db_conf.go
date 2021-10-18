@@ -4,24 +4,24 @@ import (
 	"gorm.io/gorm"
 )
 
-type DbModelConf struct {
+type DBConf struct {
 	ModelPkg       string
 	TableName      string
 	ModelName      string
 	SchemaNameOpts []SchemaNameOpt
 	MemberOpts     []MemberOpt
 	Nullable       bool
-	IndexTag       bool
+	WithIndexTag   bool
 }
 
-func (cf *DbModelConf) SortOpt() (modifyOpts []MemberOpt, filterOpts []MemberOpt, createOpts []MemberOpt) {
+func (cf *DBConf) SortOpt() (modifyOpts []MemberOpt, filterOpts []MemberOpt, createOpts []MemberOpt) {
 	if cf == nil {
 		return
 	}
 	return sortOpt(cf.MemberOpts)
 }
 
-func (cf *DbModelConf) GetSchemaName(db *gorm.DB) string {
+func (cf *DBConf) GetSchemaName(db *gorm.DB) string {
 	if cf == nil {
 		return defaultMysqlSchemaNameOpt(db)
 	}

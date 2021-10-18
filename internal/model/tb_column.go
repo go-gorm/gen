@@ -21,17 +21,11 @@ type Column struct {
 }
 
 func (c *Column) IsPrimaryKey() bool {
-	if c != nil && c.ColumnKey == "PRI" {
-		return true
-	}
-	return false
+	return c != nil && c.ColumnKey == "PRI"
 }
 
 func (c *Column) AutoIncrement() bool {
-	if c != nil && c.Extra == "auto_increment" {
-		return true
-	}
-	return false
+	return c != nil && c.Extra == "auto_increment"
 }
 
 func (c *Column) ToMember(nullable bool) *Member {
@@ -70,7 +64,7 @@ func (c *Column) buildGormTag() string {
 		if idx == nil || idx.IsPrimaryKey() {
 			continue
 		}
-		if idx.NotPriButUnique() {
+		if idx.IsUnique() {
 			buf.WriteString(fmt.Sprintf(";uniqueIndex:%s,priority:%d", idx.IndexName, idx.SeqInIndex))
 		} else {
 			buf.WriteString(fmt.Sprintf(";index:%s,priority:%d", idx.IndexName, idx.SeqInIndex))

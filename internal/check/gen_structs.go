@@ -24,7 +24,7 @@ const (
 )
 
 // GenBaseStructs generate db model by table name
-func GenBaseStructs(db *gorm.DB, conf model.DbModelConf) (bases *BaseStruct, err error) {
+func GenBaseStructs(db *gorm.DB, conf model.DBConf) (bases *BaseStruct, err error) {
 	modelName := conf.ModelName
 	tableName := conf.TableName
 	if _, ok := db.Config.Dialector.(tests.DummyDialector); ok {
@@ -40,7 +40,7 @@ func GenBaseStructs(db *gorm.DB, conf model.DbModelConf) (bases *BaseStruct, err
 	}
 	modelPkg = filepath.Base(modelPkg)
 	dbName := conf.GetSchemaName(db)
-	columns, err := getTbColumns(db, dbName, tableName, conf.IndexTag)
+	columns, err := getTbColumns(db, dbName, tableName, conf.WithIndexTag)
 	if err != nil {
 		return nil, err
 	}

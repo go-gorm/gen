@@ -152,8 +152,8 @@ func (g *Generator) GenerateModel(tableName string, opts ...model.MemberOpt) *ch
 
 // GenerateModel catch table info from db, return a BaseStruct
 func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...model.MemberOpt) *check.BaseStruct {
-	mc := model.DbModelConf{ModelPkg: g.Config.ModelPkgPath, TableName: tableName, ModelName: modelName,
-		SchemaNameOpts: g.dbNameOpts, MemberOpts: fieldOpts, Nullable: g.FieldNullable, IndexTag: g.FieldWithIndexTag}
+	mc := model.DBConf{ModelPkg: g.Config.ModelPkgPath, TableName: tableName, ModelName: modelName,
+		SchemaNameOpts: g.dbNameOpts, MemberOpts: fieldOpts, Nullable: g.FieldNullable, WithIndexTag: g.FieldWithIndexTag}
 
 	s, err := check.GenBaseStructs(g.db, mc)
 	if err != nil {

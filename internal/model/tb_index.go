@@ -10,14 +10,11 @@ type Index struct {
 }
 
 func (c *Index) IsPrimaryKey() bool {
-	if c != nil && c.IndexName == "PRIMARY" {
-		return true
-	}
-	return false
+	return c != nil && c.IndexName == "PRIMARY"
 }
 
 // not primary key but unique key
-func (c *Index) NotPriButUnique() bool {
+func (c *Index) IsUnique() bool {
 	return c != nil && !c.IsPrimaryKey() && c.NonUnique == 0
 }
 
