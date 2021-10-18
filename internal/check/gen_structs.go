@@ -25,8 +25,8 @@ const (
 
 // GenBaseStructs generate db model by table name
 func GenBaseStructs(db *gorm.DB, conf model.DBConf) (bases *BaseStruct, err error) {
-	modelName := conf.ModelName
-	tableName := conf.TableName
+	modelName, tableName := conf.ModelName, conf.TableName
+
 	if _, ok := db.Config.Dialector.(tests.DummyDialector); ok {
 		return nil, fmt.Errorf("UseDB() is necessary to generate model struct [%s] from database table [%s]", modelName, tableName)
 	}
@@ -34,16 +34,18 @@ func GenBaseStructs(db *gorm.DB, conf model.DBConf) (bases *BaseStruct, err erro
 	if err = checkModelName(modelName); err != nil {
 		return nil, fmt.Errorf("model name %q is invalid: %w", modelName, err)
 	}
+
 	modelPkg := conf.ModelPkg
 	if modelPkg == "" {
 		modelPkg = DefaultModelPkg
 	}
 	modelPkg = filepath.Base(modelPkg)
-	dbName := conf.GetSchemaName(db)
-	columns, err := getTbColumns(db, dbName, tableName, conf.WithIndexTag)
+
+	columns, err := getTbColumns(db, conf.GetSchemaName(db), tableName, conf.FieldWithIndexTag)
 	if err != nil {
 		return nil, err
 	}
+
 	base := BaseStruct{
 		Source:        model.TableName,
 		GenBaseStruct: true,
@@ -53,9 +55,10 @@ func GenBaseStructs(db *gorm.DB, conf model.DBConf) (bases *BaseStruct, err erro
 		S:             strings.ToLower(modelName[0:1]),
 		StructInfo:    parser.Param{Type: modelName, Package: modelPkg},
 	}
+
 	modifyOpts, filterOpts, createOpts := conf.SortOpt()
 	for _, field := range columns {
-		m := field.ToMember(conf.Nullable)
+		m := field.ToMember(conf.FieldNullable)
 
 		if filterMember(m, filterOpts) == nil {
 			continue
