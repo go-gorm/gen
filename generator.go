@@ -13,11 +13,7 @@ import (
 	"text/template"
 
 	"golang.org/x/tools/imports"
-<<<<<<< HEAD
 	"gorm.io/gen/internal/model"
-=======
-	"gorm.io/gen/internal/models"
->>>>>>> feat: index tag
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils/tests"
 
@@ -64,36 +60,20 @@ const (
 type Config struct {
 	db *gorm.DB //nolint
 
-<<<<<<< HEAD
 	OutPath           string
 	OutFile           string
 	ModelPkgPath      string // generated model code's package name
 	FieldNullable     bool
 	FieldWithIndexTag bool
-=======
-	OutPath       string
-	OutFile       string
-	ModelPkgPath  string // generated model code's package name
-	FieldNullable bool
-	NeedIndexTag  bool
->>>>>>> feat: index tag
 
 	Mode GenerateMode // generate mode
 
 	queryPkgName string // generated query code's package name
-<<<<<<< HEAD
 	dbNameOpts   []model.SchemaNameOpt
 }
 
 // WithDbNameOpts set get database name function
 func (cfg *Config) WithDbNameOpts(opts ...model.SchemaNameOpt) {
-=======
-	dbNameOpts   []models.SchemaNameOpt
-}
-
-// WithDbNameOpts set get database name function
-func (cfg *Config) WithDbNameOpts(opts ...models.SchemaNameOpt) {
->>>>>>> feat: index tag
 	if cfg.dbNameOpts == nil {
 		cfg.dbNameOpts = opts
 	} else {
@@ -166,16 +146,11 @@ func (g *Generator) UseDB(db *gorm.DB) {
  */
 
 // GenerateModel catch table info from db, return a BaseStruct
-<<<<<<< HEAD
 func (g *Generator) GenerateModel(tableName string, opts ...model.MemberOpt) *check.BaseStruct {
-=======
-func (g *Generator) GenerateModel(tableName string, opts ...models.MemberOpt) *check.BaseStruct {
->>>>>>> feat: index tag
 	return g.GenerateModelAs(tableName, g.db.Config.NamingStrategy.SchemaName(tableName), opts...)
 }
 
 // GenerateModel catch table info from db, return a BaseStruct
-<<<<<<< HEAD
 func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...model.MemberOpt) *check.BaseStruct {
 	s, err := check.GenBaseStructs(g.db, model.DBConf{
 		ModelPkg:          g.Config.ModelPkgPath,
@@ -186,13 +161,6 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 		FieldNullable:     g.FieldNullable,
 		FieldWithIndexTag: g.FieldWithIndexTag,
 	})
-=======
-func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...models.MemberOpt) *check.BaseStruct {
-	mc := models.DbModelConf{ModelPkg: g.Config.ModelPkgPath, TableName: tableName, ModelName: modelName,
-		SchemaNameOpts: g.dbNameOpts, MemberOpts: fieldOpts, Nullable: g.FieldNullable, IndexTag: g.NeedIndexTag}
-
-	s, err := check.GenBaseStructs(g.db, mc)
->>>>>>> feat: index tag
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)
 		panic("generate struct fail")

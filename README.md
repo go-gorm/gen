@@ -157,12 +157,17 @@ func main() {
         //if you want the nullable field generation property to be pointer type, set FieldNullable true
         /* FieldNullable: true,*/
 <<<<<<< HEAD
+<<<<<<< HEAD
         //If you need to generate index tags from the database, set FieldWithIndexTag true
         /* FieldWithIndexTag: true,*/
 =======
         //If you need to generate index tags from the database, set NeedIndexTag true
         /* NeedIndexTag: true,*/
 >>>>>>> feat: index tag
+=======
+        //If you need to generate index tags from the database, set FieldWithIndexTag true
+        /* FieldWithIndexTag: true,*/
+>>>>>>> feat: rename model
     })
   
     // reuse the database connection in Project or create a connection here

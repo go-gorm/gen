@@ -1,8 +1,4 @@
-<<<<<<< HEAD:internal/model/base.go
 package model
-=======
-package models
->>>>>>> feat: index tag:internal/models/base.go
 
 import (
 	"bytes"
@@ -152,15 +148,9 @@ func (m *Member) EscapeKeyword() *Member {
 	return m
 }
 
-<<<<<<< HEAD:internal/model/base.go
 type SQLBuffer struct{ bytes.Buffer }
 
 func (s *SQLBuffer) WriteSql(b byte) {
-=======
-type Sql struct{ bytes.Buffer }
-
-func (s *Sql) WriteSql(b byte) {
->>>>>>> feat: index tag:internal/models/base.go
 	switch b {
 	case '\n', '\t', ' ':
 		if s.Len() == 0 || s.Bytes()[s.Len()-1] != ' ' {
@@ -171,11 +161,7 @@ func (s *Sql) WriteSql(b byte) {
 	}
 }
 
-<<<<<<< HEAD:internal/model/base.go
 func (s *SQLBuffer) Dump() string {
-=======
-func (s *Sql) Dump() string {
->>>>>>> feat: index tag:internal/models/base.go
 	defer s.Reset()
 	return s.String()
 }
