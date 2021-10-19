@@ -60,7 +60,7 @@ func (c *Column) buildGormTag() string {
 			buf.WriteString(";autoIncrement:false")
 		}
 	}
-	if c.IsNullable == "YES" {
+	if c.IsNullable != "YES" {
 		buf.WriteString(";not null")
 	}
 	for _, idx := range c.Indexes {
