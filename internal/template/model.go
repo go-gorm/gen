@@ -8,7 +8,7 @@ import "time"
 
 const TableName{{.StructName}} = "{{.TableName}}"
 
-// {{.StructName}} mapped from table {{.TableName}}
+// {{.StructName}} mapped from table <{{.TableName}}>
 type {{.StructName}} struct {
     {{range .Members}}
 	{{if .MultilineComment -}}
