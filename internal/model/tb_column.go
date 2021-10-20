@@ -59,7 +59,10 @@ func (c *Column) buildGormTag() string {
 			// if not, we need to turn off autoIncrement for the fields
 			buf.WriteString(";autoIncrement:false")
 		}
+	} else if c.IsNullable != "YES" {
+		buf.WriteString(";not null")
 	}
+
 	for _, idx := range c.Indexes {
 		if idx == nil || idx.IsPrimaryKey() {
 			continue

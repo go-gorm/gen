@@ -73,19 +73,19 @@ func (r *Relation) AppendChildRelation(relations ...Relation) {
 	r.childRelations = append(r.childRelations, wrapPath(r.fieldPath, relations)...)
 }
 
-func (r *Relation) On(conds ...Expr) RelationField {
+func (r Relation) On(conds ...Expr) RelationField {
 	r.conds = append(r.conds, conds...)
-	return r
+	return &r
 }
 
-func (r *Relation) Order(columns ...Expr) RelationField {
+func (r Relation) Order(columns ...Expr) RelationField {
 	r.order = append(r.order, columns...)
-	return r
+	return &r
 }
 
-func (r *Relation) Clauses(hints ...clause.Expression) RelationField {
+func (r Relation) Clauses(hints ...clause.Expression) RelationField {
 	r.clauses = append(r.clauses, hints...)
-	return r
+	return &r
 }
 
 func (r *Relation) GetConds() []Expr { return r.conds }

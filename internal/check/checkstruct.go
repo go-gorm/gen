@@ -5,11 +5,11 @@ import (
 	"reflect"
 	"strings"
 
-	"gorm.io/gen/internal/model"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 
 	"gorm.io/gen/field"
+	"gorm.io/gen/internal/model"
 	"gorm.io/gen/internal/parser"
 )
 

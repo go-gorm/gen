@@ -5,13 +5,15 @@ import (
 )
 
 type DBConf struct {
-	ModelPkg       string
-	TableName      string
-	ModelName      string
+	ModelPkg  string
+	TableName string
+	ModelName string
+
 	SchemaNameOpts []SchemaNameOpt
 	MemberOpts     []MemberOpt
-	Nullable       bool
-	WithIndexTag   bool
+
+	FieldNullable     bool
+	FieldWithIndexTag bool
 }
 
 func (cf *DBConf) SortOpt() (modifyOpts []MemberOpt, filterOpts []MemberOpt, createOpts []MemberOpt) {

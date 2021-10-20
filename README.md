@@ -153,7 +153,7 @@ func main() {
     // ### if you want to query without context constrain, set mode gen.WithoutContext ###
     g := gen.NewGenerator(gen.Config{
         OutPath: "../dal/query",
-        /* Mode: gen.WithoutContext,*/
+        /* Mode: gen.WithoutContext|gen.WithDefaultQuery*/
         //if you want the nullable field generation property to be pointer type, set FieldNullable true
         /* FieldNullable: true,*/
         //If you need to generate index tags from the database, set FieldWithIndexTag true
@@ -176,6 +176,11 @@ func main() {
     g.Execute()
 }
 ```
+
+Generate Mode:
+
+- `gen.WithoutContext` generate code without `WithContext` contrain
+- `gen.WithDefaultQuery` generate code with a default global variable `Q` as a singleton
 
 ### Project Directory
 
