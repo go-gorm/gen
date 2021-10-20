@@ -16,6 +16,8 @@ const (
 	}
 	
 	func ({{.S}} *{{.NewStructName}}) WithContext(ctx context.Context) *{{.NewStructName}}Do { return {{.S}}.{{.NewStructName}}Do.WithContext(ctx)}
+
+	func ({{.S}} {{.NewStructName}}) TableName() string { return {{.S}}.{{.NewStructName}}Do.TableName()}
 	
 	` + cloneMethod + relationship + defineMethodStruct
 )
