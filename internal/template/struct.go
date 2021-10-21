@@ -31,6 +31,7 @@ const (
 		_{{.NewStructName}}.{{.NewStructName}}Do.UseModel(&{{.StructInfo.Package}}.{{.StructInfo.Type}}{})
 	
 		{{if .HasMember}}tableName := _{{.NewStructName}}.{{.NewStructName}}Do.TableName(){{end}}
+		_{{$.NewStructName}}.ALL = field.NewField(tableName, "*")
 		{{range .Members -}}
 		{{if not .IsRelation -}}
 			_{{$.NewStructName}}.{{.Name}} = field.New{{.GenType}}(tableName, "{{.ColumnName}}")
@@ -47,6 +48,8 @@ const (
 	}
 	`
 	members = `
+
+	ALL field.Field
 	{{range .Members -}}
 	{{if not .IsRelation -}}
 		{{.Name}} field.{{.GenType}}
