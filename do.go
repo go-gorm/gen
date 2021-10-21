@@ -251,10 +251,16 @@ func (d *DO) calcOrderValue(columns ...field.Expr) string {
 }
 
 func (d *DO) Distinct(columns ...field.Expr) Dao {
+	if len(columns) == 0 {
+		return d
+	}
 	return d.getInstance(d.db.Distinct(toInterfaceSlice(toColumnFullName(d.db.Statement, columns...))...))
 }
 
 func (d *DO) Omit(columns ...field.Expr) Dao {
+	if len(columns) == 0 {
+		return d
+	}
 	return d.getInstance(d.db.Omit(getColumnName(columns...)...))
 }
 
@@ -274,6 +280,7 @@ func (d *DO) Having(conds ...Condition) Dao {
 	if len(conds) == 0 {
 		return d
 	}
+
 	exprs, err := condToExpression(conds)
 	if err != nil {
 		return d.withError(err)
@@ -300,8 +307,6 @@ func (d *DO) Scopes(funcs ...func(Dao) Dao) Dao {
 func (d *DO) Unscoped() Dao {
 	return d.getInstance(d.db.Unscoped())
 }
-
-// TODO implement commonDo
 
 func (d *DO) Join(table schema.Tabler, conds ...field.Expr) Dao {
 	return d.join(table, clause.InnerJoin, conds)
@@ -330,10 +335,16 @@ func (d *DO) join(table schema.Tabler, joinType clause.JoinType, conds []field.E
 }
 
 func (d *DO) Attrs(attrs ...field.AssignExpr) Dao {
+	if len(attrs) == 0 {
+		return d
+	}
 	return d.getInstance(d.db.Attrs(d.attrsValue(attrs)...))
 }
 
 func (d *DO) Assign(attrs ...field.AssignExpr) Dao {
+	if len(attrs) == 0 {
+		return d
+	}
 	return d.getInstance(d.db.Assign(d.attrsValue(attrs)...))
 }
 
@@ -489,6 +500,10 @@ func (d *DO) Update(column field.Expr, value interface{}) (info resultInfo, err 
 }
 
 func (d *DO) UpdateSimple(columns ...field.AssignExpr) (info resultInfo, err error) {
+	if len(columns) == 0 {
+		return
+	}
+
 	dest, err := assignMap(d.db.Statement, columns)
 	if err != nil {
 		return resultInfo{Error: err}, err
@@ -520,6 +535,10 @@ func (d *DO) UpdateColumn(column field.Expr, value interface{}) (info resultInfo
 }
 
 func (d *DO) UpdateColumnSimple(columns ...field.AssignExpr) (info resultInfo, err error) {
+	if len(columns) == 0 {
+		return
+	}
+
 	dest, err := assignMap(d.db.Statement, columns)
 	if err != nil {
 		return resultInfo{Error: err}, err

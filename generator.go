@@ -393,7 +393,7 @@ func (g *Generator) generateBaseStruct() (err error) {
 			return err
 		}
 
-		g.successInfo(fmt.Sprintf("generate struct(table %q -> {%s.%s}) file: %s", data.TableName, data.StructInfo.Package, data.StructInfo.Type, modelFile))
+		g.successInfo(fmt.Sprintf("generate model file(table <%s> -> {%s.%s}): %s", data.TableName, data.StructInfo.Package, data.StructInfo.Type, modelFile))
 	}
 	return nil
 }
