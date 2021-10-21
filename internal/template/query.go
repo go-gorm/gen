@@ -9,9 +9,9 @@ var (
 )
 
 func SetDefault(db *gorm.DB) {
-	Q = Use(db)
+	*Q = *Use(db)
 	{{range $name,$d :=.Data -}}
-	{{$d.StructName}} = &Q.{{$d.StructName}}
+	*{{$d.StructName}} = Q.{{$d.StructName}}
 	{{end -}}
 }
 
