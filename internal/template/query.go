@@ -2,7 +2,7 @@ package template
 
 const DefaultQueryTmpl = `
 var (
-	Q *Query
+	Q =new(Query)
 	{{range $name,$d :=.Data -}}
 	{{$d.StructName}} *{{$d.NewStructName}}
 	{{end -}}
@@ -11,7 +11,7 @@ var (
 func SetDefault(db *gorm.DB) {
 	*Q = *Use(db)
 	{{range $name,$d :=.Data -}}
-	*{{$d.StructName}} = Q.{{$d.StructName}}
+	{{$d.StructName}} = &Q.{{$d.StructName}}
 	{{end -}}
 }
 
@@ -34,6 +34,8 @@ type Query struct{
 	{{$d.StructName}} {{$d.NewStructName}}
 	{{end}}
 }
+
+func (q *Query) Available() bool { return q.db == nil }
 
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
