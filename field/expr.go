@@ -121,6 +121,11 @@ func (e expr) appendBuildOpts(opts ...BuildOpt) expr {
 }
 
 // ======================== basic function ========================
+func (e expr) WithTable(table string) Expr {
+	e.col.Table = table
+	return e
+}
+
 func (e expr) IsNull() Expr {
 	return e.setE(clause.Expr{SQL: "? IS NULL", Vars: []interface{}{e.RawExpr()}})
 }
@@ -161,9 +166,8 @@ func (e expr) Null() AssignExpr {
 	return e.setE(clause.Eq{Column: e.col.Name, Value: nil})
 }
 
-func (e expr) WithTable(table string) Expr {
-	e.col.Table = table
-	return e
+func (e expr) GroutConcat() Expr {
+	return e.setE(clause.Expr{SQL: "GROUP_CONCAT(?)", Vars: []interface{}{e.RawExpr()}})
 }
 
 // ======================== comparison between columns ========================
