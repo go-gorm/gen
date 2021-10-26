@@ -14,7 +14,7 @@ import (
 var ns = schema.NamingStrategy{}
 
 var (
-	// FieldNew add new field
+	// FieldNew add new field (any type your want)
 	FieldNew = func(fieldName, fieldType, fieldTag string) model.CreateMemberOpt {
 		return func(*model.Member) *model.Member {
 			return &model.Member{
@@ -35,7 +35,7 @@ var (
 			return m
 		}
 	}
-	// FieldIgnoreReg ignore some columns by reg rule
+	// FieldIgnoreReg ignore some columns by RegExp
 	FieldIgnoreReg = func(columnNameRegs ...string) model.FilterMemberOpt {
 		regs := make([]regexp.Regexp, len(columnNameRegs))
 		for i, reg := range columnNameRegs {
@@ -68,7 +68,7 @@ var (
 			return m
 		}
 	}
-	// FieldIgnoreType ignore some columns by reg rule
+	// FieldIgnoreType ignore some columns by RegExp
 	FieldTypeReg = func(columnNameReg string, newType string) model.ModifyMemberOpt {
 		reg := regexp.MustCompile(columnNameReg)
 		return func(m *model.Member) *model.Member {
@@ -78,7 +78,7 @@ var (
 			return m
 		}
 	}
-	// FieldTag specify json tag and gorm tag
+	// FieldTag specify GORM tag and JSON tag
 	FieldTag = func(columnName string, gormTag, jsonTag string) model.ModifyMemberOpt {
 		return func(m *model.Member) *model.Member {
 			if m.ColumnName == columnName {
@@ -87,7 +87,7 @@ var (
 			return m
 		}
 	}
-	// FieldJSONTag specify json tag
+	// FieldJSONTag specify JSON tag
 	FieldJSONTag = func(columnName string, jsonTag string) model.ModifyMemberOpt {
 		return func(m *model.Member) *model.Member {
 			if m.ColumnName == columnName {
@@ -96,7 +96,7 @@ var (
 			return m
 		}
 	}
-	// FieldGORMTag specify gorm tag
+	// FieldGORMTag specify GORM tag
 	FieldGORMTag = func(columnName string, gormTag string) model.ModifyMemberOpt {
 		return func(m *model.Member) *model.Member {
 			if m.ColumnName == columnName {
@@ -142,6 +142,7 @@ var (
 			return m
 		}
 	}
+	// FieldRelate relate to table in database
 	FieldRelate = func(relationship field.RelationshipType, fieldName string, table *check.BaseStruct, config *field.RelateConfig) model.CreateMemberOpt {
 		if config == nil {
 			config = &field.RelateConfig{}
@@ -164,6 +165,7 @@ var (
 			}
 		}
 	}
+	// FieldRelateModel relate to exist table model
 	FieldRelateModel = func(relationship field.RelationshipType, fieldName string, relModel interface{}, config *field.RelateConfig) model.CreateMemberOpt {
 		st := reflect.TypeOf(relModel)
 		if st.Kind() == reflect.Ptr {
