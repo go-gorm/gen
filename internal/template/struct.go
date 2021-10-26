@@ -7,7 +7,7 @@ const (
 		` + members + `
 	}
 	
-	` + cloneMethod + relationship + defineMethodStruct
+	` + getFieldMethod + cloneMethod + relationship + defineMethodStruct
 
 	BaseStructWithContext = createMethod + `
 	type {{.NewStructName}} struct {
@@ -17,9 +17,11 @@ const (
 	
 	func ({{.S}} *{{.NewStructName}}) WithContext(ctx context.Context) *{{.NewStructName}}Do { return {{.S}}.{{.NewStructName}}Do.WithContext(ctx)}
 
-	func ({{.S}} {{.NewStructName}}) TableName() string { return {{.S}}.{{.NewStructName}}Do.TableName()}
+	func ({{.S}} {{.NewStructName}}) TableName() string { return {{.S}}.{{.NewStructName}}Do.TableName()} 
+
 	
-	` + cloneMethod + relationship + defineMethodStruct
+	
+	` + getFieldMethod + cloneMethod + relationship + defineMethodStruct
 )
 
 const (
@@ -43,7 +45,12 @@ const (
 			}
 		{{end}}
 		{{end}}
-	
+
+		{{range .Members -}}
+		{{if not .IsRelation -}}
+			_{{$.NewStructName}}.fieldMap["{{.ColumnName}}"] = _{{$.NewStructName}}.{{.Name}}
+		{{end -}}
+		{{end}}
 		return _{{.NewStructName}}
 	}
 	`
@@ -57,11 +64,19 @@ const (
 		{{.Relation.Name}} {{$.NewStructName}}{{.Relation.RelationshipName}}{{.Relation.Name}}
 	{{end}}
 	{{end}}
+
+	fieldMap  map[string]field.Expr
 `
 	cloneMethod = `
 func ({{.S}} {{.NewStructName}}) clone(db *gorm.DB) {{.NewStructName}} {
 	{{.S}}.{{.NewStructName}}Do.ReplaceDB(db)
 	return {{.S}}
+}
+`
+	getFieldMethod = `
+func ({{.S}} *{{.NewStructName}}) GetFieldByName(fieldName string) (field.Expr, bool) {
+	field, ok := {{.S}}.fieldMap[fieldName]
+	return field, ok
 }
 `
 	relationship = `{{range .Members}}{{if .IsRelation}}` +
