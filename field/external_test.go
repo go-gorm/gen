@@ -307,6 +307,11 @@ func TestExpr_Build(t *testing.T) {
 			ExpectedVars: []interface{}{time.Duration(24 * time.Hour).Microseconds()},
 			Result:       "DATE_SUB(`creatAt`, INTERVAL ? MICROSECOND)",
 		},
+		{
+			Expr:         field.NewTime("", "updateAt").DateFormat("%W %M %Y"),
+			ExpectedVars: []interface{}{"%W %M %Y"},
+			Result:       "DATE_FORMAT(`updateAt`,?)",
+		},
 		// ======================== bool ========================
 		{
 			Expr:   field.NewBool("", "male").Not(),

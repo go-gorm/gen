@@ -171,7 +171,8 @@ func (d *DO) Select(columns ...field.Expr) Dao {
 	if len(columns) == 0 {
 		return d.getInstance(d.db.Clauses(clause.Select{}))
 	}
-	return d.getInstance(d.db.Select(buildExpr(d.db.Statement, columns...)))
+	query, args := buildExpr(d.db.Statement, columns...)
+	return d.getInstance(d.db.Select(query, args...))
 }
 
 func (d *DO) Where(conds ...Condition) Dao {
@@ -580,12 +581,17 @@ func buildColumn(stmt *gorm.Statement, cols []field.Expr, opts ...field.BuildOpt
 	return results
 }
 
-func buildExpr(stmt *gorm.Statement, exprs ...field.Expr) []string {
-	results := make([]string, len(exprs))
-	for i, e := range exprs {
-		results[i] = e.Build(stmt).String()
+func buildExpr(stmt *gorm.Statement, exprs ...field.Expr) (query string, args []interface{}) {
+	for _, e := range exprs {
+		sql, vars := e.BuildWithArgs(stmt)
+		if query == "" {
+			query = sql.String()
+		} else {
+			query += "," + sql.String()
+		}
+		args = append(args, vars...)
 	}
-	return results
+	return query, args
 }
 
 func toExpression(exprs ...field.Expr) []clause.Expression {
