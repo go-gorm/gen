@@ -118,9 +118,9 @@ func (d *DO) withError(err error) *DO {
 	return d.getInstance(newDB)
 }
 
+// implements Condition
 func (d *DO) BeCond() interface{} { return d.buildCondition() }
-
-func (d *DO) CondError() error { return nil }
+func (d *DO) CondError() error    { return nil }
 
 // Debug return a DO with db in debug mode
 func (d *DO) Debug() Dao { return d.getInstance(d.db.Debug()) }
