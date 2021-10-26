@@ -18,8 +18,6 @@ const (
 	func ({{.S}} *{{.NewStructName}}) WithContext(ctx context.Context) *{{.NewStructName}}Do { return {{.S}}.{{.NewStructName}}Do.WithContext(ctx)}
 
 	func ({{.S}} {{.NewStructName}}) TableName() string { return {{.S}}.{{.NewStructName}}Do.TableName()} 
-
-	
 	
 	` + getFieldMethod + cloneMethod + relationship + defineMethodStruct
 )
@@ -46,6 +44,7 @@ const (
 		{{end}}
 		{{end}}
 
+		_{{$.NewStructName}}.fieldMap = make(map[string]field.Expr, {{len .Members}})
 		{{range .Members -}}
 		{{if not .IsRelation -}}
 			_{{$.NewStructName}}.fieldMap["{{.ColumnName}}"] = _{{$.NewStructName}}.{{.Name}}
