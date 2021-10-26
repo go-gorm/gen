@@ -85,6 +85,10 @@ func TestExpr_Build(t *testing.T) {
 			Expr:   field.NewField("", "id").IsNotNull(),
 			Result: "`id` IS NOT NULL",
 		},
+		{
+			Expr:   field.NewField("", "id").GroutConcat(),
+			Result: "GROUP_CONCAT(`id`)",
+		},
 		// ======================== integer ========================
 		{
 			Expr:   field.NewUint("", "id"),

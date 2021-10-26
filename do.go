@@ -10,7 +10,6 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/schema"
-	"gorm.io/hints"
 
 	"gorm.io/gen/field"
 )
@@ -139,44 +138,6 @@ func (d *DO) Clauses(conds ...clause.Expression) Dao {
 	return d.getInstance(d.db.Clauses(conds...))
 }
 
-func checkConds(conds []clause.Expression) error {
-	for _, cond := range conds {
-		if err := checkClause(cond); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-var banClauses = map[string]bool{
-	"INSERT":      true,
-	"VALUES":      true,
-	"ON CONFLICT": true,
-	"SELECT":      true,
-	"FROM":        true,
-	"WHERE":       true,
-	"GROUP BY":    true,
-	"ORDER BY":    true,
-	"LIMIT":       true,
-	"FOR":         true,
-	"UPDATE":      true,
-	"SET":         true,
-	"DELETE":      true,
-}
-
-func checkClause(cond clause.Expression) error {
-	switch cond := cond.(type) {
-	case hints.Hints, hints.IndexHint:
-		return nil
-	case clause.Interface:
-		if banClauses[cond.Name()] {
-			return fmt.Errorf("banned clause %s", cond.Name())
-		}
-		return nil
-	}
-	return fmt.Errorf("unknown clause %v", cond)
-}
-
 // As alias cannot be heired, As must used on tail
 func (d *DO) As(alias string) Dao { return &DO{db: d.db, alias: alias} }
 
@@ -299,7 +260,8 @@ func (d *DO) Offset(offset int) Dao {
 func (d *DO) Scopes(funcs ...func(Dao) Dao) Dao {
 	fcs := make([]func(*gorm.DB) *gorm.DB, len(funcs))
 	for i, f := range funcs {
-		fcs[i] = func(tx *gorm.DB) *gorm.DB { return f(d.getInstance(tx)).(*DO).db }
+		sf := f
+		fcs[i] = func(tx *gorm.DB) *gorm.DB { return sf(d.getInstance(tx)).(*DO).db }
 	}
 	return d.getInstance(d.db.Scopes(fcs...))
 }
@@ -559,7 +521,7 @@ func (d *DO) Delete() (info resultInfo, err error) {
 }
 
 func (d *DO) Count() (count int64, err error) {
-	return count, d.db.Model(d.model).Count(&count).Error
+	return count, d.db.Session(&gorm.Session{}).Model(d.model).Count(&count).Error
 }
 
 func (d *DO) Row() *sql.Row {
