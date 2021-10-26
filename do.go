@@ -521,7 +521,7 @@ func (d *DO) Delete() (info resultInfo, err error) {
 }
 
 func (d *DO) Count() (count int64, err error) {
-	return count, d.db.Model(d.model).Count(&count).Error
+	return count, d.db.Session(&gorm.Session{}).Model(d.model).Count(&count).Error
 }
 
 func (d *DO) Row() *sql.Row {
