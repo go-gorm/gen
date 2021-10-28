@@ -213,9 +213,6 @@ func (d *DO) calcOrderValue(columns ...field.Expr) string {
 }
 
 func (d *DO) Distinct(columns ...field.Expr) Dao {
-	if len(columns) == 0 {
-		return d
-	}
 	return d.getInstance(d.db.Distinct(toInterfaceSlice(toColumnFullName(d.db.Statement, columns...))...))
 }
 
