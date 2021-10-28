@@ -255,6 +255,18 @@ func TestDO_methods(t *testing.T) {
 			Result: "SELECT * WHERE `id` = (SELECT MAX(`id`) FROM `users_info`)",
 		},
 		{
+			Expr: u.Select().Where(
+				u.Columns(u.ID).Eq(
+					u.Select(u.ID).Where(
+						u.Columns(u.Name).Eq(
+							student.Select(student.Name).Where(student.ID.Eq(1)),
+						),
+					),
+				)),
+			ExpectedVars: []interface{}{int64(1)},
+			Result:       "SELECT * WHERE `id` = (SELECT `id` FROM `users_info` WHERE `name` = (SELECT `student`.`name` FROM `student` WHERE `student`.`id` = ?))",
+		},
+		{
 			Expr:   u.Select().Where(u.Columns(u.ID).Neq(u.Select(u.ID.Max()))),
 			Result: "SELECT * WHERE `id` <> (SELECT MAX(`id`) FROM `users_info`)",
 		},
