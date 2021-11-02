@@ -118,9 +118,9 @@ func (d *DO) withError(err error) *DO {
 	return d.getInstance(newDB)
 }
 
+// implements Condition
 func (d *DO) BeCond() interface{} { return d.buildCondition() }
-
-func (d *DO) CondError() error { return nil }
+func (d *DO) CondError() error    { return nil }
 
 // Debug return a DO with db in debug mode
 func (d *DO) Debug() Dao { return d.getInstance(d.db.Debug()) }
@@ -213,9 +213,6 @@ func (d *DO) calcOrderValue(columns ...field.Expr) string {
 }
 
 func (d *DO) Distinct(columns ...field.Expr) Dao {
-	if len(columns) == 0 {
-		return d
-	}
 	return d.getInstance(d.db.Distinct(toInterfaceSlice(toColumnFullName(d.db.Statement, columns...))...))
 }
 
