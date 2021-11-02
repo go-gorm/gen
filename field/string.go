@@ -70,6 +70,16 @@ func (field String) Zero() AssignExpr {
 	return field.value("")
 }
 
+// FindInSet FIND_IN_SET(field_name, input_string_list)
+func (field String) FindInSet(targetList string) Expr {
+	return expr{e: clause.Expr{SQL: "FIND_IN_SET(?,?)", Vars: []interface{}{field.RawExpr(), targetList}}}
+}
+
+// FindInSetWith FIND_IN_SET(input_string, field_name)
+func (field String) FindInSetWith(target string) Expr {
+	return expr{e: clause.Expr{SQL: "FIND_IN_SET(?,?)", Vars: []interface{}{target, field.RawExpr()}}}
+}
+
 func (field String) toSlice(values []string) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
@@ -142,6 +152,16 @@ func (field Bytes) Value(value []byte) AssignExpr {
 
 func (field Bytes) Zero() AssignExpr {
 	return field.value([]byte{})
+}
+
+// FindInSet FIND_IN_SET(field_name, input_string_list)
+func (field Bytes) FindInSet(targetList string) Expr {
+	return expr{e: clause.Expr{SQL: "FIND_IN_SET(?,?)", Vars: []interface{}{field.RawExpr(), targetList}}}
+}
+
+// FindInSetWith FIND_IN_SET(input_string, field_name)
+func (field Bytes) FindInSetWith(target string) Expr {
+	return expr{e: clause.Expr{SQL: "FIND_IN_SET(?,?)", Vars: []interface{}{target, field.RawExpr()}}}
 }
 
 func (field Bytes) toSlice(values [][]byte) []interface{} {

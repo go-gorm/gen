@@ -266,6 +266,16 @@ func TestExpr_Build(t *testing.T) {
 			ExpectedVars: []interface{}{".*"},
 			Result:       "NOT `name` REGEXP ?",
 		},
+		{
+			Expr:         field.NewString("", "address").FindInSetWith("sh"),
+			ExpectedVars: []interface{}{"sh"},
+			Result:       "FIND_IN_SET(?,`address`)",
+		},
+		{
+			Expr:         field.NewString("", "address").FindInSet("sh"),
+			ExpectedVars: []interface{}{"sh"},
+			Result:       "FIND_IN_SET(`address`,?)",
+		},
 		// ======================== time ========================
 		{
 			Expr:         field.NewTime("", "creatAt").Eq(timeData),
