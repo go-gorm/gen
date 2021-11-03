@@ -44,6 +44,7 @@ func (b *BaseStruct) parseStruct(st interface{}) error {
 		}))
 	}
 	for _, r := range ParseStructRelationShip(&stmt.Schema.Relationships) {
+		r := r
 		b.appendOrUpdateMember(&model.Member{Relation: &r})
 	}
 	return nil
