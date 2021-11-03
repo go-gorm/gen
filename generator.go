@@ -152,7 +152,6 @@ func (g *Generator) GenerateModel(tableName string, opts ...model.MemberOpt) *ch
 
 // GenerateModel catch table info from db, return a BaseStruct
 func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...model.MemberOpt) *check.BaseStruct {
-<<<<<<< HEAD
 	s, err := check.GenBaseStructs(g.db, model.DBConf{
 		ModelPkg:          g.Config.ModelPkgPath,
 		TableName:         tableName,
@@ -162,12 +161,6 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 		FieldNullable:     g.FieldNullable,
 		FieldWithIndexTag: g.FieldWithIndexTag,
 	})
-=======
-	mc := model.DBConf{ModelPkg: g.Config.ModelPkgPath, TableName: tableName, ModelName: modelName,
-		SchemaNameOpts: g.dbNameOpts, MemberOpts: fieldOpts, Nullable: g.FieldNullable, WithIndexTag: g.FieldWithIndexTag}
-
-	s, err := check.GenBaseStructs(g.db, mc)
->>>>>>> feat: rename
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)
 		panic("generate struct fail")
