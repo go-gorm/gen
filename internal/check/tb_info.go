@@ -13,13 +13,13 @@ const (
 	//query table structure
 	columnQuery = "SELECT COLUMN_NAME,COLUMN_COMMENT,DATA_TYPE,IS_NULLABLE,COLUMN_KEY,COLUMN_TYPE,COLUMN_DEFAULT,EXTRA " +
 		"FROM information_schema.COLUMNS " +
-		"WHERE table_schema = ? AND table_name =? " +
+		"WHERE TABLE_SCHEMA = ? AND TABLE_NAME =? " +
 		"ORDER BY ORDINAL_POSITION"
 
 	//query table index
 	indexQuery = "SELECT TABLE_NAME,COLUMN_NAME,INDEX_NAME,SEQ_IN_INDEX,NON_UNIQUE " +
 		"FROM information_schema.STATISTICS " +
-		"WHERE table_schema = ? AND table_name =?"
+		"WHERE TABLE_SCHEMA = ? AND TABLE_NAME =?"
 )
 
 type ITableInfo interface {
