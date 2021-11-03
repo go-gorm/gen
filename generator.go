@@ -163,7 +163,8 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 	})
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)
-		panic("generate struct fail")
+
+		panic(fmt.Sprintf("generate struct fail err:%s",err))
 	}
 
 	g.successInfo(fmt.Sprintf("got %d columns from table <%s>", len(s.Members), s.TableName))
