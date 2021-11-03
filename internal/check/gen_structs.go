@@ -46,6 +46,10 @@ func GenBaseStructs(db *gorm.DB, conf model.DBConf) (bases *BaseStruct, err erro
 		return nil, err
 	}
 
+	if len(columns) == 0 {
+		return nil, fmt.Errorf("getTbColumns empty ")
+	}
+
 	base := BaseStruct{
 		Source:        model.TableName,
 		GenBaseStruct: true,
