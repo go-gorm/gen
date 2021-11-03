@@ -32,6 +32,7 @@ var defaultMysqlSchemaNameOpt = SchemaNameOpt(func(db *gorm.DB) string {
 	return dbName[1:end]
 })
 
+
 type MemberOpt interface{ Self() func(*Member) *Member }
 
 type ModifyMemberOpt func(*Member) *Member
