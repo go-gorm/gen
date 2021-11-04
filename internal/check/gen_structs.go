@@ -2,6 +2,7 @@ package check
 
 import (
 	"fmt"
+	"log"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -22,6 +23,32 @@ import (
 const (
 	DefaultModelPkg = "model"
 )
+
+// GenBaseStructsForDB genByDB tables
+func GenBaseStructsForDB(db *gorm.DB, conf model.DBConf) (bases *BaseStruct, err error) {
+	tableList, tableErr := GetDBTables(db, conf.GetSchemaName(db))
+	if tableErr != nil {
+		return nil, err
+	}
+	var s *BaseStruct
+	var genErr error
+	for _, v := range tableList {
+		s, genErr = GenBaseStructs(db, model.DBConf{
+			ModelPkg:          conf.ModelPkg,
+			TableName:         v.TableName,
+			ModelName:         db.Config.NamingStrategy.SchemaName(v.TableName),
+			SchemaNameOpts:    conf.SchemaNameOpts,
+			MemberOpts:        conf.MemberOpts,
+			FieldNullable:     conf.FieldNullable,
+			FieldWithIndexTag: conf.FieldWithIndexTag,
+		})
+		if genErr != nil {
+			log.Fatalf("GenBaseStructsForDB err table:%s", v.TableName)
+		}
+	}
+
+	return s, nil
+}
 
 // GenBaseStructs generate db model by table name
 func GenBaseStructs(db *gorm.DB, conf model.DBConf) (bases *BaseStruct, err error) {

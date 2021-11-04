@@ -10,16 +10,16 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"text/template"
 
 	"golang.org/x/tools/imports"
-	"gorm.io/gen/internal/model"
-	"gorm.io/gorm"
-	"gorm.io/gorm/utils/tests"
-
 	"gorm.io/gen/internal/check"
+	"gorm.io/gen/internal/model"
 	"gorm.io/gen/internal/parser"
 	tmpl "gorm.io/gen/internal/template"
+	"gorm.io/gorm"
+	"gorm.io/gorm/utils/tests"
 )
 
 // TODO implement some unit tests
@@ -151,6 +151,30 @@ func (g *Generator) GenerateModel(tableName string, opts ...model.MemberOpt) *ch
 }
 
 // GenerateModel catch table info from db, return a BaseStruct
+func (g *Generator) GenerateModelByDB(opts ...model.MemberOpt) error {
+	conf := model.DBConf{
+		ModelPkg:          g.Config.ModelPkgPath,
+		SchemaNameOpts:    g.dbNameOpts,
+		MemberOpts:        opts,
+		FieldNullable:     g.FieldNullable,
+		FieldWithIndexTag: g.FieldWithIndexTag,
+	}
+	list, err := check.GetDBTables(g.db, conf.GetSchemaName(g.db))
+	if err != nil {
+		return nil
+	}
+	var wg sync.WaitGroup
+	wg.Add(len(list))
+	for _, v := range list {
+		g.ApplyBasic(g.GenerateModel(v.TableName))
+		wg.Done()
+	}
+	wg.Wait()
+
+	return nil
+}
+
+// GenerateModel catch table info from db, return a BaseStruct
 func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...model.MemberOpt) *check.BaseStruct {
 	s, err := check.GenBaseStructs(g.db, model.DBConf{
 		ModelPkg:          g.Config.ModelPkgPath,
@@ -164,7 +188,7 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)
 
-		panic(fmt.Sprintf("generate struct fail err:%s",err))
+		panic(fmt.Sprintf("generate struct fail err:%s", err))
 	}
 
 	g.successInfo(fmt.Sprintf("got %d columns from table <%s>", len(s.Members), s.TableName))
@@ -284,14 +308,12 @@ func (g *Generator) generateQueryFile() (err error) {
 	if err != nil {
 		return err
 	}
-
 	for _, info := range g.Data {
 		err = g.generateSubQuery(info)
 		if err != nil {
 			return err
 		}
 	}
-
 	err = g.output(g.OutFile, buf.Bytes())
 	if err != nil {
 		return err
