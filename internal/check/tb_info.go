@@ -11,7 +11,8 @@ import (
 
 const (
 	//query db table list
-	tableQuery = "SELECT TABLE_NAME FROM information_schema.tables where TABLE_SCHEMA=?"
+	allTableQuery = "SELECT TABLE_NAME FROM information_schema.tables where TABLE_SCHEMA=?"
+	tablesQuery   = "SELECT TABLE_NAME FROM information_schema.tables where TABLE_SCHEMA=? and TABLE_NAME in (?)"
 	//query table structure
 	columnQuery = "SELECT COLUMN_NAME,COLUMN_COMMENT,DATA_TYPE,IS_NULLABLE,COLUMN_KEY,COLUMN_TYPE,COLUMN_DEFAULT,EXTRA " +
 		"FROM information_schema.COLUMNS " +
@@ -25,8 +26,9 @@ const (
 )
 
 type ITableInfo interface {
+	GetALLTables(schemaName string) (result []*model.Table, err error)
 
-	GetDBTables(schemaName string) (result []*model.Table, err error)
+	GetTables(schemaName string, tableNames []string) (result []*model.Table, err error)
 
 	GetTbColumns(schemaName string, tableName string) (result []*model.Column, err error)
 
@@ -37,18 +39,32 @@ func getITableInfo(db *gorm.DB) ITableInfo {
 	return &mysqlTableInfo{db: db}
 }
 
-func GetDBTables(db *gorm.DB, schemaName string) (result []*model.Table, err error) {
+func GetALLTables(db *gorm.DB, schemaName string) (result []*model.Table, err error) {
 	if db == nil {
 		return nil, errors.New("gorm db is nil")
 	}
 
 	mt := getITableInfo(db)
-	result, err = mt.GetDBTables(schemaName)
+	result, err = mt.GetALLTables(schemaName)
 	if err != nil {
 		return nil, err
 	}
 
-	return result,nil
+	return result, nil
+}
+
+func GetTables(db *gorm.DB, schemaName string, tableNames []string) (result []*model.Table, err error) {
+	if db == nil {
+		return nil, errors.New("gorm db is nil")
+	}
+
+	mt := getITableInfo(db)
+	result, err = mt.GetTables(schemaName, tableNames)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 func getTbColumns(db *gorm.DB, schemaName string, tableName string, indexTag bool) (result []*model.Column, err error) {
@@ -84,9 +100,14 @@ type mysqlTableInfo struct {
 	db *gorm.DB
 }
 
-// GetDBTables Mysql Table List
-func (t *mysqlTableInfo)GetDBTables(schemaName string) (result []*model.Table, err error) {
-	return result, t.db.Raw(tableQuery, schemaName).Scan(&result).Error
+// GetALLTables Mysql Table List
+func (t *mysqlTableInfo) GetALLTables(schemaName string) (result []*model.Table, err error) {
+	return result, t.db.Raw(allTableQuery, schemaName).Scan(&result).Error
+}
+
+// GetTables Mysql Table List
+func (t *mysqlTableInfo) GetTables(schemaName string, tableNames []string) (result []*model.Table, err error) {
+	return result, t.db.Raw(tablesQuery, schemaName, tableNames).Scan(&result).Error
 }
 
 //GetTbColumns Mysql struct
@@ -98,4 +119,3 @@ func (t *mysqlTableInfo) GetTbColumns(schemaName string, tableName string) (resu
 func (t *mysqlTableInfo) GetTbIndex(schemaName string, tableName string) (result []*model.Index, err error) {
 	return result, t.db.Raw(indexQuery, schemaName, tableName).Scan(&result).Error
 }
-

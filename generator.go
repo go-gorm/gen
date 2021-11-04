@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 	"text/template"
 
 	"golang.org/x/tools/imports"
@@ -150,31 +149,7 @@ func (g *Generator) GenerateModel(tableName string, opts ...model.MemberOpt) *ch
 	return g.GenerateModelAs(tableName, g.db.Config.NamingStrategy.SchemaName(tableName), opts...)
 }
 
-// GenerateModel catch table info from db, return a BaseStruct
-func (g *Generator) GenerateModelByDB(opts ...model.MemberOpt) error {
-	conf := model.DBConf{
-		ModelPkg:          g.Config.ModelPkgPath,
-		SchemaNameOpts:    g.dbNameOpts,
-		MemberOpts:        opts,
-		FieldNullable:     g.FieldNullable,
-		FieldWithIndexTag: g.FieldWithIndexTag,
-	}
-	list, err := check.GetDBTables(g.db, conf.GetSchemaName(g.db))
-	if err != nil {
-		return nil
-	}
-	var wg sync.WaitGroup
-	wg.Add(len(list))
-	for _, v := range list {
-		g.ApplyBasic(g.GenerateModel(v.TableName))
-		wg.Done()
-	}
-	wg.Wait()
-
-	return nil
-}
-
-// GenerateModel catch table info from db, return a BaseStruct
+// GenerateModelAs GenerateModel catch table info from db, return a BaseStruct
 func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...model.MemberOpt) *check.BaseStruct {
 	s, err := check.GenBaseStructs(g.db, model.DBConf{
 		ModelPkg:          g.Config.ModelPkgPath,
@@ -198,6 +173,36 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 // ApplyBasic specify models which will implement basic method
 func (g *Generator) ApplyBasic(models ...interface{}) {
 	g.ApplyInterface(func() {}, models...)
+}
+
+const ALLTables = "gen:all_tables"
+
+// GetTables get db all tables or some tables
+func (g *Generator) GetTables(tableNames ...string) (models []interface{}) {
+	conf := model.DBConf{
+		ModelPkg:          g.Config.ModelPkgPath,
+		SchemaNameOpts:    g.dbNameOpts,
+		FieldNullable:     g.FieldNullable,
+		FieldWithIndexTag: g.FieldWithIndexTag,
+	}
+	var err error
+	var tableList []*model.Table
+	if len(tableNames) == 1 && tableNames[0] == ALLTables {
+		tableList, err = check.GetALLTables(g.db, conf.GetSchemaName(g.db))
+	} else {
+		tableList, err = check.GetTables(g.db, conf.GetSchemaName(g.db), tableNames)
+	}
+	if err != nil {
+		g.db.Logger.Error(context.Background(), "GetTables err: %s", err)
+
+		return nil
+	}
+
+	for _, v := range tableList {
+		models = append(models, g.GenerateModel(v.TableName))
+	}
+
+	return models
 }
 
 // ApplyInterface specifies method interfaces on structures, implment codes will be generated after calling g.Execute()

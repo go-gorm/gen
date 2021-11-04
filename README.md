@@ -171,7 +171,13 @@ func main() {
     
     // apply diy interfaces on structs or table models
     g.ApplyInterface(func(method model.Method) {}, model.User{}, g.GenerateModel("company"))
-
+    //Provide the ability to generate all and some tables of the database
+	g.ApplyBasic(
+		g.GetTables(gen.ALLTables)...,
+	)
+	g.ApplyBasic(
+		g.GetTables("orders", "orders_medical_advice")...,
+	)
     // execute the action of code generation
     g.Execute()
 }

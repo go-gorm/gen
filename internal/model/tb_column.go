@@ -8,8 +8,9 @@ import (
 
 // Table Database table list info
 type Table struct {
-	TableName     string   `gorm:"column:TABLE_NAME"`
+	TableName string `gorm:"column:TABLE_NAME"`
 }
+
 // Column table column's info
 type Column struct {
 	TableName     string   `gorm:"column:TABLE_NAME"`
