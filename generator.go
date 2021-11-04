@@ -13,13 +13,12 @@ import (
 	"text/template"
 
 	"golang.org/x/tools/imports"
-	"gorm.io/gen/internal/model"
-	"gorm.io/gorm"
-	"gorm.io/gorm/utils/tests"
-
 	"gorm.io/gen/internal/check"
+	"gorm.io/gen/internal/model"
 	"gorm.io/gen/internal/parser"
 	tmpl "gorm.io/gen/internal/template"
+	"gorm.io/gorm"
+	"gorm.io/gorm/utils/tests"
 )
 
 // TODO implement some unit tests
@@ -163,7 +162,8 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 	})
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)
-		panic("generate struct fail")
+
+		panic(fmt.Sprintf("generate struct fail err:%s", err))
 	}
 
 	g.successInfo(fmt.Sprintf("got %d columns from table <%s>", len(s.Members), s.TableName))
@@ -283,14 +283,12 @@ func (g *Generator) generateQueryFile() (err error) {
 	if err != nil {
 		return err
 	}
-
 	for _, info := range g.Data {
 		err = g.generateSubQuery(info)
 		if err != nil {
 			return err
 		}
 	}
-
 	err = g.output(g.OutFile, buf.Bytes())
 	if err != nil {
 		return err
