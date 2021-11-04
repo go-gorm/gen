@@ -1,6 +1,6 @@
 package template
 
-const DefaultQueryTmpl = `
+const DefaultQuery = `
 var (
 	Q =new(Query)
 	{{range $name,$d :=.Data -}}
@@ -17,7 +17,7 @@ func SetDefault(db *gorm.DB) {
 
 `
 
-const QueryTmpl = `
+const QueryMethod = `
 func Use(db *gorm.DB) *Query {
 	return &Query{
 		db: db,
@@ -86,4 +86,78 @@ func (q *QueryTx) RollbackTo(name string) error {
 	return q.db.RollbackTo(name).Error
 }
 
+`
+
+const QueryMethod_TEST = `
+
+const dbName = "gen_test.db"
+
+var db *gorm.DB
+
+func init() {
+	var err error
+	db, err = gorm.Open(sqlite.Open(dbName), &gorm.Config{})
+	if err != nil {
+		panic(fmt.Errorf("open sqlite %q fail: %w", dbName, err))
+	}
+}
+
+func Test_Available(t *testing.T) {
+	if !Use(db).Available() {
+		t.Errorf("query.Available() == false")
+	}
+}
+
+func Test_WithContext(t *testing.T) {
+	query := Use(db)
+	if !query.Available() {
+		t.Errorf("query Use(db) fail: query.Available() == false")
+	}
+
+	type Content string
+	var key, value Content = "gen_tag", "unit_test"
+	qCtx := query.WithContext(context.WithValue(context.Background(), key, value))
+
+	for _, ctx := range []context.Context{
+		{{range $name,$d :=.Data -}}
+		qCtx.{{$d.StructName}}.UnderlyingDB().Statement.Context,
+		{{end}}
+	} {
+		if v := ctx.Value(key); v != value {
+			t.Errorf("get value from context fail, expect %q, got %q", value, v)
+		}
+	}
+}
+
+func Test_Transaction(t *testing.T) {
+	query := Use(db)
+	if !query.Available() {
+		t.Errorf("query Use(db) fail: query.Available() == false")
+	}
+
+	err := query.Transaction(func(tx *Query) error { return nil })
+	if err != nil {
+		t.Errorf("query.Transaction execute fail: %s", err)
+	}
+
+	tx := query.Begin()
+
+	err = tx.SavePoint("point")
+	if err != nil {
+		t.Errorf("query tx SavePoint fail: %s", err)
+	}
+	err = tx.RollbackTo("point")
+	if err != nil {
+		t.Errorf("query tx RollbackTo fail: %s", err)
+	}
+	err = tx.Commit()
+	if err != nil {
+		t.Errorf("query tx Commit fail: %s", err)
+	}
+
+	err = query.Begin().Rollback()
+	if err != nil {
+		t.Errorf("query tx Rollback fail: %s", err)
+	}
+}
 `

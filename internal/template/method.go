@@ -203,3 +203,5 @@ func ({{.S}} *{{.NewStructName}}Do) withDO(do gen.Dao) (*{{.NewStructName}}Do) {
 }
 
 `
+
+const CRUDMethod_TEST = ``
