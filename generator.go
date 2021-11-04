@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 	"text/template"
 
 	"golang.org/x/tools/imports"
@@ -148,30 +147,6 @@ func (g *Generator) UseDB(db *gorm.DB) {
 // GenerateModel catch table info from db, return a BaseStruct
 func (g *Generator) GenerateModel(tableName string, opts ...model.MemberOpt) *check.BaseStruct {
 	return g.GenerateModelAs(tableName, g.db.Config.NamingStrategy.SchemaName(tableName), opts...)
-}
-
-// GenerateModel catch table info from db, return a BaseStruct
-func (g *Generator) GenerateModelByDB(opts ...model.MemberOpt) error {
-	conf := model.DBConf{
-		ModelPkg:          g.Config.ModelPkgPath,
-		SchemaNameOpts:    g.dbNameOpts,
-		MemberOpts:        opts,
-		FieldNullable:     g.FieldNullable,
-		FieldWithIndexTag: g.FieldWithIndexTag,
-	}
-	list, err := check.GetDBTables(g.db, conf.GetSchemaName(g.db))
-	if err != nil {
-		return nil
-	}
-	var wg sync.WaitGroup
-	wg.Add(len(list))
-	for _, v := range list {
-		g.ApplyBasic(g.GenerateModel(v.TableName))
-		wg.Done()
-	}
-	wg.Wait()
-
-	return nil
 }
 
 // GenerateModel catch table info from db, return a BaseStruct
