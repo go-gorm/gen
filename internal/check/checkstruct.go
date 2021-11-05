@@ -63,6 +63,9 @@ func (b *BaseStruct) getMemberRealType(member reflect.Type) string {
 	if member.String() == "time.Time" {
 		return "time.Time"
 	}
+	if member.String() == "[]uint8" || member.String() == "json.RawMessage" {
+		return "bytes"
+	}
 	return member.Kind().String()
 }
 
