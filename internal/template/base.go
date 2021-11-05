@@ -14,6 +14,7 @@ import(
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
+	"gorm.io/gorm/clause"
 
 	"gorm.io/gen"
 	"gorm.io/gen/field"
