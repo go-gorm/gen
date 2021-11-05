@@ -136,6 +136,8 @@ func (m *Member) GenType() string {
 		return strings.Title(m.Type)
 	case "time.Time":
 		return "Time"
+	case "json.RawMessage":
+		return "Bytes"
 	default:
 		return "Field"
 	}
