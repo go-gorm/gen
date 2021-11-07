@@ -272,12 +272,11 @@ func (g *Generator) generateQueryFile() (err error) {
 			return err
 		}
 
-		if !g.WithUnitTest {
-			continue
-		}
-		err = g.generateQueryUnitTestFile(info)
-		if err != nil { // do not panic
-			g.db.Logger.Error(context.Background(), "generate unit test fail: %s", err)
+		if g.WithUnitTest {
+			err = g.generateQueryUnitTestFile(info)
+			if err != nil { // do not panic
+				g.db.Logger.Error(context.Background(), "generate unit test fail: %s", err)
+			}
 		}
 	}
 

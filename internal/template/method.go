@@ -204,4 +204,90 @@ func ({{.S}} *{{.NewStructName}}Do) withDO(do gen.Dao) (*{{.NewStructName}}Do) {
 
 `
 
-const CRUDMethod_TEST = ``
+const CRUDMethod_TEST = `
+func init() {
+	db.AutoMigrate(&{{.StructInfo.Package}}.{{.StructName}}{})
+}
+
+func Test_{{.NewStructName}}Query(t *testing.T) {
+	{{.NewStructName}} := new{{.StructName}}(db)
+	do := {{.NewStructName}}.WithContext(context.Background()).Debug()
+
+	primaryKey := field.NewString(do.TableName(), clause.PrimaryKey)
+	_, err := do.Unscoped().Where(primaryKey.IsNotNull()).Delete()
+	if err != nil {
+		t.Error("clean table <{{.TableName}}> fail:", err)
+		return
+	}
+
+	err = do.Create(&{{.StructInfo.Package}}.{{.StructName}}{})
+	if err != nil {
+		t.Error("create item in table <{{.TableName}}> fail:", err)
+	}
+
+	err = do.Save(&{{.StructInfo.Package}}.{{.StructName}}{})
+	if err != nil {
+		t.Error("create item in table <{{.TableName}}> fail:", err)
+	}
+
+	err = do.CreateInBatches([]*{{.StructInfo.Package}}.{{.StructName}}{ {}, {} }, 10)
+	if err != nil {
+		t.Error("create item in table <{{.TableName}}> fail:", err)
+	}
+
+	_, err = do.Select({{.NewStructName}}.ALL).Take()
+	if err != nil {
+		t.Error("Take() on table <{{.TableName}}> fail:", err)
+	}
+
+	_, err = do.First()
+	if err != nil {
+		t.Error("First() on table <{{.TableName}}> fail:", err)
+	}
+
+	_, err = do.Last()
+	if err != nil {
+		t.Error("First() on table <{{.TableName}}> fail:", err)
+	}
+
+	_, err = do.Where(primaryKey.IsNotNull()).FindInBatch(10, func(tx gen.Dao, batch int) error { return nil })
+	if err != nil {
+		t.Error("FindInBatch() on table <{{.TableName}}> fail:", err)
+	}
+
+	err = do.Where(primaryKey.IsNotNull()).FindInBatches([]*{{.StructInfo.Package}}.{{.StructName}}{}, 10, func(tx gen.Dao, batch int) error { return nil })
+	if err != nil {
+		t.Error("FindInBatches() on table <{{.TableName}}> fail:", err)
+	}
+
+	_, err = do.Select({{.NewStructName}}.ALL).Where(primaryKey.IsNotNull()).Order(primaryKey.Desc()).Find()
+	if err != nil {
+		t.Error("Find() on table <{{.TableName}}> fail:", err)
+	}
+
+	_, err = do.Select(primaryKey.Distinct()).Take()
+	if err != nil {
+		t.Error("select Distinct() on table <{{.TableName}}> fail:", err)
+	}
+
+	_, err = do.Select({{.NewStructName}}.ALL).Omit(primaryKey).Take()
+	if err != nil {
+		t.Error("Omit() on table <{{.TableName}}> fail:", err)
+	}
+
+	_, err = do.Group(primaryKey).Find()
+	if err != nil {
+		t.Error("Group() on table <{{.TableName}}> fail:", err)
+	}
+
+	_, err = do.Scopes(func(dao gen.Dao) gen.Dao { return dao.Where(primaryKey.IsNotNull()) }).Find()
+	if err != nil {
+		t.Error("Scopes() on table <{{.TableName}}> fail:", err)
+	}
+
+	_, _, err = do.FindByPage(0, 1)
+	if err != nil {
+		t.Error("FindByPage() on table <{{.TableName}}> fail:", err)
+	}
+}
+`
