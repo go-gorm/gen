@@ -93,13 +93,20 @@ const QueryMethod_TEST = `
 const dbName = "gen_test.db"
 
 var db *gorm.DB
+var once sync.Once
 
 func init() {
-	var err error
-	db, err = gorm.Open(sqlite.Open(dbName), &gorm.Config{})
-	if err != nil {
-		panic(fmt.Errorf("open sqlite %q fail: %w", dbName, err))
-	}
+	InitializeDB()
+}
+
+func InitializeDB() {
+	once.Do(func() {
+		var err error
+		db, err = gorm.Open(sqlite.Open(dbName), &gorm.Config{})
+		if err != nil {
+			panic(fmt.Errorf("open sqlite %q fail: %w", dbName, err))
+		}
+	})
 }
 
 func Test_Available(t *testing.T) {

@@ -206,6 +206,7 @@ func ({{.S}} *{{.NewStructName}}Do) withDO(do gen.Dao) (*{{.NewStructName}}Do) {
 
 const CRUDMethod_TEST = `
 func init() {
+	InitializeDB()
 	db.AutoMigrate(&{{.StructInfo.Package}}.{{.StructName}}{})
 }
 
