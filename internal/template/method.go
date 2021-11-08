@@ -207,7 +207,10 @@ func ({{.S}} *{{.NewStructName}}Do) withDO(do gen.Dao) (*{{.NewStructName}}Do) {
 const CRUDMethod_TEST = `
 func init() {
 	InitializeDB()
-	db.AutoMigrate(&{{.StructInfo.Package}}.{{.StructName}}{})
+	err := db.AutoMigrate(&{{.StructInfo.Package}}.{{.StructName}}{})
+	if err != nil{
+		fmt.Printf("Error: AutoMigrate(&{{.StructInfo.Package}}.{{.StructName}}{}) fail: %s", err)
+	}
 }
 
 func Test_{{.NewStructName}}Query(t *testing.T) {
