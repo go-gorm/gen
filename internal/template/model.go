@@ -1,7 +1,7 @@
 package template
 
-// ModelTemplate used as a variable because it cannot load template file after packed, params still can pass file
-const ModelTemplate = NotEditMark + `
+// Model used as a variable because it cannot load template file after packed, params still can pass file
+const Model = NotEditMark + `
 package {{.StructInfo.Package}}
 
 import "time"

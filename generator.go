@@ -57,13 +57,14 @@ const (
 
 // Config generator's basic configuration
 type Config struct {
-	db *gorm.DB //nolint
+	db *gorm.DB // db connection
 
-	OutPath           string
-	OutFile           string
+	OutPath           string // query code path
+	OutFile           string // query code file name, default: gen.go
 	ModelPkgPath      string // generated model code's package name
-	FieldNullable     bool
-	FieldWithIndexTag bool
+	FieldNullable     bool   // generate pointer when field is nullable
+	FieldWithIndexTag bool   // generate with gorm index tag
+	WithUnitTest      bool   // generate unit test for query code
 
 	Mode GenerateMode // generate mode
 
@@ -162,8 +163,7 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 	})
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)
-
-		panic(fmt.Sprintf("generate struct fail err:%s", err))
+		panic(fmt.Sprintf("generate struct fail: %s", err))
 	}
 
 	g.successInfo(fmt.Sprintf("got %d columns from table <%s>", len(s.Members), s.TableName))
@@ -248,7 +248,7 @@ func (g *Generator) Execute() {
 	g.deleteHistoryGeneratedFile()
 	err = g.generateQueryFile()
 	if err != nil {
-		g.db.Logger.Error(context.Background(), "generate query code: %s", err)
+		g.db.Logger.Error(context.Background(), "generate query code fail: %s", err)
 		panic("generate query code fail")
 	}
 
@@ -265,35 +265,66 @@ func (g *Generator) successInfo(logInfos ...string) {
 
 // generateQueryFile generate query code and save to file
 func (g *Generator) generateQueryFile() (err error) {
-	var buf bytes.Buffer
-
-	err = render(tmpl.HeaderTmpl, &buf, g.queryPkgName)
-	if err != nil {
-		return err
-	}
-
-	if g.judgeMode(WithDefaultQuery) {
-		err = render(tmpl.DefaultQueryTmpl, &buf, g)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = render(tmpl.QueryTmpl, &buf, g)
-	if err != nil {
-		return err
-	}
+	// generate query code for all struct
 	for _, info := range g.Data {
 		err = g.generateSubQuery(info)
 		if err != nil {
 			return err
 		}
+
+		if g.WithUnitTest {
+			err = g.generateQueryUnitTestFile(info)
+			if err != nil { // do not panic
+				g.db.Logger.Error(context.Background(), "generate unit test fail: %s", err)
+			}
+		}
+	}
+
+	// generate query file
+	var buf bytes.Buffer
+	err = render(tmpl.Header, &buf, g.queryPkgName)
+	if err != nil {
+		return err
+	}
+
+	if g.judgeMode(WithDefaultQuery) {
+		err = render(tmpl.DefaultQuery, &buf, g)
+		if err != nil {
+			return err
+		}
+	}
+	err = render(tmpl.QueryMethod, &buf, g)
+	if err != nil {
+		return err
 	}
 	err = g.output(g.OutFile, buf.Bytes())
 	if err != nil {
 		return err
 	}
 	g.successInfo("generate query file: " + g.OutFile)
+
+	// generate query unit test file
+	if g.WithUnitTest {
+		buf.Reset()
+
+		err = render(tmpl.UnitTestHeader, &buf, g.queryPkgName)
+		if err != nil {
+			g.db.Logger.Error(context.Background(), "generate query unit test fail: %s", err)
+			return nil
+		}
+		err = render(tmpl.QueryMethod_TEST, &buf, g)
+		if err != nil {
+			g.db.Logger.Error(context.Background(), "generate query unit test fail: %s", err)
+			return nil
+		}
+		fileName := strings.TrimSuffix(g.OutFile, ".go") + "_test.go"
+		err = g.output(fileName, buf.Bytes())
+		if err != nil {
+			g.db.Logger.Error(context.Background(), "generate query unit test fail: %s", err)
+			return nil
+		}
+		g.successInfo("generate unit test file: " + fileName)
+	}
 
 	return nil
 }
@@ -302,7 +333,7 @@ func (g *Generator) generateQueryFile() (err error) {
 func (g *Generator) generateSubQuery(data *genInfo) (err error) {
 	var buf bytes.Buffer
 
-	err = render(tmpl.HeaderTmpl, &buf, g.queryPkgName)
+	err = render(tmpl.Header, &buf, g.queryPkgName)
 	if err != nil {
 		return err
 	}
@@ -331,6 +362,24 @@ func (g *Generator) generateSubQuery(data *genInfo) (err error) {
 
 	defer g.successInfo(fmt.Sprintf("generate query file: %s/%s.gen.go", g.OutPath, strings.ToLower(data.TableName)))
 	return g.output(fmt.Sprintf("%s/%s.gen.go", g.OutPath, strings.ToLower(data.TableName)), buf.Bytes())
+}
+
+// generateQueryUnitTestFile generate unit test file for query
+func (g *Generator) generateQueryUnitTestFile(data *genInfo) (err error) {
+	var buf bytes.Buffer
+
+	err = render(tmpl.UnitTestHeader, &buf, g.queryPkgName)
+	if err != nil {
+		return err
+	}
+
+	err = render(tmpl.CRUDMethod_TEST, &buf, data.BaseStruct)
+	if err != nil {
+		return err
+	}
+
+	defer g.successInfo(fmt.Sprintf("generate unit test file: %s/%s.gen_test.go", g.OutPath, strings.ToLower(data.TableName)))
+	return g.output(fmt.Sprintf("%s/%s.gen_test.go", g.OutPath, strings.ToLower(data.TableName)), buf.Bytes())
 }
 
 // remove history GEN generated file
@@ -381,7 +430,7 @@ func (g *Generator) generateBaseStruct() (err error) {
 		mkdir()
 
 		var buf bytes.Buffer
-		err = render(tmpl.ModelTemplate, &buf, data.BaseStruct)
+		err = render(tmpl.Model, &buf, data.BaseStruct)
 		if err != nil {
 			return err
 		}
