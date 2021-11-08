@@ -46,9 +46,9 @@ const (
 
 		_{{$.NewStructName}}.fieldMap = make(map[string]field.Expr, {{len .Members}})
 		{{range .Members -}}
-		{{if not .IsRelation -}}
-			_{{$.NewStructName}}.fieldMap["{{.ColumnName}}"] = _{{$.NewStructName}}.{{.Name}}
-		{{end -}}
+		{{if not .IsRelation -}}{{if .ColumnName -}}
+		_{{$.NewStructName}}.fieldMap["{{.ColumnName}}"] = _{{$.NewStructName}}.{{.Name}}
+		{{end -}}{{end -}}
 		{{end}}
 		return _{{.NewStructName}}
 	}
