@@ -151,7 +151,7 @@ func ({{.S}} {{.NewStructName}}Do) FindInBatch(batchSize int, fc func(tx gen.Dao
 	return result.([]*{{.StructInfo.Package}}.{{.StructInfo.Type}}), err
 }
 
-func ({{.S}} {{.NewStructName}}Do) FindInBatches(result []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, batchSize int, fc func(tx gen.Dao, batch int) error) error {
+func ({{.S}} {{.NewStructName}}Do) FindInBatches(result *[]*{{.StructInfo.Package}}.{{.StructInfo.Type}}, batchSize int, fc func(tx gen.Dao, batch int) error) error {
 	return {{.S}}.DO.FindInBatches(&result, batchSize, fc)
 }
 
