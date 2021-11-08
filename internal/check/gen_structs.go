@@ -64,6 +64,10 @@ func GenBaseStructs(db *gorm.DB, conf model.DBConf) (bases *BaseStruct, err erro
 			continue
 		}
 
+		if !conf.FieldWithTypeTag { // remove type tag if FieldWithTypeTag == false
+			m.GORMTag = strings.ReplaceAll(m.GORMTag, ";type:"+field.ColumnType, "")
+		}
+
 		m = modifyMember(m, modifyOpts)
 		if ns, ok := db.NamingStrategy.(schema.NamingStrategy); ok {
 			ns.SingularTable = true

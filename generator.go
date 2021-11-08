@@ -59,12 +59,15 @@ const (
 type Config struct {
 	db *gorm.DB // db connection
 
-	OutPath           string // query code path
-	OutFile           string // query code file name, default: gen.go
-	ModelPkgPath      string // generated model code's package name
-	FieldNullable     bool   // generate pointer when field is nullable
-	FieldWithIndexTag bool   // generate with gorm index tag
-	WithUnitTest      bool   // generate unit test for query code
+	OutPath      string // query code path
+	OutFile      string // query code file name, default: gen.go
+	ModelPkgPath string // generated model code's package name
+	WithUnitTest bool   // generate unit test for query code
+
+	// generate model global configuration
+	FieldNullable     bool // generate pointer when field is nullable
+	FieldWithIndexTag bool // generate with gorm index tag
+	FieldWithTypeTag  bool // generate with gorm column type ta
 
 	Mode GenerateMode // generate mode
 
@@ -153,13 +156,16 @@ func (g *Generator) GenerateModel(tableName string, opts ...model.MemberOpt) *ch
 // GenerateModel catch table info from db, return a BaseStruct
 func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...model.MemberOpt) *check.BaseStruct {
 	s, err := check.GenBaseStructs(g.db, model.DBConf{
-		ModelPkg:          g.Config.ModelPkgPath,
-		TableName:         tableName,
-		ModelName:         modelName,
-		SchemaNameOpts:    g.dbNameOpts,
-		MemberOpts:        fieldOpts,
-		FieldNullable:     g.FieldNullable,
-		FieldWithIndexTag: g.FieldWithIndexTag,
+		ModelPkg:       g.Config.ModelPkgPath,
+		TableName:      tableName,
+		ModelName:      modelName,
+		SchemaNameOpts: g.dbNameOpts,
+		MemberOpts:     fieldOpts,
+		GenerateModelConfig: model.GenerateModelConfig{
+			FieldNullable:     g.FieldNullable,
+			FieldWithIndexTag: g.FieldWithIndexTag,
+			FieldWithTypeTag:  g.FieldWithTypeTag,
+		},
 	})
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)

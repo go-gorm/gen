@@ -12,8 +12,13 @@ type DBConf struct {
 	SchemaNameOpts []SchemaNameOpt
 	MemberOpts     []MemberOpt
 
-	FieldNullable     bool
-	FieldWithIndexTag bool
+	GenerateModelConfig
+}
+
+type GenerateModelConfig struct {
+	FieldNullable     bool // generate pointer when field is nullable
+	FieldWithIndexTag bool // generate with gorm index tag
+	FieldWithTypeTag  bool // generate with gorm column type tagl
 }
 
 func (cf *DBConf) SortOpt() (modifyOpts []MemberOpt, filterOpts []MemberOpt, createOpts []MemberOpt) {

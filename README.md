@@ -156,8 +156,10 @@ func main() {
         /* Mode: gen.WithoutContext|gen.WithDefaultQuery*/
         //if you want the nullable field generation property to be pointer type, set FieldNullable true
         /* FieldNullable: true,*/
-        //if you want to generate index tags from the database, set FieldWithIndexTag true
+        //if you want to generate index tags from database, set FieldWithIndexTag true
         /* FieldWithIndexTag: true,*/
+        //if you want to generate type tags from database, set FieldWithTypeTag true
+        /* FieldWithTypeTag: true,*/
         //if you need unit tests for query code, set WithUnitTest true
         /* WithUnitTest: true, */
     })
