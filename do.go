@@ -30,10 +30,10 @@ type resultInfo struct {
 // DO (data object): implement basic query methods
 // the structure embedded with a *gorm.DB, and has a element item "alias" will be used when used as a sub query
 type DO struct {
-	db     *gorm.DB
-	alias  string // for subquery
-	model  interface{}
-	schema *schema.Schema
+	db        *gorm.DB
+	alias     string // for subquery
+	modelType reflect.Type
+	schema    *schema.Schema
 }
 
 func (d DO) getInstance(db *gorm.DB) *DO {
@@ -61,7 +61,11 @@ func (d *DO) ReplaceDB(db *gorm.DB) { d.db = db }
 
 // UseModel specify a data model structure as a source for table name
 func (d *DO) UseModel(model interface{}) {
-	d.model = model
+	mt := reflect.TypeOf(model)
+	if mt.Kind() == reflect.Ptr {
+		mt = mt.Elem()
+	}
+	d.modelType = mt
 
 	err := d.db.Statement.Parse(model)
 	if err != nil {
@@ -388,7 +392,7 @@ func (d *DO) Last() (result interface{}, err error) {
 }
 
 func (d *DO) singleQuery(query func(dest interface{}, conds ...interface{}) *gorm.DB) (result interface{}, err error) {
-	if d.model == nil {
+	if d.modelType == nil {
 		return d.singleScan()
 	}
 
@@ -410,7 +414,7 @@ func (d *DO) Find() (results interface{}, err error) {
 }
 
 func (d *DO) multiQuery(query func(dest interface{}, conds ...interface{}) *gorm.DB) (results interface{}, err error) {
-	if d.model == nil {
+	if d.modelType == nil {
 		return d.findToMap()
 	}
 
@@ -444,7 +448,7 @@ func (d *DO) FirstOrCreate() (result interface{}, err error) {
 }
 
 func (d *DO) Update(column field.Expr, value interface{}) (info resultInfo, err error) {
-	tx := d.db.Model(d.model)
+	tx := d.db.Model(d.newResultPointer())
 	columnStr := column.BuildColumn(d.db.Statement, field.WithoutQuote).String()
 
 	var result *gorm.DB
@@ -469,17 +473,17 @@ func (d *DO) UpdateSimple(columns ...field.AssignExpr) (info resultInfo, err err
 		return resultInfo{Error: err}, err
 	}
 
-	result := d.db.Model(d.model).Updates(dest)
+	result := d.db.Model(d.newResultPointer()).Updates(dest)
 	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
 func (d *DO) Updates(value interface{}) (info resultInfo, err error) {
-	result := d.db.Model(d.model).Updates(value)
+	result := d.db.Model(d.newResultPointer()).Updates(value)
 	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
 func (d *DO) UpdateColumn(column field.Expr, value interface{}) (info resultInfo, err error) {
-	tx := d.db.Model(d.model)
+	tx := d.db.Model(d.newResultPointer())
 	columnStr := column.BuildColumn(d.db.Statement, field.WithoutQuote).String()
 
 	var result *gorm.DB
@@ -504,59 +508,50 @@ func (d *DO) UpdateColumnSimple(columns ...field.AssignExpr) (info resultInfo, e
 		return resultInfo{Error: err}, err
 	}
 
-	result := d.db.Model(d.model).UpdateColumns(dest)
+	result := d.db.Model(d.newResultPointer()).UpdateColumns(dest)
 	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
 func (d *DO) UpdateColumns(value interface{}) (info resultInfo, err error) {
-	result := d.db.Model(d.model).UpdateColumns(value)
+	result := d.db.Model(d.newResultPointer()).UpdateColumns(value)
 	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
 func (d *DO) Delete() (info resultInfo, err error) {
-	result := d.db.Model(d.model).Delete(reflect.New(d.getModelType()).Interface())
+	result := d.db.Model(d.newResultPointer()).Delete(reflect.New(d.modelType).Interface())
 	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
 func (d *DO) Count() (count int64, err error) {
-	return count, d.db.Session(&gorm.Session{}).Model(d.model).Count(&count).Error
+	return count, d.db.Session(&gorm.Session{}).Model(d.newResultPointer()).Count(&count).Error
 }
 
 func (d *DO) Row() *sql.Row {
-	return d.db.Model(d.model).Row()
+	return d.db.Model(d.newResultPointer()).Row()
 }
 
 func (d *DO) Rows() (*sql.Rows, error) {
-	return d.db.Model(d.model).Rows()
+	return d.db.Model(d.newResultPointer()).Rows()
 }
 
 func (d *DO) Scan(dest interface{}) error {
-	return d.db.Model(d.model).Scan(dest).Error
+	return d.db.Model(d.newResultPointer()).Scan(dest).Error
 }
 
 func (d *DO) Pluck(column field.Expr, dest interface{}) error {
-	return d.db.Model(d.model).Pluck(column.ColumnName().String(), dest).Error
+	return d.db.Model(d.newResultPointer()).Pluck(column.ColumnName().String(), dest).Error
 }
 
 func (d *DO) ScanRows(rows *sql.Rows, dest interface{}) error {
-	return d.db.Model(d.model).ScanRows(rows, dest)
+	return d.db.Model(d.newResultPointer()).ScanRows(rows, dest)
 }
 
 func (d *DO) newResultPointer() interface{} {
-	return reflect.New(d.getModelType()).Interface()
+	return reflect.New(d.modelType).Interface()
 }
 
 func (d *DO) newResultSlicePointer() interface{} {
-	return reflect.New(reflect.SliceOf(reflect.PtrTo(d.getModelType()))).Interface()
-}
-
-// getModelType get model type
-func (d *DO) getModelType() reflect.Type {
-	mt := reflect.TypeOf(d.model)
-	if mt.Kind() == reflect.Ptr {
-		mt = mt.Elem()
-	}
-	return mt
+	return reflect.New(reflect.SliceOf(reflect.PtrTo(d.modelType))).Interface()
 }
 
 func toColumnFullName(stmt *gorm.Statement, columns ...field.Expr) []string {
