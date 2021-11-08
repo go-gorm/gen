@@ -214,11 +214,16 @@ func Test_{{.NewStructName}}Query(t *testing.T) {
 	{{.NewStructName}} := new{{.StructName}}(db)
 	do := {{.NewStructName}}.WithContext(context.Background()).Debug()
 
-	primaryKey := field.NewString(do.TableName(), clause.PrimaryKey)
+	primaryKey := field.NewString({{.NewStructName}}.TableName(), clause.PrimaryKey)
 	_, err := do.Unscoped().Where(primaryKey.IsNotNull()).Delete()
 	if err != nil {
 		t.Error("clean table <{{.TableName}}> fail:", err)
 		return
+	}
+	
+	_, ok := {{.NewStructName}}.GetFieldByName("")
+	if ok {
+		t.Error("GetFieldByName(\"\") from {{.NewStructName}} success")
 	}
 
 	err = do.Create(&{{.StructInfo.Package}}.{{.StructName}}{})
@@ -266,7 +271,7 @@ func Test_{{.NewStructName}}Query(t *testing.T) {
 		t.Error("Find() on table <{{.TableName}}> fail:", err)
 	}
 
-	_, err = do.Select(primaryKey.Distinct()).Take()
+	_, err = do.Distinct(primaryKey).Take()
 	if err != nil {
 		t.Error("select Distinct() on table <{{.TableName}}> fail:", err)
 	}
@@ -289,6 +294,34 @@ func Test_{{.NewStructName}}Query(t *testing.T) {
 	_, _, err = do.FindByPage(0, 1)
 	if err != nil {
 		t.Error("FindByPage() on table <{{.TableName}}> fail:", err)
+	}
+	
+	_, err = do.Attrs(primaryKey).Assign(primaryKey).FirstOrInit()
+	if err != nil {
+		t.Error("FirstOrInit() on table <{{.TableName}}> fail:", err)
+	}
+
+	_, err = do.Attrs(primaryKey).Assign(primaryKey).FirstOrCreate()
+	if err != nil {
+		t.Error("FirstOrCreate() on table <{{.TableName}}> fail:", err)
+	}
+	
+	var _a _another
+	var _aPK = field.NewString(_a.TableName(), clause.PrimaryKey)
+
+	err = do.Join(&_a, primaryKey.EqCol(_aPK)).Scan(map[string]interface{}{})
+	if err != nil {
+		t.Error("Join() on table <{{.TableName}}> fail:", err)
+	}
+
+	err = do.LeftJoin(&_a, primaryKey.EqCol(_aPK)).Scan(map[string]interface{}{})
+	if err != nil {
+		t.Error("LeftJoin() on table <{{.TableName}}> fail:", err)
+	}
+	
+	_, err = do.Not().Or().Clauses().Take()
+	if err != nil {
+		t.Error("Not/Or/Clauses on table <{{.TableName}}> fail:", err)
 	}
 }
 `

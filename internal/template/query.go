@@ -97,6 +97,7 @@ var once sync.Once
 
 func init() {
 	InitializeDB()
+	db.AutoMigrate(&_another{})
 }
 
 func InitializeDB() {
@@ -108,6 +109,12 @@ func InitializeDB() {
 		}
 	})
 }
+
+type _another struct {
+	ID uint64 ` + "`" + `gorm:"primaryKey"` + "`" + `
+}
+
+func (*_another) TableName() string { return "another_for_unit_test" }
 
 func Test_Available(t *testing.T) {
 	if !Use(db).Available() {
