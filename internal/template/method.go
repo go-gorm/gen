@@ -261,7 +261,7 @@ func Test_{{.NewStructName}}Query(t *testing.T) {
 		t.Error("FindInBatch() on table <{{.TableName}}> fail:", err)
 	}
 
-	err = do.Where(primaryKey.IsNotNull()).FindInBatches([]*{{.StructInfo.Package}}.{{.StructName}}{}, 10, func(tx gen.Dao, batch int) error { return nil })
+	err = do.Where(primaryKey.IsNotNull()).FindInBatches(&[]*{{.StructInfo.Package}}.{{.StructName}}{}, 10, func(tx gen.Dao, batch int) error { return nil })
 	if err != nil {
 		t.Error("FindInBatches() on table <{{.TableName}}> fail:", err)
 	}
