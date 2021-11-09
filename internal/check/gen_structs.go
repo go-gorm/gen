@@ -91,8 +91,6 @@ func GenBaseStructs(db *gorm.DB, conf model.DBConf) (bases *BaseStruct, err erro
 				}
 			}
 			m.Type = strings.ReplaceAll(m.Type, modelPkg+".", "") // remove modelPkg in field's Type, avoid import error
-		} else { // Relation Field do not need SchemaName convert
-			m.Name = db.NamingStrategy.SchemaName(m.Name)
 		}
 
 		base.Members = append(base.Members, m)
