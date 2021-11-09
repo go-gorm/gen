@@ -34,7 +34,7 @@ const (
 		_{{$.NewStructName}}.ALL = field.NewField(tableName, "*")
 		{{range .Members -}}
 		{{if not .IsRelation -}}
-			_{{$.NewStructName}}.{{.Name}} = field.New{{.GenType}}(tableName, "{{.ColumnName}}")
+			{{- if .ColumnName -}}_{{$.NewStructName}}.{{.Name}} = field.New{{.GenType}}(tableName, "{{.ColumnName}}"){{- end -}}
 		{{- else -}}
 			_{{$.NewStructName}}.{{.Relation.Name}} = {{$.NewStructName}}{{.Relation.RelationshipName}}{{.Relation.Name}}{
 				db: db.Session(&gorm.Session{}),
@@ -46,9 +46,9 @@ const (
 
 		_{{$.NewStructName}}.fieldMap = make(map[string]field.Expr, {{len .Members}})
 		{{range .Members -}}
-		{{if not .IsRelation -}}{{if .ColumnName -}}
-		_{{$.NewStructName}}.fieldMap["{{.ColumnName}}"] = _{{$.NewStructName}}.{{.Name}}
-		{{end -}}{{end -}}
+		{{if not .IsRelation -}}
+			{{- if .ColumnName -}}_{{$.NewStructName}}.fieldMap["{{.ColumnName}}"] = _{{$.NewStructName}}.{{.Name}}{{- end -}}
+		{{end}}
 		{{end}}
 		return _{{.NewStructName}}
 	}
@@ -58,7 +58,7 @@ const (
 	ALL field.Field
 	{{range .Members -}}
 	{{if not .IsRelation -}}
-		{{.Name}} field.{{.GenType}}
+		{{- if .ColumnName -}}{{.Name}} field.{{.GenType}}{{- end -}}
 	{{- else -}}
 		{{.Relation.Name}} {{$.NewStructName}}{{.Relation.RelationshipName}}{{.Relation.Name}}
 	{{end}}
