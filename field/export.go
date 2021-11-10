@@ -142,16 +142,33 @@ func ContainsSubQuery(columns []Expr, subQuery *gorm.DB) Expr {
 			Vars: []interface{}{columns[0].RawExpr(), subQuery},
 		}}
 	default: // len(columns) > 0
-		vars := make([]string, len(columns))
-		queryCols := make([]interface{}, len(columns))
+		placeholders := make([]string, len(columns))
+		cols := make([]interface{}, len(columns))
 		for i, c := range columns {
-			vars[i], queryCols[i] = "?", c.RawExpr()
+			placeholders[i], cols[i] = "?", c.RawExpr()
 		}
 		return expr{e: clause.Expr{
-			SQL:  fmt.Sprintf("(%s) IN (?)", strings.Join(vars, ", ")),
-			Vars: append(queryCols, subQuery),
+			SQL:  fmt.Sprintf("(%s) IN (?)", strings.Join(placeholders, ",")),
+			Vars: append(cols, subQuery),
 		}}
 	}
+}
+
+func AssignSubQuery(columns []Expr, subQuery *gorm.DB) AssignExpr {
+	cols := make([]string, len(columns))
+	for i, c := range columns {
+		cols[i] = string(c.BuildColumn(subQuery.Statement))
+	}
+
+	name := cols[0]
+	if len(cols) > 1 {
+		name = "(" + strings.Join(cols, ",") + ")"
+	}
+
+	return expr{e: clause.Set{{
+		Column: clause.Column{Name: name, Raw: true},
+		Value:  gorm.Expr("(?)", subQuery),
+	}}}
 }
 
 type CompareOperate string

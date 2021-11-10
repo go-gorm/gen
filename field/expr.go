@@ -205,6 +205,10 @@ func (e expr) LteCol(col Expr) Expr {
 	return e.setE(clause.Expr{SQL: "? <= ?", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})
 }
 
+func (e expr) SetCol(col Expr) AssignExpr {
+	return e.setE(clause.Eq{Column: e.col.Name, Value: col.RawExpr()})
+}
+
 // ======================== keyword ========================
 func (e expr) As(alias string) Expr {
 	if e.e != nil {

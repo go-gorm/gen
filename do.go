@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/callbacks"
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/schema"
 
@@ -26,6 +27,8 @@ type resultInfo struct {
 	RowsAffected int64
 	Error        error
 }
+
+var _ Dao = new(DO)
 
 // DO (data object): implement basic query methods
 // the structure embedded with a *gorm.DB, and has a element item "alias" will be used when used as a sub query
@@ -143,7 +146,10 @@ func (d *DO) Clauses(conds ...clause.Expression) Dao {
 }
 
 // As alias cannot be heired, As must used on tail
-func (d *DO) As(alias string) Dao { return &DO{db: d.db, alias: alias} }
+func (d DO) As(alias string) Dao {
+	d.alias = alias
+	return &d
+}
 
 // Columns return columns for Subquery
 func (*DO) Columns(cols ...field.Expr) columns { return cols }
@@ -351,6 +357,26 @@ func (d *DO) Preload(field field.RelationField) Dao {
 	return d.getInstance(d.db.Preload(field.Path(), args...))
 }
 
+// UpdateFrom specify update sub query
+// WARNNING!!! This Method will be deprecated soon!!!
+func (d *DO) UpdateFrom(querys ...subQuery) Dao {
+	var tableName strings.Builder
+	d.db.Statement.QuoteTo(&tableName, d.db.Statement.Table)
+	tableName.WriteByte(' ')
+	d.db.Statement.QuoteTo(&tableName, d.alias)
+	for _, q := range querys {
+		tableName.WriteByte(',')
+		if _, ok := q.underlyingDB().Statement.Clauses["SELECT"]; ok || len(q.underlyingDB().Statement.Selects) > 0 {
+			tableName.WriteString("(" + q.underlyingDB().ToSQL(func(tx *gorm.DB) *gorm.DB { return tx.Find(nil) }) + ")")
+		} else {
+			d.db.Statement.QuoteTo(&tableName, q.underlyingDB().Statement.Table)
+		}
+		tableName.WriteByte(' ')
+		d.db.Statement.QuoteTo(&tableName, q.underlyingDO().alias)
+	}
+	return d.getInstance(d.db.Clauses(clause.Update{Table: clause.Table{Name: tableName.String(), Raw: true}}))
+}
+
 func getFromClause(db *gorm.DB) *clause.From {
 	if db == nil || db.Statement == nil {
 		return &clause.From{}
@@ -468,12 +494,7 @@ func (d *DO) UpdateSimple(columns ...field.AssignExpr) (info resultInfo, err err
 		return
 	}
 
-	dest, err := assignMap(d.db.Statement, columns)
-	if err != nil {
-		return resultInfo{Error: err}, err
-	}
-
-	result := d.db.Model(d.newResultPointer()).Updates(dest)
+	result := d.db.Model(d.newResultPointer()).Clauses(d.assignSet(columns)).Omit("*").Updates(map[string]interface{}{})
 	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
@@ -503,18 +524,35 @@ func (d *DO) UpdateColumnSimple(columns ...field.AssignExpr) (info resultInfo, e
 		return
 	}
 
-	dest, err := assignMap(d.db.Statement, columns)
-	if err != nil {
-		return resultInfo{Error: err}, err
-	}
-
-	result := d.db.Model(d.newResultPointer()).UpdateColumns(dest)
+	result := d.db.Model(d.newResultPointer()).Clauses(d.assignSet(columns)).Omit("*").UpdateColumns(map[string]interface{}{})
 	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
 func (d *DO) UpdateColumns(value interface{}) (info resultInfo, err error) {
 	result := d.db.Model(d.newResultPointer()).UpdateColumns(value)
 	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
+}
+
+// assignSet fetch all set
+func (d *DO) assignSet(exprs []field.AssignExpr) (set clause.Set) {
+	for _, expr := range exprs {
+		column := clause.Column{Name: string(expr.ColumnName())}
+		if d.alias != "" {
+			column.Table = d.alias
+		}
+		switch e := expr.AssignExpr().(type) {
+		case clause.Expr:
+			set = append(set, clause.Assignment{Column: column, Value: e})
+		case clause.Eq:
+			set = append(set, clause.Assignment{Column: column, Value: e.Value})
+		case clause.Set:
+			set = append(set, e...)
+		}
+	}
+
+	stmt := d.db.Session(&gorm.Session{}).Statement
+	stmt.Dest = map[string]interface{}{}
+	return append(set, callbacks.ConvertToAssignments(stmt)...)
 }
 
 func (d *DO) Delete() (info resultInfo, err error) {
@@ -634,20 +672,6 @@ func toInterfaceSlice(value interface{}) []interface{} {
 	}
 }
 
-func assignMap(stmt *gorm.Statement, exprs []field.AssignExpr) (map[string]interface{}, error) {
-	dest := make(map[string]interface{}, len(exprs))
-	for _, expr := range exprs {
-		target := expr.BuildColumn(stmt, field.WithoutQuote).String()
-		switch e := expr.AssignExpr().(type) {
-		case clause.Expr:
-			dest[target] = e
-		case clause.Eq:
-			dest[target] = e.Value
-		}
-	}
-	return dest, nil
-}
-
 // ======================== New Table ========================
 
 // Table return a new table produced by subquery,
@@ -682,6 +706,11 @@ func Table(subQueries ...subQuery) Dao {
 // ======================== sub query method ========================
 
 type columns []field.Expr
+
+// Set assign value by subquery
+func (cs columns) Set(query subQuery) field.AssignExpr {
+	return field.AssignSubQuery(cs, query.underlyingDB())
+}
 
 // In accept query or value
 func (cs columns) In(queryOrValue Condition) field.Expr {

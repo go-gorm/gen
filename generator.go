@@ -109,7 +109,6 @@ type genInfo struct {
 	Interfaces []*check.InterfaceMethod
 }
 
-//
 func (i *genInfo) appendMethods(methods []*check.InterfaceMethod) error {
 	for _, newMethod := range methods {
 		if i.methodInGenInfo(newMethod) {
