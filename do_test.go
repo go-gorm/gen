@@ -292,7 +292,7 @@ func TestDO_methods(t *testing.T) {
 		{
 			Expr:         u.Select(u.ID).Where(u.Columns(u.ID, u.Age).In(u.Select(u.ID, u.Age).Where(u.Score.Eq(100)))),
 			ExpectedVars: []interface{}{100.0},
-			Result:       "SELECT `id` WHERE (`id`, `age`) IN (SELECT `id`,`age` FROM `users_info` WHERE `score` = ?)",
+			Result:       "SELECT `id` WHERE (`id`,`age`) IN (SELECT `id`,`age` FROM `users_info` WHERE `score` = ?)",
 		},
 		{
 			Expr:         u.Select(u.Age.Avg().As("avgage")).Group(u.Name).Having(u.Columns(u.Age.Avg()).Gt(u.Select(u.Age.Avg()).Where(u.Name.Like("name%")))),
