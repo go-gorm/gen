@@ -151,7 +151,7 @@ func (s *Slices) GetName(status model.Status) string {
 }
 
 func (s *Slices) appendIfCond(name, cond, result string) {
-	s.tmpl = append(s.tmpl, fmt.Sprintf("%s = append(%s, helper.Cond{%s, %s})", name, name, cond, result))
+	s.tmpl = append(s.tmpl, fmt.Sprintf("%s = append(%s, helper.Cond{Cond: %s, Result: %s})", name, name, cond, result))
 }
 
 func (s *Slices) appendSetValue(name, result string) {
