@@ -59,6 +59,7 @@ A safer orm base on [GORM](https://github.com/go-gorm/gorm), aims to be develope
         - [SubQuery](#subquery)
           - [From SubQuery](#from-subquery)
           - [Update from SubQuery](#update-from-subquery)
+          - [Update multiple columns from SubQuery](#update-multiple-columns-from-subquery)
         - [Transaction](#transaction)
           - [Nested Transactions](#nested-transactions)
           - [Transactions by manual](#transactions-by-manual)
