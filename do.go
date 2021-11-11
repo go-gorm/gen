@@ -362,8 +362,10 @@ func (d *DO) Preload(field field.RelationField) Dao {
 func (d *DO) UpdateFrom(querys ...subQuery) Dao {
 	var tableName strings.Builder
 	d.db.Statement.QuoteTo(&tableName, d.db.Statement.Table)
-	tableName.WriteByte(' ')
-	d.db.Statement.QuoteTo(&tableName, d.alias)
+	if d.alias != "" {
+		tableName.WriteString(" AS ")
+		d.db.Statement.QuoteTo(&tableName, d.alias)
+	}
 	for _, q := range querys {
 		tableName.WriteByte(',')
 		if _, ok := q.underlyingDB().Statement.Clauses["SELECT"]; ok || len(q.underlyingDB().Statement.Selects) > 0 {
@@ -371,8 +373,10 @@ func (d *DO) UpdateFrom(querys ...subQuery) Dao {
 		} else {
 			d.db.Statement.QuoteTo(&tableName, q.underlyingDB().Statement.Table)
 		}
-		tableName.WriteByte(' ')
-		d.db.Statement.QuoteTo(&tableName, q.underlyingDO().alias)
+		if alias := q.underlyingDO().alias; alias != "" {
+			tableName.WriteString(" AS ")
+			d.db.Statement.QuoteTo(&tableName, alias)
+		}
 	}
 	return d.getInstance(d.db.Clauses(clause.Update{Table: clause.Table{Name: tableName.String(), Raw: true}}))
 }
