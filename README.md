@@ -737,6 +737,31 @@ u.WithContext(ctx).Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqCol(u.Com
 u.WithContext(ctx).Where(u.Name.Eq("modi")).Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqCol(u.CompanyID)))
 ```
 
+###### Update multiple columns from SubQuery
+
+Update multiple columns by using SubQuery (for MySQL):
+
+```go
+u := query.Use(db).User
+c := query.Use(db).Company
+
+ua := u.As("u")
+ca := u.As("c")
+
+ua.WithContext(ctx).UpdateFrom(ca.WithContext(ctx).Select(c.ID, c.Address, c.Phone).Where(c.ID.Gt(100))).
+Where(ua.CompanyID.EqCol(ca.ID)).
+UpdateSimple(
+  ua.Address.SetCol(ca.Address),
+  ua.Phone.SetCol(ca.Phone),
+)
+// UPDATE `users` AS `u`,(
+//   SELECT `company`.`id`,`company`.`address`,`company`.`phone` 
+//   FROM `company` WHERE `company`.`id` > 100 AND `company`.`deleted_at` IS NULL
+// ) AS `c` 
+// SET `u`.`address`=`c`.`address`,`c`.`phone`=`c`.`phone`,`updated_at`='2021-11-11 11:11:11.111'
+// WHERE `u`.`company_id` = `c`.`id`
+```
+
 ##### Transaction
 
 To perform a set of operations within a transaction, the general flow is as below.
