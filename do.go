@@ -358,26 +358,25 @@ func (d *DO) Preload(field field.RelationField) Dao {
 }
 
 // UpdateFrom specify update sub query
-// WARNNING!!! This Method will be deprecated soon!!!
-func (d *DO) UpdateFrom(querys ...subQuery) Dao {
+func (d *DO) UpdateFrom(q subQuery) Dao {
 	var tableName strings.Builder
 	d.db.Statement.QuoteTo(&tableName, d.db.Statement.Table)
 	if d.alias != "" {
 		tableName.WriteString(" AS ")
 		d.db.Statement.QuoteTo(&tableName, d.alias)
 	}
-	for _, q := range querys {
-		tableName.WriteByte(',')
-		if _, ok := q.underlyingDB().Statement.Clauses["SELECT"]; ok || len(q.underlyingDB().Statement.Selects) > 0 {
-			tableName.WriteString("(" + q.underlyingDB().ToSQL(func(tx *gorm.DB) *gorm.DB { return tx.Find(nil) }) + ")")
-		} else {
-			d.db.Statement.QuoteTo(&tableName, q.underlyingDB().Statement.Table)
-		}
-		if alias := q.underlyingDO().alias; alias != "" {
-			tableName.WriteString(" AS ")
-			d.db.Statement.QuoteTo(&tableName, alias)
-		}
+
+	tableName.WriteByte(',')
+	if _, ok := q.underlyingDB().Statement.Clauses["SELECT"]; ok || len(q.underlyingDB().Statement.Selects) > 0 {
+		tableName.WriteString("(" + q.underlyingDB().ToSQL(func(tx *gorm.DB) *gorm.DB { return tx.Find(nil) }) + ")")
+	} else {
+		d.db.Statement.QuoteTo(&tableName, q.underlyingDB().Statement.Table)
 	}
+	if alias := q.underlyingDO().alias; alias != "" {
+		tableName.WriteString(" AS ")
+		d.db.Statement.QuoteTo(&tableName, alias)
+	}
+
 	return d.getInstance(d.db.Clauses(clause.Update{Table: clause.Table{Name: tableName.String(), Raw: true}}))
 }
 
