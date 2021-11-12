@@ -258,7 +258,7 @@ FieldRelateModel // specify relationship with exist models
 
 Actually, you're not supposed to create a new field variable, cause it will be accomplished in generated code.
 
-| Field Type | Detail Type           | Crerate Function               | Supported Query Method                                       |
+| Field Type | Detail Type           | Create Function               | Supported Query Method                                       |
 | ---------- | --------------------- | ------------------------------ | ------------------------------------------------------------ |
 | generic    | field                 | NewField                       | IsNull/IsNotNull/Count/Eq/Neq/Gt/Gte/Lt/Lte/Like             |
 | int        | int/int8/.../int64    | NewInt/NewInt8/.../NewInt64    | Eq/Neq/Gt/Gte/Lt/Lte/In/NotIn/Between/NotBetween/Like/NotLike/Add/Sub/Mul/Div/Mod/FloorDiv/RightShift/LeftShift/BitXor/BitAnd/BitOr/BitFlip |
