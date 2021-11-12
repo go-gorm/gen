@@ -152,7 +152,7 @@ func ({{.S}} {{.NewStructName}}Do) FindInBatch(batchSize int, fc func(tx gen.Dao
 }
 
 func ({{.S}} {{.NewStructName}}Do) FindInBatches(result *[]*{{.StructInfo.Package}}.{{.StructInfo.Type}}, batchSize int, fc func(tx gen.Dao, batch int) error) error {
-	return {{.S}}.DO.FindInBatches(&result, batchSize, fc)
+	return {{.S}}.DO.FindInBatches(result, batchSize, fc)
 }
 
 func ({{.S}} {{.NewStructName}}Do) Attrs(attrs ...field.AssignExpr) *{{.NewStructName}}Do {
