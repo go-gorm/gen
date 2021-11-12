@@ -197,6 +197,16 @@ func ({{.S}} {{.NewStructName}}Do) FindByPage(offset int, limit int) (result []*
 	return
 }
 
+func ({{.S}} {{.NewStructName}}Do) ScanByPage(result interface{}, offset int, limit int) (count int64, err error) {
+	count, err = {{.S}}.Count()
+	if err != nil {
+		return
+	}
+
+	err = {{.S}}.Offset(offset).Limit(limit).Scan(result)
+	return
+}
+
 func ({{.S}} *{{.NewStructName}}Do) withDO(do gen.Dao) (*{{.NewStructName}}Do) {
 	{{.S}}.DO = *do.(*gen.DO)
 	return {{.S}}
