@@ -458,12 +458,6 @@ func (d *DO) findToMap() (interface{}, error) {
 	return results, err
 }
 
-func (d *DO) FindInBatch(batchSize int, fc func(tx Dao, batch int) error) (result interface{}, err error) {
-	resultsPtr := d.newResultSlicePointer()
-	err = d.db.FindInBatches(resultsPtr, batchSize, func(tx *gorm.DB, batch int) error { return fc(d.getInstance(tx), batch) }).Error
-	return reflect.Indirect(reflect.ValueOf(resultsPtr)).Interface(), err
-}
-
 func (d *DO) FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error {
 	return d.db.FindInBatches(dest, batchSize, func(tx *gorm.DB, batch int) error { return fc(d.getInstance(tx), batch) }).Error
 }
