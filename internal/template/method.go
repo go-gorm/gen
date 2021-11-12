@@ -146,9 +146,13 @@ func ({{.S}} {{.NewStructName}}Do) Find() ([]*{{.StructInfo.Package}}.{{.StructI
 	return result.([]*{{.StructInfo.Package}}.{{.StructInfo.Type}}), err
 }
 
-func ({{.S}} {{.NewStructName}}Do) FindInBatch(batchSize int, fc func(tx gen.Dao, batch int) error) ([]*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
-	result, err := {{.S}}.DO.FindInBatch(batchSize, fc)
-	return result.([]*{{.StructInfo.Package}}.{{.StructInfo.Type}}), err
+func ({{.S}} {{.NewStructName}}Do) FindInBatch(batchSize int, fc func(tx gen.Dao, batch int) error) (results []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, err error) {
+	buf := make([]*{{.StructInfo.Package}}.{{.StructInfo.Type}}, 0, batchSize)
+	err = {{.S}}.DO.FindInBatches(&buf, batchSize, func(tx gen.Dao, batch int) error {
+		defer func() { results = append(results, buf...) }()
+		return fc(tx, batch)
+	})
+	return results, err
 }
 
 func ({{.S}} {{.NewStructName}}Do) FindInBatches(result *[]*{{.StructInfo.Package}}.{{.StructInfo.Type}}, batchSize int, fc func(tx gen.Dao, batch int) error) error {
