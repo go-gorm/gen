@@ -12,6 +12,8 @@ type DBConf struct {
 	SchemaNameOpts []SchemaNameOpt
 	MemberOpts     []MemberOpt
 
+	DataTypeMap map[string]func(detailType string) (dataType string)
+
 	GenerateModelConfig
 }
 

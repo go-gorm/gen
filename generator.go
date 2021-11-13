@@ -73,6 +73,7 @@ type Config struct {
 
 	queryPkgName string // generated query code's package name
 	dbNameOpts   []model.SchemaNameOpt
+	dataTypeMap  map[string]func(detailType string) (dataType string)
 }
 
 // WithDbNameOpts set get database name function
@@ -81,6 +82,12 @@ func (cfg *Config) WithDbNameOpts(opts ...model.SchemaNameOpt) {
 		cfg.dbNameOpts = opts
 	} else {
 		cfg.dbNameOpts = append(cfg.dbNameOpts, opts...)
+	}
+}
+
+func (cfg *Config) WithDataTypeMap(newMap map[string]func(detailType string) (dataType string)) {
+	if newMap != nil {
+		cfg.dataTypeMap = newMap
 	}
 }
 
@@ -160,6 +167,7 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 		ModelName:      modelName,
 		SchemaNameOpts: g.dbNameOpts,
 		MemberOpts:     fieldOpts,
+		DataTypeMap:    g.dataTypeMap,
 		GenerateModelConfig: model.GenerateModelConfig{
 			FieldNullable:     g.FieldNullable,
 			FieldWithIndexTag: g.FieldWithIndexTag,

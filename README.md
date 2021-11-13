@@ -31,6 +31,7 @@ A safer orm base on [GORM](https://github.com/go-gorm/gorm), aims to be develope
   - [API Examples](#api-examples)
     - [Generate](#generate)
       - [Generate Model](#generate-model)
+      - [Data Mapping](#data-mapping)
     - [Field Expression](#field-expression)
       - [Create Field](#create-field)
     - [CRUD API](#crud-api)
@@ -255,6 +256,25 @@ FieldAddPrefix     // add prefix to struct member's name
 FieldAddSuffix     // add suffix to struct member's name
 FieldRelate        // specify relationship with other tables
 FieldRelateModel   // specify relationship with exist models
+```
+
+#### Data Mapping
+
+Specify data mapping relationship to be whatever you want.
+
+```go
+dataMap := map[string]func(detailType string) (dataType string){
+  "int": func(detailType string) (dataType string) { return "int64" },
+  // bool mapping
+  "tinyint": func(detailType string) (dataType string) {
+    if strings.HasPrefix(detailType, "tinyint(1)") {
+      return "bool"
+    }
+    return "int8"
+  },
+}
+
+g.WithDataTypeMap(dataMap)
 ```
 
 ### Field Expression

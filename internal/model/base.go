@@ -54,8 +54,8 @@ var keywords = []string{
 
 var (
 	defaultDataType             = "string"
-	dataType        dataTypeMap = map[string]func(detailType string) string{
-		"int":        func(string) string { return "int32" },
+	dataType        dataTypeMap = map[string]dataTypeMapping{
+		"int":        (func(string) string { return "int32" }),
 		"integer":    func(string) string { return "int32" },
 		"smallint":   func(string) string { return "int32" },
 		"mediumint":  func(string) string { return "int32" },
@@ -93,9 +93,10 @@ var (
 	}
 )
 
-type dataTypeMap map[string]func(string) string
+type dataTypeMapping func(detailType string) (finalType string)
 
-// TODO diy type map global or single
+type dataTypeMap map[string]dataTypeMapping
+
 func (m dataTypeMap) Get(dataType, detailType string) string {
 	if convert, ok := m[dataType]; ok {
 		return convert(detailType)

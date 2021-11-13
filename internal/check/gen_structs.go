@@ -58,6 +58,7 @@ func GenBaseStructs(db *gorm.DB, conf model.DBConf) (bases *BaseStruct, err erro
 
 	modifyOpts, filterOpts, createOpts := conf.SortOpt()
 	for _, field := range columns {
+		field.SetDataTypeMap(conf.DataTypeMap)
 		m := field.ToMember(conf.FieldNullable)
 
 		if filterMember(m, filterOpts) == nil {

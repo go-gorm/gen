@@ -20,8 +20,6 @@ var (
 	}
 )
 
-// TODO implement validator options
-
 // ======================== generic field =======================
 
 func NewField(table, column string, opts ...FieldOption) Field {
