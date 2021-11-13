@@ -229,6 +229,7 @@ func init() {
 
 func Test_{{.NewStructName}}Query(t *testing.T) {
 	{{.NewStructName}} := new{{.StructName}}(db)
+	{{.NewStructName}} = *{{.NewStructName}}.As({{.NewStructName}}.TableName())
 	do := {{.NewStructName}}.WithContext(context.Background()).Debug()
 
 	primaryKey := field.NewString({{.NewStructName}}.TableName(), clause.PrimaryKey)
@@ -313,6 +314,11 @@ func Test_{{.NewStructName}}Query(t *testing.T) {
 		t.Error("FindByPage() on table <{{.TableName}}> fail:", err)
 	}
 	
+	_, err = do.ScanByPage(&{{.StructInfo.Package}}.{{.StructName}}{}, 0, 1)
+	if err != nil {
+		t.Error("ScanByPage() on table <{{.TableName}}> fail:", err)
+	}
+
 	_, err = do.Attrs(primaryKey).Assign(primaryKey).FirstOrInit()
 	if err != nil {
 		t.Error("FirstOrInit() on table <{{.TableName}}> fail:", err)
