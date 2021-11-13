@@ -18,6 +18,8 @@ type Column struct {
 	Extra         string   `gorm:"column:EXTRA"`
 	IsNullable    string   `gorm:"column:IS_NULLABLE"`
 	Indexes       []*Index `gorm:"-"`
+
+	dataTypeMap map[string]func(detailType string) (dataType string) `gorm:"-"`
 }
 
 func (c *Column) IsPrimaryKey() bool {
@@ -28,8 +30,22 @@ func (c *Column) AutoIncrement() bool {
 	return c != nil && c.Extra == "auto_increment"
 }
 
+func (c *Column) SetDataTypeMap(m map[string]func(detailType string) (dataType string)) {
+	c.dataTypeMap = m
+}
+
+func (c *Column) GetDataType() (memberType string) {
+	if c.dataTypeMap == nil {
+		return dataType.Get(c.DataType, c.ColumnType)
+	}
+	if mapping, ok := c.dataTypeMap[c.DataType]; ok {
+		return mapping(c.ColumnType)
+	}
+	return dataType.Get(c.DataType, c.ColumnType)
+}
+
 func (c *Column) ToMember(nullable bool) *Member {
-	memberType := dataType.Get(c.DataType, c.ColumnType)
+	memberType := c.GetDataType()
 	if c.ColumnName == "deleted_at" && memberType == "time.Time" {
 		memberType = "gorm.DeletedAt"
 	}
