@@ -114,7 +114,7 @@ A safer orm base on [GORM](https://github.com/go-gorm/gorm), aims to be develope
       - [Smart select fields](#smart-select-fields)
     - [Advanced Topics](#advanced-topics)
       - [Hints](#hints)
-      - [Binary](#binary)
+  - [Binary](#binary)
   - [Maintainers](#maintainers)
   - [Contributing](#contributing)
   - [License](#license)
@@ -1819,39 +1819,46 @@ users, err := u.WithContext(ctx).Clauses(hints.UseIndex("idx_user_name")).Find()
 users, err := u.WithContext(ctx).Clauses(hints.ForceIndex("idx_user_name", "idx_user_id").ForJoin()).Find()
 // SELECT * FROM `users` FORCE INDEX FOR JOIN (`idx_user_name`,`idx_user_id`)"
 ```
-#### Binary
 
-You can use Gen in binary mode, e.g:
+## Binary
+
+Install GEN as a binary tool:
+
 ```bash
-go install gorm.io/gen/tools/gentool/gentool@master
+go install gorm.io/gen/tools/gentool@latest
+```
 
-#You can input grom_gen -h 
-gorm_gen -h
+usage:
 
- -db string
-        You can input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html] (default "mysql")
+```bash
+$ gentool -h
+Usage of gentool:
+  -db string
+      input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html] (default "mysql")
   -dsn string
-        consult[https://gorm.io/docs/connecting_to_the_database.html]
+      consult[https://gorm.io/docs/connecting_to_the_database.html]
   -fieldNullable
-        generate pointer when field is nullable
+      generate with pointer when field is nullable
   -fieldWithIndexTag
-        generate with gorm index tag (default true)
+      generate field with gorm index tag
   -fieldWithTypeTag
-        generate with gorm column type tag
-  -modelsName string
-        generated model code's package name
+      generate field with gorm column type tag
+  -modelPkgName string
+      generated model code's package name
   -outFile string
-        query code file name, default: gen.go
+      query code file name, default: gen.go
   -outPath string
-        You can specify a directory for output (default "./dao/query")
+      specify a directory for output (default "./dao/query")
   -tables string
-        You can enter the required data table or leave it blank
+      enter the required data table or leave it blank
   -withUnitTest
-        generate unit test for query code (default true)
+      generate unit test for query code
+```
 
+example:
 
-#generate curd and unit test 
-grom_gen -dsn "user:pwd@tcp(127.0.0.1:3306)/database?charset=utf8mb4&parseTime=True&loc=Local" -tables "orders,doctor"
+``` bash
+gentool -dsn "user:pwd@tcp(127.0.0.1:3306)/database?charset=utf8mb4&parseTime=True&loc=Local" -tables "orders,doctor"
 ```
 
 ## Maintainers
