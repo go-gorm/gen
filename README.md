@@ -1823,7 +1823,7 @@ users, err := u.WithContext(ctx).Clauses(hints.ForceIndex("idx_user_name", "idx_
 
 You can use Gen in binary mode, e.g:
 ```bash
-go install gorm.io/gen/build/gorm_gen.go@master
+go install gorm.io/gen/build/gorm_gen@master
 
 #You can input grom_gen -h 
 gorm_gen -h
