@@ -230,6 +230,9 @@ g.GenerateModelAs("people", "People")
 
 // add option to ignore field
 g.GenerateModel("people", gen.FieldIgnore("address"), gen.FieldType("id", "int64"))
+
+// generate all tables, ex: g.ApplyBasic(g.GenerateAllTable()...)
+g.GenerateAllTable()
 ```
 
 Field Generate **Options**

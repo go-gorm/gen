@@ -175,6 +175,22 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 	return s
 }
 
+// GenerateAllTable generate all tables in db
+func (g *Generator) GenerateAllTable(opts ...model.MemberOpt) (tableModels []interface{}) {
+	tableList, err := g.db.Migrator().GetTables()
+	if err != nil {
+		panic(fmt.Sprintf("get all tables fail: %s", err))
+	}
+
+	g.successInfo(fmt.Sprintf("find %d table from db: %s", len(tableList), tableList))
+
+	tableModels = make([]interface{}, len(tableList))
+	for i, tableName := range tableList {
+		tableModels[i] = g.GenerateModel(tableName)
+	}
+	return tableModels
+}
+
 // ApplyBasic specify models which will implement basic method
 func (g *Generator) ApplyBasic(models ...interface{}) {
 	g.ApplyInterface(func() {}, models...)
