@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"strings"
 
@@ -13,86 +14,89 @@ import (
 	"gorm.io/gorm"
 )
 
+// DBType database type
+type DBType string
+
 const (
 	//	Gorm Drivers mysql || postgres || sqlite || sqlserver
-	DBMySQL     string = "mysql"
-	DBPostgres  string = "postgres"
-	DBSQLite    string = "sqlite"
-	DBSQLServer string = "sqlserver"
+	DBMySQL     DBType = "mysql"
+	DBPostgres  DBType = "postgres"
+	DBSQLite    DBType = "sqlite"
+	DBSQLServer DBType = "sqlserver"
 )
 
-func main() {
-	dbDSN := flag.String("dsn", "", "consult[https://gorm.io/docs/connecting_to_the_database.html]")
-	dbType := flag.String("db", "mysql", "You can input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]")
-	tableList := flag.String("tables", "", "You can enter the required data table or leave it blank")
-	outPath := flag.String("outPath", "./dao/query", "You can specify a directory for output")
-	outFile := flag.String("outFile", "", "query code file name, default: gen.go")
-	withUnitTest := flag.Bool("withUnitTest", true, "generate unit test for query code")
-	modelsName := flag.String("modelsName", "", "generated model code's package name")
-	fieldNullAble := flag.Bool("fieldNullable", false, "generate pointer when field is nullable")
-	fieldWithIndexTag := flag.Bool("fieldWithIndexTag", true, "generate with gorm index tag")
-	fieldWithTypeTag := flag.Bool("fieldWithTypeTag", false, "generate with gorm column type tag")
-	flag.Parse()
-	//dsn必须有
-	if *dbDSN == "" {
-		log.Fatalln("dsn must input")
-		return
+func connectDB(t DBType, dsn string) (*gorm.DB, error) {
+	if dsn == "" {
+		return nil, fmt.Errorf("dsn cannot be empty")
 	}
-	var tables []string
-	if *tableList != "" {
-		tables = strings.Split(*tableList, ",")
-	}
-	var db *gorm.DB
-	var dbERR error
-	switch *dbType {
+
+	switch t {
 	case DBMySQL:
-		db, dbERR = gorm.Open(mysql.Open(*dbDSN), &gorm.Config{})
+		return gorm.Open(mysql.Open(dsn))
 	case DBPostgres:
-		db, dbERR = gorm.Open(postgres.Open(*dbDSN), &gorm.Config{})
+		return gorm.Open(postgres.Open(dsn))
 	case DBSQLite:
-		db, dbERR = gorm.Open(sqlite.Open(*dbDSN), &gorm.Config{})
+		return gorm.Open(sqlite.Open(dsn))
 	case DBSQLServer:
-		db, dbERR = gorm.Open(sqlserver.Open(*dbDSN), &gorm.Config{})
+		return gorm.Open(sqlserver.Open(dsn))
 	default:
-		log.Fatalln("You can only enter Gorm Drivers mysql || postgres || sqlite || sqlserver")
-		return
+		return nil, fmt.Errorf("unknow db %q (support mysql || postgres || sqlite || sqlserver for now)", t)
 	}
-	if dbERR != nil {
-		log.Fatalln("Gorm.Open ERR:", dbERR)
-		return
+}
+
+func getModels(g *gen.Generator, db *gorm.DB, tables []string) (models []interface{}, err error) {
+	if len(tables) == 0 {
+		//Execute tasks for all tables in the database
+		tables, err = db.Migrator().GetTables()
+		if err != nil {
+			return nil, fmt.Errorf("GORM migrator get all tables fail: %w", err)
+		}
 	}
-	log.Println("NewGenerator Start")
-	config := gen.Config{
+
+	//Execute some data table tasks
+	models = make([]interface{}, len(tables))
+	for i, tableName := range tables {
+		models[i] = g.GenerateModel(tableName)
+	}
+	return models, nil
+}
+
+func main() {
+	dsn := flag.String("dsn", "", "consult[https://gorm.io/docs/connecting_to_the_database.html]")
+	dbType := flag.String("db", "mysql", "input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]")
+	tableList := flag.String("tables", "", "enter the required data table or leave it blank")
+	outPath := flag.String("outPath", "./dao/query", "specify a directory for output")
+	outFile := flag.String("outFile", "", "query code file name, default: gen.go")
+	withUnitTest := flag.Bool("withUnitTest", false, "generate unit test for query code")
+	modelPkgName := flag.String("modelPkgName", "", "generated model code's package name")
+	fieldNullable := flag.Bool("fieldNullable", false, "generate with pointer when field is nullable")
+	fieldWithIndexTag := flag.Bool("fieldWithIndexTag", false, "generate field with gorm index tag")
+	fieldWithTypeTag := flag.Bool("fieldWithTypeTag", false, "generate field with gorm column type tag")
+	flag.Parse()
+
+	db, err := connectDB(DBType(*dbType), *dsn)
+	if err != nil {
+		log.Fatalln("connect db server fail:", err)
+	}
+
+	g := gen.NewGenerator(gen.Config{
 		OutPath:           *outPath,
 		OutFile:           *outFile,
-		ModelPkgPath:      *modelsName,
+		ModelPkgPath:      *modelPkgName,
 		WithUnitTest:      *withUnitTest,
-		FieldNullable:     *fieldNullAble,
+		FieldNullable:     *fieldNullable,
 		FieldWithIndexTag: *fieldWithIndexTag,
 		FieldWithTypeTag:  *fieldWithTypeTag,
-	}
-	g := gen.NewGenerator(config)
+	})
 
 	g.UseDB(db)
 
-	if len(tables) == 0 {
-		//Execute tasks for all tables in the database
-		//tables = databases tables
-		var err error
-		tables, err = db.Migrator().GetTables()
-		if err != nil {
-			log.Fatalln("Gorm Migrator GetTables Err:", err)
-			return
-		}
-	}
-	//Execute some data table tasks
-	for _, v := range tables {
-		g.ApplyBasic(
-			g.GenerateModel(v),
-		)
+	models, err := getModels(g, db, strings.Split(*tableList, ","))
+	if err != nil {
+		log.Fatalln("get tables info fail:", err)
 	}
 
-	// 执行并生成代码
+	g.ApplyBasic(models...)
+
 	g.Execute()
-	log.Println("NewGenerator End")
 }
