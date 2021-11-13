@@ -6,20 +6,20 @@ const (
 		{{.NewStructName}}Do
 		` + members + `
 	}
-	
-	` + getFieldMethod + cloneMethod + relationship + defineMethodStruct
+	` + asMethond + getFieldMethod + fillFieldMapMethod + cloneMethod + relationship + defineMethodStruct
 
 	BaseStructWithContext = createMethod + `
 	type {{.NewStructName}} struct {
 		{{.NewStructName}}Do {{.NewStructName}}Do
 		` + members + `
 	}
+	` + asMethond + `
 	
 	func ({{.S}} *{{.NewStructName}}) WithContext(ctx context.Context) *{{.NewStructName}}Do { return {{.S}}.{{.NewStructName}}Do.WithContext(ctx)}
 
 	func ({{.S}} {{.NewStructName}}) TableName() string { return {{.S}}.{{.NewStructName}}Do.TableName()} 
-	
-	` + getFieldMethod + cloneMethod + relationship + defineMethodStruct
+
+	` + getFieldMethod + fillFieldMapMethod + cloneMethod + relationship + defineMethodStruct
 )
 
 const (
@@ -44,17 +44,12 @@ const (
 		{{end}}
 		{{end}}
 
-		_{{$.NewStructName}}.fieldMap = make(map[string]field.Expr, {{len .Members}})
-		{{range .Members -}}
-		{{if not .IsRelation -}}
-			{{- if .ColumnName -}}_{{$.NewStructName}}.fieldMap["{{.ColumnName}}"] = _{{$.NewStructName}}.{{.Name}}{{- end -}}
-		{{end}}
-		{{end}}
+		_{{$.NewStructName}}.fillFieldMap()
+		
 		return _{{.NewStructName}}
 	}
 	`
 	members = `
-
 	ALL field.Field
 	{{range .Members -}}
 	{{if not .IsRelation -}}
@@ -66,6 +61,23 @@ const (
 
 	fieldMap  map[string]field.Expr
 `
+	asMethond = `	
+func ({{.S}} {{.NewStructName}}) As(alias string) *{{.NewStructName}} { 
+	{{.S}}.{{.NewStructName}}Do.DO = *({{.S}}.{{.NewStructName}}Do.As(alias).(*gen.DO))
+
+	{{.S}}.ALL = field.NewField(alias, "*")
+	{{range .Members -}}
+	{{if not .IsRelation -}}
+		{{- if .ColumnName -}}{{$.S}}.{{.Name}} = field.New{{.GenType}}(alias, "{{.ColumnName}}"){{- end -}}
+	{{end}}
+	{{end}}
+	
+	{{.S}}.fillFieldMap()
+
+	return &{{.S}}
+}
+`
+
 	cloneMethod = `
 func ({{.S}} {{.NewStructName}}) clone(db *gorm.DB) {{.NewStructName}} {
 	{{.S}}.{{.NewStructName}}Do.ReplaceDB(db)
@@ -83,6 +95,17 @@ func ({{.S}} *{{.NewStructName}}) GetFieldByName(fieldName string) (field.Expr, 
 		relationStruct + relationTx +
 		`{{end}}{{end}}`
 	defineMethodStruct = `type {{.NewStructName}}Do struct { gen.DO }`
+
+	fillFieldMapMethod = `
+func ({{.S}} *{{.NewStructName}}) fillFieldMap() {
+	{{.S}}.fieldMap =  make(map[string]field.Expr, {{len .Members}})
+	{{range .Members -}}
+	{{if not .IsRelation -}}
+		{{- if .ColumnName -}}{{$.S}}.fieldMap["{{.ColumnName}}"] = {{$.S}}.{{.Name}}{{- end -}}
+	{{end}}
+	{{end -}}
+}
+`
 )
 
 const (

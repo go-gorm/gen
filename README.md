@@ -59,6 +59,7 @@ A safer orm base on [GORM](https://github.com/go-gorm/gorm), aims to be develope
         - [SubQuery](#subquery)
           - [From SubQuery](#from-subquery)
           - [Update from SubQuery](#update-from-subquery)
+          - [Update multiple columns from SubQuery](#update-multiple-columns-from-subquery)
         - [Transaction](#transaction)
           - [Nested Transactions](#nested-transactions)
           - [Transactions by manual](#transactions-by-manual)
@@ -258,7 +259,7 @@ FieldRelateModel // specify relationship with exist models
 
 Actually, you're not supposed to create a new field variable, cause it will be accomplished in generated code.
 
-| Field Type | Detail Type           | Crerate Function               | Supported Query Method                                       |
+| Field Type | Detail Type           | Create Function               | Supported Query Method                                       |
 | ---------- | --------------------- | ------------------------------ | ------------------------------------------------------------ |
 | generic    | field                 | NewField                       | IsNull/IsNotNull/Count/Eq/Neq/Gt/Gte/Lt/Lte/Like             |
 | int        | int/int8/.../int64    | NewInt/NewInt8/.../NewInt64    | Eq/Neq/Gt/Gte/Lt/Lte/In/NotIn/Between/NotBetween/Like/NotLike/Add/Sub/Mul/Div/Mod/FloorDiv/RightShift/LeftShift/BitXor/BitAnd/BitOr/BitFlip |
@@ -736,6 +737,31 @@ u.WithContext(ctx).Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqCol(u.Com
 // UPDATE "users" SET "company_name" = (SELECT name FROM companies WHERE companies.id = users.company_id);
 
 u.WithContext(ctx).Where(u.Name.Eq("modi")).Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqCol(u.CompanyID)))
+```
+
+###### Update multiple columns from SubQuery
+
+Update multiple columns by using SubQuery (for MySQL):
+
+```go
+u := query.Use(db).User
+c := query.Use(db).Company
+
+ua := u.As("u")
+ca := u.As("c")
+
+ua.WithContext(ctx).UpdateFrom(ca.WithContext(ctx).Select(c.ID, c.Address, c.Phone).Where(c.ID.Gt(100))).
+Where(ua.CompanyID.EqCol(ca.ID)).
+UpdateSimple(
+  ua.Address.SetCol(ca.Address),
+  ua.Phone.SetCol(ca.Phone),
+)
+// UPDATE `users` AS `u`,(
+//   SELECT `company`.`id`,`company`.`address`,`company`.`phone` 
+//   FROM `company` WHERE `company`.`id` > 100 AND `company`.`deleted_at` IS NULL
+// ) AS `c` 
+// SET `u`.`address`=`c`.`address`,`c`.`phone`=`c`.`phone`,`updated_at`='2021-11-11 11:11:11.111'
+// WHERE `u`.`company_id` = `c`.`id`
 ```
 
 ##### Transaction

@@ -67,7 +67,6 @@ type Dao interface {
 	Take() (result interface{}, err error)
 	Last() (result interface{}, err error)
 	Find() (results interface{}, err error)
-	FindInBatch(batchSize int, fc func(tx Dao, batch int) error) (results interface{}, err error)
 	FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error
 	FirstOrInit() (result interface{}, err error)
 	FirstOrCreate() (result interface{}, err error)

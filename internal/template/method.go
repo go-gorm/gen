@@ -146,13 +146,17 @@ func ({{.S}} {{.NewStructName}}Do) Find() ([]*{{.StructInfo.Package}}.{{.StructI
 	return result.([]*{{.StructInfo.Package}}.{{.StructInfo.Type}}), err
 }
 
-func ({{.S}} {{.NewStructName}}Do) FindInBatch(batchSize int, fc func(tx gen.Dao, batch int) error) ([]*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
-	result, err := {{.S}}.DO.FindInBatch(batchSize, fc)
-	return result.([]*{{.StructInfo.Package}}.{{.StructInfo.Type}}), err
+func ({{.S}} {{.NewStructName}}Do) FindInBatch(batchSize int, fc func(tx gen.Dao, batch int) error) (results []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, err error) {
+	buf := make([]*{{.StructInfo.Package}}.{{.StructInfo.Type}}, 0, batchSize)
+	err = {{.S}}.DO.FindInBatches(&buf, batchSize, func(tx gen.Dao, batch int) error {
+		defer func() { results = append(results, buf...) }()
+		return fc(tx, batch)
+	})
+	return results, err
 }
 
 func ({{.S}} {{.NewStructName}}Do) FindInBatches(result *[]*{{.StructInfo.Package}}.{{.StructInfo.Type}}, batchSize int, fc func(tx gen.Dao, batch int) error) error {
-	return {{.S}}.DO.FindInBatches(&result, batchSize, fc)
+	return {{.S}}.DO.FindInBatches(result, batchSize, fc)
 }
 
 func ({{.S}} {{.NewStructName}}Do) Attrs(attrs ...field.AssignExpr) *{{.NewStructName}}Do {
@@ -194,6 +198,16 @@ func ({{.S}} {{.NewStructName}}Do) FindByPage(offset int, limit int) (result []*
 	}
 
 	result, err = {{.S}}.Offset(offset).Limit(limit).Find()
+	return
+}
+
+func ({{.S}} {{.NewStructName}}Do) ScanByPage(result interface{}, offset int, limit int) (count int64, err error) {
+	count, err = {{.S}}.Count()
+	if err != nil {
+		return
+	}
+
+	err = {{.S}}.Offset(offset).Limit(limit).Scan(result)
 	return
 }
 
