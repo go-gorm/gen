@@ -233,6 +233,8 @@ func (g *Generator) apply(fc interface{}, structs []*check.BaseStruct) {
 func (g *Generator) Execute() {
 	var err error
 
+	g.successInfo("Start generating code.")
+
 	if g.OutPath == "" {
 		g.OutPath = "./query/"
 	}
