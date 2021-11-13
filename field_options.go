@@ -1,6 +1,7 @@
 package gen
 
 import (
+	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
@@ -111,6 +112,16 @@ var (
 			if m.ColumnName == columnName {
 				m.NewTag += " " + newTag
 			}
+			return m
+		}
+	}
+	// FieldNewTagWithNS add new tag with name strategy
+	FieldNewTagWithNS = func(tagName string, schemaName func(columnName string) string) model.ModifyMemberOpt {
+		return func(m *model.Member) *model.Member {
+			if schemaName == nil {
+				schemaName = func(name string) string { return name }
+			}
+			m.NewTag = fmt.Sprintf(`%s %s:"%s"`, m.NewTag, tagName, schemaName(m.ColumnName))
 			return m
 		}
 	}
