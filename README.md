@@ -238,22 +238,23 @@ g.GenerateAllTable()
 Field Generate **Options**
 
 ```go
-FieldNew         // create new field
-FieldIgnore      // ignore field
-FieldIgnoreReg   // ignore field (match with regexp)
-FieldRename      // rename field in struct
-FieldType        // specify field type
-FieldTypeReg     // specify field type (match with regexp)
-FieldTag         // specify gorm and json tag
-FieldJSONTag     // specify json tag
-FieldGORMTag     // specify gorm tag
-FieldNewTag      // append new tag
-FieldTrimPrefix  // trim column prefix
-FieldTrimSuffix  // trim column suffix
-FieldAddPrefix   // add prefix to struct member's name
-FieldAddSuffix   // add suffix to struct member's name
-FieldRelate      // specify relationship with other tables
-FieldRelateModel // specify relationship with exist models
+FieldNew           // create new field
+FieldIgnore        // ignore field
+FieldIgnoreReg     // ignore field (match with regexp)
+FieldRename        // rename field in struct
+FieldType          // specify field type
+FieldTypeReg       // specify field type (match with regexp)
+FieldTag           // specify gorm and json tag
+FieldJSONTag       // specify json tag
+FieldGORMTag       // specify gorm tag
+FieldNewTag        // append new tag
+FieldNewTagWithNS  // specify new tag with name strategy
+FieldTrimPrefix    // trim column prefix
+FieldTrimSuffix    // trim column suffix
+FieldAddPrefix     // add prefix to struct member's name
+FieldAddSuffix     // add suffix to struct member's name
+FieldRelate        // specify relationship with other tables
+FieldRelateModel   // specify relationship with exist models
 ```
 
 ### Field Expression
