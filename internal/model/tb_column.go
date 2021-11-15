@@ -35,9 +35,6 @@ func (c *Column) SetDataTypeMap(m map[string]func(detailType string) (dataType s
 }
 
 func (c *Column) GetDataType() (memberType string) {
-	if c.dataTypeMap == nil {
-		return dataType.Get(c.DataType, c.ColumnType)
-	}
 	if mapping, ok := c.dataTypeMap[c.DataType]; ok {
 		return mapping(c.ColumnType)
 	}
