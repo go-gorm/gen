@@ -95,6 +95,19 @@ const dbName = "gen_test.db"
 var db *gorm.DB
 var once sync.Once
 
+type Input struct {
+	Args []interface{}
+}
+
+type Expectation struct {
+	Ret []interface{}
+}
+
+type TestCase struct {
+	Input
+	Expectation
+}
+
 func init() {
 	InitializeDB()
 	db.AutoMigrate(&_another{})
