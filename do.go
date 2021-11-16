@@ -22,8 +22,8 @@ var (
 	deleteClauses = []string{"DELETE", "FROM", "WHERE"}
 )
 
-// resultInfo query/execute info
-type resultInfo struct {
+// ResultInfo query/execute info
+type ResultInfo struct {
 	RowsAffected int64
 	Error        error
 }
@@ -470,7 +470,7 @@ func (d *DO) FirstOrCreate() (result interface{}, err error) {
 	return d.singleQuery(d.db.FirstOrCreate)
 }
 
-func (d *DO) Update(column field.Expr, value interface{}) (info resultInfo, err error) {
+func (d *DO) Update(column field.Expr, value interface{}) (info ResultInfo, err error) {
 	tx := d.db.Model(d.newResultPointer())
 	columnStr := column.BuildColumn(d.db.Statement, field.WithoutQuote).String()
 
@@ -483,24 +483,24 @@ func (d *DO) Update(column field.Expr, value interface{}) (info resultInfo, err 
 	default:
 		result = tx.Update(columnStr, value)
 	}
-	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
+	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
-func (d *DO) UpdateSimple(columns ...field.AssignExpr) (info resultInfo, err error) {
+func (d *DO) UpdateSimple(columns ...field.AssignExpr) (info ResultInfo, err error) {
 	if len(columns) == 0 {
 		return
 	}
 
 	result := d.db.Model(d.newResultPointer()).Clauses(d.assignSet(columns)).Omit("*").Updates(map[string]interface{}{})
-	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
+	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
-func (d *DO) Updates(value interface{}) (info resultInfo, err error) {
+func (d *DO) Updates(value interface{}) (info ResultInfo, err error) {
 	result := d.db.Model(d.newResultPointer()).Updates(value)
-	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
+	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
-func (d *DO) UpdateColumn(column field.Expr, value interface{}) (info resultInfo, err error) {
+func (d *DO) UpdateColumn(column field.Expr, value interface{}) (info ResultInfo, err error) {
 	tx := d.db.Model(d.newResultPointer())
 	columnStr := column.BuildColumn(d.db.Statement, field.WithoutQuote).String()
 
@@ -513,21 +513,21 @@ func (d *DO) UpdateColumn(column field.Expr, value interface{}) (info resultInfo
 	default:
 		result = d.db.UpdateColumn(columnStr, value)
 	}
-	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
+	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
-func (d *DO) UpdateColumnSimple(columns ...field.AssignExpr) (info resultInfo, err error) {
+func (d *DO) UpdateColumnSimple(columns ...field.AssignExpr) (info ResultInfo, err error) {
 	if len(columns) == 0 {
 		return
 	}
 
 	result := d.db.Model(d.newResultPointer()).Clauses(d.assignSet(columns)).Omit("*").UpdateColumns(map[string]interface{}{})
-	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
+	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
-func (d *DO) UpdateColumns(value interface{}) (info resultInfo, err error) {
+func (d *DO) UpdateColumns(value interface{}) (info ResultInfo, err error) {
 	result := d.db.Model(d.newResultPointer()).UpdateColumns(value)
-	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
+	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
 // assignSet fetch all set
@@ -552,9 +552,9 @@ func (d *DO) assignSet(exprs []field.AssignExpr) (set clause.Set) {
 	return append(set, callbacks.ConvertToAssignments(stmt)...)
 }
 
-func (d *DO) Delete() (info resultInfo, err error) {
+func (d *DO) Delete() (info ResultInfo, err error) {
 	result := d.db.Model(d.newResultPointer()).Delete(reflect.New(d.modelType).Interface())
-	return resultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
+	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
 func (d *DO) Count() (count int64, err error) {
