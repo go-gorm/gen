@@ -45,8 +45,7 @@ func (c *Column) ToMember(nullable bool) *Member {
 	memberType := c.GetDataType()
 	if c.ColumnName == "deleted_at" && memberType == "time.Time" {
 		memberType = "gorm.DeletedAt"
-	}
-	if nullable && c.IsNullable == "YES" {
+	} else if nullable && c.IsNullable == "YES" {
 		memberType = "*" + memberType
 	}
 	return &Member{

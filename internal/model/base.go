@@ -126,15 +126,16 @@ func (m *Member) GenType() string {
 		return m.Type
 	}
 
-	switch m.Type {
+	typ := strings.TrimLeft(m.Type, "*")
+	switch typ {
 	case "string", "bytes":
-		return strings.Title(m.Type)
+		return strings.Title(typ)
 	case "int", "int8", "int16", "int32", "int64", "uint", "uint8", "uint16", "uint32", "uint64":
-		return strings.Title(m.Type)
+		return strings.Title(typ)
 	case "float64", "float32":
-		return strings.Title(m.Type)
+		return strings.Title(typ)
 	case "bool":
-		return strings.Title(m.Type)
+		return strings.Title(typ)
 	case "time.Time":
 		return "Time"
 	case "json.RawMessage":
