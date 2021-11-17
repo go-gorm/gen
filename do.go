@@ -360,7 +360,7 @@ func (d *DO) Preload(field field.RelationField) Dao {
 // UpdateFrom specify update sub query
 func (d *DO) UpdateFrom(q subQuery) Dao {
 	var tableName strings.Builder
-	d.db.Statement.QuoteTo(&tableName, d.db.Statement.Table)
+	d.db.Statement.QuoteTo(&tableName, d.TableName())
 	if d.alias != "" {
 		tableName.WriteString(" AS ")
 		d.db.Statement.QuoteTo(&tableName, d.alias)
@@ -368,9 +368,9 @@ func (d *DO) UpdateFrom(q subQuery) Dao {
 
 	tableName.WriteByte(',')
 	if _, ok := q.underlyingDB().Statement.Clauses["SELECT"]; ok || len(q.underlyingDB().Statement.Selects) > 0 {
-		tableName.WriteString("(" + q.underlyingDB().ToSQL(func(tx *gorm.DB) *gorm.DB { return tx.Find(nil) }) + ")")
+		tableName.WriteString("(" + q.underlyingDB().ToSQL(func(tx *gorm.DB) *gorm.DB { return tx.Table(q.underlyingDO().TableName()).Find(nil) }) + ")")
 	} else {
-		d.db.Statement.QuoteTo(&tableName, q.underlyingDB().Statement.Table)
+		d.db.Statement.QuoteTo(&tableName, q.underlyingDO().TableName())
 	}
 	if alias := q.underlyingDO().alias; alias != "" {
 		tableName.WriteString(" AS ")
