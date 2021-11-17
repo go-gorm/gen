@@ -368,7 +368,7 @@ func (d *DO) UpdateFrom(q subQuery) Dao {
 
 	tableName.WriteByte(',')
 	if _, ok := q.underlyingDB().Statement.Clauses["SELECT"]; ok || len(q.underlyingDB().Statement.Selects) > 0 {
-		tableName.WriteString("(" + q.underlyingDB().ToSQL(func(tx *gorm.DB) *gorm.DB { return tx.Find(nil) }) + ")")
+		tableName.WriteString("(" + q.underlyingDB().ToSQL(func(tx *gorm.DB) *gorm.DB { return tx.Table(q.underlyingDO().TableName()).Find(nil) }) + ")")
 	} else {
 		d.db.Statement.QuoteTo(&tableName, q.underlyingDO().TableName())
 	}
