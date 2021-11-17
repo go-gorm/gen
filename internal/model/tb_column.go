@@ -66,11 +66,7 @@ func (c *Column) buildGormTag() string {
 	buf.WriteString(fmt.Sprintf("column:%s;type:%s", c.ColumnName, c.ColumnType))
 	if c.IsPrimaryKey() {
 		buf.WriteString(";primaryKey")
-		if !c.AutoIncrement() {
-			// integer PrioritizedPrimaryField enables AutoIncrement by default,
-			// if not, we need to turn off autoIncrement for the fields
-			buf.WriteString(";autoIncrement:false")
-		}
+		buf.WriteString(fmt.Sprintf(";autoIncrement:%t", c.AutoIncrement()))
 	} else if c.IsNullable != "YES" {
 		buf.WriteString(";not null")
 	}
