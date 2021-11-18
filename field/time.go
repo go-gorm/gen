@@ -141,6 +141,10 @@ func (field Time) Zero() AssignExpr {
 	return field.value(time.Time{})
 }
 
+func (field Time) Sum() Time {
+	return Time{field.sum()}
+}
+
 func (field Time) IfNull(value Time) Expr {
 	return field.ifNull(value)
 }

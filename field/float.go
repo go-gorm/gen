@@ -84,6 +84,10 @@ func (field Float64) Zero() AssignExpr {
 	return field.value(0)
 }
 
+func (field Float64) Sum() Float64 {
+	return Float64{field.sum()}
+}
+
 func (field Float64) IfNull(value float64) Expr {
 	return field.ifNull(value)
 }
@@ -176,6 +180,10 @@ func (field Float32) Value(value float32) AssignExpr {
 
 func (field Float32) Zero() AssignExpr {
 	return field.value(0)
+}
+
+func (field Float32) Sum() Float32 {
+	return Float32{field.sum()}
 }
 
 func (field Float32) IfNull(value float32) Expr {

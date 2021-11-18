@@ -110,6 +110,10 @@ func (field Int) Zero() AssignExpr {
 	return field.value(0)
 }
 
+func (field Int) Sum() Int {
+	return Int{field.sum()}
+}
+
 func (field Int) IfNull(value int) Expr {
 	return field.ifNull(value)
 }
@@ -226,6 +230,10 @@ func (field Int8) Value(value int8) AssignExpr {
 
 func (field Int8) Zero() AssignExpr {
 	return field.value(0)
+}
+
+func (field Int8) Sum() Int8 {
+	return Int8{field.sum()}
 }
 
 func (field Int8) IfNull(value int8) Expr {
@@ -346,6 +354,10 @@ func (field Int16) Zero() AssignExpr {
 	return field.value(0)
 }
 
+func (field Int16) Sum() Int16 {
+	return Int16{field.sum()}
+}
+
 func (field Int16) IfNull(value int16) Expr {
 	return field.ifNull(value)
 }
@@ -462,6 +474,10 @@ func (field Int32) Value(value int32) AssignExpr {
 
 func (field Int32) Zero() AssignExpr {
 	return field.value(0)
+}
+
+func (field Int32) Sum() Int32 {
+	return Int32{field.sum()}
 }
 
 func (field Int32) IfNull(value int32) Expr {
@@ -582,6 +598,10 @@ func (field Int64) Zero() AssignExpr {
 	return field.value(0)
 }
 
+func (field Int64) Sum() Int64 {
+	return Int64{field.sum()}
+}
+
 func (field Int64) IfNull(value int64) Expr {
 	return field.ifNull(value)
 }
@@ -698,6 +718,10 @@ func (field Uint) Value(value uint) AssignExpr {
 
 func (field Uint) Zero() AssignExpr {
 	return field.value(0)
+}
+
+func (field Uint) Sum() Uint {
+	return Uint{field.sum()}
 }
 
 func (field Uint) IfNull(value uint) Expr {
@@ -818,6 +842,10 @@ func (field Uint8) Zero() AssignExpr {
 	return field.value(0)
 }
 
+func (field Uint8) Sum() Uint8 {
+	return Uint8{field.sum()}
+}
+
 func (field Uint8) IfNull(value uint8) Expr {
 	return field.ifNull(value)
 }
@@ -934,6 +962,10 @@ func (field Uint16) Value(value uint16) AssignExpr {
 
 func (field Uint16) Zero() AssignExpr {
 	return field.value(0)
+}
+
+func (field Uint16) Sum() Uint16 {
+	return Uint16{field.sum()}
 }
 
 func (field Uint16) IfNull(value uint16) Expr {
@@ -1054,6 +1086,10 @@ func (field Uint32) Zero() AssignExpr {
 	return field.value(0)
 }
 
+func (field Uint32) Sum() Uint32 {
+	return Uint32{field.sum()}
+}
+
 func (field Uint32) IfNull(value uint32) Expr {
 	return field.ifNull(value)
 }
@@ -1170,6 +1206,10 @@ func (field Uint64) Value(value uint64) AssignExpr {
 
 func (field Uint64) Zero() AssignExpr {
 	return field.value(0)
+}
+
+func (field Uint64) Sum() Uint64 {
+	return Uint64{field.sum()}
 }
 
 func (field Uint64) IfNull(value uint64) Expr {
