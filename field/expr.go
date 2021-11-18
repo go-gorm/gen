@@ -168,10 +168,6 @@ func (e expr) Avg() Float64 {
 	return Float64{e.setE(clause.Expr{SQL: "AVG(?)", Vars: []interface{}{e.RawExpr()}})}
 }
 
-func (e expr) Sum() Float64 {
-	return Float64{e.setE(clause.Expr{SQL: "SUM(?)", Vars: []interface{}{e.RawExpr()}})}
-}
-
 func (e expr) Null() AssignExpr {
 	return e.setE(clause.Eq{Column: e.col.Name, Value: nil})
 }
@@ -351,6 +347,10 @@ func (e expr) isPure() bool {
 	return e.e == nil
 }
 
-func (e expr) ifNull(value interface{}) Expr {
+func (e expr) ifNull(value interface{}) expr {
 	return e.setE(clause.Expr{SQL: "IFNULL(?,?)", Vars: []interface{}{e.RawExpr(), value}})
+}
+
+func (e expr) sum() expr {
+	return e.setE(clause.Expr{SQL: "SUM(?)", Vars: []interface{}{e.RawExpr()}})
 }
