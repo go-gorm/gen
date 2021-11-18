@@ -141,6 +141,10 @@ func (field Time) Zero() AssignExpr {
 	return field.value(time.Time{})
 }
 
+func (field Time) IfNull(value Time) Expr {
+	return field.ifNull(value)
+}
+
 func (field Time) toSlice(values ...time.Time) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
