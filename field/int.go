@@ -110,6 +110,10 @@ func (field Int) Zero() AssignExpr {
 	return field.value(0)
 }
 
+func (field Int) IfNull(value int) Expr {
+	return field.ifNull(value)
+}
+
 func (field Int) toSlice(values ...int) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
@@ -222,6 +226,10 @@ func (field Int8) Value(value int8) AssignExpr {
 
 func (field Int8) Zero() AssignExpr {
 	return field.value(0)
+}
+
+func (field Int8) IfNull(value int8) Expr {
+	return field.ifNull(value)
 }
 
 func (field Int8) toSlice(values ...int8) []interface{} {
@@ -338,6 +346,10 @@ func (field Int16) Zero() AssignExpr {
 	return field.value(0)
 }
 
+func (field Int16) IfNull(value int16) Expr {
+	return field.ifNull(value)
+}
+
 func (field Int16) toSlice(values ...int16) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
@@ -450,6 +462,10 @@ func (field Int32) Value(value int32) AssignExpr {
 
 func (field Int32) Zero() AssignExpr {
 	return field.value(0)
+}
+
+func (field Int32) IfNull(value int32) Expr {
+	return field.ifNull(value)
 }
 
 func (field Int32) toSlice(values ...int32) []interface{} {
@@ -566,6 +582,10 @@ func (field Int64) Zero() AssignExpr {
 	return field.value(0)
 }
 
+func (field Int64) IfNull(value int64) Expr {
+	return field.ifNull(value)
+}
+
 func (field Int64) toSlice(values ...int64) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
@@ -678,6 +698,10 @@ func (field Uint) Value(value uint) AssignExpr {
 
 func (field Uint) Zero() AssignExpr {
 	return field.value(0)
+}
+
+func (field Uint) IfNull(value uint) Expr {
+	return field.ifNull(value)
 }
 
 func (field Uint) toSlice(values ...uint) []interface{} {
@@ -794,6 +818,10 @@ func (field Uint8) Zero() AssignExpr {
 	return field.value(0)
 }
 
+func (field Uint8) IfNull(value uint8) Expr {
+	return field.ifNull(value)
+}
+
 func (field Uint8) toSlice(values ...uint8) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
@@ -906,6 +934,10 @@ func (field Uint16) Value(value uint16) AssignExpr {
 
 func (field Uint16) Zero() AssignExpr {
 	return field.value(0)
+}
+
+func (field Uint16) IfNull(value uint16) Expr {
+	return field.ifNull(value)
 }
 
 func (field Uint16) toSlice(values ...uint16) []interface{} {
@@ -1022,6 +1054,10 @@ func (field Uint32) Zero() AssignExpr {
 	return field.value(0)
 }
 
+func (field Uint32) IfNull(value uint32) Expr {
+	return field.ifNull(value)
+}
+
 func (field Uint32) toSlice(values ...uint32) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
@@ -1134,6 +1170,10 @@ func (field Uint64) Value(value uint64) AssignExpr {
 
 func (field Uint64) Zero() AssignExpr {
 	return field.value(0)
+}
+
+func (field Uint64) IfNull(value uint64) Expr {
+	return field.ifNull(value)
 }
 
 func (field Uint64) toSlice(values ...uint64) []interface{} {

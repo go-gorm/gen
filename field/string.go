@@ -70,6 +70,10 @@ func (field String) Zero() AssignExpr {
 	return field.value("")
 }
 
+func (field String) IfNull(value string) Expr {
+	return field.ifNull(value)
+}
+
 // FindInSet FIND_IN_SET(field_name, input_string_list)
 func (field String) FindInSet(targetList string) Expr {
 	return expr{e: clause.Expr{SQL: "FIND_IN_SET(?,?)", Vars: []interface{}{field.RawExpr(), targetList}}}
@@ -152,6 +156,10 @@ func (field Bytes) Value(value []byte) AssignExpr {
 
 func (field Bytes) Zero() AssignExpr {
 	return field.value([]byte{})
+}
+
+func (field Bytes) IfNull(value []byte) Expr {
+	return field.ifNull(value)
 }
 
 // FindInSet FIND_IN_SET(field_name, input_string_list)

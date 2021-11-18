@@ -350,3 +350,7 @@ func (e expr) xor(value interface{}) expr {
 func (e expr) isPure() bool {
 	return e.e == nil
 }
+
+func (e expr) ifNull(value interface{}) Expr {
+	return e.setE(clause.Expr{SQL: "IFNULL(?,?)", Vars: []interface{}{e.RawExpr(), value}})
+}
