@@ -223,7 +223,7 @@ func (d *DO) calcOrderValue(columns ...field.Expr) string {
 }
 
 func (d *DO) Distinct(columns ...field.Expr) Dao {
-	return d.getInstance(d.db.Distinct(toInterfaceSlice(toColumnFullName(d.db.Statement, columns...))...))
+	return d.getInstance(d.db.Distinct(toInterfaceSlice(toColExprFullName(d.db.Statement, columns...))...))
 }
 
 func (d *DO) Omit(columns ...field.Expr) Dao {
@@ -589,8 +589,8 @@ func (d *DO) newResultSlicePointer() interface{} {
 	return reflect.New(reflect.SliceOf(reflect.PtrTo(d.modelType))).Interface()
 }
 
-func toColumnFullName(stmt *gorm.Statement, columns ...field.Expr) []string {
-	return buildColumn(stmt, columns, field.WithAll)
+func toColExprFullName(stmt *gorm.Statement, columns ...field.Expr) []string {
+	return buildColExpr(stmt, columns, field.WithAll)
 }
 
 func getColumnName(columns ...field.Expr) (result []string) {
@@ -600,10 +600,15 @@ func getColumnName(columns ...field.Expr) (result []string) {
 	return result
 }
 
-func buildColumn(stmt *gorm.Statement, cols []field.Expr, opts ...field.BuildOpt) []string {
+func buildColExpr(stmt *gorm.Statement, cols []field.Expr, opts ...field.BuildOpt) []string {
 	results := make([]string, len(cols))
 	for i, c := range cols {
-		results[i] = c.BuildColumn(stmt, opts...).String()
+		switch c.RawExpr().(type) {
+		case clause.Column:
+			results[i] = c.BuildColumn(stmt, opts...).String()
+		case clause.Expression:
+			results[i] = c.Build(stmt).String()
+		}
 	}
 	return results
 }
