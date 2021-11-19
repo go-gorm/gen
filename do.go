@@ -607,7 +607,8 @@ func buildColExpr(stmt *gorm.Statement, cols []field.Expr, opts ...field.BuildOp
 		case clause.Column:
 			results[i] = c.BuildColumn(stmt, opts...).String()
 		case clause.Expression:
-			results[i] = c.Build(stmt).String()
+			sql, args := c.BuildWithArgs(stmt)
+			results[i] = stmt.Dialector.Explain(sql.String(), args...)
 		}
 	}
 	return results
