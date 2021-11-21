@@ -21,6 +21,9 @@ type GenerateModelConfig struct {
 	FieldNullable     bool // generate pointer when field is nullable
 	FieldWithIndexTag bool // generate with gorm index tag
 	FieldWithTypeTag  bool // generate with gorm column type tagl
+
+	FieldJSONTagNS func(columnName string) string
+	FieldNewTagNS  func(columnName string) string
 }
 
 func (cf *DBConf) SortOpt() (modifyOpts []MemberOpt, filterOpts []MemberOpt, createOpts []MemberOpt) {

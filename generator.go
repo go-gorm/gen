@@ -67,13 +67,15 @@ type Config struct {
 	// generate model global configuration
 	FieldNullable     bool // generate pointer when field is nullable
 	FieldWithIndexTag bool // generate with gorm index tag
-	FieldWithTypeTag  bool // generate with gorm column type ta
+	FieldWithTypeTag  bool // generate with gorm column type tag
 
 	Mode GenerateMode // generate mode
 
-	queryPkgName string // generated query code's package name
-	dbNameOpts   []model.SchemaNameOpt
-	dataTypeMap  map[string]func(detailType string) (dataType string)
+	queryPkgName   string // generated query code's package name
+	dbNameOpts     []model.SchemaNameOpt
+	dataTypeMap    map[string]func(detailType string) (dataType string)
+	fieldJSONTagNS func(columnName string) string
+	fieldNewTagNS  func(columnName string) string
 }
 
 // WithDbNameOpts set get database name function
@@ -86,9 +88,15 @@ func (cfg *Config) WithDbNameOpts(opts ...model.SchemaNameOpt) {
 }
 
 func (cfg *Config) WithDataTypeMap(newMap map[string]func(detailType string) (dataType string)) {
-	if newMap != nil {
-		cfg.dataTypeMap = newMap
-	}
+	cfg.dataTypeMap = newMap
+}
+
+func (cfg *Config) WithJSONTagNameStrategy(ns func(columnName string) (tagContent string)) {
+	cfg.fieldJSONTagNS = ns
+}
+
+func (cfg *Config) WithNewTagNameStrategy(ns func(columnName string) (tagContent string)) {
+	cfg.fieldNewTagNS = ns
 }
 
 func (cfg *Config) Revise() (err error) {
@@ -172,6 +180,9 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 			FieldNullable:     g.FieldNullable,
 			FieldWithIndexTag: g.FieldWithIndexTag,
 			FieldWithTypeTag:  g.FieldWithTypeTag,
+
+			FieldJSONTagNS: g.fieldJSONTagNS,
+			FieldNewTagNS:  g.fieldNewTagNS,
 		},
 	})
 	if err != nil {
