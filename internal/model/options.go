@@ -2,9 +2,7 @@ package model
 
 import (
 	"regexp"
-	"strings"
 
-	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
@@ -14,22 +12,7 @@ type SchemaNameOpt func(*gorm.DB) string
 var dbNameReg = regexp.MustCompile(`/\w+\??`)
 
 var defaultMysqlSchemaNameOpt = SchemaNameOpt(func(db *gorm.DB) string {
-	if db == nil || db.Dialector == nil {
-		return ""
-	}
-	myDia, ok := db.Dialector.(*mysql.Dialector)
-	if !ok || myDia == nil || myDia.Config == nil {
-		return ""
-	}
-	dbName := dbNameReg.FindString(myDia.DSN)
-	if len(dbName) < 3 {
-		return ""
-	}
-	end := len(dbName)
-	if strings.HasSuffix(dbName, "?") {
-		end--
-	}
-	return dbName[1:end]
+	return db.Migrator().CurrentDatabase()
 })
 
 type MemberOpt interface{ Self() func(*Member) *Member }
