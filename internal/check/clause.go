@@ -424,18 +424,11 @@ type fragment struct {
 }
 
 func checkFragment(s string, params []parser.Param) (f fragment, err error) {
-	digital := func(str string) string {
-		if isDigit(str) {
-			return "<integer>"
-		}
-		return str
-	}
-
 	f = fragment{Type: model.UNKNOWN, Value: strings.Trim(s, " ")}
 	str := strings.ToLower(strings.Trim(s, " "))
-	switch digital(str) {
-	case "<integer>":
-		f.Type = model.INT
+	switch str {
+	case isDigit(str):
+		f.Type = model.DIGIT
 	case "&&", "||":
 		f.Type = model.LOGICAL
 	case ">", "<", ">=", "<=", "==", "!=":
@@ -471,8 +464,8 @@ func (f *fragment) fragmentByParams(params []parser.Param) {
 			case "bool":
 				f.Type = model.BOOL
 				return
-			case "int":
-				f.Type = model.INT
+			case "int", "int8", "int16", "int32", "int64", "float32", "float64":
+				f.Type = model.DIGIT
 				return
 			case "string":
 				f.Type = model.STRING
@@ -579,7 +572,7 @@ func checkTempleFragmentValid(list []fragment) error {
 		switch list[i].Type {
 		case model.IF, model.ELSE, model.END, model.BOOL, model.LOGICAL, model.WHERE, model.SET:
 			continue
-		case model.INT, model.STRING, model.OTHER, model.TIME, model.NIL:
+		case model.DIGIT, model.STRING, model.OTHER, model.TIME, model.NIL:
 			if i+2 < len(list) {
 				if isExpressionValid(list[i : i+3]) {
 					i += 2

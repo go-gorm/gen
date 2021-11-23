@@ -34,7 +34,7 @@ func getPackageName(fullName string) string {
 	return strings.Split(delPointerSym(fullName), ".")[0]
 }
 
-func isDigit(str string) bool {
+func isDigit(str string) string {
 	for _, x := range str {
 		switch x {
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
@@ -42,10 +42,10 @@ func isDigit(str string) bool {
 		case '+', '-', '*', '/', '%':
 			continue
 		default:
-			return false
+			return ""
 		}
 	}
-	return true
+	return str
 }
 
 func strOutrange(index int, str string) bool {
