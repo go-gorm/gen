@@ -2,7 +2,6 @@ package check
 
 import (
 	"strings"
-	"unicode"
 )
 
 func isCapitalize(s string) bool {
@@ -37,7 +36,12 @@ func getPackageName(fullName string) string {
 
 func isDigit(str string) bool {
 	for _, x := range str {
-		if !unicode.IsDigit(x) {
+		switch x {
+		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+			continue
+		case '+', '-', '*', '/', '%':
+			continue
+		default:
 			return false
 		}
 	}
@@ -69,4 +73,3 @@ func uncaptialize(s string) string {
 
 	return strings.ToLower(s[:1]) + s[1:]
 }
-
