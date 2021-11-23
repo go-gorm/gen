@@ -163,6 +163,12 @@ func (p *Param) IsTime() bool {
 func (p *Param) SetName(name string) {
 	p.Name = name
 }
+func (p *Param) TypeName() string {
+	if p.IsArray {
+		return "[]" + p.Type
+	}
+	return p.Type
+}
 
 func (p *Param) AllowType() bool {
 	switch p.Type {

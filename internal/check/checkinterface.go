@@ -9,12 +9,6 @@ import (
 	"gorm.io/gen/internal/parser"
 )
 
-type slice struct {
-	Type   model.Status
-	Value  string
-	Origin string
-}
-
 // InterfaceMethod interface's method
 type InterfaceMethod struct {
 	Doc           string         //comment
@@ -25,18 +19,19 @@ type InterfaceMethod struct {
 	Params        []parser.Param // function input params
 	Result        []parser.Param // function output params
 	ResultData    parser.Param   // output data
-	SqlTmplList   []string       // generated function content
+	Sections      *Sections      //Parse split SQL into sections
 	SqlData       []string       // variable in sql need function input
 	SqlString     string         // SQL
 	GormOption    string         // gorm execute method Find or Exec or Take
 	Table         string         // specified by user. if empty, generate it with gorm
 	InterfaceName string         // origin interface name
 	Package       string         // interface package name
+	HasForParams  bool           //
 }
 
-// HasSqlData has variable or not
+// HasSqlData has variable or for params will creat params map
 func (m *InterfaceMethod) HasSqlData() bool {
-	return len(m.SqlData) > 0
+	return len(m.SqlData) > 0 || m.HasForParams
 }
 
 // HasGotPoint parameter has pointer or not
@@ -122,13 +117,16 @@ func (m *InterfaceMethod) DocComment() string {
 
 // checkParams check all parameters
 func (m *InterfaceMethod) checkMethod(methods []*InterfaceMethod, s *BaseStruct) (err error) {
+	if model.GormKeywords.Contain(m.MethodName) {
+		return fmt.Errorf("can not use keyword as method name:%s", m.MethodName)
+	}
+	// TODO check methods Always empty?
 	for _, method := range methods {
 		if m.IsRepeatFromDifferentInterface(method) {
 			return fmt.Errorf("can not generate method with the same name from different interface:[%s.%s] and [%s.%s]",
 				m.InterfaceName, m.MethodName, method.InterfaceName, method.MethodName)
 		}
 	}
-
 	for _, member := range s.Members {
 		if member.Name == m.MethodName {
 			return fmt.Errorf("can not generate method same name with struct member:[%s.%s] and [%s.%s]",
@@ -143,11 +141,14 @@ func (m *InterfaceMethod) checkMethod(methods []*InterfaceMethod, s *BaseStruct)
 func (m *InterfaceMethod) checkParams(params []parser.Param) (err error) {
 	paramList := make([]parser.Param, len(params))
 	for i, param := range params {
-		if param.Package == "UNDEFINED" {
+		switch {
+		case param.Package == "UNDEFINED":
 			param.Package = m.OriginStruct.Package
-		}
-		if param.IsMap() || param.IsGenM() || param.IsError() || param.IsNull() {
+		case param.IsMap() || param.IsGenM() || param.IsError() || param.IsNull():
 			return fmt.Errorf("type error on interface [%s] param: [%s]", m.InterfaceName, param.Name)
+		case param.IsGenT():
+			param.Type = m.OriginStruct.Type
+			param.Package = m.OriginStruct.Package
 		}
 		paramList[i] = param
 	}
@@ -266,7 +267,7 @@ func (m *InterfaceMethod) getSQLDocString() string {
 // sqlStateCheck check sql with an adeterministic finite automaton
 func (m *InterfaceMethod) sqlStateCheck() error {
 	sqlString := m.SqlString
-	result := NewSlices()
+	m.Sections = NewSections()
 	var buf model.SQLBuffer
 	for i := 0; !strOutrange(i, sqlString); i++ {
 		b := sqlString[i]
@@ -284,7 +285,7 @@ func (m *InterfaceMethod) sqlStateCheck() error {
 			}
 		case '{', '@':
 			if sqlClause := buf.Dump(); strings.TrimSpace(sqlClause) != "" {
-				result.slices = append(result.slices, slice{
+				m.Sections.members = append(m.Sections.members, section{
 					Type:  model.SQL,
 					Value: strconv.Quote(sqlClause),
 				})
@@ -317,13 +318,12 @@ func (m *InterfaceMethod) sqlStateCheck() error {
 					}
 					if sqlString[i] == '}' && sqlString[i+1] == '}' {
 						i++
-
 						sqlClause := buf.Dump()
-						part, err := checkTemplate(sqlClause, m.Params)
+						part, err := m.Sections.checkTemplate(sqlClause, m.Params)
 						if err != nil {
 							return fmt.Errorf("sql [%s] dynamic template %s err:%w", sqlString, sqlClause, err)
 						}
-						result.slices = append(result.slices, part)
+						m.Sections.members = append(m.Sections.members, part)
 						break
 					}
 					buf.WriteSql(sqlString[i])
@@ -339,11 +339,11 @@ func (m *InterfaceMethod) sqlStateCheck() error {
 				for ; ; i++ {
 					if strOutrange(i, sqlString) || isEnd(sqlString[i]) {
 						varString := buf.Dump()
-						params, err := m.methodParams(varString, status)
+						params, err := m.Sections.checkSQLVar(varString, status, m)
 						if err != nil {
 							return fmt.Errorf("sql [%s] varable %s err:%s", sqlString, varString, err)
 						}
-						result.slices = append(result.slices, params)
+						m.Sections.members = append(m.Sections.members, params)
 						i--
 						break
 					}
@@ -355,51 +355,49 @@ func (m *InterfaceMethod) sqlStateCheck() error {
 		}
 	}
 	if sqlClause := buf.Dump(); strings.TrimSpace(sqlClause) != "" {
-		result.slices = append(result.slices, slice{
+		m.Sections.members = append(m.Sections.members, section{
 			Type:  model.SQL,
 			Value: strconv.Quote(sqlClause),
 		})
 	}
-
-	_, err := result.parse()
+	_, err := m.Sections.parse()
 	if err != nil {
 		return fmt.Errorf("sql [%s] parser err:%w", sqlString, err)
 	}
-	m.SqlTmplList = result.tmpl
 	return nil
 }
 
-// methodParams return extrenal parameters, table name
-func (m *InterfaceMethod) methodParams(param string, s model.Status) (result slice, err error) {
+// checkSQLVarByParams return external parameters, table name
+func (m *InterfaceMethod) checkSQLVarByParams(param string, status model.Status) (result section, err error) {
 	for _, p := range m.Params {
 		if p.Name == param {
-			var str string
-			switch s {
+			switch status {
 			case model.DATA:
-				str = fmt.Sprintf("\"@%s\"", param)
 				if !m.isParamExist(param) {
 					m.SqlData = append(m.SqlData, param)
 				}
 			case model.VARIABLE:
-				if p.Type != "string" {
-					err = fmt.Errorf("variable name must be string :%s type is %s", param, p.Type)
+				if p.Type != "string" || p.IsArray {
+					err = fmt.Errorf("variable name must be string :%s type is %s", param, p.TypeName())
+					return
 				}
-				str = fmt.Sprintf("%s.Quote(%s)", m.S, param)
+				param = fmt.Sprintf("%s.Quote(%s)", m.S, param)
 			}
-			result = slice{
-				Type:  s,
-				Value: str,
+			result = section{
+				Type:  status,
+				Value: param,
 			}
 			return
 		}
 	}
 	if param == "table" {
-		result = slice{
+		result = section{
 			Type:  model.SQL,
 			Value: strconv.Quote(m.Table),
 		}
 		return
 	}
+
 	return result, fmt.Errorf("unknow variable param:%s", param)
 }
 
@@ -413,15 +411,16 @@ func (m *InterfaceMethod) isParamExist(paramName string) bool {
 	return false
 }
 
-// checkTemplate check sql template's syntax (check if/else/where/set)
-func checkTemplate(tmpl string, params []parser.Param) (result slice, err error) {
-	fragmentList, err := splitTemplate(tmpl, params)
+// checkTemplate check sql template's syntax (if/else/where/set/for)
+func (s *Sections) checkTemplate(tmpl string, params []parser.Param) (section, error) {
+	var part section
+	part.Origin = tmpl
+	part.SQLSlice = s
+	err := part.splitTemplate(tmpl, params)
 	if err != nil {
-		return
+		return part, err
 	}
-	err = checkTempleFragmentValid(fragmentList)
-	if err != nil {
-		return
-	}
-	return fragmentToSLice(fragmentList)
+	err = part.checkTempleFragmentValid()
+
+	return part, err
 }
