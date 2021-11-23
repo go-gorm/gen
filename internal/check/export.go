@@ -29,7 +29,7 @@ func CheckStructs(db *gorm.DB, structs ...interface{}) (bases []*BaseStruct, err
 			S:             getPureName(name),
 			StructName:    name,
 			NewStructName: uncaptialize(name),
-			StructInfo:    parser.Param{Type: name, Package: getPackageName(structType.String())},
+			StructInfo:    parser.Param{PkgPath: structType.PkgPath(), Type: name, Package: getPackageName(structType.String())},
 			Source:        model.Struct,
 			db:            db,
 		}

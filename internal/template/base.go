@@ -7,7 +7,7 @@ const NotEditMark = `
 `
 
 const Header = NotEditMark + `
-package {{.}}
+package {{.Package}}
 
 import(
 	"database/sql"
@@ -19,6 +19,7 @@ import(
 	"gorm.io/gen"
 	"gorm.io/gen/field"
 	"gorm.io/gen/helper"
+	{{ if .StructPkgPath  }}"{{.StructPkgPath}}"{{ end }}
 )
 `
 
