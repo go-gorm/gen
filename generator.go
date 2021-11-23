@@ -324,7 +324,10 @@ func (g *Generator) generateQueryFile() (err error) {
 
 	// generate query file
 	var buf bytes.Buffer
-	err = render(tmpl.Header, &buf, g.queryPkgName)
+	err = render(tmpl.Header, &buf, map[string]string{
+		"Package":       g.queryPkgName,
+		"StructPkgPath": "",
+	})
 	if err != nil {
 		return err
 	}
@@ -375,7 +378,10 @@ func (g *Generator) generateQueryFile() (err error) {
 func (g *Generator) generateSubQuery(data *genInfo) (err error) {
 	var buf bytes.Buffer
 
-	err = render(tmpl.Header, &buf, g.queryPkgName)
+	err = render(tmpl.Header, &buf, map[string]string{
+		"Package":       g.queryPkgName,
+		"StructPkgPath": data.StructInfo.PkgPath,
+	})
 	if err != nil {
 		return err
 	}
