@@ -826,7 +826,7 @@ func fragmentToSLice(list []fragment) (part slice, err error) {
 				if e.Type.In(model.DIGIT) {
 					idx = fmt.Sprintf("%s, ", strings.ReplaceAll(e.Value, "$", ""))
 				} else {
-					res = fmt.Sprintf("%s", strings.ReplaceAll(e.Value, "$", ""))
+					res = strings.ReplaceAll(e.Value, "$", "")
 				}
 			}
 		}
