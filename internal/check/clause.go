@@ -563,22 +563,12 @@ type fragment struct {
 }
 
 func checkFragment(s string, params []parser.Param) (f fragment, err error) {
-	digital := func(str string) string {
-		if isDigit(str) {
-			return "<integer>"
-		}
-		if strings.HasPrefix(str, "_") || strings.HasPrefix(str, "$") {
-			return "<range var>"
-		}
-		return str
-	}
-
 	f = fragment{Value: strings.Trim(s, " ")}
 	str := strings.ToLower(strings.Trim(s, " "))
-	switch digital(str) {
-	case "<integer>":
-		f.Type |= model.INT
-	case "<range var>":
+	switch str {
+	case isDigit(str):
+		f.Type |= model.DIGIT
+	case strings.HasPrefix(str, "_") || strings.HasPrefix(str, "$"):
 		f.Type |= model.RANGEVAR | model.INT
 	case "&&", "||":
 		f.Type |= model.LOGICAL
@@ -620,8 +610,8 @@ func (f *fragment) fragmentByParams(params []parser.Param) {
 			case "bool":
 				f.Type |= model.BOOL
 				return
-			case "int":
-				f.Type |= model.INT
+			case "int", "int8", "int16", "int32", "int64", "float32", "float64":
+				f.Type |= model.DIGIT
 				return
 			case "string":
 				if f.IsArray {
@@ -741,7 +731,7 @@ func checkTempleFragmentValid(list []fragment) error {
 		switch {
 		case list[i].Type.In(model.IF, model.ELSE, model.END, model.BOOL, model.LOGICAL, model.WHERE, model.SET, model.RANGE, model.ASSIGN):
 			continue
-		case list[i].Type.In(model.INT, model.STRING, model.OTHER, model.TIME, model.NIL, model.RANGEVAR):
+		case list[i].Type.In(model.DIGIT, model.STRING, model.OTHER, model.TIME, model.NIL, model.RANGEVAR):
 			if list[0].Type.In(model.RANGE) {
 				if !list[len(list)-1].Type.In(model.ARRAY) {
 					return fmt.Errorf("cannot range over %s", fragmentToString(list[len(list)-1:]))

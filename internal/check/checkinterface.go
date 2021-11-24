@@ -423,9 +423,10 @@ func checkTemplate(tmpl string, params []parser.Param) (result slice, err error)
 	if err != nil {
 		return
 	}
-	err = checkTempleFragmentValid(fragmentList)
-	if err != nil {
-		return
-	}
+	// TODO checking template in new version
+	//err = checkTempleFragmentValid(fragmentList)
+	//if err != nil {
+	//	return
+	//}
 	return fragmentToSLice(fragmentList)
 }

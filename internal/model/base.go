@@ -22,7 +22,7 @@ const (
 	ELSEIF
 	END
 	BOOL
-	INT
+	DIGIT
 	STRING
 	TIME
 	ARRAY

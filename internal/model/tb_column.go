@@ -20,6 +20,8 @@ type Column struct {
 	Indexes       []*Index `gorm:"-"`
 
 	dataTypeMap map[string]func(detailType string) (dataType string) `gorm:"-"`
+	jsonTagNS   func(columnName string) string                       `gorm:"-"`
+	newTagNS    func(columnName string) string                       `gorm:"-"`
 }
 
 func (c *Column) IsPrimaryKey() bool {
@@ -41,6 +43,16 @@ func (c *Column) GetDataType() (memberType string) {
 	return dataType.Get(c.DataType, c.ColumnType)
 }
 
+func (c *Column) WithNS(jsonTagNS, newTagNS func(columnName string) string) {
+	c.jsonTagNS, c.newTagNS = jsonTagNS, newTagNS
+	if c.jsonTagNS == nil {
+		c.jsonTagNS = func(n string) string { return n }
+	}
+	if c.newTagNS == nil {
+		c.newTagNS = func(string) string { return "" }
+	}
+}
+
 func (c *Column) ToMember(nullable bool) *Member {
 	memberType := c.GetDataType()
 	if c.ColumnName == "deleted_at" && memberType == "time.Time" {
@@ -55,7 +67,8 @@ func (c *Column) ToMember(nullable bool) *Member {
 		ColumnComment:    c.ColumnComment,
 		MultilineComment: c.multilineComment(),
 		GORMTag:          c.buildGormTag(),
-		JSONTag:          c.ColumnName,
+		JSONTag:          c.jsonTagNS(c.ColumnName),
+		NewTag:           c.newTagNS(c.ColumnName),
 	}
 }
 

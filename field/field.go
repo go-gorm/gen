@@ -50,6 +50,14 @@ func (field Field) Value(value ScanValuer) AssignExpr {
 	return field.value(value)
 }
 
+func (field Field) Sum() Field {
+	return Field{field.sum()}
+}
+
+func (field Field) IfNull(value ScanValuer) Expr {
+	return field.ifNull(value)
+}
+
 func (field Field) toSlice(values ...ScanValuer) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {

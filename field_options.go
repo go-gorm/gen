@@ -97,6 +97,15 @@ var (
 			return m
 		}
 	}
+	// FieldJSONTagWithNS specify JSON tag with name strategy
+	FieldJSONTagWithNS = func(schemaName func(columnName string) (tagContent string)) model.ModifyMemberOpt {
+		return func(m *model.Member) *model.Member {
+			if schemaName != nil {
+				m.JSONTag = schemaName(m.ColumnName)
+			}
+			return m
+		}
+	}
 	// FieldGORMTag specify GORM tag
 	FieldGORMTag = func(columnName string, gormTag string) model.ModifyMemberOpt {
 		return func(m *model.Member) *model.Member {

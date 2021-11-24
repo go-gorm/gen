@@ -113,6 +113,7 @@ func (i *InterfaceSet) getInterfaceFromFile(filename string, name, Package strin
 
 // Param parameters in method
 type Param struct { // (user model.User)
+	PkgPath   string // package's path: internal/model
 	Package   string // package's name: model
 	Name      string // param's name: user
 	Type      string // param's type: User
