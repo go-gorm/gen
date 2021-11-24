@@ -360,10 +360,7 @@ func (m *InterfaceMethod) sqlStateCheck() error {
 			Value: strconv.Quote(sqlClause),
 		})
 	}
-	_, err := m.Sections.parse()
-	if err != nil {
-		return fmt.Errorf("sql [%s] parser err:%w", sqlString, err)
-	}
+
 	return nil
 }
 
