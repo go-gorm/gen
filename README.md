@@ -1659,6 +1659,7 @@ Logical operations must be wrapped in `{{}}`,and end must used `{{end}}`, All te
 - `if`/`else if`/`else` the condition accept a bool parameter or operation expression which conforms to Golang syntax.
 - `where` The `where` clause will be inserted only if the child elements return something. The key word  `and` or `or`  in front of clause will be removed. And `and` will be added automatically when there is no junction keyword between query condition clause.
 - `Set` The  `set` clause will be inserted only if the child elements return something. The `,` in front of columns array will be removed.And `,` will be added automatically when there is no junction keyword between query coulmns.
+- `Range` The `range` clause range over the param which must be an array, conforms to Golang syntax. word starts with `$` indicates the variable inside range. Different from Golang range, key word `RANGE` should be the first place.
 - `...` Coming soon
 
 ###### `If` clause
@@ -1750,6 +1751,37 @@ update @@table
 where id=@id
 ```
 
+###### `Range` clause
+
+```sql
+{{range $idx, $elem := @array_param}}
+    // do something with $idx and $elem
+{{end}}
+```
+
+Use case in raw SQL
+
+```go
+/* select * from @@table
+   {{where}}
+       {{ range $idx, $elem := @names }}
+           {{ if $idx > 0 }} or {{ end }} name={{ $elem }}
+       {{ end }}
+   {{end}}
+*/
+method(names []string) ([]gen.T, error)
+```
+
+Use case in raw SQL template
+
+```sql
+select * from @@table
+{{where}}
+   {{ range $idx, $elem := @names }}
+       {{ if $idx > 0 }} or {{ end }} name={{ $elem }}
+   {{ end }}
+{{end}}
+```
 ##### Method interface example
 
 ```go

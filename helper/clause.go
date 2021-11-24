@@ -1,6 +1,8 @@
 package helper
 
-import "strings"
+import (
+	"strings"
+)
 
 type Cond struct {
 	Cond   bool
@@ -20,6 +22,21 @@ func IfClause(conds []Cond) string {
 		clauses[i] = strings.Trim(judge(cond), " ")
 	}
 	return " " + strings.Join(clauses, " ")
+}
+
+func RangeClause(conds []string) string {
+	//clauses := make([]string, len(ranges))
+	//for i, r := range ranges {
+	//	if r.Source == nil {
+	//		continue
+	//	}
+	//	for idx, elem := range r.Source {
+	//
+	//	}
+	//	clauses[i] = ""
+	//}
+	//return trimAll(strings.Join(conds, " "))
+	return joinClause(conds, "", rangeValue, " ")
 }
 
 func WhereClause(conds []string) string {
@@ -80,4 +97,8 @@ func whereValue(value string) string {
 
 func setValue(value string) string {
 	return strings.Trim(value, ", ")
+}
+
+func rangeValue(value string) string {
+	return strings.Trim(value, " ")
 }

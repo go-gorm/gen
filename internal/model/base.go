@@ -11,7 +11,7 @@ import (
 type Status int
 
 const (
-	UNKNOWN Status = iota
+	UNKNOWN Status = 1 << iota
 	SQL
 	DATA
 	VARIABLE
@@ -25,11 +25,25 @@ const (
 	INT
 	STRING
 	TIME
+	ARRAY
 	OTHER
 	EXPRESSION
 	LOGICAL
 	NIL
+	RANGE
+	RANGEVAR
+	ASSIGN
+	RANGEBODY
 )
+
+func (s Status) In(standard ...Status) bool {
+	for _, sta := range standard {
+		if s&sta != 0 {
+			return true
+		}
+	}
+	return false
+}
 
 type SourceCode int
 

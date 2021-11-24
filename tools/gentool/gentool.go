@@ -3,15 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
-	"strings"
-
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/driver/sqlserver"
 	"gorm.io/gen"
 	"gorm.io/gorm"
+	"log"
+	"strings"
 )
 
 // DBType database type

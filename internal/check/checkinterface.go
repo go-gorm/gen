@@ -283,9 +283,13 @@ func (m *InterfaceMethod) sqlStateCheck() error {
 				}
 			}
 		case '{', '@':
-			if sqlClause := buf.Dump(); strings.TrimSpace(sqlClause) != "" {
+			if sqlClause := strings.TrimSpace(buf.Dump()); sqlClause != "" {
+				typ := model.SQL
+				if strings.Contains(sqlClause, "$") {
+					typ |= model.RANGEBODY
+				}
 				result.slices = append(result.slices, slice{
-					Type:  model.SQL,
+					Type:  typ,
 					Value: strconv.Quote(sqlClause),
 				})
 			}
@@ -423,5 +427,5 @@ func checkTemplate(tmpl string, params []parser.Param) (result slice, err error)
 	if err != nil {
 		return
 	}
-	return fragmentToSLice(fragmentList)
+	return fragmentToSLice(fragmentList, params)
 }
