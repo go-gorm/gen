@@ -187,24 +187,7 @@ func (s *section) splitTemplate(tmpl string, params []parser.Param) (err error) 
 
 // check validition of clause's value
 func (s *section) checkTempleFragmentValid() error {
-	switch s.Type {
-	case model.IF, model.ELSE:
-		for i := 1; i < len(s.fList); i++ {
-			switch s.fList[i].Type {
-			case model.IF:
-				continue
-			case model.INT, model.STRING, model.OTHER, model.TIME, model.NIL:
-				if i+2 < len(s.fList) {
-					if s.isExpressionValid(s.fList[i : i+3]) {
-						i += 2
-					} else {
-						return fmt.Errorf("condition type not match：%s", s.String())
-					}
-				}
-			}
-		}
-
-	case model.FOR:
+	if s.Type == model.FOR {
 		switch {
 		case !s.isForFormat():
 			return fmt.Errorf("for range syntax error:%s ", s.String())
@@ -213,7 +196,6 @@ func (s *section) checkTempleFragmentValid() error {
 		case s.SQLSlice.hasSameName(s.ForRange.value):
 			return fmt.Errorf("cannot use the same value name in different for loops")
 		}
-
 	}
 	s.Value = s.String()
 	return nil

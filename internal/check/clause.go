@@ -209,8 +209,8 @@ func (s *Sections) hasSameName(value string) bool {
 
 }
 
-// parse sql sections and append to tmpl, return a Clause array
-func (s *Sections) parse() ([]Clause, error) {
+// BuildSQLClause sql sections and append to tmpl, return a Clause array
+func (s *Sections) BuildSQLClause() ([]Clause, error) {
 	if s.IsNull() {
 		return nil, fmt.Errorf("sql is null")
 	}
@@ -593,7 +593,7 @@ func (s *Sections) checkSQLVar(param string, status model.Status, method *Interf
 			case model.DATA:
 				method.HasForParams = true
 				if part.ForRange.key == "_" {
-					s.members[index].SetForRangeKey("forRangeIndex")
+					s.members[index].SetForRangeKey("_index")
 				}
 			case model.VARIABLE:
 				param = fmt.Sprintf("%s.Quote(%s)", method.S, param)

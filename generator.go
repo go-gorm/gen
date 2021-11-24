@@ -251,7 +251,7 @@ func (g *Generator) apply(fc interface{}, structs []*check.BaseStruct) {
 			panic("gen struct fail")
 		}
 
-		functions, err := check.CheckInterface(readInterface, interfaceStruct, data.Interfaces)
+		functions, err := check.BuildDiyMethod(readInterface, interfaceStruct, data.Interfaces)
 		if err != nil {
 			g.db.Logger.Error(context.Background(), "check interface fail: %v", err)
 			panic("check interface fail")
