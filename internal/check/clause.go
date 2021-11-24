@@ -790,7 +790,7 @@ func fragmentToString(list []fragment) string {
 	return strings.Join(values, " ")
 }
 
-func fragmentToSLice(list []fragment, params []parser.Param) (part slice, err error) {
+func fragmentToSLice(list []fragment) (part slice, err error) {
 	var values []string
 
 	if len(list) == 0 {
@@ -847,11 +847,11 @@ func fragmentToSLice(list []fragment, params []parser.Param) (part slice, err er
 		return
 	}
 
-	err = rangeFragmentToSlice(list, &part, params)
+	err = rangeFragmentToSlice(list, &part)
 	return
 }
 
-func rangeFragmentToSlice(list []fragment, part *slice, params []parser.Param) error {
+func rangeFragmentToSlice(list []fragment, part *slice) error {
 	rangeExp := false
 	for _, t := range list {
 		if t.Type.In(model.RANGEVAR) {

@@ -427,5 +427,5 @@ func checkTemplate(tmpl string, params []parser.Param) (result slice, err error)
 	if err != nil {
 		return
 	}
-	return fragmentToSLice(fragmentList, params)
+	return fragmentToSLice(fragmentList)
 }
