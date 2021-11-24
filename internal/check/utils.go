@@ -48,6 +48,13 @@ func isDigit(str string) string {
 	return str
 }
 
+func isRangeVar(str string) string {
+	if strings.HasPrefix(str, "_") || strings.HasPrefix(str, "$") {
+		return ""
+	}
+	return str
+}
+
 func strOutrange(index int, str string) bool {
 	return index >= len(str)
 }

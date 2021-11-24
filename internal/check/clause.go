@@ -568,8 +568,8 @@ func checkFragment(s string, params []parser.Param) (f fragment, err error) {
 	switch str {
 	case isDigit(str):
 		f.Type |= model.DIGIT
-	case strings.HasPrefix(str, "_") || strings.HasPrefix(str, "$"):
-		f.Type |= model.RANGEVAR | model.INT
+	case isRangeVar(str):
+		f.Type |= model.RANGEVAR | model.DIGIT
 	case "&&", "||":
 		f.Type |= model.LOGICAL
 	case ">", "<", ">=", "<=", "==", "!=":
@@ -653,8 +653,8 @@ func splitTemplate(tmpl string, params []parser.Param) (fragList []fragment, err
 				if err != nil {
 					return nil, err
 				}
-				if f.Type.In(model.RANGEVAR, model.INT) && len(fragList) > 0 && fragList[len(fragList)-1].Type.In(model.RANGEVAR, model.INT) {
-					f.Type &^= model.INT
+				if f.Type.In(model.RANGEVAR, model.DIGIT) && len(fragList) > 0 && fragList[len(fragList)-1].Type.In(model.RANGEVAR, model.DIGIT) {
+					f.Type &^= model.DIGIT
 				}
 				fragList = append(fragList, f)
 			}
@@ -823,7 +823,7 @@ func fragmentToSLice(list []fragment) (part slice, err error) {
 
 		for _, e := range list {
 			if e.Type.In(model.RANGEVAR) {
-				if e.Type.In(model.INT) {
+				if e.Type.In(model.DIGIT) {
 					idx = fmt.Sprintf("%s, ", strings.ReplaceAll(e.Value, "$", ""))
 				} else {
 					res = fmt.Sprintf("%s", strings.ReplaceAll(e.Value, "$", ""))
