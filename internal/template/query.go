@@ -110,6 +110,12 @@ func InitializeDB() {
 	})
 }
 
+func assert(t *testing.T, methodName string, res, exp interface{}) {
+	if !reflect.DeepEqual(res, exp) {
+		t.Errorf("%v() gotResult = %v, want %v", methodName, res, exp)
+	}
+}
+
 type _another struct {
 	ID uint64 ` + "`" + `gorm:"primaryKey"` + "`" + `
 }

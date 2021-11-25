@@ -426,6 +426,13 @@ func (g *Generator) generateQueryUnitTestFile(data *genInfo) (err error) {
 		return err
 	}
 
+	for _, method := range data.Interfaces {
+		err = render(tmpl.DIYMethod_TEST, &buf, method)
+		if err != nil {
+			return err
+		}
+	}
+
 	defer g.successInfo(fmt.Sprintf("generate unit test file: %s/%s.gen_test.go", g.OutPath, strings.ToLower(data.TableName)))
 	return g.output(fmt.Sprintf("%s/%s.gen_test.go", g.OutPath, strings.ToLower(data.TableName)), buf.Bytes())
 }
