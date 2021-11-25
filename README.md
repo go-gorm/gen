@@ -206,6 +206,7 @@ demo
 │   └── query  # generated code's directory
 |       ├── user.gen.go # generated code for user
 │       └── gen.go # generated code
+|       └── user.gen_test.go # generated unit test
 ├── biz
 │   └── query.go # call function in dal/gorm_generated.go and query databases
 ├── config
@@ -1785,6 +1786,59 @@ type Method interface {
     //      id=@id
     //  {{end}}
     UpdateName(name string, id int) (gen.RowsAffected,error)
+}
+```
+
+#### Unit Test
+Unit test file will be generated if `WithUnitTest` is set, which will generate unit test for general query function.
+Unit test for DIY method need diy testcase, which should place in the same package with test file.
+
+A testcase contains input and expectation result, input should match the method arguments, expectation should match method return values, which will be asserted **Equal** in test.
+```go
+package query
+
+type Input struct {
+  Args []interface{}
+}
+
+type Expectation struct {
+  Ret []interface{}
+}
+
+type TestCase struct {
+  Input
+  Expectation
+}
+
+/* Table student */
+
+var StudentFindByIdTestCase = []TestCase {
+  {
+    Input{[]interface{}{1}},
+    Expectation{[]interface{}{nil, nil}},
+  },
+}
+
+```
+Corresponding test
+```go
+//FindById select * from @@table where id = @id
+func (s studentDo) FindById(id int64) (result *model.Student, err error) {
+    ///
+}
+
+func Test_student_FindById(t *testing.T) {
+    student := newStudent(db)
+    do := student.WithContext(context.Background()).Debug()
+    assert := assert.New(t)
+
+    for i, tt := range StudentFindByIdTestCase {
+        t.Run("FindById_"+strconv.Itoa(i), func(t *testing.T) {
+            res1, res2 := do.FindById(tt.Input.Args[0].(int64))
+            assert.Equal(res1, tt.Expectation.Ret[0])
+            assert.Equal(res2, tt.Expectation.Ret[1])
+        })
+    }
 }
 ```
 

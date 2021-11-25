@@ -29,9 +29,12 @@ package {{.}}
 import(
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
+
 `
