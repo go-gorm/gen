@@ -117,7 +117,7 @@ func (m *InterfaceMethod) DocComment() string {
 
 // checkParams check all parameters
 func (m *InterfaceMethod) checkMethod(methods []*InterfaceMethod, s *BaseStruct) (err error) {
-	if model.GormKeywords.Contain(m.MethodName) {
+	if model.GormKeywords.FullMatch(m.MethodName) {
 		return fmt.Errorf("can not use keyword as method name:%s", m.MethodName)
 	}
 	// TODO check methods Always empty?
@@ -212,7 +212,7 @@ func (m *InterfaceMethod) checkResult(result []parser.Param) (err error) {
 // checkSQL get sql from comment and check it
 func (m *InterfaceMethod) checkSQL() (err error) {
 	m.SqlString = m.parseDocString()
-	if err = m.sqlStateCheck(); err != nil {
+	if err = m.sqlStateCheckAndSplit(); err != nil {
 		err = fmt.Errorf("interface %s member method %s check sql err:%w", m.InterfaceName, m.MethodName, err)
 	}
 	return
@@ -264,18 +264,18 @@ func (m *InterfaceMethod) getSQLDocString() string {
 	return docString
 }
 
-// sqlStateCheck check sql with an adeterministic finite automaton
-func (m *InterfaceMethod) sqlStateCheck() error {
+// sqlStateCheckAndSplit check sql with an adeterministic finite automaton
+func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 	sqlString := m.SqlString
 	m.Sections = NewSections()
 	var buf model.SQLBuffer
-	for i := 0; !strOutrange(i, sqlString); i++ {
+	for i := 0; !strOutRange(i, sqlString); i++ {
 		b := sqlString[i]
 		switch b {
 		case '"':
 			_ = buf.WriteByte(sqlString[i])
 			for i++; ; i++ {
-				if strOutrange(i, sqlString) {
+				if strOutRange(i, sqlString) {
 					return fmt.Errorf("incomplete SQL:%s", sqlString)
 				}
 				_ = buf.WriteByte(sqlString[i])
@@ -291,18 +291,18 @@ func (m *InterfaceMethod) sqlStateCheck() error {
 				})
 			}
 
-			if strOutrange(i+1, sqlString) {
+			if strOutRange(i+1, sqlString) {
 				return fmt.Errorf("incomplete SQL:%s", sqlString)
 			}
 			if b == '{' && sqlString[i+1] == '{' {
 				for i += 2; ; i++ {
-					if strOutrange(i, sqlString) {
+					if strOutRange(i, sqlString) {
 						return fmt.Errorf("incomplete SQL:%s", sqlString)
 					}
 					if sqlString[i] == '"' {
 						_ = buf.WriteByte(sqlString[i])
 						for i++; ; i++ {
-							if strOutrange(i, sqlString) {
+							if strOutRange(i, sqlString) {
 								return fmt.Errorf("incomplete SQL:%s", sqlString)
 							}
 							_ = buf.WriteByte(sqlString[i])
@@ -313,7 +313,7 @@ func (m *InterfaceMethod) sqlStateCheck() error {
 						i++
 					}
 
-					if strOutrange(i+1, sqlString) {
+					if strOutRange(i+1, sqlString) {
 						return fmt.Errorf("incomplete SQL:%s", sqlString)
 					}
 					if sqlString[i] == '}' && sqlString[i+1] == '}' {
@@ -337,7 +337,7 @@ func (m *InterfaceMethod) sqlStateCheck() error {
 					status = model.VARIABLE
 				}
 				for ; ; i++ {
-					if strOutrange(i, sqlString) || isEnd(sqlString[i]) {
+					if strOutRange(i, sqlString) || isEnd(sqlString[i]) {
 						varString := buf.Dump()
 						params, err := m.Sections.checkSQLVar(varString, status, m)
 						if err != nil {
@@ -425,13 +425,10 @@ func checkTemplate(tmpl string, params []parser.Param) (result slice, err error)
 // checkTemplate check sql template's syntax (if/else/where/set/for)
 func (s *Sections) checkTemplate(tmpl string, params []parser.Param) (section, error) {
 	var part section
-	part.Origin = tmpl
+	part.Value = tmpl
 	part.SQLSlice = s
-	err := part.splitTemplate(tmpl, params)
-	if err != nil {
-		return part, err
-	}
-	err = part.checkTempleFragmentValid()
+	part.splitTemplate()
+	err := part.checkTemple()
 
 	return part, err
 >>>>>>> 0756b34 (feat:add for range and generated code style)

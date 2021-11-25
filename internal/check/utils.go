@@ -34,6 +34,7 @@ func getPackageName(fullName string) string {
 	return strings.Split(delPointerSym(fullName), ".")[0]
 }
 
+<<<<<<< HEAD
 func isDigit(str string) string {
 	for _, x := range str {
 		switch x {
@@ -49,6 +50,9 @@ func isDigit(str string) string {
 }
 
 func strOutrange(index int, str string) bool {
+=======
+func strOutRange(index int, str string) bool {
+>>>>>>> a4d747a (feat：feat style do code review)
 	return index >= len(str)
 }
 
