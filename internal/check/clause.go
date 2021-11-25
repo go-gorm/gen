@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"gorm.io/gen/internal/model"
-	"gorm.io/gen/internal/parser"
 )
 
 // Clause a symbol of clause, it can be sql condition clause, if clause, where clause, set clause and else clause
@@ -95,7 +94,7 @@ func (w WhereClause) Creat() string {
 	return fmt.Sprintf("var %s strings.Builder", w.VarName)
 }
 func (w WhereClause) Finish(name string) string {
-	return fmt.Sprintf("%s.WriteString(%s)", name, w.String())
+	return fmt.Sprintf("helper.JoinBuilder(&%s,\" WHERE \",%s)", name, w.VarName)
 }
 
 // SetClause set clause
@@ -112,8 +111,8 @@ func (s SetClause) Creat() string {
 	return fmt.Sprintf("var %s strings.Builder", s.VarName)
 }
 
-func (s SetClause) Finish() string {
-	return fmt.Sprintf("%s.WriteString(%s)", s.VarName, s.String())
+func (s SetClause) Finish(name string) string {
+	return fmt.Sprintf("helper.JoinBuilder(&%s,\" SET \",%s)", name, s.VarName)
 }
 
 // ForClause set clause
@@ -209,8 +208,8 @@ func (s *Sections) hasSameName(value string) bool {
 
 }
 
-// BuildSQLClause sql sections and append to tmpl, return a Clause array
-func (s *Sections) BuildSQLClause() ([]Clause, error) {
+// BuildSQL sql sections and append to tmpl, return a Clause array
+func (s *Sections) BuildSQL() ([]Clause, error) {
 	if s.IsNull() {
 		return nil, fmt.Errorf("sql is null")
 	}
@@ -243,7 +242,7 @@ func (s *Sections) BuildSQLClause() ([]Clause, error) {
 				return nil, err
 			}
 			res = append(res, setClause)
-			s.tmplAppend(setClause.Finish())
+			s.tmplAppend(setClause.Finish(name))
 		case model.FOR:
 			forClause, err := s.parseFor(name)
 			_, _ = forClause, err
@@ -254,7 +253,7 @@ func (s *Sections) BuildSQLClause() ([]Clause, error) {
 			s.tmplAppend(forClause.Finish())
 		case model.END:
 		default:
-			return nil, fmt.Errorf("unknow clause:%s", c.Origin)
+			return nil, fmt.Errorf("unknow clause:%s", c.Value)
 		}
 		if !s.HasMore() {
 			break
@@ -303,7 +302,7 @@ func (s *Sections) parseIF(name string) (res IfClause, err error) {
 				return
 			}
 			res.Value = append(res.Value, setClause)
-			s.tmplAppend(setClause.Finish())
+			s.tmplAppend(setClause.Finish(name))
 		case model.ELSE:
 			var elseClause ElseClause
 			elseClause, err = s.parseElSE(name)
@@ -322,7 +321,7 @@ func (s *Sections) parseIF(name string) (res IfClause, err error) {
 		case model.END:
 			return
 		default:
-			err = fmt.Errorf("unknow clause : %s", c.Origin)
+			err = fmt.Errorf("unknow clause : %s", c.Value)
 			return
 		}
 		if !s.HasMore() {
@@ -374,7 +373,7 @@ func (s *Sections) parseElSE(name string) (res ElseClause, err error) {
 				return
 			}
 			res.Value = append(res.Value, setClause)
-			s.tmplAppend(setClause.Finish())
+			s.tmplAppend(setClause.Finish(name))
 		case model.ELSE:
 			var elseClause ElseClause
 			elseClause, err = s.parseElSE(name)
@@ -438,7 +437,7 @@ func (s *Sections) parseWhere() (res WhereClause, err error) {
 		case model.END:
 			return
 		default:
-			err = fmt.Errorf("unknow clause : %s", c.Origin)
+			err = fmt.Errorf("unknow clause : %s", c.Value)
 			return
 		}
 		if !s.HasMore() {
@@ -489,7 +488,7 @@ func (s *Sections) parseSet() (res SetClause, err error) {
 		case model.END:
 			return
 		default:
-			err = fmt.Errorf("unknow clause : %s", c.Origin)
+			err = fmt.Errorf("unknow clause : %s", c.Value)
 			return
 		}
 		if !s.HasMore() {
@@ -538,7 +537,7 @@ func (s *Sections) parseFor(name string) (res ForClause, err error) {
 			s.forValue = s.forValue[:len(s.forValue)-1]
 			return
 		default:
-			err = fmt.Errorf("unknow clause : %s", c.Origin)
+			err = fmt.Errorf("unknow clause : %s", c.Value)
 			return
 		}
 		if !s.HasMore() {
@@ -564,11 +563,10 @@ func (s *Sections) parseSQL(name string) (res SQLClause) {
 		case model.VARIABLE:
 			res.Value = append(res.Value, c.Value)
 		case model.DATA:
-			forKeyValue, isInForRange := s.isInForValue(c.Value)
+			forRange, isInForRange := s.isInForValue(c.Value)
 			if isInForRange {
-				forDataName := fmt.Sprintf("%sFor%s_%%d", strings.Replace(c.Value, ".", "", -1), strings.Title(name))
-				c.Value = fmt.Sprintf("fmt.Sprintf(\"@%s\",%s)", forDataName, forKeyValue.key)
-				s.tmplAppend(fmt.Sprintf("params[fmt.Sprintf(\"%s\",%s)]=%s%s", forDataName, forKeyValue.key, forKeyValue.value, forKeyValue.suffix))
+				s.tmplAppend(forRange.appendDataToParams(c.Value, name))
+				c.Value = forRange.DataValue(c.Value, name)
 			} else {
 				c.Value = strconv.Quote("@" + c.Value)
 			}
@@ -592,7 +590,7 @@ func (s *Sections) checkSQLVar(param string, status model.Status, method *Interf
 			switch status {
 			case model.DATA:
 				method.HasForParams = true
-				if part.ForRange.key == "_" {
+				if part.ForRange.index == "_" {
 					s.members[index].SetForRangeKey("_index")
 				}
 			case model.VARIABLE:
@@ -615,74 +613,11 @@ func (s *Sections) GetName(status model.Status) string {
 	switch status {
 	case model.WHERE:
 		defer func() { s.ClauseTotal[model.WHERE]++ }()
-		return fmt.Sprintf("whereClause%d", s.ClauseTotal[model.WHERE])
+		return fmt.Sprintf("whereSQL%d", s.ClauseTotal[model.WHERE])
 	case model.SET:
 		defer func() { s.ClauseTotal[model.SET]++ }()
-		return fmt.Sprintf("setClause%d", s.ClauseTotal[model.SET])
+		return fmt.Sprintf("setSQL%d", s.ClauseTotal[model.SET])
 	default:
 		return "generateSQL"
 	}
-}
-
-// sql fragment
-type fragment struct {
-	Type    model.Status
-	Value   string
-	IsArray bool
-}
-
-func (f *fragment) fragmentByForRange(s *section) (str string) {
-	str = strings.ToLower(f.Value)
-	if s.Type == model.FOR {
-		switch len(s.fList) {
-		case 1:
-			s.ForRange.key = f.Value
-			f.Type = model.KEY
-			return
-		case 2:
-			s.ForRange.value = f.Value
-			f.Type = model.VALUE
-			return
-		}
-	} else {
-		for _, p := range s.SQLSlice.members {
-			if p.Type == model.FOR {
-				if f.Value == p.ForRange.key {
-					f.Type = model.INT
-				}
-				if f.Value == p.ForRange.value {
-					f.Type = p.fList[len(p.fList)-1].Type
-				}
-				return
-			}
-		}
-	}
-	return ""
-}
-
-func (f *fragment) fragmentByParams(params []parser.Param) (str string) {
-	str = strings.ToLower(f.Value)
-	for _, param := range params {
-		if param.Name == f.Value {
-			f.IsArray = param.IsArray
-			switch param.Type {
-			case "bool":
-				f.Type = model.BOOL
-				return
-			case "int":
-				f.Type = model.INT
-				return
-			case "string":
-				f.Type = model.STRING
-				return
-			case "Time":
-				f.Type = model.TIME
-				return
-			default:
-				f.Type = model.OTHER
-				return
-			}
-		}
-	}
-	return ""
 }

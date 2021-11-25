@@ -44,17 +44,37 @@ func joinClause(conds []string, keyword string, deal func(string) string, sep st
 }
 
 func trimAll(input string) string {
-	input = strings.Trim(input, " ")
+	return trimRight(trimLeft(input))
+}
+
+func trimLeft(input string) string {
+	input = strings.TrimSpace(input)
 	lowercase := strings.ToLower(input)
 	switch {
 	case strings.HasPrefix(lowercase, "and "):
 		return input[4:]
-	case strings.HasPrefix(lowercase, "or "):
+	case strings.HasPrefix(lowercase, "or"):
 		return input[3:]
 	case strings.HasPrefix(lowercase, "xor "):
 		return input[4:]
 	case strings.HasPrefix(lowercase, ","):
 		return input[1:]
+	default:
+		return input
+	}
+}
+func trimRight(input string) string {
+	input = strings.TrimSpace(input)
+	lowercase := strings.ToLower(input)
+	switch {
+	case strings.HasSuffix(lowercase, " and"):
+		return input[:len(input)-3]
+	case strings.HasSuffix(lowercase, " or"):
+		return input[:len(input)-2]
+	case strings.HasSuffix(lowercase, " xor"):
+		return input[:len(input)-3]
+	case strings.HasSuffix(lowercase, ","):
+		return input[:len(input)-1]
 	default:
 		return input
 	}
@@ -82,17 +102,20 @@ func setValue(value string) string {
 	return strings.Trim(value, ", ")
 }
 
-func WhereTrim(value string) string {
-	value = trimAll(value)
+func JoinBuilder(src *strings.Builder, conjunction string, joinValue strings.Builder) {
+	value := trimAll(joinValue.String())
 	if value != "" {
-		return " WHERE " + value
+		src.WriteString(conjunction)
+		src.WriteString(value)
 	}
-	return ""
 }
-func SetTrim(value string) string {
-	value = trimAll(value)
-	if value != "" {
-		return " SET " + value
+
+func JoinBuilder2(src *strings.Builder, conjunction string, joinValues ...strings.Builder) {
+	for _, value := range joinValues {
+		trimValue := trimAll(value.String())
+		if trimValue != "" {
+			src.WriteString(conjunction)
+			src.WriteString(trimValue)
+		}
 	}
-	return ""
 }

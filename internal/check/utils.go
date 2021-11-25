@@ -2,7 +2,6 @@ package check
 
 import (
 	"strings"
-	"unicode"
 )
 
 func isCapitalize(s string) bool {
@@ -35,16 +34,7 @@ func getPackageName(fullName string) string {
 	return strings.Split(delPointerSym(fullName), ".")[0]
 }
 
-func isDigit(str string) bool {
-	for _, x := range str {
-		if !unicode.IsDigit(x) {
-			return false
-		}
-	}
-	return true
-}
-
-func strOutrange(index int, str string) bool {
+func strOutRange(index int, str string) bool {
 	return index >= len(str)
 }
 

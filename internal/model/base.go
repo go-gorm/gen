@@ -60,9 +60,24 @@ var GormKeywords = KeyWords{
 	},
 }
 
-func (g *KeyWords) Contain(word string) bool {
+var GenKeywords = KeyWords{
+	words: []string{
+		"generateSQL", "whereClause", "setClause",
+	},
+}
+
+func (g *KeyWords) FullMatch(word string) bool {
 	for _, item := range g.words {
 		if word == item {
+			return true
+		}
+	}
+	return false
+}
+
+func (g *KeyWords) Contain(text string) bool {
+	for _, item := range g.words {
+		if strings.Contains(text, item) {
 			return true
 		}
 	}
@@ -161,7 +176,7 @@ func (m *Member) GenType() string {
 }
 
 func (m *Member) EscapeKeyword() *Member {
-	if GormKeywords.Contain(m.Name) {
+	if GormKeywords.FullMatch(m.Name) {
 		m.Name += "_"
 	}
 	return m
