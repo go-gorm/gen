@@ -3,6 +3,7 @@ package check
 import (
 	"fmt"
 	"gorm.io/gen/internal/parser"
+	"strconv"
 	"strings"
 )
 
@@ -31,11 +32,11 @@ func testParamToString(params []parser.Param) string {
 	return strings.Join(res, ",")
 }
 
-// GetAssertInTmpl a
+// GetAssertInTmpl assert in diy test
 func (m *InterfaceMethod) GetAssertInTmpl() string {
 	var res []string
 	for i := range m.Result {
-		tmplString := fmt.Sprintf("assert.Equal(res%d, tt.Expectation.Ret[%d])", i+1, i)
+		tmplString := fmt.Sprintf("assert(t, %v, res%d, tt.Expectation.Ret[%d])", strconv.Quote(m.MethodName), i+1, i)
 		res = append(res, tmplString)
 	}
 	return strings.Join(res, "\n")

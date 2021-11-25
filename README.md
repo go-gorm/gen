@@ -1830,13 +1830,12 @@ func (s studentDo) FindById(id int64) (result *model.Student, err error) {
 func Test_student_FindById(t *testing.T) {
     student := newStudent(db)
     do := student.WithContext(context.Background()).Debug()
-    assert := assert.New(t)
 
     for i, tt := range StudentFindByIdTestCase {
         t.Run("FindById_"+strconv.Itoa(i), func(t *testing.T) {
             res1, res2 := do.FindById(tt.Input.Args[0].(int64))
-            assert.Equal(res1, tt.Expectation.Ret[0])
-            assert.Equal(res2, tt.Expectation.Ret[1])
+            assert(t, "FindById", res1, tt.Expectation.Ret[0])
+            assert(t, "FindById", res2, tt.Expectation.Ret[1])
         })
     }
 }

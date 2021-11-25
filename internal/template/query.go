@@ -95,19 +95,6 @@ const dbName = "gen_test.db"
 var db *gorm.DB
 var once sync.Once
 
-type Input struct {
-	Args []interface{}
-}
-
-type Expectation struct {
-	Ret []interface{}
-}
-
-type TestCase struct {
-	Input
-	Expectation
-}
-
 func init() {
 	InitializeDB()
 	db.AutoMigrate(&_another{})
@@ -121,6 +108,12 @@ func InitializeDB() {
 			panic(fmt.Errorf("open sqlite %q fail: %w", dbName, err))
 		}
 	})
+}
+
+func assert(t *testing.T, methodName string, res, exp interface{}) {
+	if !reflect.DeepEqual(res, exp) {
+		t.Errorf("%v() gotResult = %v, want %v", methodName, res, exp)
+	}
 }
 
 type _another struct {
