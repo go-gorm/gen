@@ -3,7 +3,6 @@ module gorm.io/gen
 go 1.14
 
 require (
-	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/mod v0.5.1 // indirect
 	golang.org/x/sys v0.0.0-20211103235746-7861aae1554b // indirect

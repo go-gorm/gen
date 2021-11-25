@@ -1,6 +1,4 @@
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
-github.com/DATA-DOG/go-sqlmock v1.5.0 h1:Shsta01QNfFxHCfpW6YH2STWB0MudeXXEWMr20OEh60=
-github.com/DATA-DOG/go-sqlmock v1.5.0/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q5eFN3EC/SaM=
 github.com/Masterminds/semver/v3 v3.1.1 h1:hLg3sBzpNErnxhQtUy/mmLR2I9foDujNK030IGemrRc=
 github.com/Masterminds/semver/v3 v3.1.1/go.mod h1:VPu/7SZ7ePZ3QOrcuXROw5FAcLl4a0cBrbBpGY/8hQs=
 github.com/cockroachdb/apd v1.1.0 h1:3LFP3629v+1aKXU5Q37mxmRxX/pIu1nijXydLShEq5I=
@@ -210,7 +208,6 @@ gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c h1:dUUwHk2QECo/6vqA44rthZ8ie
 gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 gorm.io/datatypes v1.0.3 h1:cbFm8OiE50PZK1Zj9+bROQQpsFipE9bPFxxxkKgj3e4=
 gorm.io/datatypes v1.0.3/go.mod h1:bi/3zc2D4dyUkiB+xhrirAv95+u4CXI+OE/YK43Jntg=
-gorm.io/driver/mysql v1.1.3 h1:+5g1UElqN0sr2gZqmg9djlu1zT3cErHiscc6+IbLHgw=
 gorm.io/driver/mysql v1.1.3/go.mod h1:4P/X9vSc3WTrhTLZ259cpFd6xKNYiSSdSZngkSBGIMM=
 gorm.io/driver/mysql v1.2.0 h1:l8+9VwjjyzEkw0PNPBOr2JHhLOGVk7XEnl5hk42bcvs=
 gorm.io/driver/mysql v1.2.0/go.mod h1:4RQmTg4okPghdt+kbe6e1bTXIQp7Ny1NnBn/3Z6ghjk=
