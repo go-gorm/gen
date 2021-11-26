@@ -2,8 +2,9 @@ package check
 
 import (
 	"fmt"
-	"gorm.io/gen/internal/model"
 	"strings"
+
+	"gorm.io/gen/internal/model"
 )
 
 type ForRange struct {

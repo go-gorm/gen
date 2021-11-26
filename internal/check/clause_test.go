@@ -1,8 +1,9 @@
 package check
 
 import (
-	"gorm.io/gen/internal/parser"
 	"testing"
+
+	"gorm.io/gen/internal/parser"
 )
 
 func checkBuildExpr(t *testing.T, SQL string, splitResult, generateResult []string, i *InterfaceMethod) {

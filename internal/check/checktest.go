@@ -2,9 +2,10 @@ package check
 
 import (
 	"fmt"
-	"gorm.io/gen/internal/parser"
 	"strconv"
 	"strings"
+
+	"gorm.io/gen/internal/parser"
 )
 
 //GetTestParamInTmpl return param list
