@@ -287,7 +287,6 @@ func (g *Generator) Execute() {
 		g.db.Logger.Error(context.Background(), "generate basic struct from table fail: %s", err)
 		panic("generate basic struct from table fail")
 	}
-	g.deleteHistoryGeneratedFile()
 	err = g.generateQueryFile()
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate query code fail: %s", err)
@@ -435,14 +434,6 @@ func (g *Generator) generateQueryUnitTestFile(data *genInfo) (err error) {
 
 	defer g.successInfo(fmt.Sprintf("generate unit test file: %s/%s.gen_test.go", g.OutPath, strings.ToLower(data.TableName)))
 	return g.output(fmt.Sprintf("%s/%s.gen_test.go", g.OutPath, strings.ToLower(data.TableName)), buf.Bytes())
-}
-
-// remove history GEN generated file
-func (g *Generator) deleteHistoryGeneratedFile() {
-	historyFile := g.OutPath + "/gorm_generated.go"
-	if _, err := os.Stat(g.OutPath); err == nil {
-		_ = os.Remove(historyFile)
-	}
 }
 
 // generateBaseStruct generate basic structures and save to file
