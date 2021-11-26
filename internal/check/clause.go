@@ -94,7 +94,7 @@ func (w WhereClause) Creat() string {
 	return fmt.Sprintf("var %s strings.Builder", w.VarName)
 }
 func (w WhereClause) Finish(name string) string {
-	return fmt.Sprintf("helper.JoinBuilder(&%s,\" WHERE \",%s)", name, w.VarName)
+	return fmt.Sprintf("helper.JoinWhereBuilder(&%s,%s)", name, w.VarName)
 }
 
 // SetClause set clause
@@ -112,7 +112,7 @@ func (s SetClause) Creat() string {
 }
 
 func (s SetClause) Finish(name string) string {
-	return fmt.Sprintf("helper.JoinBuilder(&%s,\" SET \",%s)", name, s.VarName)
+	return fmt.Sprintf("helper.JoinSetBuilder(&%s,%s)", name, s.VarName)
 }
 
 // ForClause set clause

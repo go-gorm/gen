@@ -102,20 +102,18 @@ func setValue(value string) string {
 	return strings.Trim(value, ", ")
 }
 
-func JoinBuilder(src *strings.Builder, conjunction string, joinValue strings.Builder) {
-	value := trimAll(joinValue.String())
+func JoinWhereBuilder(src *strings.Builder, whereValue strings.Builder) {
+	value := trimAll(whereValue.String())
 	if value != "" {
-		src.WriteString(conjunction)
+		src.WriteString(" WHERE ")
 		src.WriteString(value)
 	}
 }
 
-func JoinBuilder2(src *strings.Builder, conjunction string, joinValues ...strings.Builder) {
-	for _, value := range joinValues {
-		trimValue := trimAll(value.String())
-		if trimValue != "" {
-			src.WriteString(conjunction)
-			src.WriteString(trimValue)
-		}
+func JoinSetBuilder(src *strings.Builder, setValue strings.Builder) {
+	value := trimAll(setValue.String())
+	if value != "" {
+		src.WriteString(" SET ")
+		src.WriteString(value)
 	}
 }

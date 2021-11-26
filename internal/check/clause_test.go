@@ -66,7 +66,7 @@ func TestClause(t *testing.T) {
 				"generateSQL.WriteString(\"select * from users\")",
 				"var whereSQL0 strings.Builder",
 				"whereSQL0.WriteString(\" id>@id\")",
-				"helper.JoinBuilder(&generateSQL,\" WHERE \",whereSQL0)",
+				"helper.JoinWhereBuilder(&generateSQL,whereSQL0)",
 			},
 		},
 		{
@@ -87,7 +87,7 @@ func TestClause(t *testing.T) {
 				"if id > 0 {",
 				"whereSQL0.WriteString(\" id>@id\")",
 				"}",
-				"helper.JoinBuilder(&generateSQL,\" WHERE \",whereSQL0)",
+				"helper.JoinWhereBuilder(&generateSQL,whereSQL0)",
 			},
 		},
 		{
@@ -119,7 +119,7 @@ func TestClause(t *testing.T) {
 				"if id>0 {",
 				"setSQL0.WriteString(\"id=@id\")",
 				"}",
-				"helper.JoinBuilder(&generateSQL,\" SET \",setSQL0)",
+				"helper.JoinSetBuilder(&generateSQL,setSQL0)",
 				"generateSQL.WriteString(\" where id=@id\")",
 			},
 		},
@@ -142,7 +142,7 @@ func TestClause(t *testing.T) {
 				"params[\"nameForWhereSQL0_\"+strconv.Itoa(_index)]=name",
 				"whereSQL0.WriteString(\"name=@nameForWhereSQL0_\"+strconv.Itoa(_index))",
 				"}",
-				"helper.JoinBuilder(&generateSQL,\" WHERE \",whereSQL0)",
+				"helper.JoinWhereBuilder(&generateSQL,whereSQL0)",
 			},
 		},
 	}
