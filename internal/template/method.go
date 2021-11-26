@@ -8,11 +8,12 @@ func ({{.S}} {{.TargetStruct}}Do){{.MethodName}}({{.GetParamInTmpl}})({{.GetResu
 		"{{$data}}":{{$data}},{{end}}
 	}
 
-	{{end}}var generateSQL string{{range $line:=.SqlTmplList}}{{$line}}
+	{{end}}var generateSQL strings.Builder
+	{{range $line:=.Sections.Tmpl}}{{$line}}
 	{{end}}
 
 	{{if .HasNeedNewResult}}result ={{if .ResultData.IsMap}}make{{else}}new{{end}}({{if ne .ResultData.Package ""}}{{.ResultData.Package}}.{{end}}{{.ResultData.Type}}){{end}}
-	{{if or .ReturnRowsAffected .ReturnError}}executeSQL:{{else}}_{{end}}= {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL{{if .HasSqlData}},params{{end}}){{if not .ResultData.IsNull}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}
+	{{if or .ReturnRowsAffected .ReturnError}}executeSQL:{{else}}_{{end}}= {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL.String(){{if .HasSqlData}},params{{end}}){{if not .ResultData.IsNull}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}
 	{{if .ReturnRowsAffected}}rowsAffected = executeSQL.RowsAffected
 	{{end}}{{if .ReturnError}}err = executeSQL.Error
 	{{end}}return

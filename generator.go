@@ -504,12 +504,13 @@ func (g *Generator) generateBaseStruct() (err error) {
 func (g *Generator) output(fileName string, content []byte) error {
 	result, err := imports.Process(fileName, content, nil)
 	if err != nil {
-		errLine, _ := strconv.Atoi(strings.Split(err.Error(), ":")[1])
-		startLine, endLine := 0, errLine+3
-		fmt.Println("Format fail:")
 		line := strings.Split(string(content), "\n")
+		errLine, _ := strconv.Atoi(strings.Split(err.Error(), ":")[1])
+		startLine, endLine := -0, len(line)-1
+		fmt.Println("Format fail:", errLine, err)
+
 		for i := startLine; i <= endLine; i++ {
-			fmt.Println(i+errLine, line[i+errLine])
+			fmt.Println(i, line[i])
 		}
 		return fmt.Errorf("cannot format struct file: %w", err)
 	}

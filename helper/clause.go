@@ -81,3 +81,18 @@ func whereValue(value string) string {
 func setValue(value string) string {
 	return strings.Trim(value, ", ")
 }
+
+func WhereTrim(value string) string {
+	value = trimAll(value)
+	if value != "" {
+		return " WHERE " + value
+	}
+	return ""
+}
+func SetTrim(value string) string {
+	value = trimAll(value)
+	if value != "" {
+		return " SET " + value
+	}
+	return ""
+}

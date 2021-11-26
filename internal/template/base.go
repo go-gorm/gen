@@ -11,6 +11,7 @@ package {{.Package}}
 
 import(
 	"database/sql"
+	"strings"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
