@@ -408,20 +408,6 @@ func (m *InterfaceMethod) isParamExist(paramName string) bool {
 	return false
 }
 
-<<<<<<< HEAD
-// checkTemplate check sql template's syntax (check if/else/where/set)
-func checkTemplate(tmpl string, params []parser.Param) (result slice, err error) {
-	fragmentList, err := splitTemplate(tmpl, params)
-	if err != nil {
-		return
-	}
-	// TODO checking template in new version
-	//err = checkTempleFragmentValid(fragmentList)
-	//if err != nil {
-	//	return
-	//}
-	return fragmentToSLice(fragmentList)
-=======
 // checkTemplate check sql template's syntax (if/else/where/set/for)
 func (s *Sections) checkTemplate(tmpl string, params []parser.Param) (section, error) {
 	var part section
@@ -431,5 +417,4 @@ func (s *Sections) checkTemplate(tmpl string, params []parser.Param) (section, e
 	err := part.checkTemple()
 
 	return part, err
->>>>>>> 0756b34 (feat:add for range and generated code style)
 }

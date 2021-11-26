@@ -20,17 +20,6 @@ const (
 	SET
 	FOR
 	END
-	BOOL
-	DIGIT
-	STRING
-	TIME
-	NIL
-	OTHER
-	EXPRESSION
-	LOGICAL
-	RANGE
-	KEY   //for range key
-	VALUE // for range value
 )
 
 type SourceCode int

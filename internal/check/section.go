@@ -14,7 +14,7 @@ type ForRange struct {
 }
 
 func (f *ForRange) String() string {
-	return fmt.Sprintf("for %s, %s :=range %s", f.index, f.value, f.rangeList)
+	return fmt.Sprintf("for %s, %s := range %s", f.index, f.value, f.rangeList)
 }
 
 func (f *ForRange) mapIndexName(prefix, dataName, clauseName string) string {
