@@ -1751,6 +1751,31 @@ update @@table
 {{end}}
 where id=@id
 ```
+###### `For` clause
+
+```sql
+{{for _,name:=range names}}
+    // do something here
+{{end}}
+```
+
+Use case in raw SQL:
+
+```go
+// select * from users where id>0 {{for _,name:=range names}} and name=@name{{end}}
+methond(names []string) (gen.T,error) 
+```
+
+Use case in raw SQL template:
+
+```sql
+select * from @@table 
+{{where}}
+  {{for _,user:=range users}}
+     OR name=@user.Name 
+  {{end}}
+{{end}}
+```
 
 ###### `For` clause
 
