@@ -9,17 +9,17 @@
 [![ClosedIssue](https://img.shields.io/github/issues-closed/go-gorm/gen)](https://github.com/go-gorm/gen/issues?q=is%3Aissue+is%3Aclosed)
 [![TODOs](https://badgen.net/https/api.tickgit.com/badgen/github.com/go-gorm/gen)](https://www.tickgit.com/browse?repo=github.com/go-gorm/gen)
 
-基于 [GORM](https://github.com/go-gorm/gorm), 更安全更友好的ORM工具。、
+基于 [GORM](https://github.com/go-gorm/gorm), 更安全更友好的ORM工具。
 
-## <span id="multilingual-readme"><span id="multilingual-readme">更多语言版本的 README</span></span>
+## <span id="multilingual-readme">更多语言版本的 README</span>
 
 [English Version](./README.md) | [中文版本](./README.zh-CN.md)
 
 ## <span id="overview">概览</span>
 
-- 自动生成CRUD和DIY方法
-- 自动根据表结构生成model
-- 完全兼容GORM
+- 自动生成 CRUD 和 DIY 方法
+- 自动根据表结构生成 model
+- 完全兼容 GORM
 - 更安全、更友好
 - 多种生成代码模式
 
