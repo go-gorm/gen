@@ -808,7 +808,7 @@ q.Transaction(func(tx *query.Query) error {
 
 ###### <span id="nested-transactions">嵌套事务</span>
 
-GEN 支持潜逃事务，在一个大事务中嵌套子事务。
+GEN 支持嵌套事务，在一个大事务中嵌套子事务。
 
 ```go
 q := query.Use(db)
@@ -1400,7 +1400,7 @@ type User struct {
 users, err := u.WithContext(ctx).Preload(field.Associations).Find()
 ```
 
-`clause.Associations` 不会加载嵌套关联, 潜逃关联家在可以用 [Nested Preloading](#nested_preloading) e.g:
+`clause.Associations` 不会加载嵌套关联, 嵌套关联加载可以用 [Nested Preloading](#nested_preloading) e.g:
 
 ```go
 users, err := u.WithContext(ctx).Preload(u.Orders.OrderItems.Product).Find()
