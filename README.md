@@ -11,6 +11,10 @@
 
 A safer orm base on [GORM](https://github.com/go-gorm/gorm), aims to be developer friendly.
 
+## Multilingual README
+
+[English Version](./README.md) | [中文版本](./README.zh-CN.md)
+
 ## Overview
 
 - CRUD or DIY query method code generation
@@ -23,6 +27,7 @@ A safer orm base on [GORM](https://github.com/go-gorm/gorm), aims to be develope
 ## Contents
 
 - [GORM/GEN](#gormgen)
+  - [Multilingual README](#multilingual-readme)
   - [Overview](#overview)
   - [Contents](#contents)
   - [Installation](#installation)
