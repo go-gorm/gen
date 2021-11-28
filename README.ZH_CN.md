@@ -1,4 +1,4 @@
-# GORM/GEN
+# <span id="gormgen">GORM/GEN</span>
 
 [![GoVersion](https://img.shields.io/github/go-mod/go-version/go-gorm/gen)](https://github.com/go-gorm/gen/blob/master/go.mod)
 [![Release](https://img.shields.io/github/v/release/go-gorm/gen)](https://github.com/go-gorm/gen/releases)
@@ -11,114 +11,120 @@
 
 基于 [GORM](https://github.com/go-gorm/gorm), 更安全更友好的ORM工具。
 
-## Overview
+## <span id="multilingual-readme">更多语言版本的 README</span>
 
-- 自动生成CRUD和DIY方法
-- 自动根据表结构生成model
-- 完全兼容GORM
+[English Version](./README.md) | [中文版本](./README.zh-CN.md)
+
+## <span id="overview">概览</span>
+
+- 自动生成 CRUD 和 DIY 方法
+- 自动根据表结构生成 model
+- 完全兼容 GORM
 - 更安全、更友好
 - 多种生成代码模式
 
-## Contents
+## <span id="contents">目录</span>
 
-* [GORM/GEN](#gormgen)
-   * [Overview](#overview)
-   * [Contents](#contents)
-   * [安装](#安装)
-   * [快速开始](#快速开始)
-      * [项目路径](#项目路径)
-   * [API 示例](#api-示例)
-      * [生成](#生成)
-         * [生成Model](#生成model)
-         * [类型映射](#类型映射)
-      * [字段表达式](#字段表达式)
-         * [创建字段](#创建字段)
-      * [CRUD 接口](#crud-接口)
-         * [创建](#创建)
-            * [创建记录](#创建记录)
-            * [选择字段创建](#选择字段创建)
-            * [批量创建](#批量创建)
-         * [查询](#查询)
-            * [单个数据查询](#单个数据查询)
-            * [根据主键查询数据](#根据主键查询数据)
-            * [查询所有数据](#查询所有数据)
-            * [条件](#条件)
-               * [基础查询](#基础查询)
-               * [Not](#not)
-               * [Or](#or)
-               * [Group](#group)
-               * [指定字段查询](#指定字段查询)
-               * [元组查询](#元组查询)
-               * [JSON 查询](#json-查询)
-               * [Order](#order)
-               * [Limit &amp; Offset](#limit--offset)
-               * [Group By &amp; Having](#group-by--having)
-               * [Distinct](#distinct)
-               * [Joins](#joins)
-            * [子查询](#子查询)
-               * [From 子查询](#from-子查询)
-               * [更新子查询](#更新子查询)
-               * [多字段更新子查询](#多字段更新子查询)
-            * [事务](#事务)
-               * [嵌套事务](#嵌套事务)
-               * [手动事务](#手动事务)
-               * [保存点](#保存点)
-            * [Advanced Query](#advanced-query)
-               * [迭代](#迭代)
-               * [批量查询](#批量查询)
-               * [Pluck](#pluck)
-               * [Scopes](#scopes)
-               * [Count](#count)
-               * [FirstOrInit](#firstorinit)
-               * [FirstOrCreate](#firstorcreate)
-         * [关联](#关联)
-            * [Relation](#relation)
-               * [关联已经存在的Model](#关联已经存在的model)
-               * [和数据库表关联](#和数据库表关联)
-               * [关联配置](#关联配置)
-            * [操作](#操作)
-               * [跳过自动创建关联](#跳过自动创建关联)
-               * [查询关联](#查询关联)
-               * [添加关联](#添加关联)
-               * [替换关联](#替换关联)
-               * [删除关联](#删除关联)
-               * [清楚关联](#清楚关联)
-               * [统计关联](#统计关联)
-               * [删除指定关联](#删除指定关联)
-            * [预加载](#预加载)
-               * [Preload](#preload)
-               * [Preload All](#preload-all)
-               * [根据条件预加载](#根据条件预加载)
-               * [嵌套预加载](#嵌套预加载)
-         * [更新](#更新)
-            * [更新单字段](#更新单字段)
-            * [更新多字段](#更新多字段)
-            * [选择更新的字段](#选择更新的字段)
-         * [删除](#删除)
-            * [删除记录](#删除记录)
-            * [根据主键删除](#根据主键删除)
-            * [批量删除](#批量删除)
-            * [软删除](#软删除)
-            * [查询包含软删除的记录](#查询包含软删除的记录)
-            * [永久删除](#永久删除)
-      * [DIY 方法](#diy-方法)
-         * [接口定义](#接口定义)
-            * [语法](#语法)
-               * [占位符](#占位符)
-               * [模板](#模板)
-               * [If clause](#if-clause)
-               * [Where clause](#where-clause)
-               * [Set clause](#set-clause)
-            * [Method interface example](#method-interface-example)
-         * [智能选择字段](#智能选择字段)
-      * [高级教程](#高级教程)
-         * [Hints](#hints)
-   * [命令工具](#命令工具)
-   * [Maintainers](#maintainers)
-   * [Contributing](#contributing)
-   * [License](#license)
+- [GORM/GEN](#gormgen)
+  - [更多语言版本的 README](#multilingual-readme)
+  - [概览](#overview)
+  - [目录](#contents)
+  - [安装](#installation)
+  - [快速开始](#quick-start)
+    - [项目路径](#project-directory)
+  - [API 示例](#api-examples)
+    - [生成](#generate)
+      - [模型生成](#generate-model)
+      - [类型映射](#data-mapping)
+    - [字段表达式](#field-expression)
+      - [创建字段](#create-field)
+    - [CRUD 接口](#crud-api)
+      - [创建](#create)
+        - [创建记录](#create-record)
+        - [选择字段创建](#create-record-with-selected-fields)
+        - [批量创建](#batch-insert)
+      - [查询](#query)
+        - [单条数据](#retrieving-a-single-object)
+        - [根据主键查询数据](#retrieving-objects-with-primary-key)
+        - [查询所有数据](#retrieving-all-objects)
+        - [条件查询](#conditions)
+          - [字符串和基础查询套件](#string-conditions)
+          - [内联条件查询](#inline-condition)
+          - [取反（not）查询](#not-conditions)
+          - [或（or）查询](#or-conditions)
+          - [组合查询](#group-conditions)
+          - [指定字段查询](#selecting-specific-fields)
+          - [元组查询](#tuple-query)
+          - [JSON 查询](#json-query)
+          - [Order 排序](#order)
+          - [分页查询(Limit & Offset)](#limit--offset)
+          - [分组查询（Group By & Having）](#group-by--having)
+          - [去重（Distinct）](#distinct)
+          - [联表查询（Joins）](#joins)
+        - [子查询](#subquery)
+          - [From 子查询](#from-subquery)
+          - [从子查询更新](#update-from-subquery)
+          - [从子查询更新多个字段](#update-multiple-columns-from-subquery)
+        - [事务](#transaction)
+          - [嵌套事务](#nested-transactions)
+          - [手动事务](#transactions-by-manual)
+          - [保存点/回滚](#savepointrollbackto)
+        - [高级查询](#advanced-query)
+          - [迭代](#iteration)
+          - [批量查询](#findinbatches)
+          - [Pluck 方法](#pluck)
+          - [Scopes 查询](#scopes)
+          - [Count 计数](#count)
+          - [首条匹配或指定查询实例初始化条件（FirstOrInit）](#firstorinit)
+          - [首条匹配或指定创建实例初始化条件（FirstOrCreate）](#firstorcreate)
+      - [关联关系（Association）](#association)
+        - [关联](#relation)
+          - [关联已存在的模型](#relate-to-exist-model)
+          - [和数据库表关联](#relate-to-table-in-database)
+          - [关联配置](#relate-config)
+        - [操作](#operation)
+          - [跳过自动创建关联](#skip-auto-createupdate)
+          - [查询关联](#find-associations)
+          - [添加关联](#append-associations)
+          - [替换关联](#replace-associations)
+          - [删除关联](#delete-associations)
+          - [清除关联](#clear-associations)
+          - [统计关联](#count-associations)
+          - [删除指定关联](#delete-with-select)
+        - [预加载](#preloading)
+          - [预加载（Preload）](#preload)
+          - [预加载全部数据（Preload All）](#preload-all)
+          - [根据条件预加载](#preload-with-conditions)
+          - [嵌套预加载](#nested-preloading)
+      - [更新](#update)
+        - [更新单个字段](#update-single-column)
+        - [更新多个字段](#updates-multiple-columns)
+        - [更新指定字段](#update-selected-fields)
+      - [删除](#delete)
+        - [删除记录](#delete-record)
+        - [根据主键删除](#delete-with-primary-key)
+        - [批量删除](#batch-delete)
+        - [软删除](#soft-delete)
+        - [查询包含软删除的记录](#find-soft-deleted-records)
+        - [永久删除](#delete-permanently)
+    - [自定义方法](#diy-method)
+      - [接口定义](#method-interface)
+        - [模板语法](#syntax-of-template)
+          - [占位符](#placeholder)
+          - [模板](#template)
+          - [`If` 子句](#if-clause)
+          - [`Where` 子句](#where-clause)
+          - [`Set` 子句](#set-clause)
+        - [方法接口示例](#method-interface-example)
+      - [智能选择字段](#smart-select-fields)
+    - [高级教程](#advanced-topics)
+      - [查询优化提示（Hints）](#hints)
+  - [二进制命令行工具安装](#binary)
+  - [维护者](#maintainers)
+  - [如何参与贡献](#contributing)
+  - [开源许可协议](#license)
 
-## 安装
+## <span id="installation">安装</span>
 
 安装GEN前，需要安装好GO并配置你的工作环境。
 
@@ -134,7 +140,7 @@ go get -u gorm.io/gen
 import "gorm.io/gen"
 ```
 
-## 快速开始
+## <span id="quick-start">快速开始</span>
 
 **注⚠️**: 这里所有的教程都是在 `WithContext` 模式下写的. 如果你用的是`WithoutContext` 模式,则可以删除所有的 `WithContext(ctx)` ，这样代码看起来会更简洁.
 
@@ -187,7 +193,7 @@ func main() {
 - `gen.WithoutContext` 非 `WithContext` 模式生成
 - `gen.WithDefaultQuery` 生成默认全局查询变量
 
-### 项目路径
+### <span id="project-directory">项目路径</span>
 
 最佳实践项目模板:
 
@@ -214,11 +220,11 @@ demo
 └── main.go
 ```
 
-## API 示例
+## <span id="api-examples">API 示例</span>
 
-### 生成
+### <span id="generate">生成</span>
 
-#### 生成Model
+#### <span id="generate-model">模型生成</span>
 
 ```go
 // generate a model struct map to table `people` in database
@@ -256,7 +262,7 @@ FieldRelate        // specify relationship with other tables
 FieldRelateModel   // specify relationship with exist models
 ```
 
-#### 类型映射
+#### <span id="data-mapping">类型映射</span>
 
 自定义数据库字段类型和go类型的映射关系.
 
@@ -275,9 +281,9 @@ dataMap := map[string]func(detailType string) (dataType string){
 g.WithDataTypeMap(dataMap)
 ```
 
-### 字段表达式
+### <span id="field-expression">字段表达式</span>
 
-#### 创建字段
+#### <span id="create-field">创建字段</span>
 
 实际上你需要手动创建字段，因为都会在生成代码自动创建。
 
@@ -309,7 +315,7 @@ s := field.NewString("user", "address")
 t := field.NewTime("user", "create_time")
 ```
 
-### CRUD 接口
+### <span id="crud-api">CRUD 接口</span>
 
 生成基础model `user` 和 `DB`.
 
@@ -338,9 +344,9 @@ type DB struct {
 }
 ```
 
-#### 创建
+#### <span id="create">创建</span>
 
-##### 创建记录
+##### <span id="create-record">创建记录</span>
 
 ```go
 // u refer to query.user
@@ -352,7 +358,7 @@ err := u.WithContext(ctx).Create(&user) // pass pointer of data to Create
 err // returns error
 ```
 
-##### 选择字段创建
+##### <span id="create-record-with-selected-fields">选择字段创建</span>
 
 自定义哪些字段需要插入。
 
@@ -370,7 +376,7 @@ u.WithContext(ctx).Omit(u.Name, u.Age).Create(&user)
 // INSERT INTO `users` (`Address`, `Birthday`) VALUES ("2021-08-17 20:54:12.000", 18)
 ```
 
-##### 批量创建
+##### <span id="batch-insert">批量创建</span>
 
  `Create` 方法支持批量创建，参数只要是对应model的slice就可以. GORM会通过一条语句高效创建并返回所有的主键赋值给slice的Model.
 
@@ -409,9 +415,9 @@ u.WithContext(ctx).Create(&users)
 // INSERT INTO users xxx (5 batches)
 ```
 
-#### 查询
+#### <span id="query">查询</span>
 
-##### 单个数据查询
+##### <span id="retrieving-a-single-object">单条数据查询</span>
 
 自动生成 `First`, `Take`, `Last` 三个查询单条数据的方法。 执行的sql后面会自动添加 `LIMIT 1` ，如果没有查到数据会返回错误： `ErrRecordNotFound` 。
 
@@ -434,7 +440,7 @@ user, err := u.WithContext(ctx).Last()
 errors.Is(err, gorm.ErrRecordNotFound)
 ```
 
-##### 根据主键查询数据
+##### <span id="retrieving-objects-with-primary-key">根据主键查询数据</span>
 
 ```go
 u := query.Use(db).User
@@ -453,7 +459,7 @@ user, err := u.WithContext(ctx).Where(u.ID.Eq("1b74413f-f3b8-409f-ac47-e8c062e34
 // SELECT * FROM users WHERE id = "1b74413f-f3b8-409f-ac47-e8c062e3472a";
 ```
 
-##### 查询所有数据
+##### <span id="retrieving-all-objects">查询所有数据</span>
 
 ```go
 u := query.Use(db).User
@@ -463,9 +469,9 @@ users, err := u.WithContext(ctx).Find()
 // SELECT * FROM users;
 ```
 
-##### 条件
+##### <span id="conditions">条件查询</span>
 
-###### 基础查询
+###### <span id="string-conditions">字符串和基础查询套件</span>
 
 ```go
 u := query.Use(db).User
@@ -499,7 +505,24 @@ users, err := u.WithContext(ctx).Where(u.Birthday.Between(lastWeek, today)).Find
 // SELECT * FROM users WHERE birthday BETWEEN '2000-01-01 00:00:00' AND '2000-01-08 00:00:00';
 ```
 
-###### Not 
+###### <span id="inline-condition">内联条件查询</span>
+
+```go
+u := query.Use(db).User
+
+// Get by primary key if it were a non-integer type
+user, err := u.WithContext(ctx).Where(u.ID.Eq("string_primary_key")).First()
+// SELECT * FROM users WHERE id = 'string_primary_key';
+
+// Plain SQL
+users, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Find()
+// SELECT * FROM users WHERE name = "modi";
+
+users, err := u.WithContext(ctx).Where(u.Name.Neq("modi"), u.Age.Gt(17)).Find()
+// SELECT * FROM users WHERE name <> "modi" AND age > 17;
+```
+
+###### <span id="not-conditions">取反（not）查询</span>
 
 ```go
 u := query.Use(db).User
@@ -516,7 +539,7 @@ user, err := u.WithContext(ctx).Not(u.ID.In(1,2,3)).First()
 // SELECT * FROM users WHERE id NOT IN (1,2,3) ORDER BY id LIMIT 1;
 ```
 
-###### Or
+###### <span id="or-conditions">或（or）查询</span>
 
 ```go
 u := query.Use(db).User
@@ -525,7 +548,8 @@ users, err := u.WithContext(ctx).Where(u.Role.Eq("admin")).Or(u.Role.Eq("super_a
 // SELECT * FROM users WHERE role = 'admin' OR role = 'super_admin';
 ```
 
-###### Group
+###### <span id="group-conditions">组合查询</span>
+
 组合where或or 构建复杂查询
 
 ```go
@@ -541,7 +565,7 @@ pizzas, err := p.WithContext(ctx).Where(
 // SELECT * FROM `pizzas` WHERE (pizza = "pepperoni" AND (size = "small" OR size = "medium")) OR (pizza = "hawaiian" AND size = "xlarge")
 ```
 
-###### 指定字段查询
+###### <span id="selecting-specific-fields">指定字段查询</span>
 
 通过`Select` 可以选择你要查询的字段，否则就是查询所有字段。
 
@@ -555,7 +579,8 @@ u.WithContext(ctx).Select(u.Age.Avg()).Rows()
 // SELECT Avg(age) FROM users;
 ```
 
-###### 元组查询
+###### <span id="tuple-query">元组查询</span>
+
 例如多字段IN
 
 ```go
@@ -565,7 +590,7 @@ users, err := u.WithContext(ctx).Where(u.Columns(u.ID, u.Name).In(field.Values([
 // SELECT * FROM `users` WHERE (`id`, `name`) IN ((1,'humodi'),(2,'tom'));
 ```
 
-###### JSON 查询
+###### <span id="json-query">JSON 查询</span>
 
 ```go
 u := query.Use(db).User
@@ -574,7 +599,7 @@ users, err := u.WithContext(ctx).Where(gen.Cond(datatypes.JSONQuery("attributes"
 // SELECT * FROM `users` WHERE JSON_EXTRACT(`attributes`,'$.role') IS NOT NULL;
 ```
 
-###### Order
+###### <span id="order">Order 排序</span>
 
 指定查询的排序方式
 
@@ -589,7 +614,7 @@ users, err := u.WithContext(ctx).Order(u.Age.Desc()).Order(u.Name).Find()
 // SELECT * FROM users ORDER BY age DESC, name;
 ```
 
-###### Limit & Offset
+###### <span id="limit--offset">分页查询（Limit & Offset）</span>
 
 分页查询，`Limit`限制最大条数，`Offset`指定数据的其实位置。
 
@@ -614,7 +639,7 @@ users, err := u.WithContext(ctx).Offset(10).Offset(-1).Find()
 // SELECT * FROM users;
 ```
 
-###### Group By & Having
+###### <span id="group-by--having">分组查询（Group By & Having）</span>
 
 ```go
 u := query.Use(db).User
@@ -649,7 +674,7 @@ var results []Result
 o.WithContext(ctx).Select(o.CreateAt.Date().As("date"), o.WithContext(ctx).Amount.Sum().As("total")).Group(o.CreateAt.Date()).Having(u.Amount.Sum().Gt(100)).Scan(&results)
 ```
 
-###### Distinct
+###### <span id="distinct">去重（Distinct）</span>
 
 ```go
 u := query.Use(db).User
@@ -659,7 +684,7 @@ users, err := u.WithContext(ctx).Distinct(u.Name, u.Age).Order(u.Name, u.Age.Des
 
 `Distinct` works with `Pluck` and `Count` too
 
-###### Joins
+###### <span id="joins">联表查询（Joins）</span>
 
 联表查询，`Join`是指`inner join`,还有`LeftJoin`和`RightJoin`
 
@@ -691,7 +716,7 @@ err := u.WithContext(ctx).Select(u.Name, e.Email).LeftJoin(e, e.UserID.EqCol(u.I
 users := u.WithContext(ctx).Join(e, e.UserID.EqCol(u.id), e.Email.Eq("modi@example.org")).Join(c, c.UserID.EqCol(u.ID)).Where(c.Number.Eq("411111111111")).Find()
 ```
 
-##### 子查询
+##### <span id="subquery">子查询</span>
 
 
 ```go
@@ -706,7 +731,7 @@ users, err := u.WithContext(ctx).Select(u.Age.Avg().As("avgage")).Group(u.Name).
 // SELECT AVG(age) as avgage FROM `users` GROUP BY `name` HAVING AVG(age) > (SELECT AVG(age) FROM `users` WHERE name LIKE "name%")
 ```
 
-###### From 子查询
+###### <span id="from-subquery">From 子查询</span>
 
 通过`Table`方法构建出的子查询，可以直接放到From语句中:
 
@@ -724,7 +749,7 @@ db.Table("(?) as u, (?) as p", subQuery1, subQuery2).Find(&User{})
 // SELECT * FROM (SELECT `name` FROM `users`) as u, (SELECT `name` FROM `pets`) as p
 ```
 
-###### 更新子查询
+###### <span id="update-from-subquery">从子查询更新</span>
 
 通过子查询更新表字段
 
@@ -738,7 +763,7 @@ u.WithContext(ctx).Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqCol(u.Com
 u.WithContext(ctx).Where(u.Name.Eq("modi")).Update(u.CompanyName, c.Select(c.Name).Where(c.ID.EqCol(u.CompanyID)))
 ```
 
-###### 多字段更新子查询
+###### <span id="update-multiple-columns-from-subquery">从子查询更新多个字段</span>
 
 针对mysql提供同时更新多个字段的子查询:
 
@@ -763,7 +788,7 @@ UpdateSimple(
 // WHERE `u`.`company_id` = `c`.`id`
 ```
 
-##### 事务
+##### <span id="transaction">事务</span>
 
 多个操作需要在一个事务中完成的情况.
 
@@ -781,7 +806,7 @@ q.Transaction(func(tx *query.Query) error {
 })
 ```
 
-###### 嵌套事务
+###### <span id="nested-transactions">嵌套事务</span>
 
 GEN 支持嵌套事务，在一个大事务中嵌套子事务。
 
@@ -807,7 +832,7 @@ q.Transaction(func(tx *query.Query) error {
 // Commit user1, user3
 ```
 
-###### 手动事务
+###### <span id="transactions-by-manual">手动事务</span>
 
 ```go
 q := query.Use(db)
@@ -848,7 +873,7 @@ func doSomething(ctx context.Context, users ...*model.User) (err error) {
 }
 ```
 
-###### 保存点
+###### <span id="savepointrollbackto">保存点/回滚</span>
 
 `SavePoint`, `RollbackTo` 可以保存或者回滚事务点:
 
@@ -865,9 +890,9 @@ tx.RollbackTo("sp1") // Rollback user2
 tx.Commit() // Commit user1
 ```
 
-##### Advanced Query
+##### <span id="advanced-query">高级查询</span>
 
-###### 迭代
+###### <span id="iteration">迭代</span>
 
 GEN支持通过Row迭代取值
 
@@ -886,7 +911,7 @@ for rows.Next() {
 }
 ```
 
-###### 批量查询
+###### <span id="findinbatches">批量查询</span>
 
 
 ```go
@@ -910,7 +935,7 @@ err := u.WithContext(ctx).Where(u.ID.Gt(9)).FindInBatches(&results, 100, func(tx
 })
 ```
 
-###### Pluck
+###### <span id="pluck">Pluck 方法</span>
 
 从数据库中查询单个列并扫描成一个切片或者基础类型
 
@@ -932,7 +957,7 @@ db.WithContext(ctx).Select(u.Name, u.Age).Scan(&users)
 users, err := db.Select(u.Name, u.Age).Find()
 ```
 
-###### Scopes
+###### <span id="scopes">Scopes 查询</span>
 
 可以声明一些常用的或者公用的条件方法，然后通过`Scopes` 查询
 
@@ -967,7 +992,7 @@ orders, err := o.WithContext(ctx).Scopes(AmountGreaterThan1000, OrderStatus([]st
 // Find all paid, shipped orders that amount greater than 1000
 ```
 
-###### Count
+###### <span id="count">Count 计数</span>
 
 
 ```go
@@ -984,7 +1009,7 @@ u.WithContext(ctx).Distinct(u.Name).Count()
 // SELECT COUNT(DISTINCT(`name`)) FROM `users`
 ```
 
-###### FirstOrInit
+###### <span id="firstorinit">首条匹配或指定查询实例初始化条件（FirstOrInit）</span>
 
 获取匹配的第一条数据或用给定条件初始化一个实例
 
@@ -1034,7 +1059,7 @@ user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Assign(u.Age.Value(20))
 // user -> User{ID: 111, Name: "modi", Age: 20}
 ```
 
-###### FirstOrCreate
+###### <span id="firstorcreate">首条匹配或指定创建实例初始化条件（FirstOrCreate）</span>
 
 获取第一条匹配的记录或在给定条件下创建一条新记录
 
@@ -1086,11 +1111,11 @@ user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Assign(u.Age.Value(20))
 // user -> User{ID: 111, Name: "modi", Age: 20}
 ```
 
-#### 关联
+#### <span id="association">关联关系（Association）</span>
 
 GEN将像GORM一样自动保存关联（(BelongsTo/HasOne/HasMany/Many2Many) 。
 
-##### Relation
+##### <span id="relation">关联</span>
 
 There are 4 kind of relationship.
 
@@ -1103,7 +1128,7 @@ const (
 )
 ```
 
-###### 关联已经存在的Model
+###### <span id="relate-to-exist-model">关联已存在的模型</span>
 
 ```go
 package model
@@ -1140,7 +1165,7 @@ type creditCard struct{
 }
 ```
 
-###### 和数据库表关联
+###### <span id="relate-to-table-in-database">和数据库表关联</span>
 
 必须使用 `gen.FieldRelate`声明
 
@@ -1192,7 +1217,7 @@ customer := g.GenerateModel("customers", gen.FieldRelateModel(field.HasMany, "Cr
 g.ApplyBasic(custormer)
 ```
 
-###### 关联配置
+###### <span id="relate-config">关联配置</span>
 
 ```go
 type RelateConfig struct {
@@ -1208,9 +1233,9 @@ type RelateConfig struct {
 }
 ```
 
-##### 操作
+##### <span id="operation">操作</span>
 
-###### 跳过自动创建关联
+###### <span id="skip-auto-createupdate">跳过自动创建关联</span>
 
 ```go
 user := model.User{
@@ -1244,7 +1269,7 @@ u.WithContext(ctx).Omit(field.AssociationFields).Create(&user)
 
 Method `Field` will join a serious field name with ''.", for example: `u.BillingAddress.Field("Address1", "Street")` equals to `BillingAddress.Address1.Street`
 
-###### 查询关联
+###### <span id="find-associations">查询关联</span>
 
 ```go
 u := query.Use(db).User
@@ -1261,7 +1286,7 @@ u := q.User
 languages, err = u.Languages.Where(q.Language.Name.In([]string{"ZH","EN"})).Model(&user).Find()
 ```
 
-###### 添加关联
+###### <span id="append-associations">添加关联</span>
 
 
 ```go
@@ -1274,13 +1299,13 @@ u.Languages.Model(&user).Append(&Language{Name: "DE"})
 u.CreditCards.Model(&user).Append(&CreditCard{Number: "411111111111"})
 ```
 
-###### 替换关联
+###### <span id="replace-associations">替换关联</span>
 
 ```go
 u.Languages.Model(&user).Replace(&languageZH, &languageEN)
 ```
 
-###### 删除关联
+###### <span id="delete-associations">删除关联</span>
 
 删除存在的关联，不会删除数据
 
@@ -1292,21 +1317,21 @@ u.Languages.Model(&user).Delete(&languageZH, &languageEN)
 u.Languages.Model(&user).Delete([]*Language{&languageZH, &languageEN}...)
 ```
 
-###### 清楚关联
+###### <span id="clear-associations">清除关联</span>
 
-清楚所有的关联，不会删除数据
+清除所有的关联，不会删除数据
 
 ```go
 u.Languages.Model(&user).Clear()
 ```
 
-###### 统计关联
+###### <span id="count-associations">统计关联</span>
 
 ```go
 u.Languages.Model(&user).Count()
 ```
 
-###### 删除指定关联
+###### <span id="delete-with-select">删除指定关联</span>
 
 删除制定条件数据并删除关联数据:
 
@@ -1323,9 +1348,9 @@ db.Select(u.Orders.Field(), u.CreditCards.Field()).Delete(&user)
 db.Select(field.AssociationsFields).Delete(&user)
 ```
 
-##### 预加载
+##### <span id="preloading">预加载</span>
 
-###### Preload
+###### <span id="preload">预加载（Preload）</span>
 
 GEN 支持通过 `Preload`加载关联数据:
 
@@ -1358,7 +1383,7 @@ users, err := u.WithContext(ctx).Preload(u.Orders).Preload(u.Profile).Preload(u.
 // SELECT * FROM roles WHERE id IN (4,5,6); // belongs to
 ```
 
-###### Preload All
+###### <span id="preload-all">预加载全部数据（Preload All）</span>
 
 `clause.Associations` 通过`Preload` 预加载所有的关联数据:
 
@@ -1381,7 +1406,7 @@ users, err := u.WithContext(ctx).Preload(field.Associations).Find()
 users, err := u.WithContext(ctx).Preload(u.Orders.OrderItems.Product).Find()
 ```
 
-###### 根据条件预加载
+###### <span id="nested-preloading">根据条件预加载</span>
 
 ```go
 q := query.Use(db)
@@ -1410,7 +1435,7 @@ users, err := u.WithContext(ctx).Preload(u.Orders.Clauses(hints.UseIndex("idx_or
 // SELECT * FROM orders WHERE user_id IN (1,2) USE INDEX (`idx_order_id`);
 ```
 
-###### 嵌套预加载
+###### <span id="nested-preloading">嵌套预加载</span>
 
 
 ```go
@@ -1421,9 +1446,9 @@ db.Preload(u.Orders.OrderItems.Product).Preload(u.CreditCard).Find(&users)
 db.Preload(u.Orders.On(o.State.Eq("paid"))).Preload(u.Orders.OrderItems).Find(&users)
 ```
 
-#### 更新
+#### <span id="update">更新</span>
 
-##### 更新单字段
+##### <span id="update-single-column">更新单个字段</span>
 
 `Update`方法更新单个字段。需要注意的是必须指定更新条件否则会报错`ErrMissingWhereClause`:
 
@@ -1444,7 +1469,7 @@ u.WithContext(ctx).Where(u.Activate.Is(true)).UpdateSimple(u.Age.Zero())
 // UPDATE users SET age=0, updated_at='2013-11-17 21:34:10' WHERE active=true;
 ```
 
-##### 更新多字段
+##### <span id="updates-multiple-columns">更新多个字段</span>
 
 `Updates` 支持 `struct` 和 `map[string]interface{}`类型，更新多个字段，但是会忽略其中的零值属性
 
@@ -1469,7 +1494,7 @@ u.WithContext(ctx).Where(u.Activate.Is(true)).UpdateSimple(u.Age.Value(17), u.Nu
 
 > **NOTE** When update with struct, GEN will only update non-zero fields, you might want to use `map` to update attributes or use `Select` to specify fields to update
 
-##### 选择更新的字段
+##### <span id="update-selected-fields">更新指定字段</span>
 
 通过 `Select`, `Omit`选择需要更新的字段或者需要忽略更新的字段
 
@@ -1490,9 +1515,9 @@ result.RowsAffected // affect rows number
 err                 // error
 ```
 
-#### 删除
+#### <span id="delete">删除</span>
 
-##### 删除记录
+##### <span id="delete-record">删除记录</span>
 
 ```go
 e := query.Use(db).Email
@@ -1511,7 +1536,7 @@ result.RowsAffected // affect rows number
 err                 // error
 ```
 
-##### 根据主键删除
+##### <span id="delete-with-primary-key">根据主键删除</span>
 
 
 ```go
@@ -1519,7 +1544,7 @@ u.WithContext(ctx).Where(u.ID.In(1,2,3)).Delete()
 // DELETE FROM users WHERE id IN (1,2,3);
 ```
 
-##### 批量删除
+##### <span id="batch-delete">批量删除</span>
 
 没有指定主键会删除松油匹配的数据
 
@@ -1530,7 +1555,7 @@ e.WithContext(ctx).Where(e.Name.Like("%modi%")).Delete()
 // DELETE from emails where email LIKE "%modi%";
 ```
 
-##### 软删除
+##### <span id="soft-delete">软删除</span>
 
 如果你的model中有`gorm.DeletedAt` 字段，则会自动执行软删除。也就是不会删除数据，只是把该字段的指设置为当前时间。
 
@@ -1554,7 +1579,7 @@ type User struct {
 }
 ```
 
-##### 查询包含软删除的记录
+##### <span id="find-soft-deleted-records">查询包含软删除的记录</span>
 
 可以通过 `Unscoped`实现
 
@@ -1563,7 +1588,7 @@ users, err := db.WithContext(ctx).Unscoped().Where(u.Age.Eq(20)).Find()
 // SELECT * FROM users WHERE age = 20;
 ```
 
-##### 永久删除
+##### <span id="delete-permanently">永久删除</span>
 
 通过 `Unscoped`可以直接删除数据，而不是标记删除
 
@@ -1572,9 +1597,9 @@ o.WithContext(ctx).Unscoped().Where(o.ID.Eq(10)).Delete()
 // DELETE FROM orders WHERE id=10;
 ```
 
-### DIY 方法
+### <span id="diy-method">自定义方法</span>
 
-#### 接口定义
+#### <span id="method-interface">接口定义</span>
 
 自定义方法，需要通过接口定义。在方上通过注释的方式描述具体的查询逻辑，复杂的可以直接用`sql()`，简单的直接用`where()`。
 如果想要写一些原始注释，可以先写注释然后换行，在写`sql`或者`where`。
@@ -1596,9 +1621,9 @@ type Method interface {
 
 返回值可以是 `gen.T`/`gen.M`/`gen.RowsAffected`。 `gen.T` 表示单个model, `[]gen.T`表示的是slice model，`gen.M`表示的是`map[string]interface{}`,当然也可以是其他类型Gen不会转换。除了返回一个值外，还可以返回一个err。
 
-##### 语法
+##### <span id="syntax-of-template">模板</span>
 
-###### 占位符
+###### <span id="placeholder">占位符</span>
 
 - `gen.T` represents specified `struct` or `table`
 - `gen.M` represents `map[string]interface`
@@ -1607,7 +1632,7 @@ type Method interface {
 - `@@<columnName>` represents column's name or table's name
 - `@<name>` represents normal query variable
 
-###### 模板
+###### <span id="template">模板</span>
 
 逻辑操作必须包裹在`{{}}`中，如`{{if}}`,结束语句必须是 `{{end}}`, 所有的语句都可以嵌套。
 
@@ -1616,7 +1641,7 @@ type Method interface {
 - `Set` The  `set` clause will be inserted only if the child elements return something. The `,` in front of columns array will be removed.And `,` will be added automatically when there is no junction keyword between query coulmns.
 - `...` Coming soon
 
-###### `If` clause
+###### <span id="if-clause">`If` 子句</span>
 
 ```sql
 {{if cond1}}
@@ -1654,7 +1679,7 @@ select * from @@table where
 {{end}}
 ```
 
-###### `Where` clause
+###### <span id="where-clause">`Where` 子句</span>
 
 ```sql
 {{where}}
@@ -1679,7 +1704,7 @@ select * from @@table
 {{end}}
 ```
 
-###### `Set` clause
+###### <span id="set-clause">`Set` 子句</span>
 
 ```sql
 {{set}}
@@ -1705,7 +1730,7 @@ update @@table
 where id=@id
 ```
 
-##### Method interface example
+##### <span id="method-interface-example">方法接口示例</span>
 
 ```go
 type Method interface {
@@ -1743,7 +1768,7 @@ type Method interface {
 }
 ```
 
-#### 智能选择字段
+#### <span id="smart-select-fields">智能选择字段</span>
 
 GEN 查询的时候会自动选择你的model定义的字段
 
@@ -1770,9 +1795,9 @@ apiusers, err := u.WithContext(ctx).Limit(10).FindSome()
 // SELECT `id`, `name` FROM `users` LIMIT 10
 ```
 
-### 高级教程
+### <span id="advanced-topics">高级教程</span>
 
-#### Hints
+#### <span id="hints">查询优化提示（Hints）</span>
 
 Hints可以用来优化查询计划，比如指定索引后者强制索引等。
 
@@ -1798,7 +1823,7 @@ users, err := u.WithContext(ctx).Clauses(hints.ForceIndex("idx_user_name", "idx_
 // SELECT * FROM `users` FORCE INDEX FOR JOIN (`idx_user_name`,`idx_user_id`)"
 ```
 
-## 命令工具
+## <span id="binary">二进制命令行工具安装</span>
 
 安装gen命令行工具:
 
@@ -1839,16 +1864,16 @@ Usage of gentool:
 gentool -dsn "user:pwd@tcp(127.0.0.1:3306)/database?charset=utf8mb4&parseTime=True&loc=Local" -tables "orders,doctor"
 ```
 
-## Maintainers
+## <span id="maintainers">维护者</span>
 
 [@riverchu](https://github.com/riverchu) [@idersec](https://github.com/idersec) [@qqxhb](https://github.com/qqxhb) [@dino-ma](https://github.com/dino-ma)
 
 [@jinzhu](https://github.com/jinzhu)
 
-## Contributing
+## <span id="contributing">如何参与贡献</span>
 
 You can help to deliver a better GORM/GEN
 
-## License
+## <span id="license">开源许可协议</span>
 
 Released under the [MIT License](https://github.com/go-gorm/gen/blob/master/License)
