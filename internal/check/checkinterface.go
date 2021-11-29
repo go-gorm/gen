@@ -283,6 +283,17 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 					break
 				}
 			}
+		case '\'':
+			_ = buf.WriteByte(sqlString[i])
+			for i++; ; i++ {
+				if strOutRange(i, sqlString) {
+					return fmt.Errorf("incomplete SQL:%s", sqlString)
+				}
+				_ = buf.WriteByte(sqlString[i])
+				if sqlString[i] == '\'' && sqlString[i-1] != '\\' {
+					break
+				}
+			}
 		case '{', '@':
 			if sqlClause := buf.Dump(); strings.TrimSpace(sqlClause) != "" {
 				m.Sections.members = append(m.Sections.members, section{
