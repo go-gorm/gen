@@ -13,7 +13,7 @@ A safer orm base on [GORM](https://github.com/go-gorm/gorm), aims to be develope
 
 ## Multilingual README
 
-[English Version](./README.md) | [中文版本](./README.zh-CN.md)
+[English Version](./README.md) | [中文版本](./README.ZH_CN.md)
 
 ## Overview
 
