@@ -33,3 +33,5 @@ _testmain.go
 /.vscode
 __debug_bin
 /test/
+
+*.db
