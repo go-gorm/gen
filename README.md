@@ -1665,6 +1665,7 @@ Logical operations must be wrapped in `{{}}`,and end must used `{{end}}`, All te
 - `if`/`else if`/`else` the condition accept a bool parameter or operation expression which conforms to Golang syntax.
 - `where` The `where` clause will be inserted only if the child elements return something. The key word  `and` or `or`  in front of clause will be removed. And `and` will be added automatically when there is no junction keyword between query condition clause.
 - `Set` The  `set` clause will be inserted only if the child elements return something. The `,` in front of columns array will be removed.And `,` will be added automatically when there is no junction keyword between query coulmns.
+- `for` The  `for` clause traverses an array according to golang syntax and inserts its contents into SQL,supports array of struct.
 - `...` Coming soon
 
 ###### `If` clause
@@ -1755,6 +1756,58 @@ update @@table
 {{end}}
 where id=@id
 ```
+###### `For` clause
+
+```sql
+{{for _,name:=range names}}
+    // do something here
+{{end}}
+```
+
+Use case in raw SQL:
+
+```go
+// select * from users where id>0 {{for _,name:=range names}} and name=@name{{end}}
+methond(names []string) (gen.T,error) 
+```
+
+Use case in raw SQL template:
+
+```sql
+select * from @@table 
+{{where}}
+  {{for _,user:=range users}}
+     OR name=@user.Name 
+  {{end}}
+{{end}}
+```
+
+###### `For` clause
+
+```sql
+{{for _,name:=range names}}
+    // do something here
+{{end}}
+```
+
+Use case in raw SQL:
+
+```go
+// select * from users where id>0 {{for _,name:=range names}} and name=@name{{end}}
+methond(names []string) (gen.T,error) 
+```
+
+Use case in raw SQL template:
+
+```sql
+select * from @@table where
+  {{for index,name:=range names}}
+     {{if index >0}} 
+        OR
+     {{end}}
+     name=@name
+  {{end}}
+```
 
 ##### Method interface example
 
@@ -1791,7 +1844,17 @@ type Method interface {
     //      id=@id
     //  {{end}}
     UpdateName(name string, id int) (gen.RowsAffected,error)
-}
+
+    // select * from @@table
+    //  {{where}}
+    //      {{for _,user:=range users}}
+    //          {{if user.Age >18}
+    //              OR name=@user.Name 
+    //         {{end}}
+    //      {{end}}
+    //  {{end}}
+    FindByOrList(cond bool, id int, key, value string) ([]gen.T, error)
+  }
 ```
 
 #### Unit Test
@@ -1945,7 +2008,7 @@ gentool -dsn "user:pwd@tcp(127.0.0.1:3306)/database?charset=utf8mb4&parseTime=Tr
 
 ## Maintainers
 
-[@riverchu](https://github.com/riverchu) [@idersec](https://github.com/idersec) [@qqxhb](https://github.com/qqxhb) [@dino-ma](https://github.com/dino-ma)
+[@riverchu](https://github.com/riverchu) [@iDer](https://github.com/idersec) [@qqxhb](https://github.com/qqxhb) [@dino-ma](https://github.com/dino-ma)
 
 [@jinzhu](https://github.com/jinzhu)
 

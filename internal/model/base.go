@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"gorm.io/gen/field"
-	"gorm.io/gen/internal/utils"
 )
 
 type Status int
@@ -15,20 +14,12 @@ const (
 	SQL
 	DATA
 	VARIABLE
-	WHERE
 	IF
-	SET
 	ELSE
-	ELSEIF
+	WHERE
+	SET
+	FOR
 	END
-	BOOL
-	DIGIT
-	STRING
-	TIME
-	OTHER
-	EXPRESSION
-	LOGICAL
-	NIL
 )
 
 type SourceCode int
@@ -38,18 +29,48 @@ const (
 	TableName
 )
 
-var keywords = []string{
-	"UnderlyingDB", "UseDB", "UseModel", "UseTable", "Quote", "Debug", "TableName", "WithContext",
-	"As", "Not", "Or", "Build", "Columns", "Hints",
-	"Distinct", "Omit",
-	"Select", "Where", "Order", "Group", "Having", "Limit", "Offset",
-	"Join", "LeftJoin", "RightJoin",
-	"Save", "Create", "CreateInBatches",
-	"Update", "Updates", "UpdateColumn", "UpdateColumns",
-	"Find", "FindInBatches", "First", "Take", "Last", "Pluck", "Count",
-	"Scan", "ScanRows", "Row", "Rows",
-	"Delete", "Unscoped",
-	"Scopes",
+type KeyWords struct {
+	words []string
+}
+
+var GormKeywords = KeyWords{
+	words: []string{
+		"UnderlyingDB", "UseDB", "UseModel", "UseTable", "Quote", "Debug", "TableName", "WithContext",
+		"As", "Not", "Or", "Build", "Columns", "Hints",
+		"Distinct", "Omit",
+		"Select", "Where", "Order", "Group", "Having", "Limit", "Offset",
+		"Join", "LeftJoin", "RightJoin",
+		"Save", "Create", "CreateInBatches",
+		"Update", "Updates", "UpdateColumn", "UpdateColumns",
+		"Find", "FindInBatches", "First", "Take", "Last", "Pluck", "Count",
+		"Scan", "ScanRows", "Row", "Rows",
+		"Delete", "Unscoped",
+		"Scopes",
+	},
+}
+
+var GenKeywords = KeyWords{
+	words: []string{
+		"generateSQL", "whereClause", "setClause",
+	},
+}
+
+func (g *KeyWords) FullMatch(word string) bool {
+	for _, item := range g.words {
+		if word == item {
+			return true
+		}
+	}
+	return false
+}
+
+func (g *KeyWords) Contain(text string) bool {
+	for _, item := range g.words {
+		if strings.Contains(text, item) {
+			return true
+		}
+	}
+	return false
 }
 
 var (
@@ -146,7 +167,7 @@ func (m *Member) GenType() string {
 }
 
 func (m *Member) EscapeKeyword() *Member {
-	if utils.ListContain(m.Name, keywords) {
+	if GormKeywords.FullMatch(m.Name) {
 		m.Name += "_"
 	}
 	return m

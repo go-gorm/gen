@@ -37,11 +37,11 @@ func (b *BaseStruct) parseStruct(st interface{}) error {
 	b.TableName = stmt.Table
 
 	for _, f := range stmt.Schema.Fields {
-		b.appendOrUpdateMember((&model.Member{
+		b.appendOrUpdateMember(&model.Member{
 			Name:       f.Name,
 			Type:       b.getMemberRealType(f.FieldType),
 			ColumnName: f.DBName,
-		}))
+		})
 	}
 	for _, r := range ParseStructRelationShip(&stmt.Schema.Relationships) {
 		r := r
