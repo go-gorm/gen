@@ -1625,10 +1625,7 @@ o.WithContext(ctx).Unscoped().Where(o.ID.Eq(10)).Delete()
 
 #### Method interface
 
-Method interface is an abstraction of query methods, all functions it contains are query methods and above comments describe the specific query conditions or logic.
-SQL supports simple `where` query or execute raw SQL. Simple query conditions wrapped by `where()`, and raw SQL wrapped by `sql()`（not required）
-
-Method interface supports descriptive comment that describes how the method works.It starts with method name and followed descriptive message (not required). It is distinguished from query comment by blank line (with descriptive message) or space (without descriptive message).
+The DIY method needs to be defined through the interface. In the method, the specific SQL query logic is described in the way of comments. Simple WHERE queries can be wrapped in `where()`. When using complex queries, you need to write complete SQL. You can directly wrap them in `sql()` or write SQL directly. If there are some comments on the method, just add a blank line comment in the middle.
 
 ```go
 type Method interface {
@@ -1644,8 +1641,7 @@ type Method interface {
     InsertValue(age int, name string) error
 }
 ```
-
-Return values must contains less than 1 `gen.T`/`gen.M`/`gen.RowsAffected` and less than 1 error. You can also use bulitin type (like `string`/ `int`) as the return parameter，`gen.T` represents return a single result struct's pointer, `[]gen.T` represents return an array of result structs' pointer，
+Method input parameters and return values support basic types (`int`, `string`, `bool`...), struct and placeholders (`gen.T`/`gen.M`/`gen.RowsAffected`), and types support pointers and arrays. The return value is at most a value and an error.
 
 ##### Syntax of template
 
@@ -1670,7 +1666,7 @@ Logical operations must be wrapped in `{{}}`,and end must used `{{end}}`, All te
 
 ###### `If` clause
 
-```sql
+```
 {{if cond1}}
     // do something here
 {{else if cond2}}
@@ -1689,7 +1685,7 @@ methond(name string) (gen.T,error)
 
 Use case in raw SQL template:
 
-```sql
+```
 select * from @@table where
 {{if age>60}}
     status="older"
@@ -1708,7 +1704,7 @@ select * from @@table where
 
 ###### `Where` clause
 
-```sql
+```
 {{where}}
     // do something here
 {{end}}
@@ -1723,17 +1719,17 @@ methond(id int) error
 
 Use case in raw SQL template
 
-```sql
+```
 select * from @@table 
 {{where}}
-    {{if cond}}id=@id {{end}}
-    {{if name != ""}}@@key=@value{{end}}
+    {{if cond}} id=@id, {{end}}
+    {{if name != ""}} @@key=@value, {{end}}
 {{end}}
 ```
 
 ###### `Set` clause
 
-```sql
+```
 {{set}}
     // sepecify update expression here
 {{end}}
@@ -1748,7 +1744,7 @@ methond() error
 
 Use case in raw SQL template
 
-```sql
+```
 update @@table 
 {{set}}
     {{if name!=""}} name=@name {{end}}
@@ -1758,7 +1754,7 @@ where id=@id
 ```
 ###### `For` clause
 
-```sql
+```
 {{for _,name:=range names}}
     // do something here
 {{end}}
@@ -1767,39 +1763,16 @@ where id=@id
 Use case in raw SQL:
 
 ```go
-// select * from users where id>0 {{for _,name:=range names}} and name=@name{{end}}
+// select * from users where id>0 
+//  {{for _,name:=range names}} 
+//      and name=@name
+//  {{end}}
 methond(names []string) (gen.T,error) 
 ```
 
 Use case in raw SQL template:
 
-```sql
-select * from @@table 
-{{where}}
-  {{for _,user:=range users}}
-     OR name=@user.Name 
-  {{end}}
-{{end}}
 ```
-
-###### `For` clause
-
-```sql
-{{for _,name:=range names}}
-    // do something here
-{{end}}
-```
-
-Use case in raw SQL:
-
-```go
-// select * from users where id>0 {{for _,name:=range names}} and name=@name{{end}}
-methond(names []string) (gen.T,error) 
-```
-
-Use case in raw SQL template:
-
-```sql
 select * from @@table where
   {{for index,name:=range names}}
      {{if index >0}} 
