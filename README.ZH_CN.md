@@ -1601,8 +1601,7 @@ o.WithContext(ctx).Unscoped().Where(o.ID.Eq(10)).Delete()
 
 #### <span id="method-interface">接口定义</span>
 
-自定义方法，需要通过接口定义。在方上通过注释的方式描述具体的查询逻辑，复杂的可以直接用`sql()`，简单的直接用`where()`。
-如果想要写一些原始注释，可以先写注释然后换行，在写`sql`或者`where`。
+自定义方法，需要通过interface定义。在方法上通过注释的方式描述具体的SQL查询逻辑，简单的WHERE查询可以用`where()`包住，复杂的查询需要写完整SQL可以直接用`sql()`包住或者忽略直接写SQL，太长的SQL支持换行，如果有对方法的注释，只需要在前面加一个空行。
 
 ```go
 type Method interface {
@@ -1618,33 +1617,32 @@ type Method interface {
     InsertValue(age int, name string) error
 }
 ```
-
-返回值可以是 `gen.T`/`gen.M`/`gen.RowsAffected`。 `gen.T` 表示单个model, `[]gen.T`表示的是slice model，`gen.M`表示的是`map[string]interface{}`,当然也可以是其他类型Gen不会转换。除了返回一个值外，还可以返回一个err。
+方法输入参数和返回值支持基础类型（int、string、bool等）、结构体和占位符（`gen.T`/`gen.M`/`gen.RowsAffected`）,类型支持指针和数组，返回值最多返回一个值和一个error。
 
 ##### <span id="syntax-of-template">模板</span>
 
 ###### <span id="placeholder">占位符</span>
 
-- `gen.T` represents specified `struct` or `table`
-- `gen.M` represents `map[string]interface`
-- `gen.RowsAffected` represents SQL executed `rowsAffected` (type:int64)
-- `@@table`  represents table's name (if method's parameter doesn't contains variable `table`, GEN will generate `table` from model struct)
-- `@@<columnName>` represents column's name or table's name
-- `@<name>` represents normal query variable
+- `gen.T` 用于返回数据的结构体，会根据生成结构体或者数据库表结构自动生成
+- `gen.M` 表示map[string]interface{},用于返回数据
+- `gen.RowsAffected` 用于执行SQL进行更新或删除时候,用于返回影响行数(类型为：int64)。
+- `@@table` 仅用于SQL语句中，查询的表名，如果没有传参，会根据结构体或者表名自动生成
+- `@@<columnName>` 仅用于SQL语句中，当表名或者字段名可控时候，用@@占位，name为可变参数名，需要函数传入。
+- `@<name>` 仅用于SQL语句中，当数据可控时候，用@占位，name为可变参数名，需要函数传入
 
 ###### <span id="template">模板</span>
 
-逻辑操作必须包裹在`{{}}`中，如`{{if}}`,结束语句必须是 `{{end}}`, 所有的语句都可以嵌套。
+逻辑操作必须包裹在`{{}}`中，如`{{if}}`,结束语句必须是 `{{end}}`, 所有的语句都可以嵌套。`{{}}`中的语法除了`{{end}}`其它的都是Golang语法。
 
-- `if`/`else if`/`else` the condition accept a bool parameter or operation expression which conforms to Golang syntax.
-- `where` The `where` clause will be inserted only if the child elements return something. The key word  `and` or `or`  in front of clause will be removed. And `and` will be added automatically when there is no junction keyword between query condition clause.
-- `Set` The  `set` clause will be inserted only if the child elements return something. The `,` in front of columns array will be removed.And `,` will be added automatically when there is no junction keyword between query coulmns.
-- `for` The  `for` clause traverses an array according to golang syntax and inserts its contents into SQL,supports array of struct.
-- `...` Coming soon
+- `if`/`else if`/`else`  if子句通过判断满足条件拼接字符串到SQL。
+- `where` where子句只有在内容不为空时候插入where，若子句的开头和结尾为where语句连接关键字`AND`或 `OR`，会将它们去除。
+- `Set` set子句只有在内容不为空时候插入，若子句的开头和结尾为set连接关键字`,`会将它们去除。
+- `for` for子句会遍历数组并将其内容插入到SQL中,需要注意之前的连接词。
+- `...` 未完待续
 
 ###### <span id="if-clause">`If` 子句</span>
 
-```sql
+```
 {{if cond1}}
     // do something here
 {{else if cond2}}
@@ -1654,16 +1652,19 @@ type Method interface {
 {{end}}
 ```
 
-Use case in raw SQL:
+方法使用案例:
 
 ```go
-// select * from users where {{if name !=""}} name=@name{{end}}
+// select * from users where 
+//  {{if name !=""}} 
+//      name=@name
+//  {{end}}
 methond(name string) (gen.T,error) 
 ```
 
-Use case in raw SQL template:
+SQL模板使用案例:
 
-```sql
+```
 select * from @@table where
 {{if age>60}}
     status="older"
@@ -1682,22 +1683,25 @@ select * from @@table where
 
 ###### <span id="where-clause">`Where` 子句</span>
 
-```sql
+```
 {{where}}
     // do something here
 {{end}}
 ```
 
-Use case in raw SQL
+方法使用案例:
 
 ```go
-// select * from {{where}}id=@id{{end}}
+// select * from 
+//  {{where}}
+//      id=@id
+//  {{end}}
 methond(id int) error
 ```
 
-Use case in raw SQL template
+SQL模板使用案例:
 
-```sql
+```
 select * from @@table 
 {{where}}
     {{if cond}}id=@id {{end}}
@@ -1707,22 +1711,26 @@ select * from @@table
 
 ###### <span id="set-clause">`Set` 子句</span>
 
-```sql
+```
 {{set}}
     // sepecify update expression here
 {{end}}
 ```
 
-Use case in raw SQL
+方法使用案例:
 
 ```go
-// update users {{set}}name=@name{{end}}
-methond() error
+// update users 
+//  {{set}}
+//      name=@name
+//  {{end}}
+// where id=@id
+methond(name string,id int) error
 ```
 
-Use case in raw SQL template
+SQL模板使用案例:
 
-```sql
+```
 update @@table 
 {{set}}
     {{if name!=""}} name=@name {{end}}
@@ -1731,24 +1739,27 @@ update @@table
 where id=@id
 ```
 
-###### `For` clause
+###### `For` 子句
 
-```sql
+```
 {{for _,name:=range names}}
     // do something here
 {{end}}
 ```
 
-Use case in raw SQL:
+方法使用案例:
 
 ```go
-// select * from users where id>0 {{for _,name:=range names}} and name=@name{{end}}
+// select * from users where id>0 
+//  {{for _,name:=range names}} 
+//      and name=@name
+//  {{end}}
 methond(names []string) (gen.T,error) 
 ```
 
-Use case in raw SQL template:
+SQL模板使用案例:
 
-```sql
+```
 select * from @@table where
   {{for index,name:=range names}}
      {{if index >0}} 
