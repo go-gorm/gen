@@ -208,6 +208,7 @@ func (p *Param) astGetParamType(param *ast.Field) {
 	case *ast.InterfaceType:
 		p.Type = "interface{}"
 	case *ast.StarExpr:
+		p.IsPointer = true
 		p.astGetEltType(v.X)
 	default:
 		log.Fatalf("unknow param type: %+v", v)
@@ -222,13 +223,24 @@ func (p *Param) astGetEltType(expr ast.Expr) string {
 			p.Package = "UNDEFINED"
 		}
 	case *ast.SelectorExpr:
-		temp := new(Param)
 		p.Type = v.Sel.Name
-		p.Package = temp.astGetEltType(v.X)
+		p.astGetPackageName(v.X)
 	case *ast.MapType:
 		p.astGetMapType(v)
+	case *ast.StarExpr:
+		p.IsPointer = true
+		p.astGetEltType(v.X)
+	default:
+		log.Fatalf("unknow param type: %+v", v)
 	}
 	return p.Type
+}
+func (p *Param) astGetPackageName(expr ast.Expr) {
+	switch v := expr.(type) {
+	case *ast.Ident:
+		p.Package = v.Name
+	}
+
 }
 
 func (p *Param) astGetMapType(expr *ast.MapType) string {

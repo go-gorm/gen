@@ -497,7 +497,7 @@ func (g *Generator) output(fileName string, content []byte) error {
 	if err != nil {
 		line := strings.Split(string(content), "\n")
 		errLine, _ := strconv.Atoi(strings.Split(err.Error(), ":")[1])
-		startLine, endLine := -0, len(line)-1
+		startLine, endLine := errLine-5, errLine+5
 		fmt.Println("Format fail:", errLine, err)
 
 		for i := startLine; i <= endLine; i++ {
