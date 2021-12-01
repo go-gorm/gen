@@ -1853,7 +1853,7 @@ type Method interface {
     //         {{end}}
     //      {{end}}
     //  {{end}}
-    FindByOrList(cond bool, id int, key, value string) ([]gen.T, error)
+    FindByOrList(users []gen.T) ([]gen.T, error)
   }
 ```
 
