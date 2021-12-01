@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"gorm.io/gen/examples/biz"
-	"gorm.io/gen/test/conf"
-	"gorm.io/gen/test/dal"
+	"gorm.io/gen/examples/conf"
+	"gorm.io/gen/examples/dal"
 )
 
 func init() {
