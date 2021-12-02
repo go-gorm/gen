@@ -18,7 +18,7 @@
 ## <span id="overview">概览</span>
 
 - 自动生成 CRUD 和 DIY 方法
-- 自动根据表结构生成 model
+- 自动根据表结构生成模型（model）代码
 - 完全兼容 GORM
 - 更安全、更友好
 - 多种生成代码模式
@@ -126,15 +126,15 @@
 
 ## <span id="installation">安装</span>
 
-安装GEN前，需要安装好GO并配置你的工作环境。
+安装 GEN 前，需要安装好 Go 并配置你的 Go 工作区。
 
-1.安装完Go(version 1.14+)之后，通过下面的命令安装gen。
+1. 安装完 Go（要求 1.14 以上版本）后，可以使用以下 Go 命令安装 Gen。
 
 ```bash
 go get -u gorm.io/gen
 ```
 
-2.导入到你的工程:
+2. 在工程中导入引用 Gen:
 
 ```go
 import "gorm.io/gen"
@@ -142,7 +142,7 @@ import "gorm.io/gen"
 
 ## <span id="quick-start">快速开始</span>
 
-**注⚠️**: 这里所有的教程都是在 `WithContext` 模式下写的. 如果你用的是`WithoutContext` 模式,则可以删除所有的 `WithContext(ctx)` ，这样代码看起来会更简洁.
+**注意**：此处所有教程都是在 `WithContext` 模式下写的. 如果你使用的是 `WithoutContext` 模式,则可以删除所有的 `WithContext(ctx)` 代码，这样看起来会更简洁。
 
 ```bash
 # assume the following code in generate.go file
@@ -188,14 +188,14 @@ func main() {
 }
 ```
 
-生成Model:
+生成 Model：
 
-- `gen.WithoutContext` 非 `WithContext` 模式生成
-- `gen.WithDefaultQuery` 生成默认全局查询变量
+- `gen.WithoutContext` 可以生成没有 `WithContext` 约束的代码
+- `gen.WithDefaultQuery` 使用默认全局变量 `Q` 作为单例生成代码
 
 ### <span id="project-directory">项目路径</span>
 
-最佳实践项目模板:
+最佳实践项目模板：
 
 ```bash
 demo
@@ -240,7 +240,7 @@ g.GenerateModel("people", gen.FieldIgnore("address"), gen.FieldType("id", "int64
 g.GenerateAllTable()
 ```
 
-字段生成 **Options**
+**字段生成选项**
 
 ```go
 FieldNew           // create new field
@@ -264,7 +264,7 @@ FieldRelateModel   // specify relationship with exist models
 
 #### <span id="data-mapping">类型映射</span>
 
-自定义数据库字段类型和go类型的映射关系.
+指定你期望的数据映射关系，如自定义数据库字段类型和 Go 类型的映射关系。
 
 ```go
 dataMap := map[string]func(detailType string) (dataType string){
@@ -285,7 +285,7 @@ g.WithDataTypeMap(dataMap)
 
 #### <span id="create-field">创建字段</span>
 
-实际上你需要手动创建字段，因为都会在生成代码自动创建。
+在实际操作中，你不需要创建一个新的字段变量，这个创建过程将通过生成代码自动完成。
 
 | Field Type | Detail Type           | Create Function               | Supported Query Method                                       |
 | ---------- | --------------------- | ------------------------------ | ------------------------------------------------------------ |
@@ -297,7 +297,7 @@ g.WithDataTypeMap(dataMap)
 | bool       | bool                  | NewBool                        | Not/Is/And/Or/Xor/BitXor/BitAnd/BitOr                        |
 | time       | time.Time             | NewTime                        | Eq/Neq/Gt/Gte/Lt/Lte/Between/NotBetween/In/NotIn/Add/Sub     |
 
-创建字段示例:
+创建字段示例：
 
 ```go
 import "gorm.io/gen/field"
@@ -317,7 +317,7 @@ t := field.NewTime("user", "create_time")
 
 ### <span id="crud-api">CRUD 接口</span>
 
-生成基础model `user` 和 `DB`.
+以下为一个 `user` 模型和 `DB` 模型的基础结构。
 
 ```go
 // generated code
@@ -360,7 +360,7 @@ err // returns error
 
 ##### <span id="create-record-with-selected-fields">选择字段创建</span>
 
-自定义哪些字段需要插入。
+创建记录并为指定的字段赋值。
 
 ```go
 u := query.Use(db).User
@@ -368,7 +368,7 @@ u.WithContext(ctx).Select(u.Name, u.Age).Create(&user)
 // INSERT INTO `users` (`name`,`age`) VALUES ("modi", 18)
 ```
 
-自定义创建时需要忽略的字段。
+创建记录并通过 `Omit` 方法忽略传递字段的具体值 。
 
 ```go
 u := query.Use(db).User
@@ -378,7 +378,7 @@ u.WithContext(ctx).Omit(u.Name, u.Age).Create(&user)
 
 ##### <span id="batch-insert">批量创建</span>
 
- `Create` 方法支持批量创建，参数只要是对应model的slice就可以. GORM会通过一条语句高效创建并返回所有的主键赋值给slice的Model.
+`Create` 方法支持批量创建记录，只需要将对应模型（Model）的切片（slice）类型数据作为参数传入即可。GORM 将生成单个 SQL 语句来插入所有数据并返回对应内容全部主键的值。
 
 ```go
 var users = []model.User{{Name: "modi"}, {Name: "zhangqiang"}, {Name: "songyuan"}}
@@ -389,7 +389,7 @@ for _, user := range users {
 }
 ```
 
-`CreateInBatches`可以指定批量创建的大小, e.g:
+你可以通过 `CreateInBatches` 方法可以指定批量创建记录的大小,如：
 
 ```go
 var users = []User{{Name: "modi_1"}, ...., {Name: "modi_10000"}}
@@ -398,7 +398,7 @@ var users = []User{{Name: "modi_1"}, ...., {Name: "modi_10000"}}
 query.Use(db).User.WithContext(ctx).CreateInBatches(users, 100)
 ```
 
-也可以通过全局配置方式，在初始化gorm时设置 `CreateBatchSize` in `gorm.Config` / `gorm.Session`
+也可以通过全局配置方式，在初始化 GORM 时设置在 `gorm.Config` / `gorm.Session` 中对应配置 `CreateBatchSize`
 
 ```go
 db, err := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{
@@ -419,7 +419,7 @@ u.WithContext(ctx).Create(&users)
 
 ##### <span id="retrieving-a-single-object">单条数据查询</span>
 
-自动生成 `First`, `Take`, `Last` 三个查询单条数据的方法。 执行的sql后面会自动添加 `LIMIT 1` ，如果没有查到数据会返回错误： `ErrRecordNotFound` 。
+GROM 提供了 `First`、`Take`、`Last` 方法从数据库中查询单条数据，在查询数据库时会自动添加 `LIMIT 1` 条件，如果没有找到记录则返回错误 `ErrRecordNotFound`。
 
 ```go
 u := query.Use(db).User
@@ -452,7 +452,7 @@ users, err := u.WithContext(ctx).Where(u.ID.In(1,2,3)).Find()
 // SELECT * FROM users WHERE id IN (1,2,3);
 ```
 
-如果是string类型的主键，比如UUID等:
+如果主键是一个字符串类型数据（例如，主键是一个 uuid ），查询将写成如下形式：
 
 ```go
 user, err := u.WithContext(ctx).Where(u.ID.Eq("1b74413f-f3b8-409f-ac47-e8c062e3472a")).First()
@@ -524,6 +524,8 @@ users, err := u.WithContext(ctx).Where(u.Name.Neq("modi"), u.Age.Gt(17)).Find()
 
 ###### <span id="not-conditions">取反（not）查询</span>
 
+构建取反（not）查询条件，效果类似于 `Where` 查询
+
 ```go
 u := query.Use(db).User
 
@@ -550,7 +552,7 @@ users, err := u.WithContext(ctx).Where(u.Role.Eq("admin")).Or(u.Role.Eq("super_a
 
 ###### <span id="group-conditions">组合查询</span>
 
-组合where或or 构建复杂查询
+使用 `Where` / `Or` / `Not` 进行组合查询，可以轻松编写复杂的 SQL 查询
 
 ```go
 p := query.Use(db).Pizza
@@ -567,7 +569,7 @@ pizzas, err := p.WithContext(ctx).Where(
 
 ###### <span id="selecting-specific-fields">指定字段查询</span>
 
-通过`Select` 可以选择你要查询的字段，否则就是查询所有字段。
+`Select` 方法允许你指定要从数据库中查询的字段。否则，GORM 将默认选择所有字段。
 
 ```go
 u := query.Use(db).User
@@ -580,8 +582,6 @@ u.WithContext(ctx).Select(u.Age.Avg()).Rows()
 ```
 
 ###### <span id="tuple-query">元组查询</span>
-
-例如多字段IN
 
 ```go
 u := query.Use(db).User
@@ -601,7 +601,7 @@ users, err := u.WithContext(ctx).Where(gen.Cond(datatypes.JSONQuery("attributes"
 
 ###### <span id="order">Order 排序</span>
 
-指定查询的排序方式
+从数据库查询数据时，指定数据排序的方式
 
 ```go
 u := query.Use(db).User
@@ -616,7 +616,9 @@ users, err := u.WithContext(ctx).Order(u.Age.Desc()).Order(u.Name).Find()
 
 ###### <span id="limit--offset">分页查询（Limit & Offset）</span>
 
-分页查询，`Limit`限制最大条数，`Offset`指定数据的其实位置。
+分页查询方法，其中：
+* `Limit` 指定要检索的最大记录数
+* `Offset` 指定在开始返回记录之前要跳过的记录数（当前分页的位置）
 
 ```go
 u := query.Use(db).User
@@ -676,6 +678,8 @@ o.WithContext(ctx).Select(o.CreateAt.Date().As("date"), o.WithContext(ctx).Amoun
 
 ###### <span id="distinct">去重（Distinct）</span>
 
+从 Model 中指定字段查询，并对值进行去重。
+
 ```go
 u := query.Use(db).User
 
@@ -686,7 +690,7 @@ users, err := u.WithContext(ctx).Distinct(u.Name, u.Age).Order(u.Name, u.Age.Des
 
 ###### <span id="joins">联表查询（Joins）</span>
 
-联表查询，`Join`是指`inner join`,还有`LeftJoin`和`RightJoin`
+联表查询方法，`Join` 方法对应 `inner join`，此外还有 `LeftJoin` 方法和 `RightJoin` 方法。
 
 ```go
 u := query.Use(db).User
