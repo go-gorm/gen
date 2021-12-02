@@ -116,6 +116,7 @@
           - [`Where` 子句](#where-clause)
           - [`Set` 子句](#set-clause)
         - [方法接口示例](#method-interface-example)
+      - [单元测试](#unit-test)
       - [智能选择字段](#smart-select-fields)
     - [高级教程](#advanced-topics)
       - [查询优化提示（Hints）](#hints)
@@ -1400,7 +1401,7 @@ type User struct {
 users, err := u.WithContext(ctx).Preload(field.Associations).Find()
 ```
 
-`clause.Associations` 不会加载嵌套关联, 嵌套关联加载可以用 [Nested Preloading](#nested_preloading) e.g:
+`clause.Associations` 不会加载嵌套关联, 嵌套关联加载可以用 [Nested Preloading](#nested-preloading) e.g:
 
 ```go
 users, err := u.WithContext(ctx).Preload(u.Orders.OrderItems.Product).Find()
