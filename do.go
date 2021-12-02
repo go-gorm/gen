@@ -182,7 +182,10 @@ func (d *DO) Select(columns ...field.Expr) Dao {
 		return d.getInstance(d.db.Clauses(clause.Select{}))
 	}
 	query, args := buildExpr(d.db.Statement, columns...)
-	return d.getInstance(d.db.Select(query, args...))
+	if len(args) == 0 {
+		return d.getInstance(d.db.Select(query))
+	}
+	return d.getInstance(d.db.Select(strings.Join(query, ","), args...))
 }
 
 func (d *DO) Where(conds ...Condition) Dao {
@@ -614,14 +617,10 @@ func buildColExpr(stmt *gorm.Statement, cols []field.Expr, opts ...field.BuildOp
 	return results
 }
 
-func buildExpr(stmt *gorm.Statement, exprs ...field.Expr) (query string, args []interface{}) {
+func buildExpr(stmt *gorm.Statement, exprs ...field.Expr) (query []string, args []interface{}) {
 	for _, e := range exprs {
 		sql, vars := e.BuildWithArgs(stmt)
-		if query == "" {
-			query = sql.String()
-		} else {
-			query += "," + sql.String()
-		}
+		query = append(query, sql.String())
 		args = append(args, vars...)
 	}
 	return query, args
