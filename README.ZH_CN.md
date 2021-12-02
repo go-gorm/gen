@@ -722,6 +722,7 @@ users := u.WithContext(ctx).Join(e, e.UserID.EqCol(u.id), e.Email.Eq("modi@examp
 
 ##### <span id="subquery">子查询</span>
 
+子查询可以嵌套在查询中，GEN 可以在使用 `Dao` 对象作为参数时生成子查询
 
 ```go
 o := query.Use(db).Order
@@ -737,7 +738,7 @@ users, err := u.WithContext(ctx).Select(u.Age.Avg().As("avgage")).Group(u.Name).
 
 ###### <span id="from-subquery">From 子查询</span>
 
-通过`Table`方法构建出的子查询，可以直接放到From语句中:
+通过 `Table` 方法构建出的子查询，可以直接放到 From 语句中:
 
 ```go
 u := query.Use(db).User
@@ -769,7 +770,7 @@ u.WithContext(ctx).Where(u.Name.Eq("modi")).Update(u.CompanyName, c.Select(c.Nam
 
 ###### <span id="update-multiple-columns-from-subquery">从子查询更新多个字段</span>
 
-针对mysql提供同时更新多个字段的子查询:
+针对 MySQL 提供同时更新多个字段的子查询：
 
 ```go
 u := query.Use(db).User
@@ -794,7 +795,7 @@ UpdateSimple(
 
 ##### <span id="transaction">事务</span>
 
-多个操作需要在一个事务中完成的情况.
+要在事务中执行一组操作，一般的处理流程如下：
 
 ```go
 q := query.Use(db)
@@ -879,7 +880,7 @@ func doSomething(ctx context.Context, users ...*model.User) (err error) {
 
 ###### <span id="savepointrollbackto">保存点/回滚</span>
 
-`SavePoint`, `RollbackTo` 可以保存或者回滚事务点:
+GEN 提供了 `SavePoint` 和 `RollbackTo` 方法，用于保存和回滚事务点，例如：
 
 ```go
 tx := q.Begin()
@@ -898,7 +899,7 @@ tx.Commit() // Commit user1
 
 ###### <span id="iteration">迭代</span>
 
-GEN支持通过Row迭代取值
+Gem 支持通过 Rows 方法进行迭代（遍历）操作
 
 ```go
 u := query.Use(db).User
@@ -917,6 +918,7 @@ for rows.Next() {
 
 ###### <span id="findinbatches">批量查询</span>
 
+FindInBatches 方法支持批量查询并处理记录
 
 ```go
 u := query.Use(db).User
@@ -941,7 +943,7 @@ err := u.WithContext(ctx).Where(u.ID.Gt(9)).FindInBatches(&results, 100, func(tx
 
 ###### <span id="pluck">Pluck 方法</span>
 
-从数据库中查询单个列并扫描成一个切片或者基础类型
+Pluck 方法支持从数据库中查询单列并扫描成切片。如果要查询多列，请使用 `Select` 和 `Scan` 方法代替 `Pluck` 方法
 
 ```go
 u := query.Use(db).User
@@ -963,7 +965,7 @@ users, err := db.Select(u.Name, u.Age).Find()
 
 ###### <span id="scopes">Scopes 查询</span>
 
-可以声明一些常用的或者公用的条件方法，然后通过`Scopes` 查询
+你可以声明一些常用或公共的条件方法，然后使用 `Scopes` 指定调用
 
 ```go
 o := query.Use(db).Order
@@ -998,6 +1000,7 @@ orders, err := o.WithContext(ctx).Scopes(AmountGreaterThan1000, OrderStatus([]st
 
 ###### <span id="count">Count 计数</span>
 
+`Count` 方法用于获取查询结果数。
 
 ```go
 u := query.Use(db).User
@@ -1015,7 +1018,7 @@ u.WithContext(ctx).Distinct(u.Name).Count()
 
 ###### <span id="firstorinit">首条匹配或指定查询实例初始化条件（FirstOrInit）</span>
 
-获取匹配的第一条数据或用给定条件初始化一个实例
+获取第一个匹配的记录或在给定条件下初始化一个新实例
 
 ```go
 u := query.Use(db).User
@@ -1030,6 +1033,8 @@ user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).FirstOrInit()
 ```
 
 如果希望初始化的实例包含一些非查询条件的属性，则可以通过`Attrs`指定
+
+如果未找到记录，则使用更多属性初始化结构，这些 `Attrs` 将不会用于构建 SQL 查询
 
 ```go
 u := query.Use(db).User
@@ -1080,7 +1085,7 @@ user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).FirstOrCreate()
 // user -> User{ID: 111, Name: "modi", "Age": 18}
 ```
 
-如果希望创建的实例包含一些非查询条件的属性，则可以通过`Attrs`指定
+如果希望创建的实例包含一些非查询条件的属性，则可以通过 `Attrs` 指定
 
 ```go
 u := query.Use(db).User
