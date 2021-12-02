@@ -1122,7 +1122,8 @@ user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Assign(u.Age.Value(20))
 
 #### <span id="association">关联关系（Association）</span>
 
-GEN将像GORM一样自动保存关联（(BelongsTo/HasOne/HasMany/Many2Many) 。
+GEN 会像 GORM 一样自动保存关联关系。关联关系 (BelongsTo/HasOne/HasMany/Many2Many) 重用了 GORM 的标签。
+此功能目前仅支持现有模型。
 
 ##### <span id="relation">关联</span>
 
@@ -1155,7 +1156,7 @@ type CreditCard struct {
 }
 ```
 
-GEN 会检查解析这些关联关系:
+GEN 会检测模型的关联关系：
 
 ```go
 // specify model
@@ -1176,7 +1177,7 @@ type creditCard struct{
 
 ###### <span id="relate-to-table-in-database">和数据库表关联</span>
 
-必须使用 `gen.FieldRelate`声明
+关联必须由 `gen.FieldRelate` 指定声明。
 
 ```go
 card := g.GenerateModel("credit_cards")
@@ -1213,7 +1214,7 @@ type CreditCard struct {
 }
 ```
 
-如果是已经存在的关联model, 则可以用`gen.FieldRelateModel` 声明.
+如果是已经存在的关联 model, 则可以用 `gen.FieldRelateModel` 声明。
 
 ```go
 customer := g.GenerateModel("customers", gen.FieldRelateModel(field.HasMany, "CreditCards", model.CreditCard{}, 
@@ -1276,7 +1277,7 @@ u.WithContext(ctx).Omit(field.AssociationFields).Create(&user)
 // Skip all associations when creating a user
 ```
 
-Method `Field` will join a serious field name with ''.", for example: `u.BillingAddress.Field("Address1", "Street")` equals to `BillingAddress.Address1.Street`
+方法 `Field` 会用 ''." 连接一个严谨的字段名，例如：`u.BillingAddress.Field("Address1", "Street")` 等于 `BillingAddress.Address1.Street`
 
 ###### <span id="find-associations">查询关联</span>
 
@@ -1297,6 +1298,7 @@ languages, err = u.Languages.Where(q.Language.Name.In([]string{"ZH","EN"})).Mode
 
 ###### <span id="append-associations">添加关联</span>
 
+为 `Many2Many`、`HasMany` 附加新的关联，替换 `has one`、`belongs to` 的当前关联
 
 ```go
 u := query.Use(db).User
@@ -1310,13 +1312,15 @@ u.CreditCards.Model(&user).Append(&CreditCard{Number: "411111111111"})
 
 ###### <span id="replace-associations">替换关联</span>
 
+使用新关联替换当前关联
+
 ```go
 u.Languages.Model(&user).Replace(&languageZH, &languageEN)
 ```
 
 ###### <span id="delete-associations">删除关联</span>
 
-删除存在的关联，不会删除数据
+删除源表数据和参数之间的关系，只删除引用，不会从数据库中删除这些对象。
 
 ```go
 u := query.Use(db).User
@@ -1328,7 +1332,7 @@ u.Languages.Model(&user).Delete([]*Language{&languageZH, &languageEN}...)
 
 ###### <span id="clear-associations">清除关联</span>
 
-清除所有的关联，不会删除数据
+删除源表和关联表之间的所有引用映射，不会删除这些关联表
 
 ```go
 u.Languages.Model(&user).Clear()
@@ -1336,13 +1340,15 @@ u.Languages.Model(&user).Clear()
 
 ###### <span id="count-associations">统计关联</span>
 
+返回当前关联的计数。
+
 ```go
 u.Languages.Model(&user).Count()
 ```
 
 ###### <span id="delete-with-select">删除指定关联</span>
 
-删除制定条件数据并删除关联数据:
+删除记录时，允许删除与用 `Select` 方法指定的对象存在 HasOne/HasMany/Many2Many 关系的关联，并删除关联数据，例如：
 
 ```go
 u := query.Use(db).User
@@ -1361,7 +1367,7 @@ db.Select(field.AssociationsFields).Delete(&user)
 
 ###### <span id="preload">预加载（Preload）</span>
 
-GEN 支持通过 `Preload`加载关联数据:
+GEN 允许使用 `Preload` 在其他 SQL 中预先加载关系，例如：
 
 ```go
 type User struct {
@@ -1394,7 +1400,7 @@ users, err := u.WithContext(ctx).Preload(u.Orders).Preload(u.Profile).Preload(u.
 
 ###### <span id="preload-all">预加载全部数据（Preload All）</span>
 
-`clause.Associations` 通过`Preload` 预加载所有的关联数据:
+`clause.Associations` 可以和 `Preload` 一起使用，类似于创建/更新时的 `Select`，你可以用它来 `Preload` 预加载所有关联，例如：
 
 ```go
 type User struct {
@@ -1416,6 +1422,8 @@ users, err := u.WithContext(ctx).Preload(u.Orders.OrderItems.Product).Find()
 ```
 
 ###### <span id="nested-preloading">根据条件预加载</span>
+
+GORM 允许预加载与条件关联，它的工作原理类似于内联条件。
 
 ```go
 q := query.Use(db)
@@ -1446,6 +1454,7 @@ users, err := u.WithContext(ctx).Preload(u.Orders.Clauses(hints.UseIndex("idx_or
 
 ###### <span id="nested-preloading">嵌套预加载</span>
 
+GEN 支持嵌套预加载，例如：
 
 ```go
 db.Preload(u.Orders.OrderItems.Product).Preload(u.CreditCard).Find(&users)
@@ -1459,7 +1468,7 @@ db.Preload(u.Orders.On(o.State.Eq("paid"))).Preload(u.Orders.OrderItems).Find(&u
 
 ##### <span id="update-single-column">更新单个字段</span>
 
-`Update`方法更新单个字段。需要注意的是必须指定更新条件否则会报错`ErrMissingWhereClause`:
+使用 `Update` 更新单个列时，必须指定更新条件，否则会引发 `ErrMissingWhereClause` 错误，例如：
 
 ```go
 u := query.Use(db).User
@@ -1480,7 +1489,7 @@ u.WithContext(ctx).Where(u.Activate.Is(true)).UpdateSimple(u.Age.Zero())
 
 ##### <span id="updates-multiple-columns">更新多个字段</span>
 
-`Updates` 支持 `struct` 和 `map[string]interface{}`类型，更新多个字段，但是会忽略其中的零值属性
+`Updates` 支持使用 `struct` 或 `map[string]interface{}` 更新多个字段，当使用 `struct` 更新时，默认只会更新非零字段
 
 ```go
 u := query.Use(db).User
@@ -1505,7 +1514,7 @@ u.WithContext(ctx).Where(u.Activate.Is(true)).UpdateSimple(u.Age.Value(17), u.Nu
 
 ##### <span id="update-selected-fields">更新指定字段</span>
 
-通过 `Select`, `Omit`选择需要更新的字段或者需要忽略更新的字段
+如果你想更新选定的字段或在更新时忽略某些字段，可以使用 `Select`、`Omit`。
 
 ```go
 u := query.Use(db).User
@@ -1547,6 +1556,7 @@ err                 // error
 
 ##### <span id="delete-with-primary-key">根据主键删除</span>
 
+GEN 允许使用具有内联条件的主键来删除对象，这个操作适用于数字类型的主键。
 
 ```go
 u.WithContext(ctx).Where(u.ID.In(1,2,3)).Delete()
@@ -1555,7 +1565,7 @@ u.WithContext(ctx).Where(u.ID.In(1,2,3)).Delete()
 
 ##### <span id="batch-delete">批量删除</span>
 
-没有指定主键会删除松油匹配的数据
+在进行删除操作时，当指定的值没有具体的值时（如模糊查询），GEN 会进行批量删除，这会删除所有与查询条件匹配的记录。
 
 ```go
 e := query.Use(db).Email
@@ -1566,7 +1576,9 @@ e.WithContext(ctx).Where(e.Name.Like("%modi%")).Delete()
 
 ##### <span id="soft-delete">软删除</span>
 
-如果你的model中有`gorm.DeletedAt` 字段，则会自动执行软删除。也就是不会删除数据，只是把该字段的指设置为当前时间。
+如果你的 model 中包含有 `gorm.DeletedAt` 字段，则会自动执行软删除。
+
+当使用软删除时，调用 `Delete` 不会将相关记录从数据库中删除，GORM 会将 `gorm.DeletedAt` 对应字段的值设置为当前时间，以表示删除状态和删除的时间。通过软删除的数据，无法使用普通的 Query 方法找到相应的记录。
 
 ```go
 // Batch Delete
@@ -1578,7 +1590,7 @@ users, err := u.WithContext(ctx).Where(u.Age.Eq(20)).Find()
 // SELECT * FROM users WHERE age = 20 AND deleted_at IS NULL;
 ```
 
-If you don’t want to include `gorm.Model`, you can enable the soft delete feature like:
+如果你不想在实例化的对象中引用包含 `gorm.Model`，可以启用软删除功能，例如：
 
 ```go
 type User struct {
@@ -1590,7 +1602,7 @@ type User struct {
 
 ##### <span id="find-soft-deleted-records">查询包含软删除的记录</span>
 
-可以通过 `Unscoped`实现
+可以使用 `Unscoped`，你可以查询到软删除的记录。
 
 ```go
 users, err := db.WithContext(ctx).Unscoped().Where(u.Age.Eq(20)).Find()
@@ -1599,7 +1611,7 @@ users, err := db.WithContext(ctx).Unscoped().Where(u.Age.Eq(20)).Find()
 
 ##### <span id="delete-permanently">永久删除</span>
 
-通过 `Unscoped`可以直接删除数据，而不是标记删除
+通过 `Unscoped` 可以直接删除数据（物理删除），而不是逻辑删除（软删除）。
 
 ```go
 o.WithContext(ctx).Unscoped().Where(o.ID.Eq(10)).Delete()
