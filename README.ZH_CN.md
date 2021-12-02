@@ -1622,7 +1622,7 @@ o.WithContext(ctx).Unscoped().Where(o.ID.Eq(10)).Delete()
 
 #### <span id="method-interface">接口定义</span>
 
-自定义方法，需要通过interface定义。在方法上通过注释的方式描述具体的SQL查询逻辑，简单的WHERE查询可以用`where()`包住，复杂的查询需要写完整SQL可以直接用`sql()`包住或者忽略直接写SQL，太长的SQL支持换行，如果有对方法的注释，只需要在前面加一个空行。
+自定义方法，需要通过 interface 定义。在方法上通过注释的方式描述具体的 SQL 查询逻辑，简单的 WHERE 查询可以用 `where()` 包住，复杂的查询需要写完整 SQL 可以直接用 `sql()` 包住或者忽略直接写 SQL，太长的 SQL 支持换行，如果有对方法的注释，只需要在前面加一个空行。
 
 ```go
 type Method interface {
@@ -1638,7 +1638,8 @@ type Method interface {
     InsertValue(age int, name string) error
 }
 ```
-方法输入参数和返回值支持基础类型（int、string、bool等）、结构体和占位符（`gen.T`/`gen.M`/`gen.RowsAffected`）,类型支持指针和数组，返回值最多返回一个值和一个error。
+
+方法输入参数和返回值支持基础类型（int、string、bool等）、结构体和占位符（`gen.T`/`gen.M`/`gen.RowsAffected`）,类型支持指针和数组，返回值最多返回一个值和一个 error。
 
 ##### <span id="syntax-of-template">模板</span>
 
@@ -1653,12 +1654,12 @@ type Method interface {
 
 ###### <span id="template">模板</span>
 
-逻辑操作必须包裹在`{{}}`中，如`{{if}}`,结束语句必须是 `{{end}}`, 所有的语句都可以嵌套。`{{}}`中的语法除了`{{end}}`其它的都是Golang语法。
+逻辑操作必须包裹在 `{{}}` 中，如 `{{if}}`，结束语句必须是 `{{end}}`，所有的语句都可以嵌套。`{{}}` 中的语法除了 `{{end}}` 其它的都是 Golang 语法。
 
-- `if`/`else if`/`else`  if子句通过判断满足条件拼接字符串到SQL。
-- `where` where子句只有在内容不为空时候插入where，若子句的开头和结尾为where语句连接关键字`AND`或 `OR`，会将它们去除。
-- `Set` set子句只有在内容不为空时候插入，若子句的开头和结尾为set连接关键字`,`会将它们去除。
-- `for` for子句会遍历数组并将其内容插入到SQL中,需要注意之前的连接词。
+- `if`/`else if`/`else` if 子句通过判断满足条件拼接字符串到SQL。
+- `where` where 子句只有在内容不为空时候插入 where，若子句的开头和结尾为 where 语句连接关键字 `AND` 或 `OR`，会将它们去除。
+- `Set` set 子句只有在内容不为空时候插入，若子句的开头和结尾为set连接关键字 `,` 会将它们去除。
+- `for` for 子句会遍历数组并将其内容插入到 SQL 中,需要注意之前的连接词。
 - `...` 未完待续
 
 ###### <span id="if-clause">`If` 子句</span>
@@ -1778,7 +1779,7 @@ where id=@id
 methond(names []string) (gen.T,error) 
 ```
 
-SQL模板使用案例:
+SQL 模板使用案例:
 
 ```
 select * from @@table where
@@ -1842,7 +1843,7 @@ type Method interface {
 
 #### <span id="smart-select-fields">智能选择字段</span>
 
-GEN 查询的时候会自动选择你的model定义的字段
+GEN 允许使用 `Select` 选择特定字段，如果你经常在应用程序中使用 ，也许你想为 API 使用定义一个更小的结构，它可以自动选择特定字段，例如：
 
 ```go
 type User struct {
@@ -1871,7 +1872,7 @@ apiusers, err := u.WithContext(ctx).Limit(10).FindSome()
 
 #### <span id="hints">查询优化提示（Hints）</span>
 
-Hints可以用来优化查询计划，比如指定索引后者强制索引等。
+优化器选择某个查询执行计划，GORM 支持 `gorm.io/hints`，例如：
 
 ```go
 import "gorm.io/hints"
@@ -1882,6 +1883,7 @@ users, err := u.WithContext(ctx).Clauses(hints.New("MAX_EXECUTION_TIME(10000)"))
 // SELECT * /*+ MAX_EXECUTION_TIME(10000) */ FROM `users`
 ```
 
+索引提示允许将索引提示传递给数据库，以避免查询计划器选择劣质的查询计划。
 
 ```go
 import "gorm.io/hints"
@@ -1897,13 +1899,13 @@ users, err := u.WithContext(ctx).Clauses(hints.ForceIndex("idx_user_name", "idx_
 
 ## <span id="binary">二进制命令行工具安装</span>
 
-安装gen命令行工具:
+通过二进制文件安装 gen 命令行工具:
 
 ```bash
 go install gorm.io/gen/tools/gentool@latest
 ```
 
-使用参数:
+用法：
 
 ```bash
 $ gentool -h
