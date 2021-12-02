@@ -4,6 +4,7 @@ import (
 	"gorm.io/gen"
 	"gorm.io/gen/examples/conf"
 	"gorm.io/gen/examples/dal"
+	"gorm.io/gen/examples/dal/model"
 )
 
 func init() {
@@ -33,6 +34,7 @@ func main() {
 	g.WithDataTypeMap(dataMap)
 	g.WithJSONTagNameStrategy(func(c string) string { return "-" })
 
+	g.ApplyBasic(model.Customer{})
 	g.ApplyBasic(g.GenerateAllTable()...)
 
 	g.Execute()
