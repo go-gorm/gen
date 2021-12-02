@@ -1946,8 +1946,8 @@ gentool -dsn "user:pwd@tcp(127.0.0.1:3306)/database?charset=utf8mb4&parseTime=Tr
 
 ## <span id="contributing">如何参与贡献</span>
 
-You can help to deliver a better GORM/GEN
+你可以让 GORM/GEN 变得更好
 
 ## <span id="license">开源许可协议</span>
 
-Released under the [MIT License](https://github.com/go-gorm/gen/blob/master/License)
+采用 [MIT 许可协议](https://github.com/go-gorm/gen/blob/master/License) 发布
