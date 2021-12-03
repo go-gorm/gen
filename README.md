@@ -117,6 +117,7 @@ A safer orm base on [GORM](https://github.com/go-gorm/gorm), aims to be develope
           - [`Where` clause](#where-clause)
           - [`Set` clause](#set-clause)
         - [Method interface example](#method-interface-example)
+      - [Unit Test](#unit-test)
       - [Smart select fields](#smart-select-fields)
     - [Advanced Topics](#advanced-topics)
       - [Hints](#hints)
@@ -1418,7 +1419,7 @@ type User struct {
 users, err := u.WithContext(ctx).Preload(field.Associations).Find()
 ```
 
-`clause.Associations` won’t preload nested associations, but you can use it with [Nested Preloading](#nested_preloading) together, e.g:
+`clause.Associations` won’t preload nested associations, but you can use it with [Nested Preloading](#nested-preloading) together, e.g:
 
 ```go
 users, err := u.WithContext(ctx).Preload(u.Orders.OrderItems.Product).Find()
@@ -1831,10 +1832,13 @@ type Method interface {
 ```
 
 #### Unit Test
+
 Unit test file will be generated if `WithUnitTest` is set, which will generate unit test for general query function.
+
 Unit test for DIY method need diy testcase, which should place in the same package with test file.
 
 A testcase contains input and expectation result, input should match the method arguments, expectation should match method return values, which will be asserted **Equal** in test.
+
 ```go
 package query
 
@@ -1859,9 +1863,10 @@ var StudentFindByIdTestCase = []TestCase {
     Expectation{[]interface{}{nil, nil}},
   },
 }
-
 ```
+
 Corresponding test
+
 ```go
 //FindById select * from @@table where id = @id
 func (s studentDo) FindById(id int64) (result *model.Student, err error) {

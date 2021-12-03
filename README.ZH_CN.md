@@ -116,6 +116,7 @@
           - [`Where` 子句](#where-clause)
           - [`Set` 子句](#set-clause)
         - [方法接口示例](#method-interface-example)
+      - [单元测试](#unit-test)
       - [智能选择字段](#smart-select-fields)
     - [高级教程](#advanced-topics)
       - [查询优化提示（Hints）](#hints)
@@ -1415,7 +1416,7 @@ type User struct {
 users, err := u.WithContext(ctx).Preload(field.Associations).Find()
 ```
 
-`clause.Associations` 不会加载嵌套关联, 嵌套关联加载可以用 [Nested Preloading](#nested_preloading) e.g:
+`clause.Associations` 不会加载嵌套关联, 嵌套关联加载可以用 [Nested Preloading](#nested-preloading) e.g:
 
 ```go
 users, err := u.WithContext(ctx).Preload(u.Orders.OrderItems.Product).Find()
@@ -1838,6 +1839,63 @@ type Method interface {
     //  {{end}}
     FindByOrList(cond bool, id int, key, value string) ([]gen.T, error)
 
+}
+```
+
+#### <span id="unit-test">单元测试</span>
+
+如果设置了 `WithUnitTest` 方法，就会生成单元测试文件，生成通用查询功能的单元测试代码。
+
+自定义方法的单元测试需要自定义对应的测试用例，它应该和测试文件放在同一个包里。
+
+一个测试用例包含输入和期望结果，输入应和对应的方法参数匹配，期望应和对应的方法返回值相匹配。这将在测试中被断言为 “**Equal（相等）**”。
+
+
+```go
+package query
+
+type Input struct {
+  Args []interface{}
+}
+
+type Expectation struct {
+  Ret []interface{}
+}
+
+type TestCase struct {
+  Input
+  Expectation
+}
+
+/* Table student */
+
+var StudentFindByIdTestCase = []TestCase {
+  {
+    Input{[]interface{}{1}},
+    Expectation{[]interface{}{nil, nil}},
+  },
+}
+```
+
+相应测试代码：
+
+```go
+//FindById select * from @@table where id = @id
+func (s studentDo) FindById(id int64) (result *model.Student, err error) {
+    ///
+}
+
+func Test_student_FindById(t *testing.T) {
+    student := newStudent(db)
+    do := student.WithContext(context.Background()).Debug()
+
+    for i, tt := range StudentFindByIdTestCase {
+        t.Run("FindById_"+strconv.Itoa(i), func(t *testing.T) {
+            res1, res2 := do.FindById(tt.Input.Args[0].(int64))
+            assert(t, "FindById", res1, tt.Expectation.Ret[0])
+            assert(t, "FindById", res2, tt.Expectation.Ret[1])
+        })
+    }
 }
 ```
 
