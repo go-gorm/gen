@@ -9,7 +9,7 @@
 [![ClosedIssue](https://img.shields.io/github/issues-closed/go-gorm/gen)](https://github.com/go-gorm/gen/issues?q=is%3Aissue+is%3Aclosed)
 [![TODOs](https://badgen.net/https/api.tickgit.com/badgen/github.com/go-gorm/gen)](https://www.tickgit.com/browse?repo=github.com/go-gorm/gen)
 
-A safer orm base on [GORM](https://github.com/go-gorm/gorm), aims to be developer friendly.
+Gen: Friendly & Safer [GORM](https://github.com/go-gorm/gorm) powered by Code Generation.
 
 ## Multilingual README
 
