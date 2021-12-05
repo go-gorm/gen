@@ -37,6 +37,10 @@ Install GEN as a binary tool
         generate unit test for query code
 
 ```
+#### c
+default ""
+Is path for gen.yml
+Replace the command line with a configuration file
 
 #### db
 
