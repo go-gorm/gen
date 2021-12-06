@@ -12,6 +12,6 @@ require (
 	gorm.io/driver/postgres v1.2.3
 	gorm.io/driver/sqlite v1.2.6
 	gorm.io/driver/sqlserver v1.2.1
-	gorm.io/gorm v1.22.3
+	gorm.io/gorm v1.22.4
 	gorm.io/hints v1.1.0
 )
