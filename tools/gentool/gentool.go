@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -25,6 +25,10 @@ const (
 	DBPostgres  DBType = "postgres"
 	DBSQLite    DBType = "sqlite"
 	DBSQLServer DBType = "sqlserver"
+)
+const (
+	// DefaultOutPath default path
+	DefaultOutPath = "./dao/query"
 )
 
 // CmdParams is command line parameters
@@ -92,7 +96,7 @@ func loadConfigFile(path string) (*CmdParams, error) {
 		return nil, err
 	}
 	defer file.Close()
-	var yamlConfig *YamlConfig
+	var yamlConfig YamlConfig
 	if cmdErr := yaml.NewDecoder(file).Decode(&yamlConfig); cmdErr != nil {
 		return nil, cmdErr
 	}
@@ -114,22 +118,44 @@ func cmdParser() (*CmdParams, error) {
 	fieldWithIndexTag := flag.Bool("fieldWithIndexTag", false, "generate field with gorm index tag")
 	fieldWithTypeTag := flag.Bool("fieldWithTypeTag", false, "generate field with gorm column type tag")
 	flag.Parse()
+	var cmdParse CmdParams
 	if *genPath != "" {
-		return loadConfigFile(*genPath)
+		if configFileParams, err := loadConfigFile(*genPath); err == nil && configFileParams != nil {
+			cmdParse = *configFileParams
+		}
 	}
-	cmdParse := &CmdParams{
-		DSN:               *dsn,
-		DB:                *db,
-		Tables:            *tableList,
-		OutPath:           *outPath,
-		OutFile:           *outFile,
-		WithUnitTest:      *withUnitTest,
-		ModelPkgName:      *modelPkgName,
-		FieldNullable:     *fieldNullable,
-		FieldWithIndexTag: *fieldWithIndexTag,
-		FieldWithTypeTag:  *fieldWithTypeTag,
+	//cmd first
+	if *dsn != "" {
+		cmdParse.DSN = *dsn
 	}
-	return cmdParse, nil
+	if *db != "" {
+		cmdParse.DB = *db
+	}
+	if *tableList != "" {
+		cmdParse.Tables = *tableList
+	}
+	if *outPath != DefaultOutPath {
+		cmdParse.OutPath = *outPath
+	}
+	if *outFile != "" {
+		cmdParse.OutFile = *outFile
+	}
+	if *withUnitTest {
+		cmdParse.WithUnitTest = *withUnitTest
+	}
+	if *modelPkgName != "" {
+		cmdParse.ModelPkgName = *modelPkgName
+	}
+	if *fieldNullable {
+		cmdParse.FieldNullable = *fieldNullable
+	}
+	if *fieldWithIndexTag {
+		cmdParse.FieldWithIndexTag = *fieldWithIndexTag
+	}
+	if *fieldWithTypeTag {
+		cmdParse.FieldWithTypeTag = *fieldWithTypeTag
+	}
+	return &cmdParse, nil
 }
 
 func main() {
@@ -138,7 +164,6 @@ func main() {
 	if cmdErr != nil || config == nil {
 		log.Fatalln("cmdParse config is failed:", cmdErr)
 	}
-
 	db, err := connectDB(DBType(config.DB), config.DSN)
 	if err != nil {
 		log.Fatalln("connect db server fail:", err)
