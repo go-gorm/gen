@@ -41,6 +41,8 @@ Install GEN as a binary tool
 default ""
 Is path for gen.yml
 Replace the command line with a configuration file
+The command line is the highest priority
+
 
 #### db
 
