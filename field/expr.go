@@ -31,6 +31,11 @@ type Expr interface {
 	expression() clause.Expression
 }
 
+type OrderExpr interface {
+	Expr
+	Desc() Expr
+}
+
 type expression interface{}
 
 type sql string
