@@ -254,6 +254,7 @@ FieldType          // specify field type
 FieldTypeReg       // specify field type (match with regexp)
 FieldTag           // specify gorm and json tag
 FieldJSONTag       // specify json tag
+FieldJSONTagWithNS // specify new tag with name strategy
 FieldGORMTag       // specify gorm tag
 FieldNewTag        // append new tag
 FieldNewTagWithNS  // specify new tag with name strategy
