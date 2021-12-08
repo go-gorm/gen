@@ -86,8 +86,8 @@ func ({{.S}} {{.NewStructName}}) clone(db *gorm.DB) {{.NewStructName}} {
 `
 	getFieldMethod = `
 func ({{.S}} *{{.NewStructName}}) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
-	f, ok := {{.S}}.fieldMap[fieldName]
-	return f.(field.OrderExpr), ok
+	_f, ok := {{.S}}.fieldMap[fieldName]
+	return _f.(field.OrderExpr), ok
 }
 `
 	relationship = `{{range .Members}}{{if .IsRelation}}` +
