@@ -20,7 +20,7 @@ type InterfaceMethod struct {
 	Result        []parser.Param // function output params
 	ResultData    parser.Param   // output data
 	Sections      *Sections      //Parse split SQL into sections
-	SqlData       []string       // variable in sql need function input
+	SqlParams     []parser.Param // variable in sql need function input
 	SqlString     string         // SQL
 	GormOption    string         // gorm execute method Find or Exec or Take
 	Table         string         // specified by user. if empty, generate it with gorm
@@ -31,7 +31,7 @@ type InterfaceMethod struct {
 
 // HasSqlData has variable or for params will creat params map
 func (m *InterfaceMethod) HasSqlData() bool {
-	return len(m.SqlData) > 0 || m.HasForParams
+	return len(m.SqlParams) > 0 || m.HasForParams
 }
 
 // HasGotPoint parameter has pointer or not
@@ -88,6 +88,11 @@ func (m *InterfaceMethod) GetParamInTmpl() string {
 // GetResultParamInTmpl return result list
 func (m *InterfaceMethod) GetResultParamInTmpl() string {
 	return paramToString(m.Result)
+}
+
+// SQLParamName sql param map key,
+func (m *InterfaceMethod) SQLParamName(param string) string {
+	return strings.Replace(param, ".", "", -1)
 }
 
 // paramToString param list to string used in tmpl
@@ -330,7 +335,7 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 					if sqlString[i] == '}' && sqlString[i+1] == '}' {
 						i++
 						sqlClause := buf.Dump()
-						part, err := m.Sections.checkTemplate(sqlClause, m.Params)
+						part, err := m.Sections.checkTemplate(sqlClause)
 						if err != nil {
 							return fmt.Errorf("sql [%s] dynamic template %s err:%w", sqlString, sqlClause, err)
 						}
@@ -378,12 +383,20 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 // checkSQLVarByParams return external parameters, table name
 func (m *InterfaceMethod) checkSQLVarByParams(param string, status model.Status) (result section, err error) {
 	for _, p := range m.Params {
-		if p.Name == param {
+		structName := strings.Split(param, ".")[0]
+		if p.Name == structName {
+			if p.Name != param {
+				p = parser.Param{
+					Name: param,
+					Type: "string",
+				}
+			}
 			switch status {
 			case model.DATA:
 				if !m.isParamExist(param) {
-					m.SqlData = append(m.SqlData, param)
+					m.SqlParams = append(m.SqlParams, p)
 				}
+				param = p.SQLParamName()
 			case model.VARIABLE:
 				if p.Type != "string" || p.IsArray {
 					err = fmt.Errorf("variable name must be string :%s type is %s", param, p.TypeName())
@@ -411,8 +424,8 @@ func (m *InterfaceMethod) checkSQLVarByParams(param string, status model.Status)
 
 // isParamExist check param duplicate
 func (m *InterfaceMethod) isParamExist(paramName string) bool {
-	for _, param := range m.SqlData {
-		if param == paramName {
+	for _, param := range m.SqlParams {
+		if param.Name == paramName {
 			return true
 		}
 	}
@@ -420,7 +433,7 @@ func (m *InterfaceMethod) isParamExist(paramName string) bool {
 }
 
 // checkTemplate check sql template's syntax (if/else/where/set/for)
-func (s *Sections) checkTemplate(tmpl string, params []parser.Param) (section, error) {
+func (s *Sections) checkTemplate(tmpl string) (section, error) {
 	var part section
 	part.Value = tmpl
 	part.SQLSlice = s

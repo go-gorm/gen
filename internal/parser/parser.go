@@ -164,11 +164,17 @@ func (p *Param) IsTime() bool {
 func (p *Param) SetName(name string) {
 	p.Name = name
 }
+
 func (p *Param) TypeName() string {
 	if p.IsArray {
 		return "[]" + p.Type
 	}
 	return p.Type
+}
+
+// SQLParamName sql param map key , can not contains `.`
+func (p *Param) SQLParamName() string {
+	return strings.Replace(p.Name, ".", "", -1)
 }
 
 func (p *Param) AllowType() bool {
