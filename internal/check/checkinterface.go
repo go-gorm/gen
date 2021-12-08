@@ -148,7 +148,7 @@ func (m *InterfaceMethod) checkParams(params []parser.Param) (err error) {
 	for i, param := range params {
 		switch {
 		case param.Package == "UNDEFINED":
-			param.Package = m.OriginStruct.Package
+			param.Package = m.Package
 		case param.IsMap() || param.IsGenM() || param.IsError() || param.IsNull():
 			return fmt.Errorf("type error on interface [%s] param: [%s]", m.InterfaceName, param.Name)
 		case param.IsGenT():

@@ -5,7 +5,7 @@ const DIYMethod = `
 //{{.DocComment }}
 func ({{.S}} {{.TargetStruct}}Do){{.MethodName}}({{.GetParamInTmpl}})({{.GetResultParamInTmpl}}){
 	{{if .HasSqlData}}params := map[string]interface{}{ {{range $index,$data:=.SqlParams}}
-		"{{ $data.SQLParamName}}":{{$data.Name}},{{end}}
+		"{{$data.SQLParamName}}":{{$data.Name}},{{end}}
 	}
 
 	{{end}}var generateSQL strings.Builder
