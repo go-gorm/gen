@@ -1,15 +1,10 @@
 package model
 
 import (
-	"regexp"
-
 	"gorm.io/gorm"
 )
 
 type SchemaNameOpt func(*gorm.DB) string
-
-// get mysql db' name
-var dbNameReg = regexp.MustCompile(`/\w+\??`)
 
 var defaultMysqlSchemaNameOpt = SchemaNameOpt(func(db *gorm.DB) string {
 	return db.Migrator().CurrentDatabase()
