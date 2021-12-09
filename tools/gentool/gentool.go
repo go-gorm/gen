@@ -73,7 +73,7 @@ func connectDB(t DBType, dsn string) (*gorm.DB, error) {
 
 // getModels is gorm/gen generated models
 func getModels(g *gen.Generator, db *gorm.DB, tables string) (models []interface{}, err error) {
-	tablesList := make([]string, 0)
+	var tablesList []string
 	if tables == "" {
 		// Execute tasks for all tables in the database
 		tablesList, err = db.Migrator().GetTables()
