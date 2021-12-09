@@ -33,16 +33,16 @@ const (
 
 // CmdParams is command line parameters
 type CmdParams struct {
-	DSN               string `yaml:"dsn"`               //consult[https://gorm.io/docs/connecting_to_the_database.html]"
-	DB                string `yaml:"db"`                //input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]
-	Tables            string `yaml:"tables"`            //enter the required data table or leave it blank
-	OutPath           string `yaml:"outPath"`           //specify a directory for output
-	OutFile           string `yaml:"outFile"`           //query code file name, default: gen.go
-	WithUnitTest      bool   `yaml:"withUnitTest"`      //generate unit test for query code
-	ModelPkgName      string `yaml:"modelPkgName"`      //generated model code's package name
-	FieldNullable     bool   `yaml:"fieldNullable"`     //generate with pointer when field is nullable
+	DSN               string `yaml:"dsn"`               // consult[https://gorm.io/docs/connecting_to_the_database.html]"
+	DB                string `yaml:"db"`                // input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]
+	Tables            string `yaml:"tables"`            // enter the required data table or leave it blank
+	OutPath           string `yaml:"outPath"`           // specify a directory for output
+	OutFile           string `yaml:"outFile"`           // query code file name, default: gen.go
+	WithUnitTest      bool   `yaml:"withUnitTest"`      // generate unit test for query code
+	ModelPkgName      string `yaml:"modelPkgName"`      // generated model code's package name
+	FieldNullable     bool   `yaml:"fieldNullable"`     // generate with pointer when field is nullable
 	FieldWithIndexTag bool   `yaml:"fieldWithIndexTag"` // generate field with gorm index tag
-	FieldWithTypeTag  bool   `yaml:"fieldWithTypeTag"`  //generate field with gorm column type tag
+	FieldWithTypeTag  bool   `yaml:"fieldWithTypeTag"`  // generate field with gorm column type tag
 }
 
 // YamlConfig is yaml config struct
@@ -72,18 +72,21 @@ func connectDB(t DBType, dsn string) (*gorm.DB, error) {
 }
 
 // getModels is gorm/gen generated models
-func getModels(g *gen.Generator, db *gorm.DB, tables []string) (models []interface{}, err error) {
-	if len(tables) == 0 {
-		//Execute tasks for all tables in the database
-		tables, err = db.Migrator().GetTables()
+func getModels(g *gen.Generator, db *gorm.DB, tables string) (models []interface{}, err error) {
+	var tablesList []string
+	if tables == "" {
+		// Execute tasks for all tables in the database
+		tablesList, err = db.Migrator().GetTables()
 		if err != nil {
 			return nil, fmt.Errorf("GORM migrator get all tables fail: %w", err)
 		}
+	} else {
+		tablesList = strings.Split(tables, ",")
 	}
 
-	//Execute some data table tasks
-	models = make([]interface{}, len(tables))
-	for i, tableName := range tables {
+	// Execute some data table tasks
+	models = make([]interface{}, len(tablesList))
+	for i, tableName := range tablesList {
 		models[i] = g.GenerateModel(tableName)
 	}
 	return models, nil
@@ -105,7 +108,7 @@ func loadConfigFile(path string) (*CmdParams, error) {
 
 // cmdParse is parser for cmd
 func cmdParser() (*CmdParams, error) {
-	//choose is file or flag
+	// choose is file or flag
 	genPath := flag.String("c", "", "is path for gen.yml")
 	dsn := flag.String("dsn", "", "consult[https://gorm.io/docs/connecting_to_the_database.html]")
 	db := flag.String("db", "mysql", "input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]")
@@ -124,7 +127,7 @@ func cmdParser() (*CmdParams, error) {
 			cmdParse = *configFileParams
 		}
 	}
-	//cmd first
+	// cmd first
 	if *dsn != "" {
 		cmdParse.DSN = *dsn
 	}
@@ -159,7 +162,7 @@ func cmdParser() (*CmdParams, error) {
 }
 
 func main() {
-	//cmdParse
+	// cmdParse
 	config, cmdErr := cmdParser()
 	if cmdErr != nil || config == nil {
 		log.Fatalln("cmdParse config is failed:", cmdErr)
@@ -181,7 +184,7 @@ func main() {
 
 	g.UseDB(db)
 
-	models, err := getModels(g, db, strings.Split(config.Tables, ","))
+	models, err := getModels(g, db, config.Tables)
 	if err != nil {
 		log.Fatalln("get tables info fail:", err)
 	}
