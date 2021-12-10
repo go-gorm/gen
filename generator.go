@@ -40,8 +40,9 @@ func NewGenerator(cfg Config) *Generator {
 	}
 
 	return &Generator{
-		Config: cfg,
-		Data:   make(map[string]*genInfo),
+		Config:    cfg,
+		Data:      make(map[string]*genInfo),
+		modelData: map[string]*check.BaseStruct{},
 	}
 }
 
@@ -147,7 +148,8 @@ func (i *genInfo) methodInGenInfo(m *check.InterfaceMethod) bool {
 type Generator struct {
 	Config
 
-	Data map[string]*genInfo
+	Data      map[string]*genInfo          //gen query data
+	modelData map[string]*check.BaseStruct //gen model data
 }
 
 // UseDB set db connection
@@ -189,7 +191,7 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)
 		panic(fmt.Sprintf("generate struct fail: %s", err))
 	}
-
+	g.modelData[s.StructName] = s
 	g.successInfo(fmt.Sprintf("got %d columns from table <%s>", len(s.Members), s.TableName))
 	return s
 }
@@ -282,11 +284,12 @@ func (g *Generator) Execute() {
 	}
 	g.queryPkgName = filepath.Base(g.OutPath)
 
-	err = g.generateBaseStruct()
+	err = g.generateModelFile()
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate basic struct from table fail: %s", err)
 		panic("generate basic struct from table fail")
 	}
+
 	err = g.generateQueryFile()
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate query code fail: %s", err)
@@ -436,8 +439,8 @@ func (g *Generator) generateQueryUnitTestFile(data *genInfo) (err error) {
 	return g.output(fmt.Sprintf("%s/%s.gen_test.go", g.OutPath, strings.ToLower(data.TableName)), buf.Bytes())
 }
 
-// generateBaseStruct generate basic structures and save to file
-func (g *Generator) generateBaseStruct() (err error) {
+// generateModelFile generate model structures and save to file
+func (g *Generator) generateModelFile() (err error) {
 	var outPath string
 	outPath, err = filepath.Abs(g.OutPath)
 	if err != nil {
@@ -457,30 +460,22 @@ func (g *Generator) generateBaseStruct() (err error) {
 		outPath = fmt.Sprint(filepath.Dir(outPath), "/", path, "/")
 	}
 
-	created := false
-	mkdir := func() {
-		if created {
-			return
-		}
-		if err := os.MkdirAll(outPath, os.ModePerm); err != nil {
-			g.db.Logger.Error(context.Background(), "create model pkg path(%s) fail: %s", outPath, err)
-			panic("create model pkg path fail")
-		}
+	if err := os.MkdirAll(outPath, os.ModePerm); err != nil {
+		g.db.Logger.Error(context.Background(), "create model pkg path(%s) fail: %s", outPath, err)
+		panic("create model pkg path fail")
 	}
 
-	for _, data := range g.Data {
-		if data.BaseStruct == nil || !data.BaseStruct.GenBaseStruct {
+	for _, data := range g.modelData {
+		if data == nil || !data.GenBaseStruct {
 			continue
 		}
 
-		mkdir()
-
 		var buf bytes.Buffer
-		err = render(tmpl.Model, &buf, data.BaseStruct)
+		err = render(tmpl.Model, &buf, data)
 		if err != nil {
 			return err
 		}
-		modelFile := fmt.Sprint(outPath, data.BaseStruct.TableName, ".gen.go")
+		modelFile := fmt.Sprint(outPath, data.TableName, ".gen.go")
 		err = g.output(modelFile, buf.Bytes())
 		if err != nil {
 			return err
