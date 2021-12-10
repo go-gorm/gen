@@ -40,8 +40,9 @@ func NewGenerator(cfg Config) *Generator {
 	}
 
 	return &Generator{
-		Config: cfg,
-		Data:   make(map[string]*genInfo),
+		Config:    cfg,
+		Data:      make(map[string]*genInfo),
+		modelData: map[string]*check.BaseStruct{},
 	}
 }
 
@@ -147,7 +148,8 @@ func (i *genInfo) methodInGenInfo(m *check.InterfaceMethod) bool {
 type Generator struct {
 	Config
 
-	Data map[string]*genInfo
+	Data      map[string]*genInfo          //gen query data
+	modelData map[string]*check.BaseStruct //gen model data
 }
 
 // UseDB set db connection
@@ -189,7 +191,7 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)
 		panic(fmt.Sprintf("generate struct fail: %s", err))
 	}
-
+	g.modelData[s.StructName] = s
 	g.successInfo(fmt.Sprintf("got %d columns from table <%s>", len(s.Members), s.TableName))
 	return s
 }
@@ -468,19 +470,19 @@ func (g *Generator) generateBaseStruct() (err error) {
 		}
 	}
 
-	for _, data := range g.Data {
-		if data.BaseStruct == nil || !data.BaseStruct.GenBaseStruct {
+	for _, data := range g.modelData {
+		if data == nil || !data.GenBaseStruct {
 			continue
 		}
 
 		mkdir()
-
+		created = true
 		var buf bytes.Buffer
-		err = render(tmpl.Model, &buf, data.BaseStruct)
+		err = render(tmpl.Model, &buf, data)
 		if err != nil {
 			return err
 		}
-		modelFile := fmt.Sprint(outPath, data.BaseStruct.TableName, ".gen.go")
+		modelFile := fmt.Sprint(outPath, data.TableName, ".gen.go")
 		err = g.output(modelFile, buf.Bytes())
 		if err != nil {
 			return err
