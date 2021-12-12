@@ -115,6 +115,7 @@
           - [`If` 子句](#if-clause)
           - [`Where` 子句](#where-clause)
           - [`Set` 子句](#set-clause)
+          - [`For` 子句](#for-clause)
         - [方法接口示例](#method-interface-example)
       - [单元测试](#unit-test)
       - [智能选择字段](#smart-select-fields)
@@ -1424,7 +1425,7 @@ users, err := u.WithContext(ctx).Preload(u.Orders.OrderItems.Product).Find()
 
 ###### <span id="nested-preloading">根据条件预加载</span>
 
-GORM 允许预加载与条件关联，它的工作原理类似于内联条件。
+GEN 允许预加载与条件关联，它的工作原理类似于内联条件。
 
 ```go
 q := query.Use(db)
@@ -1451,6 +1452,10 @@ users, err := u.WithContext(ctx).Preload(u.Orders.On(o.State.Eq("on")).Order(o.I
 users, err := u.WithContext(ctx).Preload(u.Orders.Clauses(hints.UseIndex("idx_order_id"))).Find()
 // SELECT * FROM users;
 // SELECT * FROM orders WHERE user_id IN (1,2) USE INDEX (`idx_order_id`);
+
+user, err := u.WithContext(ctx).Where(u.ID.Eq(1)).Preload(u.Orders.Offset(100).Limit(20)).Take()
+// SELECT * FROM users WHERE `user_id` = 1 LIMIT 20 OFFSET 100;
+// SELECT * FROM `users` WHERE `users`.`id` = 1 LIMIT 1
 ```
 
 ###### <span id="nested-preloading">嵌套预加载</span>
@@ -1762,7 +1767,7 @@ update @@table
 where id=@id
 ```
 
-###### `For` 子句
+###### <span id="for-clause">`For` 子句</span>
 
 ```
 {{for _,name:=range names}}

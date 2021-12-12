@@ -116,6 +116,7 @@ Gen: Friendly & Safer [GORM](https://github.com/go-gorm/gorm) powered by Code Ge
           - [`If` clause](#if-clause)
           - [`Where` clause](#where-clause)
           - [`Set` clause](#set-clause)
+          - [`For` clause](#for-clause)
         - [Method interface example](#method-interface-example)
       - [Unit Test](#unit-test)
       - [Smart select fields](#smart-select-fields)
@@ -1428,7 +1429,7 @@ users, err := u.WithContext(ctx).Preload(u.Orders.OrderItems.Product).Find()
 
 ###### Preload with conditions
 
-GORM allows Preload associations with conditions, it works similar to Inline Conditions.
+GEN allows Preload associations with conditions, it works similar to Inline Conditions.
 
 ```go
 q := query.Use(db)
@@ -1455,6 +1456,10 @@ users, err := u.WithContext(ctx).Preload(u.Orders.On(o.State.Eq("on")).Order(o.I
 users, err := u.WithContext(ctx).Preload(u.Orders.Clauses(hints.UseIndex("idx_order_id"))).Find()
 // SELECT * FROM users;
 // SELECT * FROM orders WHERE user_id IN (1,2) USE INDEX (`idx_order_id`);
+
+user, err := u.WithContext(ctx).Where(u.ID.Eq(1)).Preload(u.Orders.Offset(100).Limit(20)).Take()
+// SELECT * FROM users WHERE `user_id` = 1 LIMIT 20 OFFSET 100;
+// SELECT * FROM `users` WHERE `users`.`id` = 1 LIMIT 1
 ```
 
 ###### Nested Preloading
