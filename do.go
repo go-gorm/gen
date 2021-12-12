@@ -357,6 +357,11 @@ func (d *DO) Preload(field field.RelationField) Dao {
 			return db.Clauses(clauses...)
 		})
 	}
+	if offset, limit := field.GetPage(); offset|limit != 0 {
+		args = append(args, func(db *gorm.DB) *gorm.DB {
+			return db.Offset(offset).Limit(limit)
+		})
+	}
 	return d.getInstance(d.db.Preload(field.Path(), args...))
 }
 
