@@ -198,6 +198,10 @@ func ({{.S}} {{.NewStructName}}Do) FindByPage(offset int, limit int) (result []*
 		return
 	}
 
+	if limit <= 0 {
+		return
+	}
+
 	result, err = {{.S}}.Offset(offset).Limit(limit).Find()
 	return
 }
