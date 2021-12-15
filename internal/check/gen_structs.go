@@ -73,7 +73,7 @@ func GenBaseStructs(db *gorm.DB, conf model.DBConf) (bases *BaseStruct, err erro
 		m = modifyMember(m, modifyOpts)
 		if ns, ok := db.NamingStrategy.(schema.NamingStrategy); ok {
 			ns.SingularTable = true
-			m.Name = ns.SchemaName(m.Name)
+			m.Name = ns.SchemaName(ns.TablePrefix + m.Name)
 		} else {
 			m.Name = db.NamingStrategy.SchemaName(m.Name)
 		}

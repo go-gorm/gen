@@ -90,7 +90,8 @@ func ({{.S}} *{{.NewStructName}}) GetFieldByName(fieldName string) (field.OrderE
 	if !ok || _f == nil {
 		return nil, false
 	}
-	return _f.(field.OrderExpr), true
+	_oe,ok := _f.(field.OrderExpr)
+	return _oe,ok
 }
 `
 	relationship = `{{range .Members}}{{if .IsRelation}}` +
