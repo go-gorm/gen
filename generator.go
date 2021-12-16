@@ -15,6 +15,7 @@ import (
 	"golang.org/x/tools/imports"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 
 	"gorm.io/gen/internal/check"
 	"gorm.io/gen/internal/model"
@@ -97,6 +98,7 @@ func (g *Generator) GenerateModel(tableName string, opts ...model.MemberOpt) *ch
 
 // GenerateModel catch table info from db, return a BaseStruct
 func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...model.MemberOpt) *check.BaseStruct {
+	tableName = g.tableName(tableName)
 	s, err := check.GenBaseStructs(g.db, model.DBConf{
 		ModelPkg:       g.Config.ModelPkgPath,
 		TableName:      tableName,
@@ -121,6 +123,17 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 
 	g.successInfo(fmt.Sprintf("got %d columns from table <%s>", len(s.Members), s.TableName))
 	return s
+}
+
+func (g *Generator) tableName(table string) string {
+	if ns, ok := g.db.NamingStrategy.(schema.NamingStrategy); ok {
+		if strings.HasPrefix(table, ns.TablePrefix) {
+			return table
+		} else {
+			return ns.TablePrefix + table
+		}
+	}
+	return table
 }
 
 // GenerateAllTable generate all tables in db
