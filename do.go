@@ -156,6 +156,9 @@ func (*DO) Columns(cols ...field.Expr) columns { return cols }
 
 // ======================== chainable api ========================
 func (d *DO) Not(conds ...Condition) Dao {
+	if len(conds) == 0 {
+		return d
+	}
 	exprs, err := condToExpression(conds)
 	if err != nil {
 		return d.withError(err)
@@ -167,6 +170,9 @@ func (d *DO) Not(conds ...Condition) Dao {
 }
 
 func (d *DO) Or(conds ...Condition) Dao {
+	if len(conds) == 0 {
+		return d
+	}
 	exprs, err := condToExpression(conds)
 	if err != nil {
 		return d.withError(err)
@@ -189,6 +195,9 @@ func (d *DO) Select(columns ...field.Expr) Dao {
 }
 
 func (d *DO) Where(conds ...Condition) Dao {
+	if len(conds) == 0 {
+		return d
+	}
 	exprs, err := condToExpression(conds)
 	if err != nil {
 		return d.withError(err)
@@ -249,6 +258,9 @@ func (d *DO) Group(columns ...field.Expr) Dao {
 }
 
 func (d *DO) Having(conds ...Condition) Dao {
+	if len(conds) == 0 {
+		return d
+	}
 	exprs, err := condToExpression(conds)
 	if err != nil {
 		return d.withError(err)
