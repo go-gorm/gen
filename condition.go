@@ -38,6 +38,9 @@ func exprToCondition(exprs ...clause.Expression) []Condition {
 func condToExpression(conds []Condition) ([]clause.Expression, error) {
 	exprs := make([]clause.Expression, 0, len(conds))
 	for _, cond := range conds {
+		if cond == nil {
+			continue
+		}
 		if err := cond.CondError(); err != nil {
 			return nil, err
 		}
