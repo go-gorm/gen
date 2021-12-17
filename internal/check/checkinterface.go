@@ -305,6 +305,7 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 				buf.WriteSql(sqlString[i])
 				continue
 			}
+			buf.WriteSql(b)
 		case '{', '@':
 			if sqlClause := buf.Dump(); strings.TrimSpace(sqlClause) != "" {
 				m.Sections.members = append(m.Sections.members, section{
