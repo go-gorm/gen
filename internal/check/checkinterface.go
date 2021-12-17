@@ -396,7 +396,6 @@ func (m *InterfaceMethod) checkSQLVarByParams(param string, status model.Status)
 				if !m.isParamExist(param) {
 					m.SqlParams = append(m.SqlParams, p)
 				}
-				param = p.SQLParamName()
 			case model.VARIABLE:
 				if p.Type != "string" || p.IsArray {
 					err = fmt.Errorf("variable name must be string :%s type is %s", param, p.TypeName())

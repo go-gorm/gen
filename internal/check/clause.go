@@ -568,7 +568,8 @@ func (s *Sections) parseSQL(name string) (res SQLClause) {
 				s.tmplAppend(forRange.appendDataToParams(c.Value, name))
 				c.Value = forRange.DataValue(c.Value, name)
 			} else {
-				c.Value = strconv.Quote("@" + c.Value)
+				s.tmplAppend(c.AddDataToParamMap())
+				c.Value = strconv.Quote("@" + c.SQLParamName())
 			}
 			res.Value = append(res.Value, c.Value)
 		default:

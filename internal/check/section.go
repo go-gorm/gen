@@ -103,3 +103,10 @@ func (s *section) SetForRangeKey(key string) {
 	s.ForRange.index = key
 	s.Value = s.String()
 }
+
+func (s *section) AddDataToParamMap() string {
+	return fmt.Sprintf("params[\"%s\"] = %s", s.SQLParamName(), s.Value)
+}
+func (s *section) SQLParamName() string {
+	return strings.Replace(s.Value, ".", "", -1)
+}

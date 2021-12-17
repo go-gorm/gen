@@ -172,11 +172,6 @@ func (p *Param) TypeName() string {
 	return p.Type
 }
 
-// SQLParamName sql param map key , can not contains `.`
-func (p *Param) SQLParamName() string {
-	return strings.Replace(p.Name, ".", "", -1)
-}
-
 func (p *Param) AllowType() bool {
 	switch p.Type {
 	case "string", "bytes":
