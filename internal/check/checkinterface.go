@@ -299,6 +299,12 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 					break
 				}
 			}
+		case '\\':
+			if sqlString[i+1] == '@' {
+				i++
+				buf.WriteSql(sqlString[i])
+				continue
+			}
 		case '{', '@':
 			if sqlClause := buf.Dump(); strings.TrimSpace(sqlClause) != "" {
 				m.Sections.members = append(m.Sections.members, section{
