@@ -616,6 +616,24 @@ users, err := u.WithContext(ctx).Order(u.Age.Desc()).Order(u.Name).Find()
 // SELECT * FROM users ORDER BY age DESC, name;
 ```
 
+通过字符串获取想要排序的列
+
+```go
+u := query.Use(db).User
+
+orderCol, ok := u.GetFieldByName(orderColStr) // orderColStr的值可以是"id"
+if !ok {
+  // User doesn't contains orderColStr
+}
+
+users, err := u.WithContext(ctx).Order(orderCol).Find()
+// SELECT * FROM users ORDER BY age;
+
+// OR Desc
+users, err := u.WithContext(ctx).Order(orderCol.Desc()).Find()
+// SELECT * FROM users ORDER BY age DESC;
+```
+
 ###### <span id="limit--offset">分页查询（Limit & Offset）</span>
 
 分页查询方法，其中：

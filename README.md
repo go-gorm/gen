@@ -619,6 +619,24 @@ users, err := u.WithContext(ctx).Order(u.Age.Desc()).Order(u.Name).Find()
 // SELECT * FROM users ORDER BY age DESC, name;
 ```
 
+Get field by string
+
+```go
+u := query.Use(db).User
+
+orderCol, ok := u.GetFieldByName(orderColStr) // maybe orderColStr == "id"
+if !ok {
+  // User doesn't contains orderColStr
+}
+
+users, err := u.WithContext(ctx).Order(orderCol).Find()
+// SELECT * FROM users ORDER BY age;
+
+// OR Desc
+users, err := u.WithContext(ctx).Order(orderCol.Desc()).Find()
+// SELECT * FROM users ORDER BY age DESC;
+```
+
 ###### Limit & Offset
 
 `Limit` specify the max number of records to retrieve
