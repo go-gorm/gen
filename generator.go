@@ -92,27 +92,29 @@ func (g *Generator) UseDB(db *gorm.DB) {
  */
 
 // GenerateModel catch table info from db, return a BaseStruct
-func (g *Generator) GenerateModel(tableName string, opts ...model.MemberOpt) *check.BaseStruct {
+func (g *Generator) GenerateModel(tableName string, opts ...model.FieldOpt) *check.BaseStruct {
 	return g.GenerateModelAs(tableName, g.db.Config.NamingStrategy.SchemaName(tableName), opts...)
 }
 
 // GenerateModel catch table info from db, return a BaseStruct
-func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...model.MemberOpt) *check.BaseStruct {
-	tableName = g.tableName(tableName)
-	s, err := check.GenBaseStructs(g.db, model.DBConf{
+func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...model.FieldOpt) *check.BaseStruct {
+	s, err := check.GenBaseStructs(g.db, model.Conf{
 		ModelPkg:       g.Config.ModelPkgPath,
+		TablePrefix:    g.getTablePrefix(),
 		TableName:      tableName,
 		ModelName:      modelName,
 		SchemaNameOpts: g.dbNameOpts,
-		MemberOpts:     fieldOpts,
-		DataTypeMap:    g.dataTypeMap,
-		GenerateModelConfig: model.GenerateModelConfig{
+		FieldConf: model.FieldConf{
+			DataTypeMap: g.dataTypeMap,
+
 			FieldNullable:     g.FieldNullable,
 			FieldWithIndexTag: g.FieldWithIndexTag,
 			FieldWithTypeTag:  g.FieldWithTypeTag,
 
 			FieldJSONTagNS: g.fieldJSONTagNS,
 			FieldNewTagNS:  g.fieldNewTagNS,
+
+			FieldOpts: fieldOpts,
 		},
 	})
 	if err != nil {
@@ -121,23 +123,19 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 	}
 	g.modelData[s.StructName] = s
 
-	g.successInfo(fmt.Sprintf("got %d columns from table <%s>", len(s.Members), s.TableName))
+	g.successInfo(fmt.Sprintf("got %d columns from table <%s>", len(s.Fields), s.TableName))
 	return s
 }
 
-func (g *Generator) tableName(table string) string {
+func (g *Generator) getTablePrefix() string {
 	if ns, ok := g.db.NamingStrategy.(schema.NamingStrategy); ok {
-		if strings.HasPrefix(table, ns.TablePrefix) {
-			return table
-		} else {
-			return ns.TablePrefix + table
-		}
+		return ns.TablePrefix
 	}
-	return table
+	return ""
 }
 
 // GenerateAllTable generate all tables in db
-func (g *Generator) GenerateAllTable(opts ...model.MemberOpt) (tableModels []interface{}) {
+func (g *Generator) GenerateAllTable(opts ...model.FieldOpt) (tableModels []interface{}) {
 	tableList, err := g.db.Migrator().GetTables()
 	if err != nil {
 		panic(fmt.Sprintf("get all tables fail: %s", err))
@@ -184,7 +182,7 @@ func (g *Generator) apply(fc interface{}, structs []*check.BaseStruct) {
 
 	for _, interfaceStruct := range structs {
 		if g.judgeMode(WithoutContext) {
-			interfaceStruct.ReviseMemberName()
+			interfaceStruct.ReviseFieldName()
 		}
 
 		data, err := g.pushBaseStruct(interfaceStruct)

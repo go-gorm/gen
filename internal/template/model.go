@@ -10,7 +10,7 @@ const TableName{{.StructName}} = "{{.TableName}}"
 
 // {{.StructName}} mapped from table <{{.TableName}}>
 type {{.StructName}} struct {
-    {{range .Members}}
+    {{range .Fields}}
 	{{if .MultilineComment -}}
 	/*
 {{.ColumnComment}}

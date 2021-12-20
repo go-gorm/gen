@@ -24,8 +24,11 @@ const (
 )
 
 // GenBaseStructs generate db model by table name
-func GenBaseStructs(db *gorm.DB, conf model.DBConf) (bases *BaseStruct, err error) {
-	modelName, tableName := conf.ModelName, conf.TableName
+func GenBaseStructs(db *gorm.DB, conf model.Conf) (bases *BaseStruct, err error) {
+	modelPkg := conf.ModelPkg
+	tablePrefix := conf.TablePrefix
+	tableName := conf.TableName
+	modelName := conf.ModelName
 
 	if _, ok := db.Config.Dialector.(tests.DummyDialector); ok {
 		return nil, fmt.Errorf("UseDB() is necessary to generate model struct [%s] from database table [%s]", modelName, tableName)
@@ -35,18 +38,21 @@ func GenBaseStructs(db *gorm.DB, conf model.DBConf) (bases *BaseStruct, err erro
 		return nil, fmt.Errorf("model name %q is invalid: %w", modelName, err)
 	}
 
-	modelPkg := conf.ModelPkg
 	if modelPkg == "" {
 		modelPkg = DefaultModelPkg
 	}
 	modelPkg = filepath.Base(modelPkg)
 
-	columns, err := getTbColumns(db, conf.GetSchemaName(db), tableName, conf.FieldWithIndexTag)
+	if !strings.HasPrefix(tableName, tablePrefix) {
+		tableName = tablePrefix + tableName
+	}
+
+	columns, err := getTblColumns(db, conf.GetSchemaName(db), tableName, conf.FieldWithIndexTag)
 	if err != nil {
 		return nil, err
 	}
 
-	base := BaseStruct{
+	base := &BaseStruct{
 		Source:        model.TableName,
 		GenBaseStruct: true,
 		TableName:     tableName,
@@ -57,20 +63,21 @@ func GenBaseStructs(db *gorm.DB, conf model.DBConf) (bases *BaseStruct, err erro
 	}
 
 	modifyOpts, filterOpts, createOpts := conf.SortOpt()
-	for _, field := range columns {
-		field.SetDataTypeMap(conf.DataTypeMap)
-		field.WithNS(conf.FieldJSONTagNS, conf.FieldNewTagNS)
-		m := field.ToMember(conf.FieldNullable)
+	for _, col := range columns {
+		col.SetDataTypeMap(conf.DataTypeMap)
+		col.WithNS(conf.FieldJSONTagNS, conf.FieldNewTagNS)
 
-		if filterMember(m, filterOpts) == nil {
+		m := col.ToField(conf.FieldNullable)
+
+		if filterField(m, filterOpts) == nil {
 			continue
 		}
 
 		if !conf.FieldWithTypeTag { // remove type tag if FieldWithTypeTag == false
-			m.GORMTag = strings.ReplaceAll(m.GORMTag, ";type:"+field.ColumnType, "")
+			m.GORMTag = strings.ReplaceAll(m.GORMTag, ";type:"+col.ColumnType, "")
 		}
 
-		m = modifyMember(m, modifyOpts)
+		m = modifyField(m, modifyOpts)
 		if ns, ok := db.NamingStrategy.(schema.NamingStrategy); ok {
 			ns.SingularTable = true
 			m.Name = ns.SchemaName(ns.TablePrefix + m.Name)
@@ -78,11 +85,11 @@ func GenBaseStructs(db *gorm.DB, conf model.DBConf) (bases *BaseStruct, err erro
 			m.Name = db.NamingStrategy.SchemaName(m.Name)
 		}
 
-		base.Members = append(base.Members, m)
+		base.Fields = append(base.Fields, m)
 	}
 
 	for _, create := range createOpts {
-		m := create.Self()(nil)
+		m := create.Operator()(nil)
 
 		if m.Relation != nil {
 			if m.Relation.Model() != nil {
@@ -95,24 +102,24 @@ func GenBaseStructs(db *gorm.DB, conf model.DBConf) (bases *BaseStruct, err erro
 			m.Type = strings.ReplaceAll(m.Type, modelPkg+".", "") // remove modelPkg in field's Type, avoid import error
 		}
 
-		base.Members = append(base.Members, m)
+		base.Fields = append(base.Fields, m)
 	}
 
-	return &base, nil
+	return base, nil
 }
 
-func filterMember(m *model.Member, opts []model.MemberOpt) *model.Member {
+func filterField(m *model.Field, opts []model.FieldOpt) *model.Field {
 	for _, opt := range opts {
-		if opt.Self()(m) == nil {
+		if opt.Operator()(m) == nil {
 			return nil
 		}
 	}
 	return m
 }
 
-func modifyMember(m *model.Member, opts []model.MemberOpt) *model.Member {
+func modifyField(m *model.Field, opts []model.FieldOpt) *model.Field {
 	for _, opt := range opts {
-		m = opt.Self()(m)
+		m = opt.Operator()(m)
 	}
 	return m
 }
