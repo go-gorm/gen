@@ -26,7 +26,7 @@ type SourceCode int
 
 const (
 	Struct SourceCode = iota
-	TableName
+	Table
 )
 
 type KeyWords struct {
@@ -125,8 +125,8 @@ func (m dataTypeMap) Get(dataType, detailType string) string {
 	return defaultDataType
 }
 
-// Member user input structures
-type Member struct {
+// Field user input structures
+type Field struct {
 	Name             string
 	Type             string
 	ColumnName       string
@@ -140,9 +140,9 @@ type Member struct {
 	Relation *field.Relation
 }
 
-func (m *Member) IsRelation() bool { return m.Relation != nil }
+func (m *Field) IsRelation() bool { return m.Relation != nil }
 
-func (m *Member) GenType() string {
+func (m *Field) GenType() string {
 	if m.IsRelation() {
 		return m.Type
 	}
@@ -166,7 +166,7 @@ func (m *Member) GenType() string {
 	}
 }
 
-func (m *Member) EscapeKeyword() *Member {
+func (m *Field) EscapeKeyword() *Field {
 	if GormKeywords.FullMatch(m.Name) {
 		m.Name += "_"
 	}

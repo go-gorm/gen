@@ -258,8 +258,8 @@ FieldNewTag        // append new tag
 FieldNewTagWithNS  // specify new tag with name strategy
 FieldTrimPrefix    // trim column prefix
 FieldTrimSuffix    // trim column suffix
-FieldAddPrefix     // add prefix to struct member's name
-FieldAddSuffix     // add suffix to struct member's name
+FieldAddPrefix     // add prefix to struct field's name
+FieldAddSuffix     // add suffix to struct field's name
 FieldRelate        // specify relationship with other tables
 FieldRelateModel   // specify relationship with exist models
 ```

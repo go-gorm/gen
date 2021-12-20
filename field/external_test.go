@@ -390,7 +390,7 @@ func BenchmarkExpr_Count(b *testing.B) {
 	}
 }
 
-func TestRelation_StructMember(t *testing.T) {
+func TestRelation_StructField(t *testing.T) {
 	var testdatas = []struct {
 		relation      *field.Relation
 		expectedValue string
@@ -411,13 +411,13 @@ func TestRelation_StructMember(t *testing.T) {
 	}
 
 	for _, testdata := range testdatas {
-		if result := testdata.relation.StructMember(); result != testdata.expectedValue {
-			t.Errorf("StructMember fail: except %q, got %q", testdata.expectedValue, result)
+		if result := testdata.relation.StructField(); result != testdata.expectedValue {
+			t.Errorf("StructField fail: except %q, got %q", testdata.expectedValue, result)
 		}
 	}
 }
 
-func TestRelation_StructMemberInit(t *testing.T) {
+func TestRelation_StructFieldInit(t *testing.T) {
 	var testdatas = []struct {
 		relation      *field.Relation
 		expectedValue string
@@ -438,8 +438,8 @@ func TestRelation_StructMemberInit(t *testing.T) {
 	}
 
 	for _, testdata := range testdatas {
-		if result := testdata.relation.StructMemberInit(); result != testdata.expectedValue {
-			t.Errorf("StructMember fail: except %q, got %q", testdata.expectedValue, result)
+		if result := testdata.relation.StructFieldInit(); result != testdata.expectedValue {
+			t.Errorf("StructField fail: except %q, got %q", testdata.expectedValue, result)
 		}
 	}
 }

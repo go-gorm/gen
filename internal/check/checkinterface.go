@@ -11,15 +11,15 @@ import (
 
 // InterfaceMethod interface's method
 type InterfaceMethod struct {
-	Doc           string         //comment
-	S             string         //First letter of
+	Doc           string         // comment
+	S             string         // First letter of
 	OriginStruct  parser.Param   // origin struct name
 	TargetStruct  string         // generated query struct bane
 	MethodName    string         // generated function name
 	Params        []parser.Param // function input params
 	Result        []parser.Param // function output params
 	ResultData    parser.Param   // output data
-	Sections      *Sections      //Parse split SQL into sections
+	Sections      *Sections      // Parse split SQL into sections
 	SqlParams     []parser.Param // variable in sql need function input
 	SqlString     string         // SQL
 	GormOption    string         // gorm execute method Find or Exec or Take
@@ -132,10 +132,10 @@ func (m *InterfaceMethod) checkMethod(methods []*InterfaceMethod, s *BaseStruct)
 				m.InterfaceName, m.MethodName, method.InterfaceName, method.MethodName)
 		}
 	}
-	for _, member := range s.Members {
-		if member.Name == m.MethodName {
-			return fmt.Errorf("can not generate method same name with struct member:[%s.%s] and [%s.%s]",
-				m.InterfaceName, m.MethodName, s.StructName, member.Name)
+	for _, f := range s.Fields {
+		if f.Name == m.MethodName {
+			return fmt.Errorf("can not generate method same name with struct field:[%s.%s] and [%s.%s]",
+				m.InterfaceName, m.MethodName, s.StructName, f.Name)
 		}
 	}
 

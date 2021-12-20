@@ -22,7 +22,7 @@ var ns = schema.NamingStrategy{}
 type RelationField interface {
 	Name() string
 	Path() string
-	Field(member ...string) Expr
+	Field(fields ...string) Expr
 
 	On(conds ...Expr) RelationField
 	Order(columns ...Expr) RelationField
@@ -66,9 +66,9 @@ func (r Relation) RelationshipName() string { return ns.SchemaName(string(r.rela
 
 func (r Relation) ChildRelations() []Relation { return r.childRelations }
 
-func (r Relation) Field(member ...string) Expr {
-	if len(member) > 0 {
-		return NewString("", r.fieldName+"."+strings.Join(member, ".")).appendBuildOpts(WithoutQuote)
+func (r Relation) Field(fields ...string) Expr {
+	if len(fields) > 0 {
+		return NewString("", r.fieldName+"."+strings.Join(fields, ".")).appendBuildOpts(WithoutQuote)
 	}
 	return NewString("", r.fieldName).appendBuildOpts(WithoutQuote)
 }
@@ -103,19 +103,18 @@ func (r *Relation) GetOrderCol() []Expr             { return r.order }
 func (r *Relation) GetClauses() []clause.Expression { return r.clauses }
 func (r *Relation) GetPage() (offset, limit int)    { return r.offset, r.limit }
 
-func (r *Relation) StructMember() string {
-	var memberStr string
+func (r *Relation) StructField() (fieldStr string) {
 	for _, relation := range r.childRelations {
-		memberStr += relation.fieldName + " struct {\nfield.RelationField\n" + relation.StructMember() + "}\n"
+		fieldStr += relation.fieldName + " struct {\nfield.RelationField\n" + relation.StructField() + "}\n"
 	}
-	return memberStr
+	return fieldStr
 }
 
-func (r *Relation) StructMemberInit() string {
+func (r *Relation) StructFieldInit() string {
 	initStr := fmt.Sprintf("RelationField: field.NewRelation(%q, %q),\n", r.fieldPath, r.fieldType)
 	for _, relation := range r.childRelations {
-		initStr += relation.fieldName + ": struct {\nfield.RelationField\n" + strings.TrimSpace(relation.StructMember()) + "}"
-		initStr += "{\n" + relation.StructMemberInit() + "},\n"
+		initStr += relation.fieldName + ": struct {\nfield.RelationField\n" + strings.TrimSpace(relation.StructField()) + "}"
+		initStr += "{\n" + relation.StructFieldInit() + "},\n"
 	}
 	return initStr
 }

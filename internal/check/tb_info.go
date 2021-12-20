@@ -32,7 +32,7 @@ func getITableInfo(db *gorm.DB) ITableInfo {
 	return &mysqlTableInfo{db: db}
 }
 
-func getTbColumns(db *gorm.DB, schemaName string, tableName string, indexTag bool) (result []*model.Column, err error) {
+func getTblColumns(db *gorm.DB, schemaName string, tableName string, indexTag bool) (result []*model.Column, err error) {
 	if db == nil {
 		return nil, errors.New("gorm db is nil")
 	}

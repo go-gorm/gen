@@ -36,7 +36,7 @@ func (c *Column) SetDataTypeMap(m map[string]func(detailType string) (dataType s
 	c.dataTypeMap = m
 }
 
-func (c *Column) GetDataType() (memberType string) {
+func (c *Column) GetDataType() (fieldtype string) {
 	if mapping, ok := c.dataTypeMap[c.DataType]; ok {
 		return mapping(c.ColumnType)
 	}
@@ -53,16 +53,16 @@ func (c *Column) WithNS(jsonTagNS, newTagNS func(columnName string) string) {
 	}
 }
 
-func (c *Column) ToMember(nullable bool) *Member {
-	memberType := c.GetDataType()
-	if c.ColumnName == "deleted_at" && memberType == "time.Time" {
-		memberType = "gorm.DeletedAt"
+func (c *Column) ToField(nullable bool) *Field {
+	fieldType := c.GetDataType()
+	if c.ColumnName == "deleted_at" && fieldType == "time.Time" {
+		fieldType = "gorm.DeletedAt"
 	} else if nullable && c.IsNullable == "YES" {
-		memberType = "*" + memberType
+		fieldType = "*" + fieldType
 	}
-	return &Member{
+	return &Field{
 		Name:             c.ColumnName,
-		Type:             memberType,
+		Type:             fieldType,
 		ColumnName:       c.ColumnName,
 		ColumnComment:    c.ColumnComment,
 		MultilineComment: c.multilineComment(),
