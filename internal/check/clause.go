@@ -34,7 +34,7 @@ type SQLClause struct {
 }
 
 func (s SQLClause) String() string {
-	return strings.ReplaceAll(strings.Join(s.Value, "+"), `"+"`, "")
+	return strings.ReplaceAll(strings.Join(append(s.Value, "\" \""), "+"), `"+"`, "")
 }
 
 func (s SQLClause) Creat() string {
