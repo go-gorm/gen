@@ -37,11 +37,17 @@ type Config struct {
 
 	Mode GenerateMode // generate mode
 
-	queryPkgName   string // generated query code's package name
-	dbNameOpts     []model.SchemaNameOpt
+	queryPkgName string // generated query code's package name
+	dbNameOpts   []model.SchemaNameOpt
+
+	// name strategy for syncing table from db
+	tableNameNS func(tableName string) (targetTableName string)
+	modelNameNS func(tableName string) (modelName string)
+	fileNameNS  func(tableName string) (fielName string)
+
 	dataTypeMap    map[string]func(detailType string) (dataType string)
-	fieldJSONTagNS func(columnName string) string
-	fieldNewTagNS  func(columnName string) string
+	fieldJSONTagNS func(columnName string) (tagContent string)
+	fieldNewTagNS  func(columnName string) (tagContent string)
 }
 
 // WithDbNameOpts set get database name function
@@ -53,14 +59,32 @@ func (cfg *Config) WithDbNameOpts(opts ...model.SchemaNameOpt) {
 	}
 }
 
+// WithTableNameStrategy specify table name naming strategy, only work when syncing table from db
+func (cfg *Config) WithTableNameStrategy(ns func(tableName string) (targetTableName string)) {
+	cfg.tableNameNS = ns
+}
+
+// WithModelNameStrategy specify model struct name naming strategy, only work when syncing table from db
+func (cfg *Config) WithModelNameStrategy(ns func(tableName string) (modelName string)) {
+	cfg.modelNameNS = ns
+}
+
+// WithFileNameStrategy specify file name naming strategy, only work when syncing table from db
+func (cfg *Config) WithFileNameStrategy(ns func(tableName string) (fielName string)) {
+	cfg.fileNameNS = ns
+}
+
+// WithDataTypeMap specify data type mapping relationship, only work when syncing table from db
 func (cfg *Config) WithDataTypeMap(newMap map[string]func(detailType string) (dataType string)) {
 	cfg.dataTypeMap = newMap
 }
 
+// WithJSONTagNameStrategy specify json tag naming strategy
 func (cfg *Config) WithJSONTagNameStrategy(ns func(columnName string) (tagContent string)) {
 	cfg.fieldJSONTagNS = ns
 }
 
+// WithNewTagNameStrategy specify new tag naming strategy
 func (cfg *Config) WithNewTagNameStrategy(ns func(columnName string) (tagContent string)) {
 	cfg.fieldNewTagNS = ns
 }

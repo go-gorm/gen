@@ -18,6 +18,7 @@ type BaseStruct struct {
 	db *gorm.DB
 
 	GenBaseStruct bool   // whether to generate db model
+	FileName      string // generated file name
 	S             string // the first letter(lower case)of simple Name
 	NewStructName string // new struct name
 	StructName    string // origin struct name
@@ -35,6 +36,7 @@ func (b *BaseStruct) parseStruct(st interface{}) error {
 		return err
 	}
 	b.TableName = stmt.Table
+	b.FileName = strings.ToLower(stmt.Table)
 
 	for _, f := range stmt.Schema.Fields {
 		b.appendOrUpdateField(&model.Field{

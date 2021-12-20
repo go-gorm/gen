@@ -104,6 +104,9 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 		TableName:      tableName,
 		ModelName:      modelName,
 		SchemaNameOpts: g.dbNameOpts,
+		TableNameNS:    g.tableNameNS,
+		ModelNameNS:    g.modelNameNS,
+		FileNameNS:     g.fileNameNS,
 		FieldConf: model.FieldConf{
 			DataTypeMap: g.dataTypeMap,
 
@@ -342,8 +345,8 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 		return err
 	}
 
-	defer g.successInfo(fmt.Sprintf("generate query file: %s/%s.gen.go", g.OutPath, strings.ToLower(data.TableName)))
-	return g.output(fmt.Sprintf("%s/%s.gen.go", g.OutPath, strings.ToLower(data.TableName)), buf.Bytes())
+	defer g.successInfo(fmt.Sprintf("generate query file: %s/%s.gen.go", g.OutPath, data.FileName))
+	return g.output(fmt.Sprintf("%s/%s.gen.go", g.OutPath, data.FileName), buf.Bytes())
 }
 
 // generateQueryUnitTestFile generate unit test file for query
@@ -367,8 +370,8 @@ func (g *Generator) generateQueryUnitTestFile(data *genInfo) (err error) {
 		}
 	}
 
-	defer g.successInfo(fmt.Sprintf("generate unit test file: %s/%s.gen_test.go", g.OutPath, strings.ToLower(data.TableName)))
-	return g.output(fmt.Sprintf("%s/%s.gen_test.go", g.OutPath, strings.ToLower(data.TableName)), buf.Bytes())
+	defer g.successInfo(fmt.Sprintf("generate unit test file: %s/%s.gen_test.go", g.OutPath, data.FileName))
+	return g.output(fmt.Sprintf("%s/%s.gen_test.go", g.OutPath, data.FileName), buf.Bytes())
 }
 
 // generateModelFile generate model structures and save to file
@@ -393,7 +396,7 @@ func (g *Generator) generateModelFile() error {
 			return err
 		}
 
-		modelFile := modelOutPath + data.TableName + ".gen.go"
+		modelFile := modelOutPath + data.FileName + ".gen.go"
 		err = g.output(modelFile, buf.Bytes())
 		if err != nil {
 			return err

@@ -34,17 +34,23 @@ func GenBaseStructs(db *gorm.DB, conf model.Conf) (bases *BaseStruct, err error)
 		return nil, fmt.Errorf("UseDB() is necessary to generate model struct [%s] from database table [%s]", modelName, tableName)
 	}
 
+	if conf.ModelNameNS != nil {
+		modelName = conf.ModelNameNS(tableName)
+	}
 	if err = checkModelName(modelName); err != nil {
 		return nil, fmt.Errorf("model name %q is invalid: %w", modelName, err)
 	}
 
-	if modelPkg == "" {
-		modelPkg = DefaultModelPkg
+	if conf.TableNameNS != nil {
+		tableName = conf.TableNameNS(tableName)
 	}
-	modelPkg = filepath.Base(modelPkg)
-
 	if !strings.HasPrefix(tableName, tablePrefix) {
 		tableName = tablePrefix + tableName
+	}
+
+	fileName := strings.ToLower(tableName)
+	if conf.FileNameNS != nil {
+		fileName = conf.FileNameNS(conf.TableName)
 	}
 
 	columns, err := getTblColumns(db, conf.GetSchemaName(db), tableName, conf.FieldWithIndexTag)
@@ -52,9 +58,15 @@ func GenBaseStructs(db *gorm.DB, conf model.Conf) (bases *BaseStruct, err error)
 		return nil, err
 	}
 
+	if modelPkg == "" {
+		modelPkg = DefaultModelPkg
+	}
+	modelPkg = filepath.Base(modelPkg)
+
 	base := &BaseStruct{
-		Source:        model.TableName,
+		Source:        model.Table,
 		GenBaseStruct: true,
+		FileName:      fileName,
 		TableName:     tableName,
 		StructName:    modelName,
 		NewStructName: uncaptialize(modelName),

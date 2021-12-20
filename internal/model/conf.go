@@ -26,6 +26,9 @@ type Conf struct {
 	ModelName   string
 
 	SchemaNameOpts []SchemaNameOpt
+	TableNameNS    func(tableName string) string
+	ModelNameNS    func(tableName string) string
+	FileNameNS     func(tableName string) string
 
 	FieldConf
 }

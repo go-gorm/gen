@@ -26,7 +26,7 @@ type SourceCode int
 
 const (
 	Struct SourceCode = iota
-	TableName
+	Table
 )
 
 type KeyWords struct {
