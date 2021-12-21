@@ -34,6 +34,8 @@ type M map[string]interface{}
 // RowsAffected execute affected raws
 type RowsAffected int64
 
+func init() { runtime.GOMAXPROCS(runtime.NumCPU()) }
+
 // NewGenerator create a new generator
 func NewGenerator(cfg Config) *Generator {
 	err := cfg.Revise()
