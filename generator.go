@@ -34,6 +34,8 @@ type M map[string]interface{}
 // RowsAffected execute affected raws
 type RowsAffected int64
 
+var concurrent = runtime.NumCPU()
+
 func init() { runtime.GOMAXPROCS(runtime.NumCPU()) }
 
 // NewGenerator create a new generator
@@ -248,7 +250,7 @@ func (g *Generator) generateQueryFile() (err error) {
 	}
 
 	errChan := make(chan error)
-	pool := pools.NewPool(runtime.NumCPU())
+	pool := pools.NewPool(concurrent)
 	// generate query code for all struct
 	for _, info := range g.Data {
 		pool.Wait()
@@ -330,9 +332,13 @@ func (g *Generator) generateQueryFile() (err error) {
 func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 	var buf bytes.Buffer
 
+	structPkgPath := data.StructInfo.PkgPath
+	if structPkgPath == "" {
+		structPkgPath = g.modelImportPath
+	}
 	err = render(tmpl.Header, &buf, map[string]string{
 		"Package":       g.queryPkgName,
-		"StructPkgPath": data.StructInfo.PkgPath,
+		"StructPkgPath": structPkgPath,
 	})
 	if err != nil {
 		return err
@@ -401,7 +407,7 @@ func (g *Generator) generateModelFile() error {
 	}
 
 	errChan := make(chan error)
-	pool := pools.NewPool(runtime.NumCPU())
+	pool := pools.NewPool(concurrent)
 	for _, data := range g.modelData {
 		if data == nil || !data.GenBaseStruct {
 			continue

@@ -10,6 +10,7 @@ const Header = NotEditMark + `
 package {{.Package}}
 
 import(
+	"context"
 	"database/sql"
 	"strings"
 
