@@ -5,15 +5,16 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"text/template"
 
 	"golang.org/x/tools/imports"
-
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 
@@ -21,6 +22,7 @@ import (
 	"gorm.io/gen/internal/model"
 	"gorm.io/gen/internal/parser"
 	tmpl "gorm.io/gen/internal/template"
+	"gorm.io/gen/internal/utils/pools"
 )
 
 // T generic type
@@ -243,19 +245,30 @@ func (g *Generator) generateQueryFile() (err error) {
 		return nil
 	}
 
+	errChan := make(chan error)
+	pool := pools.NewPool(runtime.NumCPU())
 	// generate query code for all struct
 	for _, info := range g.Data {
-		err = g.generateSingleQueryFile(info)
-		if err != nil {
-			return err
-		}
-
-		if g.WithUnitTest {
-			err = g.generateQueryUnitTestFile(info)
-			if err != nil { // do not panic
-				g.db.Logger.Error(context.Background(), "generate unit test fail: %s", err)
+		pool.Wait()
+		go func(info *genInfo) {
+			defer pool.Done()
+			err = g.generateSingleQueryFile(info)
+			if err != nil {
+				errChan <- err
 			}
-		}
+
+			if g.WithUnitTest {
+				err = g.generateQueryUnitTestFile(info)
+				if err != nil { // do not panic
+					g.db.Logger.Error(context.Background(), "generate unit test fail: %s", err)
+				}
+			}
+		}(info)
+	}
+	select {
+	case err = <-errChan:
+		return err
+	case <-pool.AsyncWaitAll():
 	}
 
 	// generate query file
@@ -385,24 +398,35 @@ func (g *Generator) generateModelFile() error {
 		return fmt.Errorf("create model pkg path(%s) fail: %s", modelOutPath, err)
 	}
 
+	errChan := make(chan error)
+	pool := pools.NewPool(runtime.NumCPU())
 	for _, data := range g.modelData {
 		if data == nil || !data.GenBaseStruct {
 			continue
 		}
 
-		var buf bytes.Buffer
-		err = render(tmpl.Model, &buf, data)
-		if err != nil {
-			return err
-		}
+		pool.Wait()
+		go func(data *check.BaseStruct) {
+			defer pool.Done()
+			var buf bytes.Buffer
+			err = render(tmpl.Model, &buf, data)
+			if err != nil {
+				errChan <- err
+			}
 
-		modelFile := modelOutPath + data.FileName + ".gen.go"
-		err = g.output(modelFile, buf.Bytes())
-		if err != nil {
-			return err
-		}
+			modelFile := modelOutPath + data.FileName + ".gen.go"
+			err = g.output(modelFile, buf.Bytes())
+			if err != nil {
+				errChan <- err
+			}
 
-		g.successInfo(fmt.Sprintf("generate model file(table <%s> -> {%s.%s}): %s", data.TableName, data.StructInfo.Package, data.StructInfo.Type, modelFile))
+			g.successInfo(fmt.Sprintf("generate model file(table <%s> -> {%s.%s}): %s", data.TableName, data.StructInfo.Package, data.StructInfo.Type, modelFile))
+		}(data)
+	}
+	select {
+	case err = <-errChan:
+		return err
+	case <-pool.AsyncWaitAll():
 	}
 	return nil
 }
@@ -433,7 +457,7 @@ func (g *Generator) output(fileName string, content []byte) error {
 		}
 		return fmt.Errorf("cannot format file: %w", err)
 	}
-	return outputFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, result)
+	return ioutil.WriteFile(fileName, result, 0640)
 }
 
 func (g *Generator) pushBaseStruct(base *check.BaseStruct) (*genInfo, error) {
@@ -446,27 +470,6 @@ func (g *Generator) pushBaseStruct(base *check.BaseStruct) (*genInfo, error) {
 			base.StructInfo.Package, base.StructName, g.Data[structName].StructInfo.Package, g.Data[structName].StructName)
 	}
 	return g.Data[structName], nil
-}
-
-func outputFile(filename string, flag int, data []byte) error {
-	out, err := os.OpenFile(filename, flag, 0640)
-	if err != nil {
-		return fmt.Errorf("open out file fail: %w", err)
-	}
-	return output(out, data)
-}
-
-func output(wr io.WriteCloser, data []byte) (err error) {
-	defer func() {
-		if e := wr.Close(); e != nil {
-			err = fmt.Errorf("close file fail: %w", e)
-		}
-	}()
-
-	if _, err = wr.Write(data); err != nil {
-		return fmt.Errorf("write file fail: %w", err)
-	}
-	return nil
 }
 
 func render(tmpl string, wr io.Writer, data interface{}) error {
