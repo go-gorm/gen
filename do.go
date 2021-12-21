@@ -589,6 +589,9 @@ func (d *DO) ScanRows(rows *sql.Rows, dest interface{}) error {
 }
 
 func (d *DO) newResultPointer() interface{} {
+	if d.modelType == nil {
+		return nil
+	}
 	return reflect.New(d.modelType).Interface()
 }
 
