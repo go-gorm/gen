@@ -310,7 +310,7 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 			if sqlClause := buf.Dump(); strings.TrimSpace(sqlClause) != "" {
 				m.Sections.members = append(m.Sections.members, section{
 					Type:  model.SQL,
-					Value: strconv.Quote(strings.TrimSpace(sqlClause)),
+					Value: strconv.Quote(sqlClause),
 				})
 			}
 
@@ -380,7 +380,7 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 	if sqlClause := buf.Dump(); strings.TrimSpace(sqlClause) != "" {
 		m.Sections.members = append(m.Sections.members, section{
 			Type:  model.SQL,
-			Value: strconv.Quote(strings.TrimSpace(sqlClause)),
+			Value: strconv.Quote(sqlClause),
 		})
 	}
 

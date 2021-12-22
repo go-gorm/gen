@@ -34,7 +34,17 @@ type SQLClause struct {
 }
 
 func (s SQLClause) String() string {
-	return strings.ReplaceAll(strings.Join(append(s.Value, "\"\""), "+\" \"+"), `"+"`, "")
+	sqlString := strings.Join(s.Value, "+")
+	// trim left space
+	if strings.HasPrefix(sqlString, "\"") {
+		sqlString = `"` + strings.TrimLeft(sqlString, `" `)
+	}
+	// make sure right has only one space
+	if !strings.HasSuffix(sqlString, ` "`) {
+		sqlString += `+" "`
+	}
+	// Remove redundant connection symbols
+	return strings.ReplaceAll(sqlString, `"+"`, "")
 }
 
 func (s SQLClause) Creat() string {
