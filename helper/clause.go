@@ -105,15 +105,17 @@ func setValue(value string) string {
 func JoinWhereBuilder(src *strings.Builder, whereValue strings.Builder) {
 	value := trimAll(whereValue.String())
 	if value != "" {
-		src.WriteString(" WHERE ")
+		src.WriteString("WHERE ")
 		src.WriteString(value)
+		src.WriteString(" ")
 	}
 }
 
 func JoinSetBuilder(src *strings.Builder, setValue strings.Builder) {
 	value := trimAll(setValue.String())
 	if value != "" {
-		src.WriteString(" SET ")
+		src.WriteString("SET ")
 		src.WriteString(value)
+		src.WriteString(" ")
 	}
 }
