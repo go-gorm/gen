@@ -14,6 +14,7 @@ import (
 	"strings"
 	"text/template"
 
+	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/imports"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
@@ -405,6 +406,11 @@ func (g *Generator) generateModelFile() error {
 	if err := os.MkdirAll(modelOutPath, os.ModePerm); err != nil {
 		return fmt.Errorf("create model pkg path(%s) fail: %s", modelOutPath, err)
 	}
+	p, err := packages.Load(&packages.Config{Dir: modelOutPath})
+	if err != nil || len(p) == 0 {
+		return fmt.Errorf("parse model pkg path(%s) fail: %v", modelOutPath, err)
+	}
+	modelPkgPath := p[0].PkgPath
 
 	errChan := make(chan error)
 	pool := pools.NewPool(concurrent)
@@ -412,7 +418,7 @@ func (g *Generator) generateModelFile() error {
 		if data == nil || !data.GenBaseStruct {
 			continue
 		}
-
+		data.StructInfo.PkgPath = modelPkgPath
 		pool.Wait()
 		go func(data *check.BaseStruct) {
 			defer pool.Done()
