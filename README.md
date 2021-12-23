@@ -564,7 +564,7 @@ p := query.Use(db).Pizza
 
 pizzas, err := p.WithContext(ctx).Where(
     p.WithContext(ctx).Where(p.Pizza.Eq("pepperoni")).
-        Where(p.Where(p.Size.Eq("small")).Or(p.Size.Eq("medium"))),
+        Where(p.WithContext(ctx).Where(p.Size.Eq("small")).Or(p.Size.Eq("medium"))),
 ).Or(
     p.WithContext(ctx).Where(p.Pizza.Eq("hawaiian")).Where(p.Size.Eq("xlarge")),
 ).Find()
