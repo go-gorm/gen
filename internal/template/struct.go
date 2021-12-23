@@ -30,7 +30,7 @@ const (
 		_{{.NewStructName}}.{{.NewStructName}}Do.UseDB(db)
 		_{{.NewStructName}}.{{.NewStructName}}Do.UseModel(&{{.StructInfo.Package}}.{{.StructInfo.Type}}{})
 	
-		{{if .HasField}}tableName := _{{.NewStructName}}.{{.NewStructName}}Do.TableName(){{end}}
+		tableName := _{{.NewStructName}}.{{.NewStructName}}Do.TableName()
 		_{{$.NewStructName}}.ALL = field.NewField(tableName, "*")
 		{{range .Fields -}}
 		{{if not .IsRelation -}}
