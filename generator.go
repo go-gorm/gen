@@ -14,6 +14,7 @@ import (
 	"strings"
 	"text/template"
 
+	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/imports"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
@@ -48,7 +49,7 @@ func NewGenerator(cfg Config) *Generator {
 	return &Generator{
 		Config:    cfg,
 		Data:      make(map[string]*genInfo),
-		modelData: map[string]*check.BaseStruct{},
+		modelData: make(map[string]*check.BaseStruct),
 	}
 }
 
@@ -334,7 +335,7 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 
 	structPkgPath := data.StructInfo.PkgPath
 	if structPkgPath == "" {
-		structPkgPath = g.modelImportPath
+		structPkgPath = g.modelPkgPath
 	}
 	err = render(tmpl.Header, &buf, map[string]string{
 		"Package":       g.queryPkgName,
@@ -396,7 +397,7 @@ func (g *Generator) generateQueryUnitTestFile(data *genInfo) (err error) {
 }
 
 // generateModelFile generate model structures and save to file
-func (g *Generator) generateModelFile() error {
+func (g *Generator) generateModelFile() (err error) {
 	modelOutPath, err := g.getModelOutputPath()
 	if err != nil {
 		return err
@@ -412,7 +413,6 @@ func (g *Generator) generateModelFile() error {
 		if data == nil || !data.GenBaseStruct {
 			continue
 		}
-
 		pool.Wait()
 		go func(data *check.BaseStruct) {
 			defer pool.Done()
@@ -435,6 +435,7 @@ func (g *Generator) generateModelFile() error {
 	case err = <-errChan:
 		return err
 	case <-pool.AsyncWaitAll():
+		g.fillModelPkgPath(modelOutPath)
 	}
 	return nil
 }
@@ -449,6 +450,22 @@ func (g *Generator) getModelOutputPath() (outPath string, err error) {
 		outPath = filepath.Dir(g.OutPath) + "/" + g.ModelPkgPath
 	}
 	return outPath + "/", nil
+}
+
+func (g *Generator) fillModelPkgPath(filePath string) {
+	pkgs, err := packages.Load(&packages.Config{
+		Mode: packages.NeedName,
+		Dir:  filePath,
+	})
+	if err != nil {
+		g.db.Logger.Error(context.Background(), "parse model pkg path fail: %s", err)
+		return
+	}
+	if len(pkgs) == 0 {
+		g.db.Logger.Error(context.Background(), "parse model pkg path fail: got 0 packages")
+		return
+	}
+	g.Config.modelPkgPath = pkgs[0].PkgPath
 }
 
 // output format and output

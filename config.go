@@ -3,7 +3,6 @@ package gen
 import (
 	"fmt"
 	"path/filepath"
-	"runtime/debug"
 	"strings"
 
 	"gorm.io/gen/internal/check"
@@ -38,9 +37,9 @@ type Config struct {
 
 	Mode GenerateMode // generate mode
 
-	queryPkgName    string // generated query code's package name
-	modelImportPath string
-	dbNameOpts      []model.SchemaNameOpt
+	queryPkgName string // generated query code's package name
+	modelPkgPath string // model pkg path in target project
+	dbNameOpts   []model.SchemaNameOpt
 
 	// name strategy for syncing table from db
 	tableNameNS func(tableName string) (targetTableName string)
@@ -91,21 +90,10 @@ func (cfg *Config) WithNewTagNameStrategy(ns func(columnName string) (tagContent
 	cfg.fieldNewTagNS = ns
 }
 
-var moduleFullPath = func() string {
-	info, ok := debug.ReadBuildInfo()
-	if !ok {
-		return ""
-	}
-	return info.Path
-}()
-
 // Revise format path and db
 func (cfg *Config) Revise() (err error) {
 	if strings.TrimSpace(cfg.ModelPkgPath) == "" {
 		cfg.ModelPkgPath = check.DefaultModelPkg
-		cfg.modelImportPath = filepath.Dir(filepath.Clean(moduleFullPath+"/"+cfg.OutPath)) + "/" + cfg.ModelPkgPath
-	} else {
-		cfg.modelImportPath = filepath.Clean(moduleFullPath + "/" + cfg.ModelPkgPath)
 	}
 
 	cfg.OutPath, err = filepath.Abs(cfg.OutPath)
