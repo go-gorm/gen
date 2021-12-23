@@ -3,7 +3,6 @@ package gen
 import (
 	"fmt"
 	"path/filepath"
-	"runtime/debug"
 	"strings"
 
 	"gorm.io/gen/internal/check"
@@ -90,14 +89,6 @@ func (cfg *Config) WithJSONTagNameStrategy(ns func(columnName string) (tagConten
 func (cfg *Config) WithNewTagNameStrategy(ns func(columnName string) (tagContent string)) {
 	cfg.fieldNewTagNS = ns
 }
-
-var moduleFullPath = func() string {
-	info, ok := debug.ReadBuildInfo()
-	if !ok {
-		return ""
-	}
-	return info.Path
-}()
 
 // Revise format path and db
 func (cfg *Config) Revise() (err error) {

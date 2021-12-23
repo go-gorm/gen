@@ -465,7 +465,7 @@ func (g *Generator) fillModelPkgPath(filePath string) {
 		g.db.Logger.Error(context.Background(), "parse model pkg path fail: got 0 packages")
 		return
 	}
-	g.modelPkgPath = pkgs[0].PkgPath
+	g.Config.modelPkgPath = pkgs[0].PkgPath
 }
 
 // output format and output
