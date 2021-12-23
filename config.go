@@ -38,9 +38,9 @@ type Config struct {
 
 	Mode GenerateMode // generate mode
 
-	queryPkgName    string // generated query code's package name
-	modelImportPath string
-	dbNameOpts      []model.SchemaNameOpt
+	queryPkgName string // generated query code's package name
+	modelPkgPath string // model pkg path in target project
+	dbNameOpts   []model.SchemaNameOpt
 
 	// name strategy for syncing table from db
 	tableNameNS func(tableName string) (targetTableName string)
@@ -103,9 +103,6 @@ var moduleFullPath = func() string {
 func (cfg *Config) Revise() (err error) {
 	if strings.TrimSpace(cfg.ModelPkgPath) == "" {
 		cfg.ModelPkgPath = check.DefaultModelPkg
-		cfg.modelImportPath = filepath.Dir(filepath.Clean(moduleFullPath+"/"+cfg.OutPath)) + "/" + cfg.ModelPkgPath
-	} else {
-		cfg.modelImportPath = filepath.Clean(moduleFullPath + "/" + cfg.ModelPkgPath)
 	}
 
 	cfg.OutPath, err = filepath.Abs(cfg.OutPath)
