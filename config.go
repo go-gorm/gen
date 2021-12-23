@@ -1,7 +1,9 @@
 package gen
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"path/filepath"
 	"runtime/debug"
 	"strings"
@@ -25,7 +27,7 @@ const (
 // Config generator's basic configuration
 type Config struct {
 	db *gorm.DB // db connection
-
+	ProjectPath string // project root path, eg: /User/xxxProjectPath/dal/model
 	OutPath      string // query code path
 	OutFile      string // query code file name, default: gen.go
 	ModelPkgPath string // generated model code's package name
@@ -99,13 +101,35 @@ var moduleFullPath = func() string {
 	return info.Path
 }()
 
-// Revise format path and db
 func (cfg *Config) Revise() (err error) {
+	moduleName :=  getProjectModuleName(cfg.ProjectPath)
+	if moduleName == "" {
+		moduleName = "undefined"
+	}
 	if strings.TrimSpace(cfg.ModelPkgPath) == "" {
+		cfg.OutPath, err = filepath.Abs(cfg.OutPath)
+		if err != nil {
+			fmt.Println("get abs of outPath error:", err.Error())
+			return err
+		}
+
 		cfg.ModelPkgPath = check.DefaultModelPkg
-		cfg.modelImportPath = filepath.Dir(filepath.Clean(moduleFullPath+"/"+cfg.OutPath)) + "/" + cfg.ModelPkgPath
+		relPathOfOutPath, err := filepath.Rel(cfg.ProjectPath, cfg.OutPath)
+		if err != nil {
+			fmt.Println("get relPathOfOutPath error:", err.Error())
+			return err
+		}
+		cfg.modelImportPath = filepath.Dir(filepath.Clean(moduleName+"/" + relPathOfOutPath)) + "/" + cfg.ModelPkgPath
 	} else {
-		cfg.modelImportPath = filepath.Clean(moduleFullPath + "/" + cfg.ModelPkgPath)
+		cfg.ModelPkgPath, err = filepath.Abs(cfg.ModelPkgPath)
+		if err != nil {
+			return fmt.Errorf("get abs of ModelPkgPath failed: %v", err)
+		}
+		relPathOfModelPath, err := filepath.Rel(cfg.ProjectPath, cfg.ModelPkgPath)
+		if err != nil {
+			return fmt.Errorf("get  relPathOfModelPath failed: %v", err)
+		}
+		cfg.modelImportPath = filepath.Clean(moduleName + "/" + relPathOfModelPath + cfg.ModelPkgPath)
 	}
 
 	cfg.OutPath, err = filepath.Abs(cfg.OutPath)
@@ -128,3 +152,31 @@ func (cfg *Config) Revise() (err error) {
 }
 
 func (cfg *Config) judgeMode(mode GenerateMode) bool { return cfg.Mode&mode != 0 }
+
+func getProjectModuleName(projectPath string) string {
+	goModeFilePath := projectPath + "/go.mod"
+	// check go.mod file
+	_, err := os.Stat(goModeFilePath)
+	if os.IsNotExist(err) {
+		panic("go mod file not found" + err.Error())
+	}
+	firstLine := strings.TrimSpace(readLine(goModeFilePath, 1))
+	if strings.HasPrefix(firstLine, "module") {
+		return strings.TrimSpace(strings.ReplaceAll(firstLine, "module", ""))
+	}
+	return ""
+}
+
+func readLine(filePath string, lineNumber int) string {
+	file, _ := os.Open(filePath)
+	fileScanner := bufio.NewScanner(file)
+	lineCount := 1
+	for fileScanner.Scan() {
+		if lineCount == lineNumber {
+			return fileScanner.Text()
+		}
+		lineCount++
+	}
+	defer file.Close()
+	return ""
+}
