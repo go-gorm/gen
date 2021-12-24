@@ -397,7 +397,11 @@ func (g *Generator) generateQueryUnitTestFile(data *genInfo) (err error) {
 }
 
 // generateModelFile generate model structures and save to file
-func (g *Generator) generateModelFile() (err error) {
+func (g *Generator) generateModelFile() error {
+	if len(g.modelData) == 0 {
+		return nil
+	}
+
 	modelOutPath, err := g.getModelOutputPath()
 	if err != nil {
 		return err
@@ -458,11 +462,11 @@ func (g *Generator) fillModelPkgPath(filePath string) {
 		Dir:  filePath,
 	})
 	if err != nil {
-		g.db.Logger.Error(context.Background(), "parse model pkg path fail: %s", err)
+		g.db.Logger.Warn(context.Background(), "parse model pkg path fail: %s", err)
 		return
 	}
 	if len(pkgs) == 0 {
-		g.db.Logger.Error(context.Background(), "parse model pkg path fail: got 0 packages")
+		g.db.Logger.Warn(context.Background(), "parse model pkg path fail: got 0 packages")
 		return
 	}
 	g.Config.modelPkgPath = pkgs[0].PkgPath
