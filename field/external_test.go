@@ -89,6 +89,11 @@ func TestExpr_Build(t *testing.T) {
 			Expr:   field.NewField("", "id").GroupConcat(),
 			Result: "GROUP_CONCAT(`id`)",
 		},
+		{
+			Expr:         field.UnixTimestamp.Mul(99),
+			Result:       "UNIX_TIMESTAMP()*?",
+			ExpectedVars: []interface{}{uint64(99)},
+		},
 		// ======================== integer ========================
 		{
 			Expr:   field.NewUint("", "id"),
