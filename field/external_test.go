@@ -90,7 +90,7 @@ func TestExpr_Build(t *testing.T) {
 			Result: "GROUP_CONCAT(`id`)",
 		},
 		{
-			Expr:         field.UnixTimestamp.Mul(99),
+			Expr:         field.Func.UnixTimestamp.Mul(99),
 			Result:       "(UNIX_TIMESTAMP())*?",
 			ExpectedVars: []interface{}{uint64(99)},
 		},
