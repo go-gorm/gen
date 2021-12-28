@@ -91,7 +91,7 @@ func TestExpr_Build(t *testing.T) {
 		},
 		{
 			Expr:         field.UnixTimestamp.Mul(99),
-			Result:       "UNIX_TIMESTAMP()*?",
+			Result:       "(UNIX_TIMESTAMP())*?",
 			ExpectedVars: []interface{}{uint64(99)},
 		},
 		// ======================== integer ========================
@@ -101,7 +101,7 @@ func TestExpr_Build(t *testing.T) {
 		},
 		{
 			Expr:         field.NewUint("user", "id").Sum().Gt(100),
-			ExpectedVars: []interface{}{float64(100)},
+			ExpectedVars: []interface{}{uint(100)},
 			Result:       "SUM(`user`.`id`) > ?",
 		},
 		{
