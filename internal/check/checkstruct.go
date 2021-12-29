@@ -17,15 +17,16 @@ import (
 type BaseStruct struct {
 	db *gorm.DB
 
-	GenBaseStruct bool   // whether to generate db model
-	FileName      string // generated file name
-	S             string // the first letter(lower case)of simple Name
-	NewStructName string // new struct name
-	StructName    string // origin struct name
-	TableName     string // table name in db server
-	StructInfo    parser.Param
-	Fields        []*model.Field
-	Source        model.SourceCode
+	GenBaseStruct  bool   // whether to generate db model
+	FileName       string // generated file name
+	S              string // the first letter(lower case)of simple Name
+	NewStructName  string // new struct name
+	StructName     string // origin struct name
+	TableName      string // table name in db server
+	StructInfo     parser.Param
+	Fields         []*model.Field
+	Source         model.SourceCode
+	ImportPkgPaths []string
 }
 
 // parseStruct get all elements of struct with gorm's Parse, ignore unexported elements

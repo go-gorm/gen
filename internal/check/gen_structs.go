@@ -64,14 +64,15 @@ func GenBaseStructs(db *gorm.DB, conf model.Conf) (bases *BaseStruct, err error)
 	modelPkg = filepath.Base(modelPkg)
 
 	base := &BaseStruct{
-		Source:        model.Table,
-		GenBaseStruct: true,
-		FileName:      fileName,
-		TableName:     tableName,
-		StructName:    modelName,
-		NewStructName: uncaptialize(modelName),
-		S:             strings.ToLower(modelName[0:1]),
-		StructInfo:    parser.Param{Type: modelName, Package: modelPkg},
+		Source:         model.Table,
+		GenBaseStruct:  true,
+		FileName:       fileName,
+		TableName:      tableName,
+		StructName:     modelName,
+		NewStructName:  uncaptialize(modelName),
+		S:              strings.ToLower(modelName[0:1]),
+		StructInfo:     parser.Param{Type: modelName, Package: modelPkg},
+		ImportPkgPaths: conf.ImportPkgPaths,
 	}
 
 	modifyOpts, filterOpts, createOpts := conf.SortOpt()

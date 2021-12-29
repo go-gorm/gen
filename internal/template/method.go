@@ -357,7 +357,25 @@ func Test_{{.NewStructName}}Query(t *testing.T) {
 }
 `
 
+const DIYMethod_TEST_Basic = `
+type Input struct {
+	Args []interface{}
+}
+
+type Expectation struct {
+	Ret []interface{}
+}
+
+type TestCase struct {
+	Input
+	Expectation
+}
+
+`
+
 const DIYMethod_TEST = `
+
+var {{.OriginStruct.Type}}{{.MethodName}}TestCase = []TestCase{}
 
 func Test_{{.TargetStruct}}_{{.MethodName}}(t *testing.T) {
 	{{.TargetStruct}} := new{{.OriginStruct.Type}}(db)

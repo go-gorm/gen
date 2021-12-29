@@ -10,6 +10,7 @@ import (
 
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
+	{{range .ImportPkgPaths}}{{.}} ` + "\n" + `{{end}}
 )
 
 const TableName{{.StructName}} = "{{.TableName}}"

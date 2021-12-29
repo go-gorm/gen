@@ -25,6 +25,8 @@ type Conf struct {
 	TableName   string
 	ModelName   string
 
+	ImportPkgPaths []string
+
 	SchemaNameOpts []SchemaNameOpt
 	TableNameNS    func(tableName string) string
 	ModelNameNS    func(tableName string) string
