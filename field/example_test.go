@@ -7,7 +7,7 @@ import (
 )
 
 func ExampleFunc() {
-	expr := field.Func.UnixTimestamp
+	expr := field.Func.UnixTimestamp()
 
 	sql, vars := field.BuildToString(expr)
 	fmt.Println(sql, vars)
