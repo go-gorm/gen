@@ -37,9 +37,10 @@ type Config struct {
 
 	Mode GenerateMode // generate mode
 
-	queryPkgName string // generated query code's package name
-	modelPkgPath string // model pkg path in target project
-	dbNameOpts   []model.SchemaNameOpt
+	queryPkgName   string // generated query code's package name
+	modelPkgPath   string // model pkg path in target project
+	dbNameOpts     []model.SchemaNameOpt
+	importPkgPaths []string
 
 	// name strategy for syncing table from db
 	tableNameNS func(tableName string) (targetTableName string)
@@ -88,6 +89,11 @@ func (cfg *Config) WithJSONTagNameStrategy(ns func(columnName string) (tagConten
 // WithNewTagNameStrategy specify new tag naming strategy
 func (cfg *Config) WithNewTagNameStrategy(ns func(columnName string) (tagContent string)) {
 	cfg.fieldNewTagNS = ns
+}
+
+// WithImportPkgPath specify import package path
+func (cfg *Config) WithImportPkgPath(path ...string) {
+	cfg.importPkgPaths = append(cfg.importPkgPaths, path...)
 }
 
 // Revise format path and db
