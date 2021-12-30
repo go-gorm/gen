@@ -352,7 +352,6 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 		"StructPkgPath":  structPkgPath,
 		"ImportPkgPaths": data.ImportPkgPaths,
 	})
-	fmt.Println(buf.String())
 	if err != nil {
 		return err
 	}
