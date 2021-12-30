@@ -1441,6 +1441,31 @@ users, err := u.WithContext(ctx).Preload(field.Associations).Find()
 users, err := u.WithContext(ctx).Preload(u.Orders.OrderItems.Product).Find()
 ```
 
+###### <span id="preload-with-select">预加载指定列（Preload with select）</span>
+
+使用`Select`指定要查询的列名, 相应的外键必须被指定。
+
+```go
+type User struct {
+  gorm.Model
+  CreditCards []CreditCard `gorm:"foreignKey:UserRefer"`
+}
+
+type CreditCard struct {
+  gorm.Model
+  Number    string
+  UserRefer uint
+}
+
+u := q.User
+cc := q.CreditCard
+
+// !!! 外键 "cc.UserRefer" 必须被指定
+users, err := u.WithContext(ctx).Where(c.ID.Eq(1)).Preload(u.CreditCards.Select(cc.Number, cc.UserRefer)).Find()
+// SELECT * FROM `credit_cards` WHERE `credit_cards`.`customer_refer` = 1 AND `credit_cards`.`deleted_at` IS NULL
+// SELECT * FROM `customers` WHERE `customers`.`id` = 1 AND `customers`.`deleted_at` IS NULL LIMIT 1
+```
+
 ###### <span id="nested-preloading">根据条件预加载</span>
 
 GEN 允许预加载与条件关联，它的工作原理类似于内联条件。

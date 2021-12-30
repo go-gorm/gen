@@ -25,12 +25,14 @@ type RelationField interface {
 	Field(fields ...string) Expr
 
 	On(conds ...Expr) RelationField
+	Select(conds ...Expr) RelationField
 	Order(columns ...Expr) RelationField
 	Clauses(hints ...clause.Expression) RelationField
 	Offset(offset int) RelationField
 	Limit(limit int) RelationField
 
 	GetConds() []Expr
+	GetSelects() []Expr
 	GetOrderCol() []Expr
 	GetClauses() []clause.Expression
 	GetPage() (offset, limit int)
@@ -47,6 +49,7 @@ type Relation struct {
 	childRelations []Relation
 
 	conds         []Expr
+	selects       []Expr
 	order         []Expr
 	clauses       []clause.Expression
 	limit, offset int
@@ -81,6 +84,10 @@ func (r Relation) On(conds ...Expr) RelationField {
 	r.conds = append(r.conds, conds...)
 	return &r
 }
+func (r Relation) Select(columns ...Expr) RelationField {
+	r.selects = append(r.selects, columns...)
+	return &r
+}
 func (r Relation) Order(columns ...Expr) RelationField {
 	r.order = append(r.order, columns...)
 	return &r
@@ -99,6 +106,7 @@ func (r Relation) Limit(limit int) RelationField {
 }
 
 func (r *Relation) GetConds() []Expr                { return r.conds }
+func (r *Relation) GetSelects() []Expr              { return r.selects }
 func (r *Relation) GetOrderCol() []Expr             { return r.order }
 func (r *Relation) GetClauses() []clause.Expression { return r.clauses }
 func (r *Relation) GetPage() (offset, limit int)    { return r.offset, r.limit }

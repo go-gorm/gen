@@ -346,6 +346,15 @@ func (d *DO) Preload(field field.RelationField) Dao {
 	if conds := field.GetConds(); len(conds) > 0 {
 		args = append(args, toExpressionInterface(conds...)...)
 	}
+	if columns := field.GetSelects(); len(columns) > 0 {
+		colNames := make([]string, len(columns))
+		for i, c := range columns {
+			colNames[i] = string(c.ColumnName())
+		}
+		args = append(args, func(db *gorm.DB) *gorm.DB {
+			return db.Select(colNames)
+		})
+	}
 	if columns := field.GetOrderCol(); len(columns) > 0 {
 		args = append(args, func(db *gorm.DB) *gorm.DB {
 			return db.Order(d.calcOrderValue(columns...))

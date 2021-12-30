@@ -95,6 +95,7 @@ Gen: Friendly & Safer [GORM](https://github.com/go-gorm/gorm) powered by Code Ge
         - [Preloading](#preloading)
           - [Preload](#preload)
           - [Preload All](#preload-all)
+          - [Preload with select](#preload-with-select)
           - [Preload with conditions](#preload-with-conditions)
           - [Nested Preloading](#nested-preloading)
       - [Update](#update)
@@ -1443,6 +1444,31 @@ users, err := u.WithContext(ctx).Preload(field.Associations).Find()
 
 ```go
 users, err := u.WithContext(ctx).Preload(u.Orders.OrderItems.Product).Find()
+```
+
+###### Preload with select
+
+Specify selected columns with method `Select`. Foregin key must be selected.
+
+```go
+type User struct {
+  gorm.Model
+  CreditCards []CreditCard `gorm:"foreignKey:UserRefer"`
+}
+
+type CreditCard struct {
+  gorm.Model
+  Number    string
+  UserRefer uint
+}
+
+u := q.User
+cc := q.CreditCard
+
+// !!! Foregin key "cc.UserRefer" must be selected
+users, err := u.WithContext(ctx).Where(c.ID.Eq(1)).Preload(u.CreditCards.Select(cc.Number, cc.UserRefer)).Find()
+// SELECT * FROM `credit_cards` WHERE `credit_cards`.`customer_refer` = 1 AND `credit_cards`.`deleted_at` IS NULL
+// SELECT * FROM `customers` WHERE `customers`.`id` = 1 AND `customers`.`deleted_at` IS NULL LIMIT 1
 ```
 
 ###### Preload with conditions
