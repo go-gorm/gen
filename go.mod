@@ -16,3 +16,5 @@ require (
 	gorm.io/gorm v1.22.4
 	gorm.io/hints v1.1.0
 )
+
+replace golang.org/x/net => golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
