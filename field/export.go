@@ -10,6 +10,7 @@ import (
 
 // Star a symbol of "*"
 var Star = NewString("", "*")
+var ALL = Star
 
 type FieldOption func(clause.Column) clause.Column
 
