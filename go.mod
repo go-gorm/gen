@@ -17,4 +17,4 @@ require (
 	gorm.io/hints v1.1.0
 )
 
-replace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
+replace golang.org/x/net => golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
