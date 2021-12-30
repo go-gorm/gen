@@ -89,6 +89,15 @@ func TestExpr_Build(t *testing.T) {
 			Expr:   field.NewField("", "id").GroupConcat(),
 			Result: "GROUP_CONCAT(`id`)",
 		},
+		{
+			Expr:   field.Func.UnixTimestamp(),
+			Result: "UNIX_TIMESTAMP()",
+		},
+		{
+			Expr:         field.Func.UnixTimestamp("2005-03-27 03:00:00").Mul(99),
+			Result:       "(UNIX_TIMESTAMP(?))*?",
+			ExpectedVars: []interface{}{"2005-03-27 03:00:00", uint64(99)},
+		},
 		// ======================== integer ========================
 		{
 			Expr:   field.NewUint("", "id"),
@@ -96,7 +105,7 @@ func TestExpr_Build(t *testing.T) {
 		},
 		{
 			Expr:         field.NewUint("user", "id").Sum().Gt(100),
-			ExpectedVars: []interface{}{float64(100)},
+			ExpectedVars: []interface{}{uint(100)},
 			Result:       "SUM(`user`.`id`) > ?",
 		},
 		{
