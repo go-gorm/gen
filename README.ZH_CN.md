@@ -919,7 +919,7 @@ tx.Commit() // Commit user1
 
 ###### <span id="iteration">迭代</span>
 
-Gem 支持通过 Rows 方法进行迭代（遍历）操作
+Gen 支持通过 Rows 方法进行迭代（遍历）操作
 
 ```go
 u := query.Use(db).User
