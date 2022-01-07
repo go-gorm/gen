@@ -219,11 +219,6 @@ func (g *Generator) apply(fc interface{}, structs []*check.BaseStruct) {
 func (g *Generator) Execute() {
 	g.successInfo("Start generating code.")
 
-	if err := os.MkdirAll(g.OutPath, os.ModePerm); err != nil {
-		g.db.Logger.Error(context.Background(), "create outpath(%s) fail: %s", g.OutPath, err)
-		panic("create outpath fail")
-	}
-
 	if err := g.generateModelFile(); err != nil {
 		g.db.Logger.Error(context.Background(), "generate model struct fail: %s", err)
 		panic("generate model struct fail")
@@ -249,6 +244,10 @@ func (g *Generator) successInfo(logInfos ...string) {
 func (g *Generator) generateQueryFile() (err error) {
 	if len(g.Data) == 0 {
 		return nil
+	}
+
+	if err := os.MkdirAll(g.OutPath, os.ModePerm); err != nil {
+		return fmt.Errorf("make dir outpath(%s) fail: %s", g.OutPath, err)
 	}
 
 	errChan := make(chan error)
