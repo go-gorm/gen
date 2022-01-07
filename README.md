@@ -2025,7 +2025,7 @@ Usage of gentool:
   -tables string
       enter the required data table or leave it blank
   -onlyModel
-        only generate models (without query file)
+      only generate models (without query file)
   -withUnitTest
       generate unit test for query code
 ```
