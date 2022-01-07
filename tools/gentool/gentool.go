@@ -36,6 +36,7 @@ type CmdParams struct {
 	DSN               string `yaml:"dsn"`               // consult[https://gorm.io/docs/connecting_to_the_database.html]"
 	DB                string `yaml:"db"`                // input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]
 	Tables            string `yaml:"tables"`            // enter the required data table or leave it blank
+	OnlyModel         bool   `yaml:"onlyModel"`         // only generate model
 	OutPath           string `yaml:"outPath"`           // specify a directory for output
 	OutFile           string `yaml:"outFile"`           // query code file name, default: gen.go
 	WithUnitTest      bool   `yaml:"withUnitTest"`      // generate unit test for query code
@@ -71,8 +72,8 @@ func connectDB(t DBType, dsn string) (*gorm.DB, error) {
 	}
 }
 
-// getModels is gorm/gen generated models
-func getModels(g *gen.Generator, db *gorm.DB, tables string) (models []interface{}, err error) {
+// genModels is gorm/gen generated models
+func genModels(g *gen.Generator, db *gorm.DB, tables string) (models []interface{}, err error) {
 	var tablesList []string
 	if tables == "" {
 		// Execute tasks for all tables in the database
@@ -113,6 +114,7 @@ func cmdParser() (*CmdParams, error) {
 	dsn := flag.String("dsn", "", "consult[https://gorm.io/docs/connecting_to_the_database.html]")
 	db := flag.String("db", "mysql", "input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]")
 	tableList := flag.String("tables", "", "enter the required data table or leave it blank")
+	onlyModel := flag.Bool("onlyModel", false, "only generate models (without query file)")
 	outPath := flag.String("outPath", "./dao/query", "specify a directory for output")
 	outFile := flag.String("outFile", "", "query code file name, default: gen.go")
 	withUnitTest := flag.Bool("withUnitTest", false, "generate unit test for query code")
@@ -136,6 +138,9 @@ func cmdParser() (*CmdParams, error) {
 	}
 	if *tableList != "" {
 		cmdParse.Tables = *tableList
+	}
+	if *onlyModel {
+		cmdParse.OnlyModel = true
 	}
 	if *outPath != DefaultOutPath {
 		cmdParse.OutPath = *outPath
@@ -184,12 +189,14 @@ func main() {
 
 	g.UseDB(db)
 
-	models, err := getModels(g, db, config.Tables)
+	models, err := genModels(g, db, config.Tables)
 	if err != nil {
 		log.Fatalln("get tables info fail:", err)
 	}
 
-	g.ApplyBasic(models...)
+	if !config.OnlyModel {
+		g.ApplyBasic(models...)
+	}
 
 	g.Execute()
 }
