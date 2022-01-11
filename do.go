@@ -240,10 +240,9 @@ func (d *DO) Group(columns ...field.Expr) Dao {
 	if len(columns) == 0 {
 		return d
 	}
-
-	name := columns[0].BuildColumn(d.db.Statement, field.WithTable).String()
+	name := string(columns[0].Build(d.db.Statement))
 	for _, col := range columns[1:] {
-		name += "," + col.BuildColumn(d.db.Statement, field.WithTable).String()
+		name += "," + string(col.Build(d.db.Statement))
 	}
 	return d.getInstance(d.db.Group(name))
 }
