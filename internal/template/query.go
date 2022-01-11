@@ -48,14 +48,14 @@ func (q *Query) clone(db *gorm.DB) *Query {
 
 type queryCtx struct{ 
 	{{range $name,$d :=.Data -}}
-	{{$d.StructName}} {{$d.NewStructName}}Do
+	{{$d.StructName}} I{{$d.StructName}}Do
 	{{end}}
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx  {
 	return &queryCtx{
 		{{range $name,$d :=.Data -}}
-		{{$d.StructName}}: *q.{{$d.StructName}}.WithContext(ctx),
+		{{$d.StructName}}: q.{{$d.StructName}}.WithContext(ctx),
 		{{end}}
 	}
 }

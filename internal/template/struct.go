@@ -15,11 +15,11 @@ const (
 	}
 	` + tableMethod + asMethond + updateFieldMethod + `
 	
-	func ({{.S}} *{{.NewStructName}}) WithContext(ctx context.Context) *{{.NewStructName}}Do { return {{.S}}.{{.NewStructName}}Do.WithContext(ctx)}
+	func ({{.S}} *{{.NewStructName}}) WithContext(ctx context.Context) I{{.StructName}}Do { return {{.S}}.{{.NewStructName}}Do.WithContext(ctx)}
 
 	func ({{.S}} {{.NewStructName}}) TableName() string { return {{.S}}.{{.NewStructName}}Do.TableName()} 
 
-	` + getFieldMethod + fillFieldMapMethod + cloneMethod + relationship + defineMethodStruct
+	` + getFieldMethod + fillFieldMapMethod + cloneMethod + relationship + defineMethodStruct + defineDoInterface
 )
 
 const (
@@ -119,6 +119,49 @@ func ({{.S}} *{{.NewStructName}}) fillFieldMap() {
 		{{- if .ColumnName -}}{{$.S}}.fieldMap["{{.ColumnName}}"] = {{$.S}}.{{.Name}}{{- end -}}
 	{{end}}
 	{{end -}}
+}
+`
+
+	defineDoInterface = `
+
+type I{{.StructName}}Do interface {
+	Debug() I{{.StructName}}Do
+	WithContext(ctx context.Context) I{{.StructName}}Do
+	Clauses(conds ...clause.Expression) I{{.StructName}}Do
+	Not(conds ...gen.Condition) I{{.StructName}}Do
+	Or(conds ...gen.Condition) I{{.StructName}}Do
+	Select(conds ...field.Expr) I{{.StructName}}Do
+	Where(conds ...gen.Condition) I{{.StructName}}Do
+	Order(conds ...field.Expr) I{{.StructName}}Do
+	Distinct(cols ...field.Expr) I{{.StructName}}Do
+	Omit(cols ...field.Expr) I{{.StructName}}Do
+	Join(table schema.Tabler, on ...field.Expr) I{{.StructName}}Do
+	LeftJoin(table schema.Tabler, on ...field.Expr) I{{.StructName}}Do
+	RightJoin(table schema.Tabler, on ...field.Expr) I{{.StructName}}Do
+	Group(cols ...field.Expr) I{{.StructName}}Do
+	Having(conds ...gen.Condition) I{{.StructName}}Do
+	Limit(limit int) I{{.StructName}}Do
+	Offset(offset int) I{{.StructName}}Do
+	Scopes(funcs ...func(gen.Dao) gen.Dao) I{{.StructName}}Do
+	Unscoped() I{{.StructName}}Do
+	Create(values ...*{{.StructInfo.Package}}.{{.StructInfo.Type}}) error
+	CreateInBatches(values []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, batchSize int) error
+	Save(values ...*{{.StructInfo.Package}}.{{.StructInfo.Type}}) error
+	First() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error)
+	Take() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error)
+	Last() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error)
+	Find() ([]*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error)
+	FindInBatch(batchSize int, fc func(tx gen.Dao, batch int) error) (results []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, err error)
+	FindInBatches(result *[]*{{.StructInfo.Package}}.{{.StructInfo.Type}}, batchSize int, fc func(tx gen.Dao, batch int) error) error
+	Attrs(attrs ...field.AssignExpr) I{{.StructName}}Do
+	Assign(attrs ...field.AssignExpr) I{{.StructName}}Do
+	Joins(field field.RelationField) I{{.StructName}}Do
+	Preload(field field.RelationField) I{{.StructName}}Do
+	FirstOrInit() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error)
+	FirstOrCreate() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error)
+	FindByPage(offset int, limit int) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, count int64, err error)
+	ScanByPage(result interface{}, offset int, limit int) (count int64, err error)
+	Scan(result interface{}) (err error)
 }
 `
 )
