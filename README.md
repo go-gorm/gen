@@ -669,17 +669,17 @@ users, err := u.WithContext(ctx).Offset(10).Offset(-1).Find()
 ```go
 u := query.Use(db).User
 
-type Result struct {
-    Date  time.Time
+var users []struct {
+    Name  string
     Total int
 }
+err := u.WithContext(ctx).Select(u.Name, u.ID.Count().As("total")).Group(u.Name).Scan(&users)
+// SELECT name, count(id) as total FROM `users` GROUP BY `name`
 
-var result Result
-
-err := u.WithContext(ctx).Select(u.Name, u.Age.Sum().As("total")).Where(u.Name.Like("%modi%")).Group(u.Name).Scan(&result)
+err := u.WithContext(ctx).Select(u.Name, u.Age.Sum().As("total")).Where(u.Name.Like("%modi%")).Group(u.Name).Scan(&users)
 // SELECT name, sum(age) as total FROM `users` WHERE name LIKE "%modi%" GROUP BY `name`
 
-err := u.WithContext(ctx).Select(u.Name, u.Age.Sum().As("total")).Group(u.Name).Having(u.Name.Eq("group")).Scan(&result)
+err := u.WithContext(ctx).Select(u.Name, u.Age.Sum().As("total")).Group(u.Name).Having(u.Name.Eq("group")).Scan(&users)
 // SELECT name, sum(age) as total FROM `users` GROUP BY `name` HAVING name = "group"
 
 rows, err := u.WithContext(ctx).Select(u.Birthday.As("date"), u.Age.Sum().As("total")).Group(u.Birthday).Rows()
@@ -694,7 +694,10 @@ for rows.Next() {
   ...
 }
 
-var results []Result
+var results []struct {
+    Date  time.Time
+    Total int
+}
 
 o.WithContext(ctx).Select(o.CreateAt.Date().As("date"), o.WithContext(ctx).Amount.Sum().As("total")).Group(o.CreateAt.Date()).Having(u.Amount.Sum().Gt(100)).Scan(&results)
 ```
