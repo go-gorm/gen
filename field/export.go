@@ -173,15 +173,22 @@ func AssignSubQuery(columns []Expr, subQuery *gorm.DB) AssignExpr {
 type CompareOperate string
 
 const (
-	EqOp  CompareOperate = " = "
-	NeqOp CompareOperate = " <> "
-	GtOp  CompareOperate = " > "
-	GteOp CompareOperate = " >= "
-	LtOp  CompareOperate = " < "
-	LteOp CompareOperate = " <= "
+	EqOp     CompareOperate = " = "
+	NeqOp    CompareOperate = " <> "
+	GtOp     CompareOperate = " > "
+	GteOp    CompareOperate = " >= "
+	LtOp     CompareOperate = " < "
+	LteOp    CompareOperate = " <= "
+	ExistsOp CompareOperate = "EXISTS "
 )
 
 func CompareSubQuery(op CompareOperate, column Expr, subQuery *gorm.DB) Expr {
+	if op == ExistsOp {
+		return expr{e: clause.Expr{
+			SQL:  fmt.Sprint(op, "(?)"),
+			Vars: []interface{}{subQuery},
+		}}
+	}
 	return expr{e: clause.Expr{
 		SQL:  fmt.Sprint("?", op, "(?)"),
 		Vars: []interface{}{column.RawExpr(), subQuery},
