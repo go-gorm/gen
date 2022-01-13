@@ -92,7 +92,7 @@ func (d DO) TableName() string {
 func (d *DO) Session(config *gorm.Session) Dao { return d.getInstance(d.db.Session(config)) }
 
 // UnderlyingDB return the underlying database connection
-func (d *DO) UnderlyingDB() *gorm.DB { return d.db }
+func (d *DO) UnderlyingDB() *gorm.DB { return d.underlyingDB() }
 
 // Quote return qutoed data
 func (d *DO) Quote(raw string) string { return d.db.Statement.Quote(raw) }
