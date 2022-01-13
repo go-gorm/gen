@@ -53,6 +53,10 @@ func ({{.S}} {{.NewStructName}}Do) Where(conds ...gen.Condition) *{{.NewStructNa
 	return {{.S}}.withDO({{.S}}.DO.Where(conds...))
 }
 
+func ({{.S}} {{.NewStructName}}Do) Exists(subquery interface{UnderlyingDB() *gorm.DB}) *{{.NewStructName}}Do {
+	return {{.S}}.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
+}
+
 func ({{.S}} {{.NewStructName}}Do) Order(conds ...field.Expr) *{{.NewStructName}}Do {
 	return {{.S}}.withDO({{.S}}.DO.Order(conds...))
 }
