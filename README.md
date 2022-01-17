@@ -592,7 +592,7 @@ u.WithContext(ctx).Select(u.Age.Avg()).Rows()
 ```go
 u := query.Use(db).User
 
-users, err := u.WithContext(ctx).Where(u.Columns(u.ID, u.Name).In(field.Values([][]inferface{}{{1, "modi"}, {2, "zhangqiang"}}))).Find()
+users, err := u.WithContext(ctx).Where(u.WithContext(ctx).Columns(u.ID, u.Name).In(field.Values([][]interface{}{{1, "modi"}, {2, "zhangqiang"}}))).Find()
 // SELECT * FROM `users` WHERE (`id`, `name`) IN ((1,'humodi'),(2,'tom'));
 ```
 
