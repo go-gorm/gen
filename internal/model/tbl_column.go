@@ -95,7 +95,7 @@ func (c *Column) buildGormTag() string {
 		}
 	}
 	if c.ColumnDefault != "" &&
-		c.ColumnName != "created_at" && c.ColumnName != "updated_at" && c.ColumnName != "deleted_at" {
+		c.ColumnName != "created_at" && c.ColumnName != "updated_at" {
 		buf.WriteString(fmt.Sprintf(";default:%s", c.ColumnDefault))
 	}
 	return buf.String()
