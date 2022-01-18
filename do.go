@@ -64,17 +64,21 @@ func (d *DO) ReplaceDB(db *gorm.DB) { d.db = db }
 
 // UseModel specify a data model structure as a source for table name
 func (d *DO) UseModel(model interface{}) {
-	mt := reflect.TypeOf(model)
-	if mt.Kind() == reflect.Ptr {
-		mt = mt.Elem()
-	}
-	d.modelType = mt
+	d.modelType = d.indirect(model)
 
 	err := d.db.Statement.Parse(model)
 	if err != nil {
 		panic(fmt.Errorf("Cannot parse model: %+v", model))
 	}
 	d.schema = d.db.Statement.Schema
+}
+
+func (d *DO) indirect(value interface{}) reflect.Type {
+	mt := reflect.TypeOf(value)
+	if mt.Kind() == reflect.Ptr {
+		mt = mt.Elem()
+	}
+	return mt
 }
 
 // UseTable specify table name
@@ -511,7 +515,25 @@ func (d *DO) UpdateSimple(columns ...field.AssignExpr) (info ResultInfo, err err
 }
 
 func (d *DO) Updates(value interface{}) (info ResultInfo, err error) {
-	result := d.db.Model(d.newResultPointer()).Updates(value)
+	var result *gorm.DB
+	var rawTyp, typ reflect.Type
+
+	rawTyp = reflect.TypeOf(value)
+	typ = rawTyp
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
+	}
+
+	switch {
+	case typ != d.modelType:
+		result = d.db.Model(d.newResultPointer()).Updates(value)
+	case rawTyp.Kind() == reflect.Ptr:
+		result = d.db.Updates(value)
+	default:
+		ptr := reflect.New(d.modelType)
+		ptr.Elem().Set(reflect.ValueOf(value))
+		result = d.db.Updates(ptr.Interface())
+	}
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
