@@ -27,8 +27,15 @@ func (m *InterfaceMethod) GetTestResultParamInTmpl() string {
 func testParamToString(params []parser.Param) string {
 	var res []string
 	for i, param := range params {
-		tmplString := fmt.Sprintf("tt.Input.Args[%d].(%s)", i, param.Type)
-		res = append(res, tmplString)
+		// TODO manage array and pointer
+		typ := param.Type
+		if param.IsArray {
+			typ = "[]" + typ
+		}
+		if param.IsPointer {
+			typ = "*" + typ
+		}
+		res = append(res, fmt.Sprintf("tt.Input.Args[%d].(%s)", i, typ))
 	}
 	return strings.Join(res, ",")
 }
