@@ -94,7 +94,8 @@ func (c *Column) buildGormTag() string {
 			buf.WriteString(fmt.Sprintf(";index:%s,priority:%d", idx.IndexName, idx.SeqInIndex))
 		}
 	}
-	if c.ColumnDefault != "" {
+	if c.ColumnDefault != "" &&
+		c.ColumnName != "created_at" && c.ColumnName != "updated_at" && c.ColumnName != "deleted_at" {
 		buf.WriteString(fmt.Sprintf(";default:%s", c.ColumnDefault))
 	}
 	return buf.String()
