@@ -55,9 +55,12 @@ func (c *Column) WithNS(jsonTagNS, newTagNS func(columnName string) string) {
 
 func (c *Column) ToField(nullable bool) *Field {
 	fieldType := c.GetDataType()
-	if c.ColumnName == "deleted_at" && fieldType == "time.Time" {
+	switch {
+	case c.ColumnName == "deleted_at" && fieldType == "time.Time":
 		fieldType = "gorm.DeletedAt"
-	} else if nullable && c.IsNullable == "YES" {
+	case nullable && c.IsNullable == "YES":
+		fieldType = "*" + fieldType
+	case c.withDefaultValue():
 		fieldType = "*" + fieldType
 	}
 	return &Field{
@@ -94,9 +97,13 @@ func (c *Column) buildGormTag() string {
 			buf.WriteString(fmt.Sprintf(";index:%s,priority:%d", idx.IndexName, idx.SeqInIndex))
 		}
 	}
-	if c.ColumnDefault != "" &&
-		c.ColumnName != "created_at" && c.ColumnName != "updated_at" {
+	if c.withDefaultValue() {
 		buf.WriteString(fmt.Sprintf(";default:%s", c.ColumnDefault))
 	}
 	return buf.String()
+}
+
+// withDefaultValue check if col has default value and not created_at or updated_at
+func (c *Column) withDefaultValue() (normal bool) {
+	return c.ColumnDefault != "" && c.ColumnName != "created_at" && c.ColumnName != "updated_at"
 }
