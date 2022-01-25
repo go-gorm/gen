@@ -18,13 +18,13 @@ func (p *password) Scan(src interface{}) error {
 	*p = password(fmt.Sprintf("this is password {%q}", src))
 	return nil
 }
-func (p *password) Value() (driver.Value, error) {
-	return strings.TrimPrefix(strings.TrimSuffix(string(*p), "}"), "this is password {"), nil
+func (p password) Value() (driver.Value, error) {
+	return strings.TrimPrefix(strings.TrimSuffix(string(p), "}"), "this is password {"), nil
 }
 
 func TestExpr_Build(t *testing.T) {
 	timeData, _ := time.Parse("2006-01-02 15:04:05", "2021-06-29 15:11:49")
-	p := password("i am password")
+	const p = password("i am password")
 
 	testcases := []struct {
 		Expr         field.Expr
@@ -33,8 +33,8 @@ func TestExpr_Build(t *testing.T) {
 	}{
 		// ======================== generic ========================
 		{
-			Expr:         field.NewField("user", "password").Eq(&p),
-			ExpectedVars: []interface{}{&p},
+			Expr:         field.NewField("user", "password").Eq(p),
+			ExpectedVars: []interface{}{p},
 			Result:       "`user`.`password` = ?",
 		},
 		{
