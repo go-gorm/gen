@@ -618,6 +618,12 @@ func (d *DO) ScanRows(rows *sql.Rows, dest interface{}) error {
 	return d.db.Model(d.newResultPointer()).ScanRows(rows, dest)
 }
 
+func (d DO) WithResult(fc func(tx Dao)) ResultInfo {
+	d.db = d.db.Set("", "")
+	fc(&d)
+	return ResultInfo{RowsAffected: d.db.RowsAffected, Error: d.db.Error}
+}
+
 func (d *DO) newResultPointer() interface{} {
 	if d.modelType == nil {
 		return nil
