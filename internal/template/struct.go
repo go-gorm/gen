@@ -6,14 +6,14 @@ const (
 		{{.NewStructName}}Do
 		` + fields + `
 	}
-	` + asMethond + getFieldMethod + fillFieldMapMethod + cloneMethod + relationship + defineMethodStruct
+	` + tableMethod + asMethond + updateFieldMethod + getFieldMethod + fillFieldMapMethod + cloneMethod + relationship + defineMethodStruct
 
 	BaseStructWithContext = createMethod + `
 	type {{.NewStructName}} struct {
 		{{.NewStructName}}Do {{.NewStructName}}Do
 		` + fields + `
 	}
-	` + asMethond + `
+	` + tableMethod + asMethond + updateFieldMethod + `
 	
 	func ({{.S}} *{{.NewStructName}}) WithContext(ctx context.Context) *{{.NewStructName}}Do { return {{.S}}.{{.NewStructName}}Do.WithContext(ctx)}
 
@@ -61,20 +61,31 @@ const (
 
 	fieldMap  map[string]field.Expr
 `
+	tableMethod = `
+func ({{.S}} {{.NewStructName}}) Table(newTableName string) *{{.NewStructName}} { 
+	{{.S}}.{{.NewStructName}}Do.UseTable(newTableName)
+	return {{.S}}.updateTableName(newTableName)
+}
+`
+
 	asMethond = `	
 func ({{.S}} {{.NewStructName}}) As(alias string) *{{.NewStructName}} { 
 	{{.S}}.{{.NewStructName}}Do.DO = *({{.S}}.{{.NewStructName}}Do.As(alias).(*gen.DO))
-
-	{{.S}}.ALL = field.NewField(alias, "*")
+	return {{.S}}.updateTableName(alias)
+}
+`
+	updateFieldMethod = `
+func ({{.S}} *{{.NewStructName}}) updateTableName(table string) *{{.NewStructName}} { 
+	{{.S}}.ALL = field.NewField(table, "*")
 	{{range .Fields -}}
 	{{if not .IsRelation -}}
-		{{- if .ColumnName -}}{{$.S}}.{{.Name}} = field.New{{.GenType}}(alias, "{{.ColumnName}}"){{- end -}}
+		{{- if .ColumnName -}}{{$.S}}.{{.Name}} = field.New{{.GenType}}(table, "{{.ColumnName}}"){{- end -}}
 	{{end}}
 	{{end}}
 	
 	{{.S}}.fillFieldMap()
 
-	return &{{.S}}
+	return {{.S}}
 }
 `
 
