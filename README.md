@@ -194,7 +194,7 @@ func main() {
 
 Generate Mode:
 
-- `gen.WithoutContext` generate code without `WithContext` contrain
+- `gen.WithoutContext` generate code without `WithContext` constraint
 - `gen.WithDefaultQuery` generate code with a default global variable `Q` as a singleton
 
 ### Project Directory
