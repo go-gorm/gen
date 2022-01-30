@@ -26,7 +26,7 @@ LEFT JOIN pg_catalog.pg_description pd ON
 	pd.objoid = psat.relid
 	AND pd.objsubid = c.ordinal_position
 WHERE
-	psat.schemaname = ? AND psat.relname = ?
+	psat.relname = ?
 ORDER BY c.ordinal_position`
 
 	indexQuery = `
@@ -48,8 +48,7 @@ WHERE
 	AND a.attnum = ANY(ix.indkey)
 	AND ns."oid" = t.relnamespace
 	AND t.relkind = 'r'
-	AND ns.nspname = ?
-	AND t.relname = ?s
+	AND t.relname = ?
 ORDER BY
 	t.relname,
 	i.relname;`
