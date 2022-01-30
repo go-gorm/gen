@@ -91,11 +91,23 @@ func (c *Column) buildGormTag() string {
 		if idx == nil || idx.IsPrimaryKey() {
 			continue
 		}
+
+		var indexTag string
+		var indexType string
+
 		if idx.IsUnique() {
-			buf.WriteString(fmt.Sprintf(";uniqueIndex:%s,priority:%d", idx.IndexName, idx.SeqInIndex))
+			indexType = "uniqueIndex"
 		} else {
-			buf.WriteString(fmt.Sprintf(";index:%s,priority:%d", idx.IndexName, idx.SeqInIndex))
+			indexType = "index"
 		}
+
+		indexTag = fmt.Sprintf(";%s:%s", indexType, idx.IndexName)
+
+		if idx.SeqInIndex > 0 {
+			indexTag += fmt.Sprintf(",priority:%d", idx.SeqInIndex)
+		}
+
+		buf.WriteString(indexTag)
 	}
 	if c.withDefaultValue() {
 		buf.WriteString(fmt.Sprintf(";default:%s", c.ColumnDefault))
