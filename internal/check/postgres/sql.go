@@ -28,4 +28,29 @@ LEFT JOIN pg_catalog.pg_description pd ON
 WHERE
 	psat.schemaname = ? AND psat.relname = ?
 ORDER BY c.ordinal_position`
+
+	indexQuery = `
+SELECT
+	t.relname AS "TABLE_NAME",
+	a.attname AS "COLUMN_NAME",
+	CASE WHEN ix.indisprimary THEN 'PRIMARY' ELSE i.relname END AS "INDEX_NAME",
+	CASE WHEN ix.indisunique THEN 1 ELSE 0 END AS "NON_UNIQUE"
+FROM
+	pg_class t,
+	pg_class i,
+	pg_index ix,
+	pg_namespace ns,
+	pg_attribute a
+WHERE
+	t.oid = ix.indrelid
+	AND i.oid = ix.indexrelid
+	AND a.attrelid = t.oid
+	AND a.attnum = ANY(ix.indkey)
+	AND ns."oid" = t.relnamespace
+	AND t.relkind = 'r'
+	AND ns.nspname = ?
+	AND t.relname = ?s
+ORDER BY
+	t.relname,
+	i.relname;`
 )

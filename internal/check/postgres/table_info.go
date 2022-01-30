@@ -16,5 +16,5 @@ func (t *TableInfo) GetTbColumns(schemaName string, tableName string) (result []
 }
 
 func (t *TableInfo) GetTbIndex(schemaName string, tableName string) (result []*model.Index, err error) {
-	panic("not implemented") // TODO: Implement
+	return result, t.Db.Raw(indexQuery, schemaName, tableName).Scan(&result).Error
 }
