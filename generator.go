@@ -99,12 +99,16 @@ func (g *Generator) UseDB(db *gorm.DB) {
  */
 
 // GenerateModel catch table info from db, return a BaseStruct
-func (g *Generator) GenerateModel(tableName string, opts ...model.FieldOpt) *check.BaseStruct {
+func (g *Generator) GenerateModel(tableName string, opts ...FieldOpt) *check.BaseStruct {
 	return g.GenerateModelAs(tableName, g.db.Config.NamingStrategy.SchemaName(tableName), opts...)
 }
 
 // GenerateModel catch table info from db, return a BaseStruct
-func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...model.FieldOpt) *check.BaseStruct {
+func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...FieldOpt) *check.BaseStruct {
+	modelFieldOpts := make([]model.FieldOpt, len(fieldOpts))
+	for i, opt := range fieldOpts {
+		modelFieldOpts[i] = opt
+	}
 	s, err := check.GenBaseStructs(g.db, model.Conf{
 		ModelPkg:       g.Config.ModelPkgPath,
 		TablePrefix:    g.getTablePrefix(),
@@ -125,7 +129,7 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 			FieldJSONTagNS: g.fieldJSONTagNS,
 			FieldNewTagNS:  g.fieldNewTagNS,
 
-			FieldOpts: fieldOpts,
+			FieldOpts: modelFieldOpts,
 		},
 	})
 	if err != nil {
@@ -146,7 +150,7 @@ func (g *Generator) getTablePrefix() string {
 }
 
 // GenerateAllTable generate all tables in db
-func (g *Generator) GenerateAllTable(opts ...model.FieldOpt) (tableModels []interface{}) {
+func (g *Generator) GenerateAllTable(opts ...FieldOpt) (tableModels []interface{}) {
 	tableList, err := g.db.Migrator().GetTables()
 	if err != nil {
 		panic(fmt.Sprintf("get all tables fail: %s", err))
