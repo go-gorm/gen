@@ -80,7 +80,7 @@ func GenBaseStructs(db *gorm.DB, conf model.Conf) (bases *BaseStruct, err error)
 		col.SetDataTypeMap(conf.DataTypeMap)
 		col.WithNS(conf.FieldJSONTagNS, conf.FieldNewTagNS)
 
-		m := col.ToField(conf.FieldNullable)
+		m := col.ToField(conf.FieldNullable, conf.FieldCoverable)
 
 		if filterField(m, filterOpts) == nil {
 			continue

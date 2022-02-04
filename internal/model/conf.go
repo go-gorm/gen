@@ -9,6 +9,7 @@ type FieldConf struct {
 	DataTypeMap map[string]func(detailType string) (dataType string)
 
 	FieldNullable     bool // generate pointer when field is nullable
+	FieldCoverable    bool // generate pointer when field has default value
 	FieldWithIndexTag bool // generate with gorm index tag
 	FieldWithTypeTag  bool // generate with gorm column type tagl
 

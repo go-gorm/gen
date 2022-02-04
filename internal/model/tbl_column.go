@@ -53,14 +53,14 @@ func (c *Column) WithNS(jsonTagNS, newTagNS func(columnName string) string) {
 	}
 }
 
-func (c *Column) ToField(nullable bool) *Field {
+func (c *Column) ToField(nullable, coverable bool) *Field {
 	fieldType := c.GetDataType()
 	switch {
 	case c.ColumnName == "deleted_at" && fieldType == "time.Time":
 		fieldType = "gorm.DeletedAt"
 	case nullable && c.IsNullable == "YES":
 		fieldType = "*" + fieldType
-	case c.withDefaultValue():
+	case coverable && c.withDefaultValue():
 		fieldType = "*" + fieldType
 	}
 	return &Field{
