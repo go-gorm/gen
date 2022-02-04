@@ -119,6 +119,7 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 			DataTypeMap: g.dataTypeMap,
 
 			FieldNullable:     g.FieldNullable,
+			FieldCoverable:    g.FieldCoverable,
 			FieldWithIndexTag: g.FieldWithIndexTag,
 			FieldWithTypeTag:  g.FieldWithTypeTag,
 

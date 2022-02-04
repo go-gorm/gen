@@ -32,6 +32,7 @@ type Config struct {
 
 	// generate model global configuration
 	FieldNullable     bool // generate pointer when field is nullable
+	FieldCoverable    bool // generate pointer when field has default value, to fix problem zero value cannot be assign: https://gorm.io/docs/create.html#Default-Values
 	FieldWithIndexTag bool // generate with gorm index tag
 	FieldWithTypeTag  bool // generate with gorm column type tag
 
