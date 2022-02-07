@@ -35,6 +35,7 @@ func main() {
 
 		// generate model global configuration
 		FieldNullable:     true, // generate pointer when field is nullable
+		FieldCoverable:    true, // generate pointer when field has default value
 		FieldWithIndexTag: true, // generate with gorm index tag
 		FieldWithTypeTag:  true, // generate with gorm column type tag
 	})

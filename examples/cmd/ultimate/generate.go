@@ -26,6 +26,7 @@ func main() {
 		WithUnitTest: true,
 
 		FieldNullable:     true,
+		FieldCoverable:    true,
 		FieldWithIndexTag: true,
 	})
 
