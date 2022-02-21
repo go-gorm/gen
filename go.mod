@@ -9,11 +9,11 @@ require (
 	golang.org/x/tools v0.1.9
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	gorm.io/datatypes v1.0.5
-	gorm.io/driver/mysql v1.2.3
-	gorm.io/driver/postgres v1.2.3
-	gorm.io/driver/sqlite v1.2.6
-	gorm.io/driver/sqlserver v1.2.1
-	gorm.io/gorm v1.22.5
+	gorm.io/driver/mysql v1.3.2
+	gorm.io/driver/postgres v1.3.1
+	gorm.io/driver/sqlite v1.3.1
+	gorm.io/driver/sqlserver v1.3.1
+	gorm.io/gorm v1.23.1
 	gorm.io/hints v1.1.0
 )
 

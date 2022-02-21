@@ -85,9 +85,8 @@ func GenBaseStructs(db *gorm.DB, conf model.Conf) (bases *BaseStruct, err error)
 		if filterField(m, filterOpts) == nil {
 			continue
 		}
-
-		if !conf.FieldWithTypeTag { // remove type tag if FieldWithTypeTag == false
-			m.GORMTag = strings.ReplaceAll(m.GORMTag, ";type:"+col.ColumnType, "")
+		if t, ok := col.ColumnType.ColumnType(); ok && !conf.FieldWithTypeTag { // remove type tag if FieldWithTypeTag == false
+			m.GORMTag = strings.ReplaceAll(m.GORMTag, ";type:"+t, "")
 		}
 
 		m = modifyField(m, modifyOpts)
