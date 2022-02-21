@@ -4,32 +4,19 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
+
+	"gorm.io/gorm"
 )
 
 // Column table column's info
 type Column struct {
-	TableName     string   `gorm:"column:TABLE_NAME"`
-	ColumnName    string   `gorm:"column:COLUMN_NAME"`
-	ColumnComment string   `gorm:"column:COLUMN_COMMENT"`
-	DataType      string   `gorm:"column:DATA_TYPE"`
-	ColumnKey     string   `gorm:"column:COLUMN_KEY"`
-	ColumnType    string   `gorm:"column:COLUMN_TYPE"`
-	ColumnDefault string   `gorm:"column:COLUMN_DEFAULT"`
-	Extra         string   `gorm:"column:EXTRA"`
-	IsNullable    string   `gorm:"column:IS_NULLABLE"`
-	Indexes       []*Index `gorm:"-"`
+	gorm.ColumnType
+	TableName string   `gorm:"column:TABLE_NAME"`
+	Indexes   []*Index `gorm:"-"`
 
 	dataTypeMap map[string]func(detailType string) (dataType string) `gorm:"-"`
 	jsonTagNS   func(columnName string) string                       `gorm:"-"`
 	newTagNS    func(columnName string) string                       `gorm:"-"`
-}
-
-func (c *Column) IsPrimaryKey() bool {
-	return c != nil && c.ColumnKey == "PRI"
-}
-
-func (c *Column) AutoIncrement() bool {
-	return c != nil && c.Extra == "auto_increment"
 }
 
 func (c *Column) SetDataTypeMap(m map[string]func(detailType string) (dataType string)) {
@@ -37,10 +24,10 @@ func (c *Column) SetDataTypeMap(m map[string]func(detailType string) (dataType s
 }
 
 func (c *Column) GetDataType() (fieldtype string) {
-	if mapping, ok := c.dataTypeMap[c.DataType]; ok {
-		return mapping(c.ColumnType)
+	if mapping, ok := c.dataTypeMap[c.DatabaseTypeName()]; ok {
+		return mapping(c.columnType())
 	}
-	return dataType.Get(c.DataType, c.ColumnType)
+	return dataType.Get(c.DatabaseTypeName(), c.columnType())
 }
 
 func (c *Column) WithNS(jsonTagNS, newTagNS func(columnName string) string) {
@@ -56,34 +43,46 @@ func (c *Column) WithNS(jsonTagNS, newTagNS func(columnName string) string) {
 func (c *Column) ToField(nullable, coverable bool) *Field {
 	fieldType := c.GetDataType()
 	switch {
-	case c.ColumnName == "deleted_at" && fieldType == "time.Time":
+	case c.Name() == "deleted_at" && fieldType == "time.Time":
 		fieldType = "gorm.DeletedAt"
-	case nullable && c.IsNullable == "YES":
-		fieldType = "*" + fieldType
+	case nullable:
+		if n, ok := c.Nullable(); ok && n {
+			fieldType = "*" + fieldType
+		}
 	case coverable && c.withDefaultValue():
 		fieldType = "*" + fieldType
 	}
-	return &Field{
-		Name:             c.ColumnName,
+	f := &Field{
+		Name:             c.Name(),
 		Type:             fieldType,
-		ColumnName:       c.ColumnName,
-		ColumnComment:    c.ColumnComment,
+		ColumnName:       c.Name(),
 		MultilineComment: c.multilineComment(),
 		GORMTag:          c.buildGormTag(),
-		JSONTag:          c.jsonTagNS(c.ColumnName),
-		NewTag:           c.newTagNS(c.ColumnName),
+		JSONTag:          c.jsonTagNS(c.Name()),
+		NewTag:           c.newTagNS(c.Name()),
 	}
+	if c, ok := c.Comment(); ok {
+		f.ColumnComment = c
+	}
+	return f
 }
 
-func (c *Column) multilineComment() bool { return strings.Contains(c.ColumnComment, "\n") }
+func (c *Column) multilineComment() bool {
+	if cm, ok := c.Comment(); ok {
+		strings.Contains(cm, "\n")
+	}
+	return false
+}
 
 func (c *Column) buildGormTag() string {
 	var buf bytes.Buffer
-	buf.WriteString(fmt.Sprintf("column:%s;type:%s", c.ColumnName, c.ColumnType))
-	if c.IsPrimaryKey() {
+	buf.WriteString(fmt.Sprintf("column:%s;type:%s", c.Name(), c.columnType()))
+	if p, ok := c.PrimaryKey(); ok && p {
 		buf.WriteString(";primaryKey")
-		buf.WriteString(fmt.Sprintf(";autoIncrement:%t", c.AutoIncrement()))
-	} else if c.IsNullable != "YES" {
+		if at, ok := c.AutoIncrement(); ok {
+			buf.WriteString(fmt.Sprintf(";autoIncrement:%t", at))
+		}
+	} else if n, ok := c.Nullable(); ok && !n {
 		buf.WriteString(";not null")
 	}
 
@@ -98,12 +97,26 @@ func (c *Column) buildGormTag() string {
 		}
 	}
 	if c.withDefaultValue() {
-		buf.WriteString(fmt.Sprintf(";default:%s", c.ColumnDefault))
+		buf.WriteString(fmt.Sprintf(";default:%s", c.defaultValue()))
 	}
 	return buf.String()
 }
 
 // withDefaultValue check if col has default value and not created_at or updated_at
 func (c *Column) withDefaultValue() (normal bool) {
-	return c.ColumnDefault != "" && c.ColumnName != "created_at" && c.ColumnName != "updated_at"
+	return c.defaultValue() != "" && c.Name() != "created_at" && c.Name() != "updated_at"
+}
+
+func (c *Column) defaultValue() (v string) {
+	if df, ok := c.DefaultValue(); ok {
+		return df
+	}
+	return ""
+}
+
+func (c *Column) columnType() (v string) {
+	if cl, ok := c.ColumnType.ColumnType(); ok {
+		return cl
+	}
+	return ""
 }
