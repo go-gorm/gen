@@ -753,11 +753,11 @@ users := u.WithContext(ctx).Join(e, e.UserID.EqCol(u.id), e.Email.Eq("modi@examp
 o := query.Use(db).Order
 u := query.Use(db).User
 
-orders, err := o.WithContext(ctx).Where(o.Columns(o.Amount).Gt(o.WithContext(ctx).Select(o.Amount.Avg())).Find()
+orders, err := o.WithContext(ctx).Where(o.WithContext(ctx).Columns(o.Amount).Gt(o.WithContext(ctx).Select(o.Amount.Avg())).Find()
 // SELECT * FROM "orders" WHERE amount > (SELECT AVG(amount) FROM "orders");
 
 subQuery := u.WithContext(ctx).Select(u.Age.Avg()).Where(u.Name.Like("name%"))
-users, err := u.WithContext(ctx).Select(u.Age.Avg().As("avgage")).Group(u.Name).Having(u.Columns(u.Age.Avg()).Gt(subQuery).Find()
+users, err := u.WithContext(ctx).Select(u.Age.Avg().As("avgage")).Group(u.Name).Having(u.WithContext(ctx).Columns(u.Age.Avg()).Gt(subQuery).Find()
 // SELECT AVG(age) as avgage FROM `users` GROUP BY `name` HAVING AVG(age) > (SELECT AVG(age) FROM `users` WHERE name LIKE "name%")
 
 // 找出交易数量在100和200之间的用户
