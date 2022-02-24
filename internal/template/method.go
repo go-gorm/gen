@@ -200,16 +200,21 @@ func ({{.S}} {{.NewStructName}}Do) FirstOrCreate() (*{{.StructInfo.Package}}.{{.
 }
 
 func ({{.S}} {{.NewStructName}}Do) FindByPage(offset int, limit int) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, count int64, err error) {
-	count, err = {{.S}}.Count()
-	if err != nil {
-		return
-	}
-
 	if limit <= 0 {
 		return
 	}
 
 	result, err = {{.S}}.Offset(offset).Limit(limit).Find()
+	if err != nil{
+		return
+	}
+
+	if size := len(result); 0 < size && size < limit {
+		count = int64(size+offset)
+		return
+	}
+
+	count, err = {{.S}}.Count()
 	return
 }
 
