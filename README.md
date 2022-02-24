@@ -756,7 +756,7 @@ A subquery can be nested within a query, GEN can generate subquery when using a 
 o := query.Use(db).Order
 u := query.Use(db).User
 
-orders, err := o.WithContext(ctx).Where(u.Columns(o.Amount).Gt(o.WithContext(ctx).Select(o.Amount.Avg())).Find()
+orders, err := o.WithContext(ctx).Where(o.Columns(o.Amount).Gt(o.WithContext(ctx).Select(o.Amount.Avg())).Find()
 // SELECT * FROM "orders" WHERE amount > (SELECT AVG(amount) FROM "orders");
 
 subQuery := u.WithContext(ctx).Select(u.Age.Avg()).Where(u.Name.Like("name%"))
