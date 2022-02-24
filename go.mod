@@ -3,7 +3,6 @@ module gorm.io/gen
 go 1.14
 
 require (
-	github.com/jackc/pgx/v4 v4.14.1 // indirect
 	golang.org/x/crypto v0.0.0-20211117183948-ae814b36b871 // indirect
 	golang.org/x/sys v0.0.0-20211103235746-7861aae1554b // indirect
 	golang.org/x/tools v0.1.9
