@@ -3,6 +3,7 @@ package check
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"gorm.io/gorm"
 
@@ -29,14 +30,13 @@ type ITableInfo interface {
 }
 
 func getITableInfo(db *gorm.DB) ITableInfo {
-	return &mysqlTableInfo{db: db}
+	return &defaultTableInfo{db: db}
 }
 
-func getTbColumns(db *gorm.DB, schemaName string, tableName string, indexTag bool) (result []*model.Column, err error) {
+func getTblColumns(db *gorm.DB, schemaName string, tableName string, indexTag bool) (result []*model.Column, err error) {
 	if db == nil {
 		return nil, errors.New("gorm db is nil")
 	}
-
 	mt := getITableInfo(db)
 	result, err = mt.GetTbColumns(schemaName, tableName)
 	if err != nil {
@@ -56,7 +56,7 @@ func getTbColumns(db *gorm.DB, schemaName string, tableName string, indexTag boo
 	}
 	im := model.GroupByColumn(index)
 	for _, c := range result {
-		c.Indexes = im[c.ColumnName]
+		c.Indexes = im[c.Name()]
 	}
 	return result, nil
 }
@@ -72,5 +72,30 @@ func (t *mysqlTableInfo) GetTbColumns(schemaName string, tableName string) (resu
 
 //GetTbIndex Mysql index
 func (t *mysqlTableInfo) GetTbIndex(schemaName string, tableName string) (result []*model.Index, err error) {
+	return result, t.db.Raw(indexQuery, schemaName, tableName).Scan(&result).Error
+}
+
+type defaultTableInfo struct {
+	db *gorm.DB
+}
+
+//GetTbColumns  struct
+func (t *defaultTableInfo) GetTbColumns(schemaName string, tableName string) (result []*model.Column, err error) {
+	types, err := t.db.Migrator().ColumnTypes(tableName)
+	if err != nil {
+		return nil, err
+	}
+	for _, column := range types {
+		result = append(result, &model.Column{ColumnType: column, TableName: tableName})
+	}
+
+	return result, nil
+}
+
+//GetTbIndex  index
+func (t *defaultTableInfo) GetTbIndex(schemaName string, tableName string) (result []*model.Index, err error) {
+	if dn := t.db.Dialector.Name(); dn != "mysql" {
+		return nil, errors.New(fmt.Sprintf("not support %s", dn))
+	}
 	return result, t.db.Raw(indexQuery, schemaName, tableName).Scan(&result).Error
 }

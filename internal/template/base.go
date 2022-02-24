@@ -10,6 +10,7 @@ const Header = NotEditMark + `
 package {{.Package}}
 
 import(
+	"context"
 	"database/sql"
 	"strings"
 
@@ -21,11 +22,12 @@ import(
 	"gorm.io/gen/field"
 	"gorm.io/gen/helper"
 	{{ if .StructPkgPath  }}"{{.StructPkgPath}}"{{ end }}
+	{{range .ImportPkgPaths}}{{.}} ` + "\n" + `{{end}}
 )
 `
 
 const UnitTestHeader = NotEditMark + `
-package {{.}}
+package {{.Package}}
 
 import(
 	"context"
@@ -35,6 +37,8 @@ import(
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	{{ if .StructPkgPath  }}"{{.StructPkgPath}}"{{ end }}
+	{{range .ImportPkgPaths}}{{.}} ` + "\n" + `{{end}}
 )
 
 `

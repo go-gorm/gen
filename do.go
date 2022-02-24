@@ -64,17 +64,21 @@ func (d *DO) ReplaceDB(db *gorm.DB) { d.db = db }
 
 // UseModel specify a data model structure as a source for table name
 func (d *DO) UseModel(model interface{}) {
-	mt := reflect.TypeOf(model)
-	if mt.Kind() == reflect.Ptr {
-		mt = mt.Elem()
-	}
-	d.modelType = mt
+	d.modelType = d.indirect(model)
 
 	err := d.db.Statement.Parse(model)
 	if err != nil {
 		panic(fmt.Errorf("Cannot parse model: %+v", model))
 	}
 	d.schema = d.db.Statement.Schema
+}
+
+func (d *DO) indirect(value interface{}) reflect.Type {
+	mt := reflect.TypeOf(value)
+	if mt.Kind() == reflect.Ptr {
+		mt = mt.Elem()
+	}
+	return mt
 }
 
 // UseTable specify table name
@@ -92,7 +96,7 @@ func (d DO) TableName() string {
 func (d *DO) Session(config *gorm.Session) Dao { return d.getInstance(d.db.Session(config)) }
 
 // UnderlyingDB return the underlying database connection
-func (d *DO) UnderlyingDB() *gorm.DB { return d.db }
+func (d *DO) UnderlyingDB() *gorm.DB { return d.underlyingDB() }
 
 // Quote return qutoed data
 func (d *DO) Quote(raw string) string { return d.db.Statement.Quote(raw) }
@@ -156,23 +160,23 @@ func (*DO) Columns(cols ...field.Expr) columns { return cols }
 
 // ======================== chainable api ========================
 func (d *DO) Not(conds ...Condition) Dao {
-	if len(conds) == 0 {
-		return d
-	}
 	exprs, err := condToExpression(conds)
 	if err != nil {
 		return d.withError(err)
+	}
+	if len(exprs) == 0 {
+		return d
 	}
 	return d.getInstance(d.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Not(exprs...)}}))
 }
 
 func (d *DO) Or(conds ...Condition) Dao {
-	if len(conds) == 0 {
-		return d
-	}
 	exprs, err := condToExpression(conds)
 	if err != nil {
 		return d.withError(err)
+	}
+	if len(exprs) == 0 {
+		return d
 	}
 	return d.getInstance(d.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Or(clause.And(exprs...))}}))
 }
@@ -189,12 +193,12 @@ func (d *DO) Select(columns ...field.Expr) Dao {
 }
 
 func (d *DO) Where(conds ...Condition) Dao {
-	if len(conds) == 0 {
-		return d
-	}
 	exprs, err := condToExpression(conds)
 	if err != nil {
 		return d.withError(err)
+	}
+	if len(exprs) == 0 {
+		return d
 	}
 	return d.getInstance(d.db.Clauses(clause.Where{Exprs: exprs}))
 }
@@ -240,22 +244,20 @@ func (d *DO) Group(columns ...field.Expr) Dao {
 	if len(columns) == 0 {
 		return d
 	}
-
-	name := columns[0].BuildColumn(d.db.Statement, field.WithTable).String()
+	name := string(columns[0].Build(d.db.Statement))
 	for _, col := range columns[1:] {
-		name += "," + col.BuildColumn(d.db.Statement, field.WithTable).String()
+		name += "," + string(col.Build(d.db.Statement))
 	}
 	return d.getInstance(d.db.Group(name))
 }
 
 func (d *DO) Having(conds ...Condition) Dao {
-	if len(conds) == 0 {
-		return d
-	}
-
 	exprs, err := condToExpression(conds)
 	if err != nil {
 		return d.withError(err)
+	}
+	if len(exprs) == 0 {
+		return d
 	}
 	return d.getInstance(d.db.Clauses(clause.GroupBy{Having: exprs}))
 }
@@ -347,6 +349,15 @@ func (d *DO) Preload(field field.RelationField) Dao {
 	if conds := field.GetConds(); len(conds) > 0 {
 		args = append(args, toExpressionInterface(conds...)...)
 	}
+	if columns := field.GetSelects(); len(columns) > 0 {
+		colNames := make([]string, len(columns))
+		for i, c := range columns {
+			colNames[i] = string(c.ColumnName())
+		}
+		args = append(args, func(db *gorm.DB) *gorm.DB {
+			return db.Select(colNames)
+		})
+	}
 	if columns := field.GetOrderCol(); len(columns) > 0 {
 		args = append(args, func(db *gorm.DB) *gorm.DB {
 			return db.Order(d.calcOrderValue(columns...))
@@ -355,6 +366,11 @@ func (d *DO) Preload(field field.RelationField) Dao {
 	if clauses := field.GetClauses(); len(clauses) > 0 {
 		args = append(args, func(db *gorm.DB) *gorm.DB {
 			return db.Clauses(clauses...)
+		})
+	}
+	if offset, limit := field.GetPage(); offset|limit != 0 {
+		args = append(args, func(db *gorm.DB) *gorm.DB {
+			return db.Offset(offset).Limit(limit)
 		})
 	}
 	return d.getInstance(d.db.Preload(field.Path(), args...))
@@ -499,7 +515,25 @@ func (d *DO) UpdateSimple(columns ...field.AssignExpr) (info ResultInfo, err err
 }
 
 func (d *DO) Updates(value interface{}) (info ResultInfo, err error) {
-	result := d.db.Model(d.newResultPointer()).Updates(value)
+	var result *gorm.DB
+	var rawTyp, typ reflect.Type
+
+	rawTyp = reflect.TypeOf(value)
+	typ = rawTyp
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
+	}
+
+	switch {
+	case typ != d.modelType:
+		result = d.db.Model(d.newResultPointer()).Updates(value)
+	case rawTyp.Kind() == reflect.Ptr:
+		result = d.db.Updates(value)
+	default:
+		ptr := reflect.New(d.modelType)
+		ptr.Elem().Set(reflect.ValueOf(value))
+		result = d.db.Updates(ptr.Interface())
+	}
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
@@ -584,7 +618,16 @@ func (d *DO) ScanRows(rows *sql.Rows, dest interface{}) error {
 	return d.db.Model(d.newResultPointer()).ScanRows(rows, dest)
 }
 
+func (d DO) WithResult(fc func(tx Dao)) ResultInfo {
+	d.db = d.db.Set("", "")
+	fc(&d)
+	return ResultInfo{RowsAffected: d.db.RowsAffected, Error: d.db.Error}
+}
+
 func (d *DO) newResultPointer() interface{} {
+	if d.modelType == nil {
+		return nil
+	}
 	return reflect.New(d.modelType).Interface()
 }
 

@@ -4,13 +4,20 @@ package template
 const Model = NotEditMark + `
 package {{.StructInfo.Package}}
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+
+	"gorm.io/datatypes"
+	"gorm.io/gorm"
+	{{range .ImportPkgPaths}}{{.}} ` + "\n" + `{{end}}
+)
 
 const TableName{{.StructName}} = "{{.TableName}}"
 
 // {{.StructName}} mapped from table <{{.TableName}}>
 type {{.StructName}} struct {
-    {{range .Members}}
+    {{range .Fields}}
 	{{if .MultilineComment -}}
 	/*
 {{.ColumnComment}}

@@ -4,16 +4,19 @@ const DIYMethod = `
 
 //{{.DocComment }}
 func ({{.S}} {{.TargetStruct}}Do){{.MethodName}}({{.GetParamInTmpl}})({{.GetResultParamInTmpl}}){
-	{{if .HasSqlData}}params := map[string]interface{}{ {{range $index,$data:=.SqlData}}
-		"{{$data}}":{{$data}},{{end}}
-	}
+	{{if .HasSqlData}}params :=make(map[string]interface{},0)
 
 	{{end}}var generateSQL strings.Builder
 	{{range $line:=.Sections.Tmpl}}{{$line}}
 	{{end}}
 
 	{{if .HasNeedNewResult}}result ={{if .ResultData.IsMap}}make{{else}}new{{end}}({{if ne .ResultData.Package ""}}{{.ResultData.Package}}.{{end}}{{.ResultData.Type}}){{end}}
-	{{if or .ReturnRowsAffected .ReturnError}}executeSQL:{{else}}_{{end}}= {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL.String(){{if .HasSqlData}},params{{end}}){{if not .ResultData.IsNull}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}
+	{{if or .ReturnRowsAffected .ReturnError}}var executeSQL *gorm.DB
+	{{end}}{{if .HasSqlData}}if len(params)>0{
+		{{if or .ReturnRowsAffected .ReturnError}}executeSQL{{else}}_{{end}}= {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL.String(){{if .HasSqlData}},params{{end}}){{if not .ResultData.IsNull}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}
+	}else{
+		{{if or .ReturnRowsAffected .ReturnError}}executeSQL{{else}}_{{end}}= {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL.String()){{if not .ResultData.IsNull}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}
+	}{{else}}{{if or .ReturnRowsAffected .ReturnError}}executeSQL{{else}}_{{end}}= {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL.String()){{if not .ResultData.IsNull}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}{{end}}
 	{{if .ReturnRowsAffected}}rowsAffected = executeSQL.RowsAffected
 	{{end}}{{if .ReturnError}}err = executeSQL.Error
 	{{end}}return
@@ -48,6 +51,10 @@ func ({{.S}} {{.NewStructName}}Do) Select(conds ...field.Expr) I{{.StructName}}D
 
 func ({{.S}} {{.NewStructName}}Do) Where(conds ...gen.Condition) I{{.StructName}}Do {
 	return {{.S}}.withDO({{.S}}.DO.Where(conds...))
+}
+
+func ({{.S}} {{.NewStructName}}Do) Exists(subquery interface{UnderlyingDB() *gorm.DB}) I{{.StructName}}Do {
+	return {{.S}}.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func ({{.S}} {{.NewStructName}}Do) Order(conds ...field.Expr) I{{.StructName}}Do {
@@ -195,6 +202,10 @@ func ({{.S}} {{.NewStructName}}Do) FirstOrCreate() (*{{.StructInfo.Package}}.{{.
 func ({{.S}} {{.NewStructName}}Do) FindByPage(offset int, limit int) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, count int64, err error) {
 	count, err = {{.S}}.Count()
 	if err != nil {
+		return
+	}
+
+	if limit <= 0 {
 		return
 	}
 
@@ -354,7 +365,25 @@ func Test_{{.NewStructName}}Query(t *testing.T) {
 }
 `
 
+const DIYMethod_TEST_Basic = `
+type Input struct {
+	Args []interface{}
+}
+
+type Expectation struct {
+	Ret []interface{}
+}
+
+type TestCase struct {
+	Input
+	Expectation
+}
+
+`
+
 const DIYMethod_TEST = `
+
+var {{.OriginStruct.Type}}{{.MethodName}}TestCase = []TestCase{}
 
 func Test_{{.TargetStruct}}_{{.MethodName}}(t *testing.T) {
 	{{.TargetStruct}} := new{{.OriginStruct.Type}}(db)

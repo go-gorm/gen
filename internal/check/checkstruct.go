@@ -17,14 +17,16 @@ import (
 type BaseStruct struct {
 	db *gorm.DB
 
-	GenBaseStruct bool   // whether to generate db model
-	S             string // the first letter(lower case)of simple Name
-	NewStructName string // new struct name
-	StructName    string // origin struct name
-	TableName     string
-	StructInfo    parser.Param
-	Members       []*model.Member
-	Source        model.SourceCode
+	GenBaseStruct  bool   // whether to generate db model
+	FileName       string // generated file name
+	S              string // the first letter(lower case)of simple Name
+	NewStructName  string // new struct name
+	StructName     string // origin struct name
+	TableName      string // table name in db server
+	StructInfo     parser.Param
+	Fields         []*model.Field
+	Source         model.SourceCode
+	ImportPkgPaths []string
 }
 
 // parseStruct get all elements of struct with gorm's Parse, ignore unexported elements
@@ -35,71 +37,70 @@ func (b *BaseStruct) parseStruct(st interface{}) error {
 		return err
 	}
 	b.TableName = stmt.Table
+	b.FileName = strings.ToLower(stmt.Table)
 
 	for _, f := range stmt.Schema.Fields {
-		b.appendOrUpdateMember(&model.Member{
+		b.appendOrUpdateField(&model.Field{
 			Name:       f.Name,
-			Type:       b.getMemberRealType(f.FieldType),
+			Type:       b.getFieldRealType(f.FieldType),
 			ColumnName: f.DBName,
 		})
 	}
 	for _, r := range ParseStructRelationShip(&stmt.Schema.Relationships) {
 		r := r
-		b.appendOrUpdateMember(&model.Member{Relation: &r})
+		b.appendOrUpdateField(&model.Field{Relation: &r})
 	}
 	return nil
 }
 
-// getMemberRealType  get basic type of member
-func (b *BaseStruct) getMemberRealType(member reflect.Type) string {
+// getFieldRealType  get basic type of field
+func (b *BaseStruct) getFieldRealType(f reflect.Type) string {
 	scanValuer := reflect.TypeOf((*field.ScanValuer)(nil)).Elem()
-	if member.Implements(scanValuer) || reflect.New(member).Type().Implements(scanValuer) {
+	if f.Implements(scanValuer) || reflect.New(f).Type().Implements(scanValuer) {
 		return "field"
 	}
 
-	if member.Kind() == reflect.Ptr {
-		member = member.Elem()
+	if f.Kind() == reflect.Ptr {
+		f = f.Elem()
 	}
-	if member.String() == "time.Time" {
+	if f.String() == "time.Time" {
 		return "time.Time"
 	}
-	if member.String() == "[]uint8" || member.String() == "json.RawMessage" {
+	if f.String() == "[]uint8" || f.String() == "json.RawMessage" {
 		return "bytes"
 	}
-	return member.Kind().String()
+	return f.Kind().String()
 }
 
-func (b *BaseStruct) ReviseMemberName() {
-	for _, m := range b.Members {
+func (b *BaseStruct) ReviseFieldName() {
+	for _, m := range b.Fields {
 		m.EscapeKeyword()
 	}
 }
 
-// check member if in BaseStruct update else append
-func (b *BaseStruct) appendOrUpdateMember(member *model.Member) {
-	if member.IsRelation() {
-		b.appendMember(member)
+// check field if in BaseStruct update else append
+func (b *BaseStruct) appendOrUpdateField(f *model.Field) {
+	if f.IsRelation() {
+		b.appendField(f)
 	}
-	if member.ColumnName == "" {
+	if f.ColumnName == "" {
 		return
 	}
-	for index, m := range b.Members {
-		if m.Name == member.Name {
-			b.Members[index] = member
+	for index, m := range b.Fields {
+		if m.Name == f.Name {
+			b.Fields[index] = f
 			return
 		}
 	}
-	b.appendMember(member)
+	b.appendField(f)
 }
 
-func (b *BaseStruct) appendMember(member *model.Member) {
-	b.Members = append(b.Members, member)
-}
+func (b *BaseStruct) appendField(f *model.Field) { b.Fields = append(b.Fields, f) }
 
-// HasMember check if BaseStruct has members
-func (b *BaseStruct) HasMember() bool { return len(b.Members) > 0 }
+// HasField check if BaseStruct has fields
+func (b *BaseStruct) HasField() bool { return len(b.Fields) > 0 }
 
-// check if struct is exportable and if struct in main package and if member's type is regular
+// check if struct is exportable and if struct in main package and if field's type is regular
 func (b *BaseStruct) check() (err error) {
 	if b.StructInfo.InMainPkg() {
 		return fmt.Errorf("can't generated data object for struct in main package, ignore:%s", b.StructName)
@@ -107,15 +108,13 @@ func (b *BaseStruct) check() (err error) {
 	if !isCapitalize(b.StructName) {
 		return fmt.Errorf("can't generated data object for non-exportable struct, ignore:%s", b.NewStructName)
 	}
-
 	return nil
 }
 
-func (b *BaseStruct) Relations() []field.Relation {
-	result := make([]field.Relation, 0, 4)
-	for _, m := range b.Members {
-		if m.IsRelation() {
-			result = append(result, *m.Relation)
+func (b *BaseStruct) Relations() (result []field.Relation) {
+	for _, f := range b.Fields {
+		if f.IsRelation() {
+			result = append(result, *f.Relation)
 		}
 	}
 	return result

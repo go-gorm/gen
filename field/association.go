@@ -22,15 +22,20 @@ var ns = schema.NamingStrategy{}
 type RelationField interface {
 	Name() string
 	Path() string
-	Field(member ...string) Expr
+	Field(fields ...string) Expr
 
 	On(conds ...Expr) RelationField
+	Select(conds ...Expr) RelationField
 	Order(columns ...Expr) RelationField
 	Clauses(hints ...clause.Expression) RelationField
+	Offset(offset int) RelationField
+	Limit(limit int) RelationField
 
 	GetConds() []Expr
+	GetSelects() []Expr
 	GetOrderCol() []Expr
 	GetClauses() []clause.Expression
+	GetPage() (offset, limit int)
 }
 
 type Relation struct {
@@ -43,9 +48,11 @@ type Relation struct {
 
 	childRelations []Relation
 
-	conds   []Expr
-	order   []Expr
-	clauses []clause.Expression
+	conds         []Expr
+	selects       []Expr
+	order         []Expr
+	clauses       []clause.Expression
+	limit, offset int
 }
 
 func (r Relation) Name() string { return r.fieldName }
@@ -62,9 +69,9 @@ func (r Relation) RelationshipName() string { return ns.SchemaName(string(r.rela
 
 func (r Relation) ChildRelations() []Relation { return r.childRelations }
 
-func (r Relation) Field(member ...string) Expr {
-	if len(member) > 0 {
-		return NewString("", r.fieldName+"."+strings.Join(member, ".")).appendBuildOpts(WithoutQuote)
+func (r Relation) Field(fields ...string) Expr {
+	if len(fields) > 0 {
+		return NewString("", r.fieldName+"."+strings.Join(fields, ".")).appendBuildOpts(WithoutQuote)
 	}
 	return NewString("", r.fieldName).appendBuildOpts(WithoutQuote)
 }
@@ -77,36 +84,45 @@ func (r Relation) On(conds ...Expr) RelationField {
 	r.conds = append(r.conds, conds...)
 	return &r
 }
-
+func (r Relation) Select(columns ...Expr) RelationField {
+	r.selects = append(r.selects, columns...)
+	return &r
+}
 func (r Relation) Order(columns ...Expr) RelationField {
 	r.order = append(r.order, columns...)
 	return &r
 }
-
 func (r Relation) Clauses(hints ...clause.Expression) RelationField {
 	r.clauses = append(r.clauses, hints...)
 	return &r
 }
-
-func (r *Relation) GetConds() []Expr { return r.conds }
-
-func (r *Relation) GetOrderCol() []Expr { return r.order }
-
-func (r *Relation) GetClauses() []clause.Expression { return r.clauses }
-
-func (r *Relation) StructMember() string {
-	var memberStr string
-	for _, relation := range r.childRelations {
-		memberStr += relation.fieldName + " struct {\nfield.RelationField\n" + relation.StructMember() + "}\n"
-	}
-	return memberStr
+func (r Relation) Offset(offset int) RelationField {
+	r.offset = offset
+	return &r
+}
+func (r Relation) Limit(limit int) RelationField {
+	r.limit = limit
+	return &r
 }
 
-func (r *Relation) StructMemberInit() string {
+func (r *Relation) GetConds() []Expr                { return r.conds }
+func (r *Relation) GetSelects() []Expr              { return r.selects }
+func (r *Relation) GetOrderCol() []Expr             { return r.order }
+func (r *Relation) GetClauses() []clause.Expression { return r.clauses }
+func (r *Relation) GetPage() (offset, limit int)    { return r.offset, r.limit }
+
+func (r *Relation) StructField() (fieldStr string) {
+	for _, relation := range r.childRelations {
+		fieldStr += relation.fieldName + " struct {\nfield.RelationField\n" + relation.StructField() + "}\n"
+	}
+	return fieldStr
+}
+
+func (r *Relation) StructFieldInit() string {
 	initStr := fmt.Sprintf("RelationField: field.NewRelation(%q, %q),\n", r.fieldPath, r.fieldType)
 	for _, relation := range r.childRelations {
-		initStr += relation.fieldName + ": struct {\nfield.RelationField\n" + strings.TrimSpace(relation.StructMember()) + "}"
-		initStr += "{\n" + relation.StructMemberInit() + "},\n"
+		initStr += relation.fieldName + ": struct {\nfield.RelationField\n" + strings.TrimSpace(relation.StructField()) + "}"
+		initStr += "{\n" + relation.StructFieldInit() + "},\n"
 	}
 	return initStr
 }

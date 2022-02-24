@@ -1,42 +1,37 @@
 package model
 
 import (
-	"regexp"
-
 	"gorm.io/gorm"
 )
 
 type SchemaNameOpt func(*gorm.DB) string
 
-// get mysql db' name
-var dbNameReg = regexp.MustCompile(`/\w+\??`)
-
-var defaultMysqlSchemaNameOpt = SchemaNameOpt(func(db *gorm.DB) string {
+var defaultSchemaNameOpt = SchemaNameOpt(func(db *gorm.DB) string {
 	return db.Migrator().CurrentDatabase()
 })
 
-type MemberOpt interface{ Self() func(*Member) *Member }
+type FieldOpt interface{ Operator() func(*Field) *Field }
 
-type ModifyMemberOpt func(*Member) *Member
+type ModifyFieldOpt func(*Field) *Field
 
-func (o ModifyMemberOpt) Self() func(*Member) *Member { return o }
+func (o ModifyFieldOpt) Operator() func(*Field) *Field { return o }
 
-type FilterMemberOpt ModifyMemberOpt
+type FilterFieldOpt ModifyFieldOpt
 
-func (o FilterMemberOpt) Self() func(*Member) *Member { return o }
+func (o FilterFieldOpt) Operator() func(*Field) *Field { return o }
 
-type CreateMemberOpt ModifyMemberOpt
+type CreateFieldOpt ModifyFieldOpt
 
-func (o CreateMemberOpt) Self() func(*Member) *Member { return o }
+func (o CreateFieldOpt) Operator() func(*Field) *Field { return o }
 
-func sortOpt(opts []MemberOpt) (modifyOpts []MemberOpt, filterOpts []MemberOpt, createOpts []MemberOpt) {
+func sortFieldOpt(opts []FieldOpt) (modifyOpts []FieldOpt, filterOpts []FieldOpt, createOpts []FieldOpt) {
 	for _, opt := range opts {
 		switch opt.(type) {
-		case ModifyMemberOpt:
+		case ModifyFieldOpt:
 			modifyOpts = append(modifyOpts, opt)
-		case FilterMemberOpt:
+		case FilterFieldOpt:
 			filterOpts = append(filterOpts, opt)
-		case CreateMemberOpt:
+		case CreateFieldOpt:
 			createOpts = append(createOpts, opt)
 		}
 	}

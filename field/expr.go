@@ -177,7 +177,7 @@ func (e expr) Null() AssignExpr {
 	return e.setE(clause.Eq{Column: e.col.Name, Value: nil})
 }
 
-func (e expr) GroutConcat() Expr {
+func (e expr) GroupConcat() Expr {
 	return e.setE(clause.Expr{SQL: "GROUP_CONCAT(?)", Vars: []interface{}{e.RawExpr()}})
 }
 

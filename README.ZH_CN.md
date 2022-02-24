@@ -115,6 +115,7 @@
           - [`If` 子句](#if-clause)
           - [`Where` 子句](#where-clause)
           - [`Set` 子句](#set-clause)
+          - [`For` 子句](#for-clause)
         - [方法接口示例](#method-interface-example)
       - [单元测试](#unit-test)
       - [智能选择字段](#smart-select-fields)
@@ -164,6 +165,8 @@ func main() {
         /* Mode: gen.WithoutContext|gen.WithDefaultQuery*/
         //if you want the nullable field generation property to be pointer type, set FieldNullable true
         /* FieldNullable: true,*/
+        //if you want to assign field which has default value in `Create` API, set FieldCoverable true, reference: https://gorm.io/docs/create.html#Default-Values
+        /* FieldCoverable: true,*/
         //if you want to generate index tags from database, set FieldWithIndexTag true
         /* FieldWithIndexTag: true,*/
         //if you want to generate type tags from database, set FieldWithTypeTag true
@@ -173,7 +176,7 @@ func main() {
     })
   
     // reuse the database connection in Project or create a connection here
-    // if you want to use GenerateModel/GenerateModelAs, UseDB is necessray or it will panic
+    // if you want to use GenerateModel/GenerateModelAs, UseDB is necessary or it will panic
     // db, _ := gorm.Open(mysql.Open("root:@(127.0.0.1:3306)/demo?charset=utf8mb4&parseTime=True&loc=Local"))
     g.UseDB(db)
   
@@ -257,8 +260,8 @@ FieldNewTag        // append new tag
 FieldNewTagWithNS  // specify new tag with name strategy
 FieldTrimPrefix    // trim column prefix
 FieldTrimSuffix    // trim column suffix
-FieldAddPrefix     // add prefix to struct member's name
-FieldAddSuffix     // add suffix to struct member's name
+FieldAddPrefix     // add prefix to struct field's name
+FieldAddSuffix     // add suffix to struct field's name
 FieldRelate        // specify relationship with other tables
 FieldRelateModel   // specify relationship with exist models
 ```
@@ -560,7 +563,7 @@ p := query.Use(db).Pizza
 
 pizzas, err := p.WithContext(ctx).Where(
     p.WithContext(ctx).Where(p.Pizza.Eq("pepperoni")).
-        Where(p.Where(p.Size.Eq("small")).Or(p.Size.Eq("medium"))),
+        Where(p.WithContext(ctx).Where(p.Size.Eq("small")).Or(p.Size.Eq("medium"))),
 ).Or(
     p.WithContext(ctx).Where(p.Pizza.Eq("hawaiian")).Where(p.Size.Eq("xlarge")),
 ).Find()
@@ -587,7 +590,7 @@ u.WithContext(ctx).Select(u.Age.Avg()).Rows()
 ```go
 u := query.Use(db).User
 
-users, err := u.WithContext(ctx).Where(u.Columns(u.ID, u.Name).In(field.Values([][]inferface{}{{1, "modi"}, {2, "zhangqiang"}}))).Find()
+users, err := u.WithContext(ctx).Where(u.WithContext(ctx).Columns(u.ID, u.Name).In(field.Values([][]interface{}{{1, "modi"}, {2, "zhangqiang"}}))).Find()
 // SELECT * FROM `users` WHERE (`id`, `name`) IN ((1,'humodi'),(2,'tom'));
 ```
 
@@ -613,6 +616,24 @@ users, err := u.WithContext(ctx).Order(u.Age.Desc(), u.Name).Find()
 // Multiple orders
 users, err := u.WithContext(ctx).Order(u.Age.Desc()).Order(u.Name).Find()
 // SELECT * FROM users ORDER BY age DESC, name;
+```
+
+通过字符串获取想要排序的列
+
+```go
+u := query.Use(db).User
+
+orderCol, ok := u.GetFieldByName(orderColStr) // orderColStr的值可以是"id"
+if !ok {
+  // User doesn't contains orderColStr
+}
+
+users, err := u.WithContext(ctx).Order(orderCol).Find()
+// SELECT * FROM users ORDER BY age;
+
+// OR Desc
+users, err := u.WithContext(ctx).Order(orderCol.Desc()).Find()
+// SELECT * FROM users ORDER BY age DESC;
 ```
 
 ###### <span id="limit--offset">分页查询（Limit & Offset）</span>
@@ -647,17 +668,17 @@ users, err := u.WithContext(ctx).Offset(10).Offset(-1).Find()
 ```go
 u := query.Use(db).User
 
-type Result struct {
-    Date  time.Time
+var users []struct {
+    Name  string
     Total int
 }
+err := u.WithContext(ctx).Select(u.Name, u.ID.Count().As("total")).Group(u.Name).Scan(&users)
+// SELECT name, count(id) as total FROM `users` GROUP BY `name`
 
-var result Result
-
-err := u.WithContext(ctx).Select(u.Name, u.Age.Sum().As("total")).Where(u.Name.Like("%modi%")).Group(u.Name).Scan(&result)
+err := u.WithContext(ctx).Select(u.Name, u.Age.Sum().As("total")).Where(u.Name.Like("%modi%")).Group(u.Name).Scan(&users)
 // SELECT name, sum(age) as total FROM `users` WHERE name LIKE "%modi%" GROUP BY `name`
 
-err := u.WithContext(ctx).Select(u.Name, u.Age.Sum().As("total")).Group(u.Name).Having(u.Name.Eq("group")).Scan(&result)
+err := u.WithContext(ctx).Select(u.Name, u.Age.Sum().As("total")).Group(u.Name).Having(u.Name.Eq("group")).Scan(&users)
 // SELECT name, sum(age) as total FROM `users` GROUP BY `name` HAVING name = "group"
 
 rows, err := u.WithContext(ctx).Select(u.Birthday.As("date"), u.Age.Sum().As("total")).Group(u.Birthday).Rows()
@@ -672,7 +693,10 @@ for rows.Next() {
   ...
 }
 
-var results []Result
+var results []struct {
+    Date  time.Time
+    Total int
+}
 
 o.WithContext(ctx).Select(o.CreateAt.Date().As("date"), o.WithContext(ctx).Amount.Sum().As("total")).Group(o.CreateAt.Date()).Having(u.Amount.Sum().Gt(100)).Scan(&results)
 ```
@@ -729,12 +753,18 @@ users := u.WithContext(ctx).Join(e, e.UserID.EqCol(u.id), e.Email.Eq("modi@examp
 o := query.Use(db).Order
 u := query.Use(db).User
 
-orders, err := o.WithContext(ctx).Where(u.Columns(o.Amount).Gt(o.WithContext(ctx).Select(o.Amount.Avg())).Find()
+orders, err := o.WithContext(ctx).Where(o.WithContext(ctx).Columns(o.Amount).Gt(o.WithContext(ctx).Select(o.Amount.Avg())).Find()
 // SELECT * FROM "orders" WHERE amount > (SELECT AVG(amount) FROM "orders");
 
 subQuery := u.WithContext(ctx).Select(u.Age.Avg()).Where(u.Name.Like("name%"))
-users, err := u.WithContext(ctx).Select(u.Age.Avg().As("avgage")).Group(u.Name).Having(u.Columns(u.Age.Avg()).Gt(subQuery).Find()
+users, err := u.WithContext(ctx).Select(u.Age.Avg().As("avgage")).Group(u.Name).Having(u.WithContext(ctx).Columns(u.Age.Avg()).Gt(subQuery).Find()
 // SELECT AVG(age) as avgage FROM `users` GROUP BY `name` HAVING AVG(age) > (SELECT AVG(age) FROM `users` WHERE name LIKE "name%")
+
+// 找出交易数量在100和200之间的用户
+subQuery1 := o.WithContext(ctx).Select(o.ID).Where(o.UserID.EqCol(u.ID), o.Amount.Gt(100))
+subQuery2 := o.WithContext(ctx).Select(o.ID).Where(o.UserID.EqCol(u.ID), o.Amount.Gt(200))
+u.WithContext(ctx).Exists(subQuery1).Not(u.WithContext(ctx).Exists(subQuery2)).Find()
+// SELECT * FROM `users` WHERE EXISTS (SELECT `orders`.`id` FROM `orders` WHERE `orders`.`user_id` = `users`.`id` AND `orders`.`amount` > 100 AND `orders`.`deleted_at` IS NULL) AND NOT EXISTS (SELECT `orders`.`id` FROM `orders` WHERE `orders`.`user_id` = `users`.`id` AND `orders`.`amount` > 200 AND `orders`.`deleted_at` IS NULL) AND `users`.`deleted_at` IS NULL
 ```
 
 ###### <span id="from-subquery">From 子查询</span>
@@ -900,7 +930,7 @@ tx.Commit() // Commit user1
 
 ###### <span id="iteration">迭代</span>
 
-Gem 支持通过 Rows 方法进行迭代（遍历）操作
+Gen 支持通过 Rows 方法进行迭代（遍历）操作
 
 ```go
 u := query.Use(db).User
@@ -1422,9 +1452,34 @@ users, err := u.WithContext(ctx).Preload(field.Associations).Find()
 users, err := u.WithContext(ctx).Preload(u.Orders.OrderItems.Product).Find()
 ```
 
+###### <span id="preload-with-select">预加载指定列（Preload with select）</span>
+
+使用`Select`指定要查询的列名, 相应的外键必须被指定。
+
+```go
+type User struct {
+  gorm.Model
+  CreditCards []CreditCard `gorm:"foreignKey:UserRefer"`
+}
+
+type CreditCard struct {
+  gorm.Model
+  Number    string
+  UserRefer uint
+}
+
+u := q.User
+cc := q.CreditCard
+
+// !!! 外键 "cc.UserRefer" 必须被指定
+users, err := u.WithContext(ctx).Where(c.ID.Eq(1)).Preload(u.CreditCards.Select(cc.Number, cc.UserRefer)).Find()
+// SELECT * FROM `credit_cards` WHERE `credit_cards`.`customer_refer` = 1 AND `credit_cards`.`deleted_at` IS NULL
+// SELECT * FROM `customers` WHERE `customers`.`id` = 1 AND `customers`.`deleted_at` IS NULL LIMIT 1
+```
+
 ###### <span id="nested-preloading">根据条件预加载</span>
 
-GORM 允许预加载与条件关联，它的工作原理类似于内联条件。
+GEN 允许预加载与条件关联，它的工作原理类似于内联条件。
 
 ```go
 q := query.Use(db)
@@ -1451,6 +1506,10 @@ users, err := u.WithContext(ctx).Preload(u.Orders.On(o.State.Eq("on")).Order(o.I
 users, err := u.WithContext(ctx).Preload(u.Orders.Clauses(hints.UseIndex("idx_order_id"))).Find()
 // SELECT * FROM users;
 // SELECT * FROM orders WHERE user_id IN (1,2) USE INDEX (`idx_order_id`);
+
+user, err := u.WithContext(ctx).Where(u.ID.Eq(1)).Preload(u.Orders.Offset(100).Limit(20)).Take()
+// SELECT * FROM users WHERE `user_id` = 1 LIMIT 20 OFFSET 100;
+// SELECT * FROM `users` WHERE `users`.`id` = 1 LIMIT 1
 ```
 
 ###### <span id="nested-preloading">嵌套预加载</span>
@@ -1762,7 +1821,7 @@ update @@table
 where id=@id
 ```
 
-###### `For` 子句
+###### <span id="for-clause">`For` 子句</span>
 
 ```
 {{for _,name:=range names}}
@@ -1986,6 +2045,8 @@ Usage of gentool:
       specify a directory for output (default "./dao/query")
   -tables string
       enter the required data table or leave it blank
+  -onlyModel
+      only generate models (without query file)
   -withUnitTest
       generate unit test for query code
 ```

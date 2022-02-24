@@ -4,16 +4,16 @@ const (
 	BaseStruct = createMethod + `
 	type {{.NewStructName}} struct {
 		{{.NewStructName}}Do
-		` + members + `
+		` + fields + `
 	}
-	` + asMethond + getFieldMethod + fillFieldMapMethod + cloneMethod + relationship + defineMethodStruct
+	` + tableMethod + asMethond + updateFieldMethod + getFieldMethod + fillFieldMapMethod + cloneMethod + relationship + defineMethodStruct
 
 	BaseStructWithContext = createMethod + `
 	type {{.NewStructName}} struct {
 		{{.NewStructName}}Do {{.NewStructName}}Do
-		` + members + `
+		` + fields + `
 	}
-	` + asMethond + `
+	` + tableMethod + asMethond + updateFieldMethod + `
 	
 	func ({{.S}} *{{.NewStructName}}) WithContext(ctx context.Context) I{{.StructName}}Do { return {{.S}}.{{.NewStructName}}Do.WithContext(ctx)}
 
@@ -30,16 +30,16 @@ const (
 		_{{.NewStructName}}.{{.NewStructName}}Do.UseDB(db)
 		_{{.NewStructName}}.{{.NewStructName}}Do.UseModel(&{{.StructInfo.Package}}.{{.StructInfo.Type}}{})
 	
-		{{if .HasMember}}tableName := _{{.NewStructName}}.{{.NewStructName}}Do.TableName(){{end}}
+		tableName := _{{.NewStructName}}.{{.NewStructName}}Do.TableName()
 		_{{$.NewStructName}}.ALL = field.NewField(tableName, "*")
-		{{range .Members -}}
+		{{range .Fields -}}
 		{{if not .IsRelation -}}
 			{{- if .ColumnName -}}_{{$.NewStructName}}.{{.Name}} = field.New{{.GenType}}(tableName, "{{.ColumnName}}"){{- end -}}
 		{{- else -}}
 			_{{$.NewStructName}}.{{.Relation.Name}} = {{$.NewStructName}}{{.Relation.RelationshipName}}{{.Relation.Name}}{
 				db: db.Session(&gorm.Session{}),
 
-				{{.Relation.StructMemberInit}}
+				{{.Relation.StructFieldInit}}
 			}
 		{{end}}
 		{{end}}
@@ -49,9 +49,9 @@ const (
 		return _{{.NewStructName}}
 	}
 	`
-	members = `
+	fields = `
 	ALL field.Field
-	{{range .Members -}}
+	{{range .Fields -}}
 	{{if not .IsRelation -}}
 		{{- if .ColumnName -}}{{.Name}} field.{{.GenType}}{{- end -}}
 	{{- else -}}
@@ -61,20 +61,31 @@ const (
 
 	fieldMap  map[string]field.Expr
 `
+	tableMethod = `
+func ({{.S}} {{.NewStructName}}) Table(newTableName string) *{{.NewStructName}} { 
+	{{.S}}.{{.NewStructName}}Do.UseTable(newTableName)
+	return {{.S}}.updateTableName(newTableName)
+}
+`
+
 	asMethond = `	
 func ({{.S}} {{.NewStructName}}) As(alias string) *{{.NewStructName}} { 
 	{{.S}}.{{.NewStructName}}Do.DO = *({{.S}}.{{.NewStructName}}Do.As(alias).(*gen.DO))
-
-	{{.S}}.ALL = field.NewField(alias, "*")
-	{{range .Members -}}
+	return {{.S}}.updateTableName(alias)
+}
+`
+	updateFieldMethod = `
+func ({{.S}} *{{.NewStructName}}) updateTableName(table string) *{{.NewStructName}} { 
+	{{.S}}.ALL = field.NewField(table, "*")
+	{{range .Fields -}}
 	{{if not .IsRelation -}}
-		{{- if .ColumnName -}}{{$.S}}.{{.Name}} = field.New{{.GenType}}(alias, "{{.ColumnName}}"){{- end -}}
+		{{- if .ColumnName -}}{{$.S}}.{{.Name}} = field.New{{.GenType}}(table, "{{.ColumnName}}"){{- end -}}
 	{{end}}
 	{{end}}
 	
 	{{.S}}.fillFieldMap()
 
-	return &{{.S}}
+	return {{.S}}
 }
 `
 
@@ -86,11 +97,15 @@ func ({{.S}} {{.NewStructName}}) clone(db *gorm.DB) {{.NewStructName}} {
 `
 	getFieldMethod = `
 func ({{.S}} *{{.NewStructName}}) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
-	f, ok := {{.S}}.fieldMap[fieldName]
-	return f.(field.OrderExpr), ok
+	_f, ok := {{.S}}.fieldMap[fieldName]
+	if !ok || _f == nil {
+		return nil, false
+	}
+	_oe,ok := _f.(field.OrderExpr)
+	return _oe,ok
 }
 `
-	relationship = `{{range .Members}}{{if .IsRelation}}` +
+	relationship = `{{range .Fields}}{{if .IsRelation}}` +
 		`{{- $relation := .Relation }}{{- $relationship := $relation.RelationshipName}}` +
 		relationStruct + relationTx +
 		`{{end}}{{end}}`
@@ -98,8 +113,8 @@ func ({{.S}} *{{.NewStructName}}) GetFieldByName(fieldName string) (field.OrderE
 
 	fillFieldMapMethod = `
 func ({{.S}} *{{.NewStructName}}) fillFieldMap() {
-	{{.S}}.fieldMap =  make(map[string]field.Expr, {{len .Members}})
-	{{range .Members -}}
+	{{.S}}.fieldMap =  make(map[string]field.Expr, {{len .Fields}})
+	{{range .Fields -}}
 	{{if not .IsRelation -}}
 		{{- if .ColumnName -}}{{$.S}}.fieldMap["{{.ColumnName}}"] = {{$.S}}.{{.Name}}{{- end -}}
 	{{end}}
@@ -158,7 +173,7 @@ type {{$.NewStructName}}{{$relationship}}{{$relation.Name}} struct{
 	
 	field.RelationField
 	
-	{{$relation.StructMember}}
+	{{$relation.StructField}}
 }
 
 func (a {{$.NewStructName}}{{$relationship}}{{$relation.Name}}) Where(conds ...field.Expr) *{{$.NewStructName}}{{$relationship}}{{$relation.Name}} {

@@ -34,7 +34,17 @@ type SQLClause struct {
 }
 
 func (s SQLClause) String() string {
-	return strings.ReplaceAll(strings.Join(s.Value, "+"), `"+"`, "")
+	sqlString := strings.Join(s.Value, "+")
+	// trim left space
+	if strings.HasPrefix(sqlString, "\"") {
+		sqlString = `"` + strings.TrimLeft(sqlString, `" `)
+	}
+	// make sure right has only one space
+	if !strings.HasSuffix(sqlString, ` "`) {
+		sqlString += `+" "`
+	}
+	// Remove redundant connection symbols
+	return strings.ReplaceAll(sqlString, `"+"`, "")
 }
 
 func (s SQLClause) Creat() string {
@@ -568,7 +578,8 @@ func (s *Sections) parseSQL(name string) (res SQLClause) {
 				s.tmplAppend(forRange.appendDataToParams(c.Value, name))
 				c.Value = forRange.DataValue(c.Value, name)
 			} else {
-				c.Value = strconv.Quote("@" + c.Value)
+				s.tmplAppend(c.AddDataToParamMap())
+				c.Value = strconv.Quote("@" + c.SQLParamName())
 			}
 			res.Value = append(res.Value, c.Value)
 		default:

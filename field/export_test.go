@@ -18,13 +18,13 @@ func (p *password) Scan(src interface{}) error {
 	*p = password(fmt.Sprintf("this is password {%q}", src))
 	return nil
 }
-func (p *password) Value() (driver.Value, error) {
-	return strings.TrimPrefix(strings.TrimSuffix(string(*p), "}"), "this is password {"), nil
+func (p password) Value() (driver.Value, error) {
+	return strings.TrimPrefix(strings.TrimSuffix(string(p), "}"), "this is password {"), nil
 }
 
 func TestExpr_Build(t *testing.T) {
 	timeData, _ := time.Parse("2006-01-02 15:04:05", "2021-06-29 15:11:49")
-	p := password("i am password")
+	const p = password("i am password")
 
 	testcases := []struct {
 		Expr         field.Expr
@@ -33,8 +33,8 @@ func TestExpr_Build(t *testing.T) {
 	}{
 		// ======================== generic ========================
 		{
-			Expr:         field.NewField("user", "password").Eq(&p),
-			ExpectedVars: []interface{}{&p},
+			Expr:         field.NewField("user", "password").Eq(p),
+			ExpectedVars: []interface{}{p},
 			Result:       "`user`.`password` = ?",
 		},
 		{
@@ -86,8 +86,17 @@ func TestExpr_Build(t *testing.T) {
 			Result: "`id` IS NOT NULL",
 		},
 		{
-			Expr:   field.NewField("", "id").GroutConcat(),
+			Expr:   field.NewField("", "id").GroupConcat(),
 			Result: "GROUP_CONCAT(`id`)",
+		},
+		{
+			Expr:   field.Func.UnixTimestamp(),
+			Result: "UNIX_TIMESTAMP()",
+		},
+		{
+			Expr:         field.Func.UnixTimestamp("2005-03-27 03:00:00").Mul(99),
+			Result:       "(UNIX_TIMESTAMP(?))*?",
+			ExpectedVars: []interface{}{"2005-03-27 03:00:00", uint64(99)},
 		},
 		// ======================== integer ========================
 		{
@@ -96,7 +105,7 @@ func TestExpr_Build(t *testing.T) {
 		},
 		{
 			Expr:         field.NewUint("user", "id").Sum().Gt(100),
-			ExpectedVars: []interface{}{float64(100)},
+			ExpectedVars: []interface{}{uint(100)},
 			Result:       "SUM(`user`.`id`) > ?",
 		},
 		{
@@ -390,7 +399,7 @@ func BenchmarkExpr_Count(b *testing.B) {
 	}
 }
 
-func TestRelation_StructMember(t *testing.T) {
+func TestRelation_StructField(t *testing.T) {
 	var testdatas = []struct {
 		relation      *field.Relation
 		expectedValue string
@@ -411,13 +420,13 @@ func TestRelation_StructMember(t *testing.T) {
 	}
 
 	for _, testdata := range testdatas {
-		if result := testdata.relation.StructMember(); result != testdata.expectedValue {
-			t.Errorf("StructMember fail: except %q, got %q", testdata.expectedValue, result)
+		if result := testdata.relation.StructField(); result != testdata.expectedValue {
+			t.Errorf("StructField fail: except %q, got %q", testdata.expectedValue, result)
 		}
 	}
 }
 
-func TestRelation_StructMemberInit(t *testing.T) {
+func TestRelation_StructFieldInit(t *testing.T) {
 	var testdatas = []struct {
 		relation      *field.Relation
 		expectedValue string
@@ -438,8 +447,8 @@ func TestRelation_StructMemberInit(t *testing.T) {
 	}
 
 	for _, testdata := range testdatas {
-		if result := testdata.relation.StructMemberInit(); result != testdata.expectedValue {
-			t.Errorf("StructMember fail: except %q, got %q", testdata.expectedValue, result)
+		if result := testdata.relation.StructFieldInit(); result != testdata.expectedValue {
+			t.Errorf("StructField fail: except %q, got %q", testdata.expectedValue, result)
 		}
 	}
 }

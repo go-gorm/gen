@@ -34,6 +34,14 @@ func CheckBuildExpr(t *testing.T, e Expr, result string, vars []interface{}) {
 	}
 }
 
+func BuildToString(e Expr) (string, []interface{}) {
+	stmt := GetStatement()
+
+	e.expression().Build(stmt)
+
+	return stmt.SQL.String(), stmt.Vars
+}
+
 type User struct {
 	gorm.Model
 	Name string

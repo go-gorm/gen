@@ -5,23 +5,26 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"text/template"
 
+	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/imports"
+	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
+
 	"gorm.io/gen/internal/check"
 	"gorm.io/gen/internal/model"
 	"gorm.io/gen/internal/parser"
 	tmpl "gorm.io/gen/internal/template"
-	"gorm.io/gorm"
-	"gorm.io/gorm/utils/tests"
+	"gorm.io/gen/internal/utils/pools"
 )
-
-// TODO implement some unit tests
 
 // T generic type
 type T interface{}
@@ -32,6 +35,10 @@ type M map[string]interface{}
 // RowsAffected execute affected raws
 type RowsAffected int64
 
+var concurrent = runtime.NumCPU()
+
+func init() { runtime.GOMAXPROCS(runtime.NumCPU()) }
+
 // NewGenerator create a new generator
 func NewGenerator(cfg Config) *Generator {
 	err := cfg.Revise()
@@ -40,83 +47,11 @@ func NewGenerator(cfg Config) *Generator {
 	}
 
 	return &Generator{
-		Config: cfg,
-		Data:   make(map[string]*genInfo),
+		Config:    cfg,
+		Data:      make(map[string]*genInfo),
+		modelData: make(map[string]*check.BaseStruct),
 	}
 }
-
-type GenerateMode uint
-
-const (
-	// WithDefaultQuery create default query in generated code
-	WithDefaultQuery GenerateMode = 1 << iota
-
-	// WithoutContext generate code without context constrain
-	WithoutContext
-)
-
-// Config generator's basic configuration
-type Config struct {
-	db *gorm.DB // db connection
-
-	OutPath      string // query code path
-	OutFile      string // query code file name, default: gen.go
-	ModelPkgPath string // generated model code's package name
-	WithUnitTest bool   // generate unit test for query code
-
-	// generate model global configuration
-	FieldNullable     bool // generate pointer when field is nullable
-	FieldWithIndexTag bool // generate with gorm index tag
-	FieldWithTypeTag  bool // generate with gorm column type tag
-
-	Mode GenerateMode // generate mode
-
-	queryPkgName   string // generated query code's package name
-	dbNameOpts     []model.SchemaNameOpt
-	dataTypeMap    map[string]func(detailType string) (dataType string)
-	fieldJSONTagNS func(columnName string) string
-	fieldNewTagNS  func(columnName string) string
-}
-
-// WithDbNameOpts set get database name function
-func (cfg *Config) WithDbNameOpts(opts ...model.SchemaNameOpt) {
-	if cfg.dbNameOpts == nil {
-		cfg.dbNameOpts = opts
-	} else {
-		cfg.dbNameOpts = append(cfg.dbNameOpts, opts...)
-	}
-}
-
-func (cfg *Config) WithDataTypeMap(newMap map[string]func(detailType string) (dataType string)) {
-	cfg.dataTypeMap = newMap
-}
-
-func (cfg *Config) WithJSONTagNameStrategy(ns func(columnName string) (tagContent string)) {
-	cfg.fieldJSONTagNS = ns
-}
-
-func (cfg *Config) WithNewTagNameStrategy(ns func(columnName string) (tagContent string)) {
-	cfg.fieldNewTagNS = ns
-}
-
-func (cfg *Config) Revise() (err error) {
-	if cfg.ModelPkgPath == "" {
-		cfg.ModelPkgPath = check.DefaultModelPkg
-	}
-
-	cfg.OutPath, err = filepath.Abs(cfg.OutPath)
-	if err != nil {
-		return fmt.Errorf("outpath is invalid: %w", err)
-	}
-
-	if cfg.db == nil {
-		cfg.db, _ = gorm.Open(tests.DummyDialector{})
-	}
-
-	return nil
-}
-
-func (cfg *Config) judgeMode(mode GenerateMode) bool { return cfg.Mode&mode != 0 }
 
 // genInfo info about generated code
 type genInfo struct {
@@ -147,7 +82,8 @@ func (i *genInfo) methodInGenInfo(m *check.InterfaceMethod) bool {
 type Generator struct {
 	Config
 
-	Data map[string]*genInfo
+	Data      map[string]*genInfo          //gen query data
+	modelData map[string]*check.BaseStruct //gen model data
 }
 
 // UseDB set db connection
@@ -163,39 +99,59 @@ func (g *Generator) UseDB(db *gorm.DB) {
  */
 
 // GenerateModel catch table info from db, return a BaseStruct
-func (g *Generator) GenerateModel(tableName string, opts ...model.MemberOpt) *check.BaseStruct {
+func (g *Generator) GenerateModel(tableName string, opts ...FieldOpt) *check.BaseStruct {
 	return g.GenerateModelAs(tableName, g.db.Config.NamingStrategy.SchemaName(tableName), opts...)
 }
 
 // GenerateModel catch table info from db, return a BaseStruct
-func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...model.MemberOpt) *check.BaseStruct {
-	s, err := check.GenBaseStructs(g.db, model.DBConf{
+func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...FieldOpt) *check.BaseStruct {
+	modelFieldOpts := make([]model.FieldOpt, len(fieldOpts))
+	for i, opt := range fieldOpts {
+		modelFieldOpts[i] = opt
+	}
+	s, err := check.GenBaseStructs(g.db, model.Conf{
 		ModelPkg:       g.Config.ModelPkgPath,
+		TablePrefix:    g.getTablePrefix(),
 		TableName:      tableName,
 		ModelName:      modelName,
+		ImportPkgPaths: g.importPkgPaths,
 		SchemaNameOpts: g.dbNameOpts,
-		MemberOpts:     fieldOpts,
-		DataTypeMap:    g.dataTypeMap,
-		GenerateModelConfig: model.GenerateModelConfig{
+		TableNameNS:    g.tableNameNS,
+		ModelNameNS:    g.modelNameNS,
+		FileNameNS:     g.fileNameNS,
+		FieldConf: model.FieldConf{
+			DataTypeMap: g.dataTypeMap,
+
 			FieldNullable:     g.FieldNullable,
+			FieldCoverable:    g.FieldCoverable,
 			FieldWithIndexTag: g.FieldWithIndexTag,
 			FieldWithTypeTag:  g.FieldWithTypeTag,
 
 			FieldJSONTagNS: g.fieldJSONTagNS,
 			FieldNewTagNS:  g.fieldNewTagNS,
+
+			FieldOpts: modelFieldOpts,
 		},
 	})
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)
-		panic(fmt.Sprintf("generate struct fail: %s", err))
+		panic("generate struct fail")
 	}
+	g.modelData[s.StructName] = s
 
-	g.successInfo(fmt.Sprintf("got %d columns from table <%s>", len(s.Members), s.TableName))
+	g.successInfo(fmt.Sprintf("got %d columns from table <%s>", len(s.Fields), s.TableName))
 	return s
 }
 
+func (g *Generator) getTablePrefix() string {
+	if ns, ok := g.db.NamingStrategy.(schema.NamingStrategy); ok {
+		return ns.TablePrefix
+	}
+	return ""
+}
+
 // GenerateAllTable generate all tables in db
-func (g *Generator) GenerateAllTable(opts ...model.MemberOpt) (tableModels []interface{}) {
+func (g *Generator) GenerateAllTable(opts ...FieldOpt) (tableModels []interface{}) {
 	tableList, err := g.db.Migrator().GetTables()
 	if err != nil {
 		panic(fmt.Sprintf("get all tables fail: %s", err))
@@ -242,7 +198,7 @@ func (g *Generator) apply(fc interface{}, structs []*check.BaseStruct) {
 
 	for _, interfaceStruct := range structs {
 		if g.judgeMode(WithoutContext) {
-			interfaceStruct.ReviseMemberName()
+			interfaceStruct.ReviseFieldName()
 		}
 
 		data, err := g.pushBaseStruct(interfaceStruct)
@@ -266,29 +222,14 @@ func (g *Generator) apply(fc interface{}, structs []*check.BaseStruct) {
 
 // Execute generate code to output path
 func (g *Generator) Execute() {
-	var err error
-
 	g.successInfo("Start generating code.")
 
-	if g.OutPath == "" {
-		g.OutPath = "./query/"
+	if err := g.generateModelFile(); err != nil {
+		g.db.Logger.Error(context.Background(), "generate model struct fail: %s", err)
+		panic("generate model struct fail")
 	}
-	if g.OutFile == "" {
-		g.OutFile = g.OutPath + "/gen.go"
-	}
-	if err := os.MkdirAll(g.OutPath, os.ModePerm); err != nil {
-		g.db.Logger.Error(context.Background(), "create outpath(%s) fail: %s", g.OutPath, err)
-		panic("create outpath fail")
-	}
-	g.queryPkgName = filepath.Base(g.OutPath)
 
-	err = g.generateBaseStruct()
-	if err != nil {
-		g.db.Logger.Error(context.Background(), "generate basic struct from table fail: %s", err)
-		panic("generate basic struct from table fail")
-	}
-	err = g.generateQueryFile()
-	if err != nil {
+	if err := g.generateQueryFile(); err != nil {
 		g.db.Logger.Error(context.Background(), "generate query code fail: %s", err)
 		panic("generate query code fail")
 	}
@@ -306,26 +247,46 @@ func (g *Generator) successInfo(logInfos ...string) {
 
 // generateQueryFile generate query code and save to file
 func (g *Generator) generateQueryFile() (err error) {
+	if len(g.Data) == 0 {
+		return nil
+	}
+
+	if err := os.MkdirAll(g.OutPath, os.ModePerm); err != nil {
+		return fmt.Errorf("make dir outpath(%s) fail: %s", g.OutPath, err)
+	}
+
+	errChan := make(chan error)
+	pool := pools.NewPool(concurrent)
 	// generate query code for all struct
 	for _, info := range g.Data {
-		err = g.generateSubQuery(info)
-		if err != nil {
-			return err
-		}
-
-		if g.WithUnitTest {
-			err = g.generateQueryUnitTestFile(info)
-			if err != nil { // do not panic
-				g.db.Logger.Error(context.Background(), "generate unit test fail: %s", err)
+		pool.Wait()
+		go func(info *genInfo) {
+			defer pool.Done()
+			err = g.generateSingleQueryFile(info)
+			if err != nil {
+				errChan <- err
 			}
-		}
+
+			if g.WithUnitTest {
+				err = g.generateQueryUnitTestFile(info)
+				if err != nil { // do not panic
+					g.db.Logger.Error(context.Background(), "generate unit test fail: %s", err)
+				}
+			}
+		}(info)
+	}
+	select {
+	case err = <-errChan:
+		return err
+	case <-pool.AsyncWaitAll():
 	}
 
 	// generate query file
 	var buf bytes.Buffer
-	err = render(tmpl.Header, &buf, map[string]string{
-		"Package":       g.queryPkgName,
-		"StructPkgPath": "",
+	err = render(tmpl.Header, &buf, map[string]interface{}{
+		"Package":        g.queryPkgName,
+		"StructPkgPath":  "",
+		"ImportPkgPaths": g.importPkgPaths,
 	})
 	if err != nil {
 		return err
@@ -341,6 +302,7 @@ func (g *Generator) generateQueryFile() (err error) {
 	if err != nil {
 		return err
 	}
+
 	err = g.output(g.OutFile, buf.Bytes())
 	if err != nil {
 		return err
@@ -351,10 +313,18 @@ func (g *Generator) generateQueryFile() (err error) {
 	if g.WithUnitTest {
 		buf.Reset()
 
-		err = render(tmpl.UnitTestHeader, &buf, g.queryPkgName)
+		err = render(tmpl.UnitTestHeader, &buf, map[string]interface{}{
+			"Package":        g.queryPkgName,
+			"StructPkgPath":  "",
+			"ImportPkgPaths": g.importPkgPaths,
+		})
 		if err != nil {
 			g.db.Logger.Error(context.Background(), "generate query unit test fail: %s", err)
 			return nil
+		}
+		err = render(tmpl.DIYMethod_TEST_Basic, &buf, nil)
+		if err != nil {
+			return err
 		}
 		err = render(tmpl.QueryMethod_TEST, &buf, g)
 		if err != nil {
@@ -373,13 +343,18 @@ func (g *Generator) generateQueryFile() (err error) {
 	return nil
 }
 
-// generateSubQuery generate query code and save to file
-func (g *Generator) generateSubQuery(data *genInfo) (err error) {
+// generateSingleQueryFile generate query code and save to file
+func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 	var buf bytes.Buffer
 
-	err = render(tmpl.Header, &buf, map[string]string{
-		"Package":       g.queryPkgName,
-		"StructPkgPath": data.StructInfo.PkgPath,
+	structPkgPath := data.StructInfo.PkgPath
+	if structPkgPath == "" {
+		structPkgPath = g.modelPkgPath
+	}
+	err = render(tmpl.Header, &buf, map[string]interface{}{
+		"Package":        g.queryPkgName,
+		"StructPkgPath":  structPkgPath,
+		"ImportPkgPaths": data.ImportPkgPaths,
 	})
 	if err != nil {
 		return err
@@ -407,15 +382,23 @@ func (g *Generator) generateSubQuery(data *genInfo) (err error) {
 		return err
 	}
 
-	defer g.successInfo(fmt.Sprintf("generate query file: %s/%s.gen.go", g.OutPath, strings.ToLower(data.TableName)))
-	return g.output(fmt.Sprintf("%s/%s.gen.go", g.OutPath, strings.ToLower(data.TableName)), buf.Bytes())
+	defer g.successInfo(fmt.Sprintf("generate query file: %s/%s.gen.go", g.OutPath, data.FileName))
+	return g.output(fmt.Sprintf("%s/%s.gen.go", g.OutPath, data.FileName), buf.Bytes())
 }
 
 // generateQueryUnitTestFile generate unit test file for query
 func (g *Generator) generateQueryUnitTestFile(data *genInfo) (err error) {
 	var buf bytes.Buffer
 
-	err = render(tmpl.UnitTestHeader, &buf, g.queryPkgName)
+	structPkgPath := data.StructInfo.PkgPath
+	if structPkgPath == "" {
+		structPkgPath = g.modelPkgPath
+	}
+	err = render(tmpl.UnitTestHeader, &buf, map[string]interface{}{
+		"Package":        g.queryPkgName,
+		"StructPkgPath":  structPkgPath,
+		"ImportPkgPaths": data.ImportPkgPaths,
+	})
 	if err != nil {
 		return err
 	}
@@ -432,63 +415,84 @@ func (g *Generator) generateQueryUnitTestFile(data *genInfo) (err error) {
 		}
 	}
 
-	defer g.successInfo(fmt.Sprintf("generate unit test file: %s/%s.gen_test.go", g.OutPath, strings.ToLower(data.TableName)))
-	return g.output(fmt.Sprintf("%s/%s.gen_test.go", g.OutPath, strings.ToLower(data.TableName)), buf.Bytes())
+	defer g.successInfo(fmt.Sprintf("generate unit test file: %s/%s.gen_test.go", g.OutPath, data.FileName))
+	return g.output(fmt.Sprintf("%s/%s.gen_test.go", g.OutPath, data.FileName), buf.Bytes())
 }
 
-// generateBaseStruct generate basic structures and save to file
-func (g *Generator) generateBaseStruct() (err error) {
-	var outPath string
-	outPath, err = filepath.Abs(g.OutPath)
+// generateModelFile generate model structures and save to file
+func (g *Generator) generateModelFile() error {
+	if len(g.modelData) == 0 {
+		return nil
+	}
+
+	modelOutPath, err := g.getModelOutputPath()
 	if err != nil {
 		return err
 	}
-	path := filepath.Clean(g.ModelPkgPath)
-	if path == "" {
-		path = check.DefaultModelPkg
-	}
-	if strings.Contains(path, "/") {
-		outPath, err = filepath.Abs(path)
-		if err != nil {
-			return fmt.Errorf("cannot parse model pkg path: %w", err)
-		}
-		outPath += "/"
-	} else {
-		outPath = fmt.Sprint(filepath.Dir(outPath), "/", path, "/")
+
+	if err := os.MkdirAll(modelOutPath, os.ModePerm); err != nil {
+		return fmt.Errorf("create model pkg path(%s) fail: %s", modelOutPath, err)
 	}
 
-	created := false
-	mkdir := func() {
-		if created {
-			return
-		}
-		if err := os.MkdirAll(outPath, os.ModePerm); err != nil {
-			g.db.Logger.Error(context.Background(), "create model pkg path(%s) fail: %s", outPath, err)
-			panic("create model pkg path fail")
-		}
-	}
-
-	for _, data := range g.Data {
-		if data.BaseStruct == nil || !data.BaseStruct.GenBaseStruct {
+	errChan := make(chan error)
+	pool := pools.NewPool(concurrent)
+	for _, data := range g.modelData {
+		if data == nil || !data.GenBaseStruct {
 			continue
 		}
+		pool.Wait()
+		go func(data *check.BaseStruct) {
+			defer pool.Done()
+			var buf bytes.Buffer
+			err = render(tmpl.Model, &buf, data)
+			if err != nil {
+				errChan <- err
+			}
 
-		mkdir()
+			modelFile := modelOutPath + data.FileName + ".gen.go"
+			err = g.output(modelFile, buf.Bytes())
+			if err != nil {
+				errChan <- err
+			}
 
-		var buf bytes.Buffer
-		err = render(tmpl.Model, &buf, data.BaseStruct)
-		if err != nil {
-			return err
-		}
-		modelFile := fmt.Sprint(outPath, data.BaseStruct.TableName, ".gen.go")
-		err = g.output(modelFile, buf.Bytes())
-		if err != nil {
-			return err
-		}
-
-		g.successInfo(fmt.Sprintf("generate model file(table <%s> -> {%s.%s}): %s", data.TableName, data.StructInfo.Package, data.StructInfo.Type, modelFile))
+			g.successInfo(fmt.Sprintf("generate model file(table <%s> -> {%s.%s}): %s", data.TableName, data.StructInfo.Package, data.StructInfo.Type, modelFile))
+		}(data)
+	}
+	select {
+	case err = <-errChan:
+		return err
+	case <-pool.AsyncWaitAll():
+		g.fillModelPkgPath(modelOutPath)
 	}
 	return nil
+}
+
+func (g *Generator) getModelOutputPath() (outPath string, err error) {
+	if strings.Contains(g.ModelPkgPath, "/") {
+		outPath, err = filepath.Abs(g.ModelPkgPath)
+		if err != nil {
+			return "", fmt.Errorf("cannot parse model pkg path: %w", err)
+		}
+	} else {
+		outPath = filepath.Dir(g.OutPath) + "/" + g.ModelPkgPath
+	}
+	return outPath + "/", nil
+}
+
+func (g *Generator) fillModelPkgPath(filePath string) {
+	pkgs, err := packages.Load(&packages.Config{
+		Mode: packages.NeedName,
+		Dir:  filePath,
+	})
+	if err != nil {
+		g.db.Logger.Warn(context.Background(), "parse model pkg path fail: %s", err)
+		return
+	}
+	if len(pkgs) == 0 {
+		g.db.Logger.Warn(context.Background(), "parse model pkg path fail: got 0 packages")
+		return
+	}
+	g.Config.modelPkgPath = pkgs[0].PkgPath
 }
 
 // output format and output
@@ -503,9 +507,9 @@ func (g *Generator) output(fileName string, content []byte) error {
 		for i := startLine; i <= endLine; i++ {
 			fmt.Println(i, line[i])
 		}
-		return fmt.Errorf("cannot format struct file: %w", err)
+		return fmt.Errorf("cannot format file: %w", err)
 	}
-	return outputFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, result)
+	return ioutil.WriteFile(fileName, result, 0640)
 }
 
 func (g *Generator) pushBaseStruct(base *check.BaseStruct) (*genInfo, error) {
@@ -518,27 +522,6 @@ func (g *Generator) pushBaseStruct(base *check.BaseStruct) (*genInfo, error) {
 			base.StructInfo.Package, base.StructName, g.Data[structName].StructInfo.Package, g.Data[structName].StructName)
 	}
 	return g.Data[structName], nil
-}
-
-func outputFile(filename string, flag int, data []byte) error {
-	out, err := os.OpenFile(filename, flag, 0640)
-	if err != nil {
-		return fmt.Errorf("open out file fail: %w", err)
-	}
-	return output(out, data)
-}
-
-func output(wr io.WriteCloser, data []byte) (err error) {
-	defer func() {
-		if e := wr.Close(); e != nil {
-			err = fmt.Errorf("close file fail: %w", e)
-		}
-	}()
-
-	if _, err = wr.Write(data); err != nil {
-		return fmt.Errorf("write file fail: %w", err)
-	}
-	return nil
 }
 
 func render(tmpl string, wr io.Writer, data interface{}) error {

@@ -164,6 +164,7 @@ func (p *Param) IsTime() bool {
 func (p *Param) SetName(name string) {
 	p.Name = name
 }
+
 func (p *Param) TypeName() string {
 	if p.IsArray {
 		return "[]" + p.Type
@@ -230,11 +231,14 @@ func (p *Param) astGetEltType(expr ast.Expr) string {
 	case *ast.StarExpr:
 		p.IsPointer = true
 		p.astGetEltType(v.X)
+	case *ast.InterfaceType:
+		p.Type = "interface{}"
 	default:
 		log.Fatalf("unknow param type: %+v", v)
 	}
 	return p.Type
 }
+
 func (p *Param) astGetPackageName(expr ast.Expr) {
 	switch v := expr.(type) {
 	case *ast.Ident:
