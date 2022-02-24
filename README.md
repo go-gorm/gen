@@ -178,7 +178,7 @@ func main() {
     })
   
     // reuse the database connection in Project or create a connection here
-    // if you want to use GenerateModel/GenerateModelAs, UseDB is necessray or it will panic
+    // if you want to use GenerateModel/GenerateModelAs, UseDB is necessary or it will panic
     // db, _ := gorm.Open(mysql.Open("root:@(127.0.0.1:3306)/demo?charset=utf8mb4&parseTime=True&loc=Local"))
     g.UseDB(db)
   
