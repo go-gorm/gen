@@ -68,10 +68,8 @@ func (c *Column) ToField(nullable, coverable bool) *Field {
 }
 
 func (c *Column) multilineComment() bool {
-	if cm, ok := c.Comment(); ok {
-		strings.Contains(cm, "\n")
-	}
-	return false
+	cm, ok := c.Comment()
+	return ok && strings.Contains(cm, "\n")
 }
 
 func (c *Column) buildGormTag() string {
