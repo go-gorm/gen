@@ -11,9 +11,9 @@ import (
 // Column table column's info
 type Column struct {
 	gorm.ColumnType
-	TableName string   `gorm:"column:TABLE_NAME"`
-	Indexes   []*Index `gorm:"-"`
-
+	TableName   string   `gorm:"column:TABLE_NAME"`
+	Indexes     []*Index `gorm:"-"`
+	UseScanType bool
 	dataTypeMap map[string]func(detailType string) (dataType string) `gorm:"-"`
 	jsonTagNS   func(columnName string) string                       `gorm:"-"`
 	newTagNS    func(columnName string) string                       `gorm:"-"`
@@ -26,6 +26,9 @@ func (c *Column) SetDataTypeMap(m map[string]func(detailType string) (dataType s
 func (c *Column) GetDataType() (fieldtype string) {
 	if mapping, ok := c.dataTypeMap[c.DatabaseTypeName()]; ok {
 		return mapping(c.columnType())
+	}
+	if c.UseScanType && c.ScanType() != nil {
+		return c.ScanType().String()
 	}
 	return dataType.Get(c.DatabaseTypeName(), c.columnType())
 }
@@ -116,5 +119,5 @@ func (c *Column) columnType() (v string) {
 	if cl, ok := c.ColumnType.ColumnType(); ok {
 		return cl
 	}
-	return ""
+	return c.DatabaseTypeName()
 }

@@ -85,8 +85,12 @@ func (t *defaultTableInfo) GetTbColumns(schemaName string, tableName string) (re
 	if err != nil {
 		return nil, err
 	}
+	us := true
+	if t.db.Dialector.Name() == "mysql" {
+		us = false
+	}
 	for _, column := range types {
-		result = append(result, &model.Column{ColumnType: column, TableName: tableName})
+		result = append(result, &model.Column{ColumnType: column, TableName: tableName, UseScanType: us})
 	}
 
 	return result, nil
