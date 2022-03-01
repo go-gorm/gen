@@ -161,7 +161,7 @@ func (g *Generator) GenerateAllTable(opts ...FieldOpt) (tableModels []interface{
 
 	tableModels = make([]interface{}, len(tableList))
 	for i, tableName := range tableList {
-		tableModels[i] = g.GenerateModel(tableName)
+		tableModels[i] = g.GenerateModel(tableName, opts...)
 	}
 	return tableModels
 }
