@@ -37,6 +37,8 @@ type DO struct {
 	alias     string // for subquery
 	modelType reflect.Type
 	schema    *schema.Schema
+
+	backfillData interface{}
 }
 
 func (d DO) getInstance(db *gorm.DB) *DO {
@@ -90,6 +92,18 @@ func (d DO) TableName() string {
 		return ""
 	}
 	return d.schema.Table
+}
+
+// Returning backfill data
+func (d DO) Returning(value interface{}, columns ...string) Dao {
+	d.backfillData = value
+
+	var targetCulumns []clause.Column
+	for _, column := range columns {
+		targetCulumns = append(targetCulumns, clause.Column{Name: column})
+	}
+	d.db = d.db.Clauses(clause.Returning{Columns: targetCulumns})
+	return &d
 }
 
 // Session replace db with new session
@@ -625,6 +639,9 @@ func (d DO) WithResult(fc func(tx Dao)) ResultInfo {
 }
 
 func (d *DO) newResultPointer() interface{} {
+	if d.backfillData != nil {
+		return d.backfillData
+	}
 	if d.modelType == nil {
 		return nil
 	}

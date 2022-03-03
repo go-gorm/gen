@@ -37,6 +37,10 @@ func ({{.S}} {{.NewStructName}}Do) Clauses(conds ...clause.Expression) *{{.NewSt
 	return {{.S}}.withDO({{.S}}.DO.Clauses(conds...))
 }
 
+func ({{.S}} {{.NewStructName}}Do) Returning(value interface{}, columns ...string) *{{.NewStructName}}Do {
+	return {{.S}}.withDO({{.S}}.DO.Returning(value, columns...))
+}
+
 func ({{.S}} {{.NewStructName}}Do) Not(conds ...gen.Condition) *{{.NewStructName}}Do {
 	return {{.S}}.withDO({{.S}}.DO.Not(conds...))
 }
