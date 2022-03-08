@@ -219,7 +219,7 @@ func ({{.S}} {{.NewStructName}}Do) FindByPage(offset int, limit int) (result []*
 		return
 	}
 
-	count, err = {{.S}}.Count()
+	count, err = {{.S}}.Offset(-1).Limit(-1).Count()
 	return
 }
 
