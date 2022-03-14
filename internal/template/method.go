@@ -183,8 +183,11 @@ func ({{.S}} {{.NewStructName}}Do) Joins(field field.RelationField) *{{.NewStruc
 	return {{.S}}.withDO({{.S}}.DO.Joins(field))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Preload(field field.RelationField) *{{.NewStructName}}Do {
-	return {{.S}}.withDO({{.S}}.DO.Preload(field))
+func ({{.S}} {{.NewStructName}}Do) Preload(field ...field.RelationField) *{{.NewStructName}}Do {
+    for _, f := range field {
+        {{.S}} = *{{.S}}.withDO({{.S}}.DO.Preload(f))
+    }
+	return &{{.S}}
 }
 
 func ({{.S}} {{.NewStructName}}Do) FirstOrInit() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
