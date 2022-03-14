@@ -351,7 +351,109 @@ func (d *DO) attrsValue(attrs []field.AssignExpr) []interface{} {
 }
 
 func (d *DO) Joins(field field.RelationField) Dao {
-	return d.getInstance(d.db.Joins(field.Path()))
+	var args []interface{}
+
+	if conds := field.GetConds(); len(conds) > 0 {
+		var exprs []clause.Expression
+		for _, oe := range toExpression(conds...) {
+			switch e := oe.(type) {
+			case clause.Eq:
+				if c, ok := e.Column.(clause.Column); ok {
+					c.Table = field.Name()
+					e.Column = c
+				}
+				exprs = append(exprs, e)
+			case clause.Neq:
+				if c, ok := e.Column.(clause.Column); ok {
+					c.Table = field.Name()
+					e.Column = c
+				}
+				exprs = append(exprs, e)
+			case clause.Gt:
+				if c, ok := e.Column.(clause.Column); ok {
+					c.Table = field.Name()
+					e.Column = c
+				}
+				exprs = append(exprs, e)
+			case clause.Gte:
+				if c, ok := e.Column.(clause.Column); ok {
+					c.Table = field.Name()
+					e.Column = c
+				}
+				exprs = append(exprs, e)
+			case clause.Lt:
+				if c, ok := e.Column.(clause.Column); ok {
+					c.Table = field.Name()
+					e.Column = c
+				}
+				exprs = append(exprs, e)
+			case clause.Lte:
+				if c, ok := e.Column.(clause.Column); ok {
+					c.Table = field.Name()
+					e.Column = c
+				}
+				exprs = append(exprs, e)
+			case clause.Like:
+				if c, ok := e.Column.(clause.Column); ok {
+					c.Table = field.Name()
+					e.Column = c
+				}
+				exprs = append(exprs, e)
+			}
+
+		}
+
+		args = append(args, d.db.Clauses(clause.Where{
+			Exprs: exprs,
+		}))
+	}
+
+	if columns := field.GetSelects(); len(columns) > 0 {
+		colNames := make([]string, len(columns))
+		for i, c := range columns {
+			colNames[i] = string(c.ColumnName())
+		}
+		args = append(args, func(db *gorm.DB) *gorm.DB {
+			return db.Select(colNames)
+		})
+	}
+
+	if columns := field.GetOrderCol(); len(columns) > 0 {
+		var os []string
+		for _, oe := range columns {
+			switch e := oe.RawExpr().(type) {
+			case clause.Expr:
+				vs := []interface{}{}
+				for _, v := range e.Vars {
+					if c, ok := v.(clause.Column); ok {
+						vs = append(vs, clause.Column{
+							Table: field.Name(),
+							Name:  c.Name,
+							Alias: c.Alias,
+							Raw:   c.Raw,
+						})
+					}
+				}
+				e.Vars = vs
+				newStmt := &gorm.Statement{DB: d.db.Statement.DB, Table: d.db.Statement.Table, Schema: d.db.Statement.Schema}
+				e.Build(newStmt)
+				os = append(os, newStmt.SQL.String())
+			}
+		}
+		args = append(args, d.db.Order(strings.Join(os, ",")))
+	}
+	if clauses := field.GetClauses(); len(clauses) > 0 {
+		args = append(args, func(db *gorm.DB) *gorm.DB {
+			return db.Clauses(clauses...)
+		})
+	}
+	if offset, limit := field.GetPage(); offset|limit != 0 {
+		args = append(args, func(db *gorm.DB) *gorm.DB {
+			return db.Offset(offset).Limit(limit)
+		})
+	}
+
+	return d.getInstance(d.db.Joins(field.Path(), args...))
 }
 
 // func (d *DO) Preload(column field.RelationPath, subQuery ...SubQuery) Dao {
