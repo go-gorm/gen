@@ -385,8 +385,8 @@ u.WithContext(ctx).Omit(u.Name, u.Age).Create(&user)
 `Create` 方法支持批量创建记录，只需要将对应模型（Model）的切片（slice）类型数据作为参数传入即可。GORM 将生成单个 SQL 语句来插入所有数据并返回对应内容全部主键的值。
 
 ```go
-var users = []model.User{{Name: "modi"}, {Name: "zhangqiang"}, {Name: "songyuan"}}
-query.Use(db).User.WithContext(ctx).Create(&users)
+var users = []*model.User{{Name: "modi"}, {Name: "zhangqiang"}, {Name: "songyuan"}}
+query.Use(db).User.WithContext(ctx).Create(users...)
 
 for _, user := range users {
     user.ID // 1,2,3
@@ -396,7 +396,7 @@ for _, user := range users {
 你可以通过 `CreateInBatches` 方法可以指定批量创建记录的大小,如：
 
 ```go
-var users = []User{{Name: "modi_1"}, ...., {Name: "modi_10000"}}
+var users = []*User{{Name: "modi_1"}, ...., {Name: "modi_10000"}}
 
 // batch size 100
 query.Use(db).User.WithContext(ctx).CreateInBatches(users, 100)

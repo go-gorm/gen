@@ -389,8 +389,8 @@ u.WithContext(ctx).Omit(u.Name, u.Age).Create(&user)
 To efficiently insert large number of records, pass a slice to the `Create` method. GORM will generate a single SQL statement to insert all the data and backfill primary key values.
 
 ```go
-var users = []model.User{{Name: "modi"}, {Name: "zhangqiang"}, {Name: "songyuan"}}
-query.Use(db).User.WithContext(ctx).Create(&users)
+var users = []*model.User{{Name: "modi"}, {Name: "zhangqiang"}, {Name: "songyuan"}}
+query.Use(db).User.WithContext(ctx).Create(users...)
 
 for _, user := range users {
     user.ID // 1,2,3
@@ -400,7 +400,7 @@ for _, user := range users {
 You can specify batch size when creating with `CreateInBatches`, e.g:
 
 ```go
-var users = []User{{Name: "modi_1"}, ...., {Name: "modi_10000"}}
+var users = []*User{{Name: "modi_1"}, ...., {Name: "modi_10000"}}
 
 // batch size 100
 query.Use(db).User.WithContext(ctx).CreateInBatches(users, 100)
