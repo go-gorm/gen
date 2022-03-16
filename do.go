@@ -84,7 +84,10 @@ func (d *DO) indirect(value interface{}) reflect.Type {
 }
 
 // UseTable specify table name
-func (d *DO) UseTable(tableName string) { d.db = d.db.Table(tableName).Session(new(gorm.Session)) }
+func (d *DO) UseTable(tableName string) {
+	d.db = d.db.Table(tableName).Session(new(gorm.Session))
+	d.schema.Table = tableName
+}
 
 // TableName return table name
 func (d DO) TableName() string {
