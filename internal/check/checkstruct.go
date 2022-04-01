@@ -20,8 +20,8 @@ type BaseStruct struct {
 	GenBaseStruct  bool   // whether to generate db model
 	FileName       string // generated file name
 	S              string // the first letter(lower case)of simple Name
-	NewStructName  string // new struct name
-	StructName     string // origin struct name
+	NewStructName  string // internal query struct name
+	StructName     string // origin/model struct name
 	TableName      string // table name in db server
 	StructInfo     parser.Param
 	Fields         []*model.Field

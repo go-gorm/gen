@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm/schema"
 	"gorm.io/gorm/utils/tests"
 
+	"gorm.io/gen/helper"
 	"gorm.io/gen/internal/model"
 	"gorm.io/gen/internal/parser"
 )
@@ -23,8 +24,8 @@ const (
 	DefaultModelPkg = "model"
 )
 
-// GenBaseStructs generate db model by table name
-func GenBaseStructs(db *gorm.DB, conf model.Conf) (bases *BaseStruct, err error) {
+// GenBaseStruct generate db model by table name
+func GenBaseStruct(db *gorm.DB, conf model.Conf) (base *BaseStruct, err error) {
 	modelPkg := conf.ModelPkg
 	tablePrefix := conf.TablePrefix
 	tableName := conf.TableName
@@ -63,7 +64,7 @@ func GenBaseStructs(db *gorm.DB, conf model.Conf) (bases *BaseStruct, err error)
 	}
 	modelPkg = filepath.Base(modelPkg)
 
-	base := &BaseStruct{
+	base = &BaseStruct{
 		Source:         model.Table,
 		GenBaseStruct:  true,
 		FileName:       fileName,
@@ -150,4 +151,44 @@ func checkModelName(name string) error {
 		return fmt.Errorf("model name must be initial capital")
 	}
 	return nil
+}
+
+func GenBaseStructFromObject(obj helper.Object) (*BaseStruct, error) {
+	err := helper.CheckObject(obj)
+	if err != nil {
+		return nil, err
+	}
+
+	structName := obj.StructName()
+	pkgName := filepath.Base(obj.PkgName())
+	if pkgName == "" {
+		pkgName = DefaultModelPkg
+	}
+
+	base := &BaseStruct{
+		Source:         model.Object,
+		GenBaseStruct:  true,
+		FileName:       strings.ToLower(structName),
+		TableName:      obj.TableName(),
+		StructName:     structName,
+		NewStructName:  uncaptialize(structName),
+		S:              strings.ToLower(structName[0:1]),
+		StructInfo:     parser.Param{Type: structName, Package: pkgName},
+		ImportPkgPaths: obj.ImportPkgPaths(),
+	}
+
+	for _, field := range obj.Fields() {
+		base.Fields = append(base.Fields, &model.Field{
+			Name:             field.Name(),
+			Type:             field.Type(),
+			ColumnName:       field.Name(),
+			GORMTag:          field.GORMTag(),
+			JSONTag:          field.JSONTag(),
+			NewTag:           field.Tag(),
+			ColumnComment:    field.Comment(),
+			MultilineComment: strings.Contains(field.Comment(), "\n"),
+		})
+	}
+
+	return base, nil
 }

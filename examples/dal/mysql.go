@@ -21,7 +21,7 @@ func ConnectDB(dsn string) (db *gorm.DB) {
 	}
 
 	if err != nil {
-		panic(fmt.Errorf("connect db fail: %s", err))
+		panic(fmt.Errorf("connect db fail: %w", err))
 	}
 
 	return db

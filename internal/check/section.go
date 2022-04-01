@@ -94,7 +94,7 @@ func (s *section) sectionType(str string) error {
 	case "end":
 		s.Type = model.END
 	default:
-		return fmt.Errorf("unknown syntax：%s", str)
+		return fmt.Errorf("unknown syntax: %s", str)
 	}
 	return nil
 }
@@ -105,8 +105,9 @@ func (s *section) SetForRangeKey(key string) {
 }
 
 func (s *section) AddDataToParamMap() string {
-	return fmt.Sprintf("params[\"%s\"] = %s", s.SQLParamName(), s.Value)
+	return fmt.Sprintf("params[%q] = %s", s.SQLParamName(), s.Value)
 }
+
 func (s *section) SQLParamName() string {
 	return strings.Replace(s.Value, ".", "", -1)
 }
