@@ -17,15 +17,12 @@ type Object interface {
 type Field interface {
 	Name() string
 	Type() string
-	
+
 	GORMTag() string
 	JSONTag() string
 	Tag() string
 
 	Comment() string
-
-	PkgPath() string
-	PkgAlias() string
 }
 
 func CheckObject(obj Object) error {
