@@ -721,19 +721,33 @@ users, err := u.WithContext(ctx).Distinct(u.Name, u.Age).Order(u.Name, u.Age.Des
 Specify Joins conditions
 
 ```go
-u := query.Use(db).User
-e := query.Use(db).Email
-c := query.Use(db).CreditCard
+q := query.Use(db)
+u := q.User
+e := q.Email
+c := q.CreditCard
 
 type Result struct {
     Name  string
     Email string
+    ID    int64
 }
 
 var result Result
 
 err := u.WithContext(ctx).Select(u.Name, e.Email).LeftJoin(e, e.UserID.EqCol(u.ID)).Scan(&result)
 // SELECT users.name, emails.email FROM `users` left join emails on emails.user_id = users.id
+
+// self join
+var result Result
+u2 := query.Use(db).User.As("u2")
+err := u.WithContext(ctx).Select(u.Name, u.ID).LeftJoin(u2, u2.ID.EqCol(u.ID)).Scan(&result)
+// SELECT users.name, u2.id FROM `users` left join `users` u2 on u2.id = users.id
+
+//join with sub query
+var result Result
+e2 := e.As("e2")
+err := u.WithContext(ctx).Select(u.Name, e2.Email).LeftJoin(e.Select(e.Email, e.UserID).Where(e.UserID.Gt(100)).As("e2"), e2.UserID.EqCol(u.ID)).Scan(&result)
+// SELECT users.name, e2.email FROM `users` left join (select email,user_id from emails  where user_id > 100) as e2 on e2.user_id = users.id
 
 rows, err := u.WithContext(ctx).Select(u.Name, e.Email).LeftJoin(e, e.UserID.EqCol(u.ID)).Rows()
 for rows.Next() {

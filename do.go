@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 
+	"gorm.io/gen/helper"
 	"gorm.io/gorm"
 	"gorm.io/gorm/callbacks"
 	"gorm.io/gorm/clause"
@@ -172,6 +173,10 @@ func (d DO) As(alias string) Dao {
 	return &d
 }
 
+func (d DO) Alias() string {
+	return d.alias
+}
+
 // Columns return columns for Subquery
 func (*DO) Columns(cols ...field.Expr) columns { return cols }
 
@@ -316,13 +321,19 @@ func (d *DO) join(table schema.Tabler, joinType clause.JoinType, conds []field.E
 	if len(conds) == 0 {
 		return d.withError(ErrEmptyCondition)
 	}
-
-	from := getFromClause(d.db)
-	from.Joins = append(from.Joins, clause.Join{
+	join := clause.Join{
 		Type:  joinType,
 		Table: clause.Table{Name: table.TableName()},
 		ON:    clause.Where{Exprs: toExpression(conds...)},
-	})
+	}
+	if do, ok := table.(Dao); ok {
+		join.Expression = helper.NewJoinExpr(join, Table(do).underlyingDB().Statement.TableExpr)
+	}
+	if al, ok := table.(Alias); ok {
+		join.Table.Alias = al.Alias()
+	}
+	from := getFromClause(d.db)
+	from.Joins = append(from.Joins, join)
 	return d.getInstance(d.db.Clauses(from))
 }
 
