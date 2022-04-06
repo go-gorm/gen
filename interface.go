@@ -35,7 +35,7 @@ type subQuery interface {
 // Dao CRUD methods
 type Dao interface {
 	subQuery
-
+	schema.Tabler
 	As(alias string) Dao
 
 	Not(conds ...Condition) Dao

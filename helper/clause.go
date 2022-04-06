@@ -1,6 +1,10 @@
 package helper
 
-import "strings"
+import (
+	"strings"
+
+	"gorm.io/gorm/clause"
+)
 
 type Cond struct {
 	Cond   bool
@@ -117,5 +121,43 @@ func JoinSetBuilder(src *strings.Builder, setValue strings.Builder) {
 		src.WriteString("SET ")
 		src.WriteString(value)
 		src.WriteString(" ")
+	}
+}
+
+// JoinTblExpr join clause with table expression(sub query...)
+type JoinTblExpr struct {
+	clause.Join
+	TableExpr clause.Expression
+}
+
+func NewJoinTblExpr(join clause.Join, tbExpr clause.Expression) JoinTblExpr {
+	return JoinTblExpr{Join: join, TableExpr: tbExpr}
+}
+
+func (join JoinTblExpr) Build(builder clause.Builder) {
+	if builder == nil {
+		return
+	}
+	if join.Type != "" {
+		_, _ = builder.WriteString(string(join.Type))
+		_ = builder.WriteByte(' ')
+	}
+	_, _ = builder.WriteString("JOIN ")
+	if join.TableExpr != nil {
+		join.TableExpr.Build(builder)
+	}
+
+	if len(join.ON.Exprs) > 0 {
+		_, _ = builder.WriteString(" ON ")
+		join.ON.Build(builder)
+	} else if len(join.Using) > 0 {
+		_, _ = builder.WriteString(" USING (")
+		for idx, c := range join.Using {
+			if idx > 0 {
+				_ = builder.WriteByte(',')
+			}
+			builder.WriteQuoted(c)
+		}
+		_ = builder.WriteByte(')')
 	}
 }

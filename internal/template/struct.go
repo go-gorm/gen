@@ -15,9 +15,11 @@ const (
 	}
 	` + tableMethod + asMethond + updateFieldMethod + `
 	
-	func ({{.S}} *{{.NewStructName}}) WithContext(ctx context.Context) *{{.NewStructName}}Do { return {{.S}}.{{.NewStructName}}Do.WithContext(ctx)}
+	func ({{.S}} *{{.NewStructName}}) WithContext(ctx context.Context) *{{.NewStructName}}Do { return {{.S}}.{{.NewStructName}}Do.WithContext(ctx) }
 
-	func ({{.S}} {{.NewStructName}}) TableName() string { return {{.S}}.{{.NewStructName}}Do.TableName()} 
+	func ({{.S}} {{.NewStructName}}) TableName() string { return {{.S}}.{{.NewStructName}}Do.TableName() } 
+
+	func ({{.S}} {{.NewStructName}}) Alias() string { return {{.S}}.{{.NewStructName}}Do.Alias() }
 
 	` + getFieldMethod + fillFieldMapMethod + cloneMethod + relationship + defineMethodStruct
 )

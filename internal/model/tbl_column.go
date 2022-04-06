@@ -108,11 +108,15 @@ func (c *Column) withDefaultValue() (normal bool) {
 	return c.defaultValue() != "" && c.Name() != "created_at" && c.Name() != "updated_at"
 }
 
-func (c *Column) defaultValue() (v string) {
-	if df, ok := c.DefaultValue(); ok {
-		return df
+func (c *Column) defaultValue() string {
+	df, ok := c.DefaultValue()
+	if !ok {
+		return ""
 	}
-	return ""
+	if strings.TrimSpace(df) == "" {
+		return "'" + df + "'"
+	}
+	return df
 }
 
 func (c *Column) columnType() (v string) {
