@@ -13,9 +13,9 @@ import (
 	{{range .ImportPkgPaths}}{{.}} ` + "\n" + `{{end}}
 )
 
-const TableName{{.StructName}} = "{{.TableName}}"
+{{if .TableName -}}const TableName{{.StructName}} = "{{.TableName}}"{{- end}}
 
-// {{.StructName}} mapped from table <{{.TableName}}>
+// {{.StructName}} {{.StructComment}}
 type {{.StructName}} struct {
     {{range .Fields}}
 	{{if .MultilineComment -}}
@@ -23,13 +23,15 @@ type {{.StructName}} struct {
 {{.ColumnComment}}
     */
 	{{end -}}
-    {{.Name}} {{.Type}} ` + "`{{if .OverwriteTag}}{{.OverwriteTag}}{{else}}gorm:\"{{.GORMTag}}\" json:\"{{.JSONTag}}\"{{.NewTag}}{{end}}` " +
+    {{.Name}} {{.Type}} ` + "`{{.Tags}}` " +
 	"{{if not .MultilineComment}}{{if .ColumnComment}}// {{.ColumnComment}}{{end}}{{end}}" +
 	`{{end}}
 }
 
+{{if .TableName -}}
 // TableName {{.StructName}}'s table name
 func (*{{.StructName}}) TableName() string {
     return TableName{{.StructName}}
 }
+{{- end}}
 `

@@ -1,6 +1,9 @@
 package helper
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 type Object interface {
 	PkgName() string
@@ -14,9 +17,11 @@ type Object interface {
 type Field interface {
 	Name() string
 	Type() string
+	
 	GORMTag() string
 	JSONTag() string
 	Tag() string
+
 	Comment() string
 
 	PkgPath() string
@@ -24,12 +29,17 @@ type Field interface {
 }
 
 func CheckObject(obj Object) error {
-	// if obj.PkgName() == "" {
-	// 	return errors.New("Object's PkgName() cannot be empty")
-	// }
 	if obj.StructName() == "" {
 		return errors.New("Object's StructName() cannot be empty")
 	}
 
+	for _, field := range obj.Fields() {
+		switch "" {
+		case field.Name():
+			return fmt.Errorf("Object %s's Field.Name() cannot be empty", obj.StructName())
+		case field.Type():
+			return fmt.Errorf("Object %s's Field.Type() cannot be empty", obj.StructName())
+		}
+	}
 	return nil
 }

@@ -189,6 +189,5 @@ func GenBaseStructFromObject(obj helper.Object) (*BaseStruct, error) {
 			MultilineComment: strings.Contains(field.Comment(), "\n"),
 		})
 	}
-
 	return base, nil
 }

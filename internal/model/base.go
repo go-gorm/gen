@@ -2,6 +2,7 @@ package model
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 
 	"gorm.io/gen/field"
@@ -139,6 +140,24 @@ type Field struct {
 	OverwriteTag     string
 
 	Relation *field.Relation
+}
+
+func (m *Field) Tags() string {
+	if m.OverwriteTag != "" {
+		return strings.TrimSpace(m.OverwriteTag)
+	}
+
+	var tags strings.Builder
+	if gormTag := strings.TrimSpace(m.GORMTag); gormTag != "" {
+		tags.WriteString(fmt.Sprintf(`gorm:"%s" `, gormTag))
+	}
+	if jsonTag := strings.TrimSpace(m.JSONTag); jsonTag != "" {
+		tags.WriteString(fmt.Sprintf(`json:"%s" `, jsonTag))
+	}
+	if newTag := strings.TrimSpace(m.NewTag); newTag != "" {
+		tags.WriteString(newTag)
+	}
+	return tags.String()
 }
 
 func (m *Field) IsRelation() bool { return m.Relation != nil }

@@ -120,6 +120,13 @@ func (b *BaseStruct) Relations() (result []field.Relation) {
 	return result
 }
 
+func (b *BaseStruct) StructComment() string {
+	if b.TableName != "" {
+		return fmt.Sprintf(`mapped from table <%s>`, b.TableName)
+	}
+	return `mapped from object`
+}
+
 func GetStructNames(bases []*BaseStruct) (res []string) {
 	for _, base := range bases {
 		res = append(res, base.StructName)
