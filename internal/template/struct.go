@@ -13,7 +13,7 @@ const (
 		{{.NewStructName}}Do {{.NewStructName}}Do
 		` + fields + `
 	}
-	` + tableMethod + asMethond + updateFieldMethod + `
+	` + tableMethod + asMethond + aliasMethod + updateFieldMethod + `
 	
 	func ({{.S}} *{{.NewStructName}}) WithContext(ctx context.Context) *{{.NewStructName}}Do { return {{.S}}.{{.NewStructName}}Do.WithContext(ctx)}
 
@@ -72,6 +72,11 @@ func ({{.S}} {{.NewStructName}}) Table(newTableName string) *{{.NewStructName}} 
 func ({{.S}} {{.NewStructName}}) As(alias string) *{{.NewStructName}} { 
 	{{.S}}.{{.NewStructName}}Do.DO = *({{.S}}.{{.NewStructName}}Do.As(alias).(*gen.DO))
 	return {{.S}}.updateTableName(alias)
+}
+`
+	aliasMethod = `	
+func ({{.S}} {{.NewStructName}}) Alias() string { 
+	return {{.S}}.{{.NewStructName}}Do.Alias()
 }
 `
 	updateFieldMethod = `
