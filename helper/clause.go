@@ -124,16 +124,17 @@ func JoinSetBuilder(src *strings.Builder, setValue strings.Builder) {
 	}
 }
 
-// Join join clause for from
-type JoinExpr struct {
+// JoinTblExpr join clause with table expression(sub query...)
+type JoinTblExpr struct {
 	clause.Join
 	TableExpr clause.Expression
 }
 
-func NewJoinExpr(join clause.Join, tbExpr clause.Expression) JoinExpr {
-	return JoinExpr{Join: join, TableExpr: tbExpr}
+func NewJoinTblExpr(join clause.Join, tbExpr clause.Expression) JoinTblExpr {
+	return JoinTblExpr{Join: join, TableExpr: tbExpr}
 }
-func (join JoinExpr) Build(builder clause.Builder) {
+
+func (join JoinTblExpr) Build(builder clause.Builder) {
 	if builder == nil {
 		return
 	}
@@ -145,6 +146,7 @@ func (join JoinExpr) Build(builder clause.Builder) {
 	if join.TableExpr != nil {
 		join.TableExpr.Build(builder)
 	}
+
 	if len(join.ON.Exprs) > 0 {
 		_, _ = builder.WriteString(" ON ")
 		join.ON.Build(builder)
