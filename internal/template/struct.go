@@ -13,11 +13,13 @@ const (
 		{{.NewStructName}}Do {{.NewStructName}}Do
 		` + fields + `
 	}
-	` + tableMethod + asMethond + aliasMethod + updateFieldMethod + `
+	` + tableMethod + asMethond + updateFieldMethod + `
 	
-	func ({{.S}} *{{.NewStructName}}) WithContext(ctx context.Context) *{{.NewStructName}}Do { return {{.S}}.{{.NewStructName}}Do.WithContext(ctx)}
+	func ({{.S}} *{{.NewStructName}}) WithContext(ctx context.Context) *{{.NewStructName}}Do { return {{.S}}.{{.NewStructName}}Do.WithContext(ctx) }
 
-	func ({{.S}} {{.NewStructName}}) TableName() string { return {{.S}}.{{.NewStructName}}Do.TableName()} 
+	func ({{.S}} {{.NewStructName}}) TableName() string { return {{.S}}.{{.NewStructName}}Do.TableName() } 
+
+	func ({{.S}} {{.NewStructName}}) Alias() string { return {{.S}}.{{.NewStructName}}Do.Alias() }
 
 	` + getFieldMethod + fillFieldMapMethod + cloneMethod + relationship + defineMethodStruct
 )
@@ -72,11 +74,6 @@ func ({{.S}} {{.NewStructName}}) Table(newTableName string) *{{.NewStructName}} 
 func ({{.S}} {{.NewStructName}}) As(alias string) *{{.NewStructName}} { 
 	{{.S}}.{{.NewStructName}}Do.DO = *({{.S}}.{{.NewStructName}}Do.As(alias).(*gen.DO))
 	return {{.S}}.updateTableName(alias)
-}
-`
-	aliasMethod = `	
-func ({{.S}} {{.NewStructName}}) Alias() string { 
-	return {{.S}}.{{.NewStructName}}Do.Alias()
 }
 `
 	updateFieldMethod = `

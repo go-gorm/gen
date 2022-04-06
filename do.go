@@ -7,13 +7,13 @@ import (
 	"reflect"
 	"strings"
 
-	"gorm.io/gen/helper"
 	"gorm.io/gorm"
 	"gorm.io/gorm/callbacks"
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/schema"
 
 	"gorm.io/gen/field"
+	"gorm.io/gen/helper"
 )
 
 var (
@@ -173,7 +173,8 @@ func (d DO) As(alias string) Dao {
 	return &d
 }
 
-func (d DO) Alias() string {
+// Alias return alias name
+func (d *DO) Alias() string {
 	return d.alias
 }
 
@@ -321,17 +322,19 @@ func (d *DO) join(table schema.Tabler, joinType clause.JoinType, conds []field.E
 	if len(conds) == 0 {
 		return d.withError(ErrEmptyCondition)
 	}
+
 	join := clause.Join{
 		Type:  joinType,
 		Table: clause.Table{Name: table.TableName()},
 		ON:    clause.Where{Exprs: toExpression(conds...)},
 	}
 	if do, ok := table.(Dao); ok {
-		join.Expression = helper.NewJoinExpr(join, Table(do).underlyingDB().Statement.TableExpr)
+		join.Expression = helper.NewJoinTblExpr(join, Table(do).underlyingDB().Statement.TableExpr)
 	}
-	if al, ok := table.(Alias); ok {
+	if al, ok := table.(interface{ Alias() string }); ok {
 		join.Table.Alias = al.Alias()
 	}
+
 	from := getFromClause(d.db)
 	from.Joins = append(from.Joins, join)
 	return d.getInstance(d.db.Clauses(from))
