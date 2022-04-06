@@ -26,11 +26,9 @@ type DemoField struct {
 	comment string
 }
 
-func (f *DemoField) Name() string     { return f.name }
-func (f *DemoField) Type() string     { return f.typ }
-func (f *DemoField) GORMTag() string  { return f.gormTag }
-func (f *DemoField) JSONTag() string  { return f.jsonTag }
-func (f *DemoField) Tag() string      { return f.tag }
-func (f *DemoField) Comment() string  { return f.comment }
-func (f *DemoField) PkgPath() string  { return "" }
-func (f *DemoField) PkgAlias() string { return "" }
+func (f *DemoField) Name() string    { return f.name }
+func (f *DemoField) Type() string    { return f.typ }
+func (f *DemoField) GORMTag() string { return f.gormTag }
+func (f *DemoField) JSONTag() string { return f.jsonTag }
+func (f *DemoField) Tag() string     { return f.tag }
+func (f *DemoField) Comment() string { return f.comment }
