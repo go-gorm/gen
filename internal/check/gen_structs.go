@@ -29,17 +29,17 @@ func GenBaseStruct(db *gorm.DB, conf model.Conf) (base *BaseStruct, err error) {
 	modelPkg := conf.ModelPkg
 	tablePrefix := conf.TablePrefix
 	tableName := conf.TableName
-	modelName := conf.ModelName
+	structName := conf.ModelName
 
 	if _, ok := db.Config.Dialector.(tests.DummyDialector); ok {
-		return nil, fmt.Errorf("UseDB() is necessary to generate model struct [%s] from database table [%s]", modelName, tableName)
+		return nil, fmt.Errorf("UseDB() is necessary to generate model struct [%s] from database table [%s]", structName, tableName)
 	}
 
 	if conf.ModelNameNS != nil {
-		modelName = conf.ModelNameNS(tableName)
+		structName = conf.ModelNameNS(tableName)
 	}
-	if err = checkModelName(modelName); err != nil {
-		return nil, fmt.Errorf("model name %q is invalid: %w", modelName, err)
+	if err = checkStructName(structName); err != nil {
+		return nil, fmt.Errorf("model name %q is invalid: %w", structName, err)
 	}
 
 	if conf.TableNameNS != nil {
@@ -69,10 +69,10 @@ func GenBaseStruct(db *gorm.DB, conf model.Conf) (base *BaseStruct, err error) {
 		GenBaseStruct:  true,
 		FileName:       fileName,
 		TableName:      tableName,
-		StructName:     modelName,
-		NewStructName:  uncaptialize(modelName),
-		S:              strings.ToLower(modelName[0:1]),
-		StructInfo:     parser.Param{Type: modelName, Package: modelPkg},
+		StructName:     structName,
+		NewStructName:  uncaptialize(structName),
+		S:              strings.ToLower(structName[0:1]),
+		StructInfo:     parser.Param{Type: structName, Package: modelPkg},
 		ImportPkgPaths: conf.ImportPkgPaths,
 	}
 
@@ -140,7 +140,7 @@ func modifyField(m *model.Field, opts []model.FieldOpt) *model.Field {
 // get mysql db' name
 var modelNameReg = regexp.MustCompile(`^\w+$`)
 
-func checkModelName(name string) error {
+func checkStructName(name string) error {
 	if name == "" {
 		return nil
 	}
@@ -153,28 +153,47 @@ func checkModelName(name string) error {
 	return nil
 }
 
-func GenBaseStructFromObject(obj helper.Object) (*BaseStruct, error) {
+func GenBaseStructFromObject(obj helper.Object, conf model.Conf) (*BaseStruct, error) {
 	err := helper.CheckObject(obj)
 	if err != nil {
 		return nil, err
 	}
 
-	structName := obj.StructName()
-	pkgName := filepath.Base(obj.PkgName())
+	pkgName := filepath.Base(conf.ModelPkg)
 	if pkgName == "" {
 		pkgName = DefaultModelPkg
+	}
+
+	tableName := obj.TableName()
+	if conf.TableNameNS != nil {
+		tableName = conf.TableNameNS(tableName)
+	}
+
+	structName := obj.StructName()
+	if conf.ModelNameNS != nil {
+		structName = conf.ModelNameNS(structName)
+	}
+
+	fileName := tableName
+	if fileName == "" {
+		fileName = structName
+	}
+	if conf.FileNameNS != nil {
+		fileName = conf.FileNameNS(fileName)
+	} else {
+		fileName = schema.NamingStrategy{SingularTable: true}.TableName(fileName)
 	}
 
 	base := &BaseStruct{
 		Source:         model.Object,
 		GenBaseStruct:  true,
-		FileName:       strings.ToLower(structName),
-		TableName:      obj.TableName(),
+		FileName:       fileName,
+		TableName:      tableName,
 		StructName:     structName,
 		NewStructName:  uncaptialize(structName),
 		S:              strings.ToLower(structName[0:1]),
 		StructInfo:     parser.Param{Type: structName, Package: pkgName},
-		ImportPkgPaths: obj.ImportPkgPaths(),
+		ImportPkgPaths: append(conf.ImportPkgPaths, obj.ImportPkgPaths()...),
 	}
 
 	for _, field := range obj.Fields() {

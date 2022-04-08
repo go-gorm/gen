@@ -5,13 +5,11 @@ import "gorm.io/gen/helper"
 var _ helper.Object = new(Demo)
 
 type Demo struct {
-	pkgName    string
 	structName string
 	tableName  string
 	fields     []helper.Field
 }
 
-func (d *Demo) PkgName() string          { return d.pkgName }
 func (d *Demo) TableName() string        { return d.tableName }
 func (d *Demo) StructName() string       { return d.structName }
 func (d *Demo) ImportPkgPaths() []string { return nil }

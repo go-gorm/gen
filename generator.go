@@ -169,7 +169,13 @@ func (g *Generator) GenerateAllTable(opts ...FieldOpt) (tableModels []interface{
 
 // GenerateModelFrom generate model from object
 func (g *Generator) GenerateModelFrom(obj helper.Object) *check.BaseStruct {
-	s, err := check.GenBaseStructFromObject(obj)
+	s, err := check.GenBaseStructFromObject(obj, model.Conf{
+		ModelPkg:       g.Config.ModelPkgPath,
+		ImportPkgPaths: g.importPkgPaths,
+		TableNameNS:    g.tableNameNS,
+		ModelNameNS:    g.modelNameNS,
+		FileNameNS:     g.fileNameNS,
+	})
 	if err != nil {
 		panic(fmt.Errorf("generate struct from object fail: %w", err))
 	}

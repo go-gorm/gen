@@ -9,7 +9,6 @@ var detail, data helper.Object
 
 func init() {
 	detail = &Demo{
-		pkgName:    "demo",
 		structName: "Detail",
 		fields: []helper.Field{
 			&DemoField{
@@ -34,7 +33,6 @@ func init() {
 	}
 
 	data = &Demo{
-		pkgName:    "demo",
 		structName: "Data",
 		tableName:  "data",
 		fields: []helper.Field{

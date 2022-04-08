@@ -6,7 +6,6 @@ import (
 )
 
 type Object interface {
-	PkgName() string
 	TableName() string
 	StructName() string
 	ImportPkgPaths() []string
