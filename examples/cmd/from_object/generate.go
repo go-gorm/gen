@@ -10,6 +10,7 @@ var detail, data helper.Object
 func init() {
 	detail = &Demo{
 		structName: "Detail",
+		fileName:   "diy_data_detail",
 		fields: []helper.Field{
 			&DemoField{
 				name:    "Username",
@@ -35,6 +36,7 @@ func init() {
 	data = &Demo{
 		structName: "Data",
 		tableName:  "data",
+		fileName:   "diy_data",
 		fields: []helper.Field{
 			&DemoField{
 				name:    "ID",

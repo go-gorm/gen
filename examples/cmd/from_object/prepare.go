@@ -7,11 +7,13 @@ var _ helper.Object = new(Demo)
 type Demo struct {
 	structName string
 	tableName  string
+	fileName   string
 	fields     []helper.Field
 }
 
 func (d *Demo) TableName() string        { return d.tableName }
 func (d *Demo) StructName() string       { return d.structName }
+func (d *Demo) FileName() string         { return d.fileName }
 func (d *Demo) ImportPkgPaths() []string { return nil }
 func (d *Demo) Fields() []helper.Field   { return d.fields }
 

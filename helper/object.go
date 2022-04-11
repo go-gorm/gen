@@ -8,6 +8,7 @@ import (
 type Object interface {
 	TableName() string
 	StructName() string
+	FileName() string
 	ImportPkgPaths() []string
 
 	Fields() []Field

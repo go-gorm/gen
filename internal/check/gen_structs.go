@@ -174,7 +174,10 @@ func GenBaseStructFromObject(obj helper.Object, conf model.Conf) (*BaseStruct, e
 		structName = conf.ModelNameNS(structName)
 	}
 
-	fileName := tableName
+	fileName := obj.FileName()
+	if fileName == "" {
+		fileName = tableName
+	}
 	if fileName == "" {
 		fileName = structName
 	}
