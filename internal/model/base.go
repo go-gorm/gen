@@ -159,7 +159,7 @@ func (m *Field) Tags() string {
 	if newTag := strings.TrimSpace(m.NewTag); newTag != "" {
 		tags.WriteString(newTag)
 	}
-	return tags.String()
+	return strings.TrimSpace(tags.String())
 }
 
 func (m *Field) IsRelation() bool { return m.Relation != nil }
