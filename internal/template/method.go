@@ -179,8 +179,11 @@ func ({{.S}} {{.NewStructName}}Do) Assign(attrs ...field.AssignExpr) *{{.NewStru
 	return {{.S}}.withDO({{.S}}.DO.Assign(attrs...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Joins(field field.RelationField) *{{.NewStructName}}Do {
-	return {{.S}}.withDO({{.S}}.DO.Joins(field))
+func ({{.S}} {{.NewStructName}}Do) Joins(field ...field.RelationField) *{{.NewStructName}}Do {
+	for _, f := range field {
+        {{.S}} = *{{.S}}.withDO({{.S}}.DO.Joins(f))
+    }
+	return &{{.S}}
 }
 
 func ({{.S}} {{.NewStructName}}Do) Preload(field ...field.RelationField) *{{.NewStructName}}Do {
