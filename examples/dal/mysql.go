@@ -11,8 +11,7 @@ import (
 
 var DB *gorm.DB
 
-func ConnectDB(dsn string) *gorm.DB {
-	var db *gorm.DB
+func ConnectDB(dsn string) (db *gorm.DB) {
 	var err error
 
 	if strings.HasSuffix(dsn, "sqlite.db") {
@@ -22,7 +21,7 @@ func ConnectDB(dsn string) *gorm.DB {
 	}
 
 	if err != nil {
-		panic(fmt.Errorf("connect db fail: %s", err))
+		panic(fmt.Errorf("connect db fail: %w", err))
 	}
 
 	return db

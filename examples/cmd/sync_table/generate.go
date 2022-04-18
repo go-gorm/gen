@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	dal.DB = dal.ConnectDB(conf.MySQLDSN)
+	dal.DB = dal.ConnectDB(conf.MySQLDSN).Debug()
 
 	prepare(dal.DB) // prepare table for generate
 }

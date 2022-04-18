@@ -19,6 +19,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 
+	"gorm.io/gen/helper"
 	"gorm.io/gen/internal/check"
 	"gorm.io/gen/internal/model"
 	"gorm.io/gen/internal/parser"
@@ -109,7 +110,7 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 	for i, opt := range fieldOpts {
 		modelFieldOpts[i] = opt
 	}
-	s, err := check.GenBaseStructs(g.db, model.Conf{
+	s, err := check.GenBaseStruct(g.db, model.Conf{
 		ModelPkg:       g.Config.ModelPkgPath,
 		TablePrefix:    g.getTablePrefix(),
 		TableName:      tableName,
@@ -154,7 +155,7 @@ func (g *Generator) getTablePrefix() string {
 func (g *Generator) GenerateAllTable(opts ...FieldOpt) (tableModels []interface{}) {
 	tableList, err := g.db.Migrator().GetTables()
 	if err != nil {
-		panic(fmt.Sprintf("get all tables fail: %s", err))
+		panic(fmt.Errorf("get all tables fail: %w", err))
 	}
 
 	g.successInfo(fmt.Sprintf("find %d table from db: %s", len(tableList), tableList))
@@ -164,6 +165,24 @@ func (g *Generator) GenerateAllTable(opts ...FieldOpt) (tableModels []interface{
 		tableModels[i] = g.GenerateModel(tableName, opts...)
 	}
 	return tableModels
+}
+
+// GenerateModelFrom generate model from object
+func (g *Generator) GenerateModelFrom(obj helper.Object) *check.BaseStruct {
+	s, err := check.GenBaseStructFromObject(obj, model.Conf{
+		ModelPkg:       g.Config.ModelPkgPath,
+		ImportPkgPaths: g.importPkgPaths,
+		TableNameNS:    g.tableNameNS,
+		ModelNameNS:    g.modelNameNS,
+		FileNameNS:     g.fileNameNS,
+	})
+	if err != nil {
+		panic(fmt.Errorf("generate struct from object fail: %w", err))
+	}
+	g.modelData[s.StructName] = s
+
+	g.successInfo(fmt.Sprintf("parse object %s", obj.StructName()))
+	return s
 }
 
 // ApplyBasic specify models which will implement basic method

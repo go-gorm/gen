@@ -14,13 +14,12 @@ func init() {
 
 func main() {
 	g := gen.NewGenerator(gen.Config{
-		OutPath: "../../dal/query",
+		OutPath: "/tmp/gentest/query",
 	})
 
 	g.UseDB(dal.DB)
 
-	// generate all table from database
-	g.ApplyBasic(g.GenerateAllTable()...)
+	g.GenerateAllTable()
 
 	g.Execute()
 }
