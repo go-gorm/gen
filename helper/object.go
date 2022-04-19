@@ -18,6 +18,7 @@ type Field interface {
 	Name() string
 	Type() string
 
+	ColumnName() string
 	GORMTag() string
 	JSONTag() string
 	Tag() string
