@@ -78,12 +78,32 @@ func (g *KeyWords) Contain(text string) bool {
 var (
 	defaultDataType             = "string"
 	dataType        dataTypeMap = map[string]dataTypeMapping{
-		"int":        func(string) string { return "int32" },
-		"numeric":    func(string) string { return "int32" },
-		"integer":    func(string) string { return "int32" },
-		"smallint":   func(string) string { return "int32" },
-		"mediumint":  func(string) string { return "int32" },
-		"bigint":     func(string) string { return "int64" },
+		"numeric": func(string) string { return "int32" },
+		"integer": func(string) string { return "int32" },
+		"int": func(detailType string) string {
+			if strings.Contains(detailType, "unsigned") {
+				return "uint32"
+			}
+			return "int32"
+		},
+		"smallint": func(detailType string) string {
+			if strings.Contains(detailType, "unsigned") {
+				return "uint32"
+			}
+			return "int32"
+		},
+		"mediumint": func(detailType string) string {
+			if strings.Contains(detailType, "unsigned") {
+				return "uint32"
+			}
+			return "int32"
+		},
+		"bigint": func(detailType string) string {
+			if strings.Contains(detailType, "unsigned") {
+				return "uint64"
+			}
+			return "int64"
+		},
 		"float":      func(string) string { return "float32" },
 		"real":       func(string) string { return "float64" },
 		"double":     func(string) string { return "float64" },
