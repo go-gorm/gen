@@ -203,7 +203,7 @@ func GenBaseStructFromObject(obj helper.Object, conf model.Conf) (*BaseStruct, e
 		base.Fields = append(base.Fields, &model.Field{
 			Name:             field.Name(),
 			Type:             field.Type(),
-			ColumnName:       field.Name(),
+			ColumnName:       field.ColumnName(),
 			GORMTag:          field.GORMTag(),
 			JSONTag:          field.JSONTag(),
 			NewTag:           field.Tag(),
