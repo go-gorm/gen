@@ -111,7 +111,8 @@ func (c *Column) buildGormTag() string {
 
 // withDefaultValue check if col has default value and not created_at or updated_at
 func (c *Column) withDefaultValue() (normal bool) {
-	return c.defaultValue() != "" && c.Name() != "created_at" && c.Name() != "updated_at"
+	return c.defaultValue() != "" && c.defaultValue() != "0" &&
+		c.Name() != "created_at" && c.Name() != "updated_at"
 }
 
 func (c *Column) defaultValue() string {
@@ -119,10 +120,7 @@ func (c *Column) defaultValue() string {
 	if !ok {
 		return ""
 	}
-	if strings.TrimSpace(df) == "" {
-		return "'" + df + "'"
-	}
-	return df
+	return "'" + df + "'"
 }
 
 func (c *Column) columnType() (v string) {
