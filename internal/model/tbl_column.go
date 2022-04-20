@@ -43,8 +43,11 @@ func (c *Column) WithNS(jsonTagNS, newTagNS func(columnName string) string) {
 	}
 }
 
-func (c *Column) ToField(nullable, coverable bool) *Field {
+func (c *Column) ToField(nullable, coverable, signable bool) *Field {
 	fieldType := c.GetDataType()
+	if signable && strings.Contains(c.columnType(), "unsigned") && strings.HasPrefix(fieldType, "int") {
+		fieldType = "u" + fieldType
+	}
 	switch {
 	case c.Name() == "deleted_at" && fieldType == "time.Time":
 		fieldType = "gorm.DeletedAt"
@@ -55,7 +58,13 @@ func (c *Column) ToField(nullable, coverable bool) *Field {
 	case coverable && c.withDefaultValue():
 		fieldType = "*" + fieldType
 	}
-	f := &Field{
+
+	var comment string
+	if c, ok := c.Comment(); ok {
+		comment = c
+	}
+
+	return &Field{
 		Name:             c.Name(),
 		Type:             fieldType,
 		ColumnName:       c.Name(),
@@ -63,11 +72,8 @@ func (c *Column) ToField(nullable, coverable bool) *Field {
 		GORMTag:          c.buildGormTag(),
 		JSONTag:          c.jsonTagNS(c.Name()),
 		NewTag:           c.newTagNS(c.Name()),
+		ColumnComment:    comment,
 	}
-	if c, ok := c.Comment(); ok {
-		f.ColumnComment = c
-	}
-	return f
 }
 
 func (c *Column) multilineComment() bool {

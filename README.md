@@ -169,6 +169,8 @@ func main() {
         /* FieldNullable: true,*/
         //if you want to assign field which has default value in `Create` API, set FieldCoverable true, reference: https://gorm.io/docs/create.html#Default-Values
         /* FieldCoverable: true,*/
+        // if you want generate field with unsigned integer type, set FieldSignable true
+        /* FieldSignable: true,*/
         //if you want to generate index tags from database, set FieldWithIndexTag true
         /* FieldWithIndexTag: true,*/
         //if you want to generate type tags from database, set FieldWithTypeTag true

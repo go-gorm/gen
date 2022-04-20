@@ -5,10 +5,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gorm.io/gen/internal/check"
-	"gorm.io/gen/internal/model"
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils/tests"
+
+	"gorm.io/gen/internal/check"
+	"gorm.io/gen/internal/model"
 )
 
 type GenerateMode uint
@@ -33,6 +34,7 @@ type Config struct {
 	// generate model global configuration
 	FieldNullable     bool // generate pointer when field is nullable
 	FieldCoverable    bool // generate pointer when field has default value, to fix problem zero value cannot be assign: https://gorm.io/docs/create.html#Default-Values
+	FieldSignable     bool // detect integer field's unsigned type, adjust generated data type
 	FieldWithIndexTag bool // generate with gorm index tag
 	FieldWithTypeTag  bool // generate with gorm column type tag
 

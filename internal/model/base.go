@@ -78,9 +78,9 @@ func (g *KeyWords) Contain(text string) bool {
 var (
 	defaultDataType             = "string"
 	dataType        dataTypeMap = map[string]dataTypeMapping{
-		"int":        func(string) string { return "int32" },
 		"numeric":    func(string) string { return "int32" },
 		"integer":    func(string) string { return "int32" },
+		"int":        func(string) string { return "int32" },
 		"smallint":   func(string) string { return "int32" },
 		"mediumint":  func(string) string { return "int32" },
 		"bigint":     func(string) string { return "int64" },

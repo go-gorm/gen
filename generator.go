@@ -123,6 +123,7 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 		FieldConf: model.FieldConf{
 			DataTypeMap: g.dataTypeMap,
 
+			FieldSignable:     g.FieldSignable,
 			FieldNullable:     g.FieldNullable,
 			FieldCoverable:    g.FieldCoverable,
 			FieldWithIndexTag: g.FieldWithIndexTag,
