@@ -566,12 +566,13 @@ Easier to write complicated SQL query with Group Conditions
 
 ```go
 p := query.Use(db).Pizza
+pd := p.WithContext(ctx)
 
-pizzas, err := p.WithContext(ctx).Where(
-    p.WithContext(ctx).Where(p.Pizza.Eq("pepperoni")).
-        Where(p.WithContext(ctx).Where(p.Size.Eq("small")).Or(p.Size.Eq("medium"))),
+pizzas, err := pd.Where(
+    pd.Where(p.Pizza.Eq("pepperoni")).
+        Where(pd.Where(p.Size.Eq("small")).Or(p.Size.Eq("medium"))),
 ).Or(
-    p.WithContext(ctx).Where(p.Pizza.Eq("hawaiian")).Where(p.Size.Eq("xlarge")),
+    pd.Where(p.Pizza.Eq("hawaiian")).Where(p.Size.Eq("xlarge")),
 ).Find()
 
 // SELECT * FROM `pizzas` WHERE (pizza = "pepperoni" AND (size = "small" OR size = "medium")) OR (pizza = "hawaiian" AND size = "xlarge")
