@@ -120,6 +120,9 @@ func (c *Column) defaultValue() string {
 	if !ok {
 		return ""
 	}
+	if typ := c.DatabaseTypeName(); strings.Contains(typ, "int") || typ == "numeric" {
+		return df
+	}
 	return "'" + df + "'"
 }
 
