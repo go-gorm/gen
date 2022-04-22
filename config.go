@@ -95,8 +95,15 @@ func (cfg *Config) WithNewTagNameStrategy(ns func(columnName string) (tagContent
 }
 
 // WithImportPkgPath specify import package path
-func (cfg *Config) WithImportPkgPath(path ...string) {
-	cfg.importPkgPaths = append(cfg.importPkgPaths, path...)
+func (cfg *Config) WithImportPkgPath(paths ...string) {
+	for i, path := range paths {
+		path = strings.TrimSpace(path)
+		if len(path) > 0 && path[0] != '"' && path[len(path)-1] != '"' { // without quote
+			path = `"` + path + `"`
+		}
+		paths[i] = path
+	}
+	cfg.importPkgPaths = append(cfg.importPkgPaths, paths...)
 }
 
 // Revise format path and db
