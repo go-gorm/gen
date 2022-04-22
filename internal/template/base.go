@@ -21,8 +21,9 @@ import(
 	"gorm.io/gen"
 	"gorm.io/gen/field"
 	"gorm.io/gen/helper"
-	{{ if .StructPkgPath  }}"{{.StructPkgPath}}"{{ end }}
-	{{range .ImportPkgPaths}}{{.}} ` + "\n" + `{{end}}
+
+	{{if .StructPkgPath}}"{{.StructPkgPath}}"{{end}}
+	{{range .ImportPkgPaths}}{{.}}` + "\n" + `{{end}}
 )
 `
 
@@ -37,8 +38,9 @@ import(
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	{{ if .StructPkgPath  }}"{{.StructPkgPath}}"{{ end }}
-	{{range .ImportPkgPaths}}{{.}} ` + "\n" + `{{end}}
+	
+	{{if .StructPkgPath}}"{{.StructPkgPath}}"{{end}}
+	{{range .ImportPkgPaths}}{{.}}` + "\n" + `{{end}}
 )
 
 `
