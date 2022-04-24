@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
-	"sync"
 
 	"gorm.io/gorm"
 )
@@ -18,9 +17,6 @@ type Column struct {
 	dataTypeMap map[string]func(detailType string) (dataType string) `gorm:"-"`
 	jsonTagNS   func(columnName string) string                       `gorm:"-"`
 	newTagNS    func(columnName string) string                       `gorm:"-"`
-
-	sync.Once    `gorm:"-"`
-	defaultValue string `gorm:"-"`
 }
 
 func (c *Column) SetDataTypeMap(m map[string]func(detailType string) (dataType string)) {
@@ -125,17 +121,14 @@ func (c *Column) needDefaultTag(defaultTagValue string) bool {
 
 // defaultTagValue return gorm default tag's value
 func (c *Column) defaultTagValue() string {
-	c.Once.Do(func() {
-		value, ok := c.DefaultValue()
-		if !ok {
-			return
-		}
-		if strings.Contains(value, " ") {
-			value = "'" + value + "'"
-		}
-		c.defaultValue = value
-	})
-	return c.defaultValue
+	value, ok := c.DefaultValue()
+	if !ok {
+		return ""
+	}
+	if strings.Contains(value, " ") {
+		return "'" + value + "'"
+	}
+	return value
 }
 
 func (c *Column) columnType() (v string) {
