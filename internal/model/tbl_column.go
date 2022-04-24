@@ -55,7 +55,7 @@ func (c *Column) ToField(nullable, coverable, signable bool) *Field {
 		if n, ok := c.Nullable(); ok && n {
 			fieldType = "*" + fieldType
 		}
-	case coverable && c.withDefaultValue():
+	case coverable && c.needDefaultTag(c.defaultTagValue()):
 		fieldType = "*" + fieldType
 	}
 
@@ -84,7 +84,10 @@ func (c *Column) multilineComment() bool {
 func (c *Column) buildGormTag() string {
 	var buf bytes.Buffer
 	buf.WriteString(fmt.Sprintf("column:%s;type:%s", c.Name(), c.columnType()))
-	if p, ok := c.PrimaryKey(); ok && p {
+
+	isPriKey, ok := c.PrimaryKey()
+	isValidPriKey := ok && isPriKey
+	if isValidPriKey {
 		buf.WriteString(";primaryKey")
 		if at, ok := c.AutoIncrement(); ok {
 			buf.WriteString(fmt.Sprintf(";autoIncrement:%t", at))
@@ -103,27 +106,29 @@ func (c *Column) buildGormTag() string {
 			buf.WriteString(fmt.Sprintf(";index:%s,priority:%d", idx.IndexName, idx.SeqInIndex))
 		}
 	}
-	if c.withDefaultValue() {
-		buf.WriteString(fmt.Sprintf(";default:%s", c.defaultValue()))
+
+	if dtValue := c.defaultTagValue(); !isValidPriKey && c.needDefaultTag(dtValue) { // cannot set default tag for primary key
+		buf.WriteString(fmt.Sprintf(";default:%s", dtValue))
 	}
 	return buf.String()
 }
 
-// withDefaultValue check if col has default value and not created_at or updated_at
-func (c *Column) withDefaultValue() (normal bool) {
-	return c.defaultValue() != "" && c.defaultValue() != "0" &&
+// needDefaultTag check if default tag needed
+func (c *Column) needDefaultTag(defaultTagValue string) bool {
+	return defaultTagValue != "" && defaultTagValue != "0" &&
 		c.Name() != "created_at" && c.Name() != "updated_at"
 }
 
-func (c *Column) defaultValue() string {
-	df, ok := c.DefaultValue()
+// defaultTagValue return gorm default tag's value
+func (c *Column) defaultTagValue() string {
+	value, ok := c.DefaultValue()
 	if !ok {
 		return ""
 	}
-	if typ := c.DatabaseTypeName(); strings.Contains(typ, "int") || typ == "numeric" || strings.Contains(typ, "float") {
-		return df
+	if strings.Contains(value, " ") {
+		return "'" + value + "'"
 	}
-	return "'" + df + "'"
+	return value
 }
 
 func (c *Column) columnType() (v string) {

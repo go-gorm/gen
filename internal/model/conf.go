@@ -12,7 +12,7 @@ type FieldConf struct {
 	FieldCoverable    bool // generate pointer when field has default value
 	FieldSignable     bool // detect integer field's unsigned type, adjust generated data type
 	FieldWithIndexTag bool // generate with gorm index tag
-	FieldWithTypeTag  bool // generate with gorm column type tagl
+	FieldWithTypeTag  bool // generate with gorm column type tag
 
 	FieldJSONTagNS func(columnName string) string
 	FieldNewTagNS  func(columnName string) string

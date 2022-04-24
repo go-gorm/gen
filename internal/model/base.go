@@ -123,7 +123,7 @@ type dataTypeMapping func(detailType string) (finalType string)
 type dataTypeMap map[string]dataTypeMapping
 
 func (m dataTypeMap) Get(dataType, detailType string) string {
-	if convert, ok := m[dataType]; ok {
+	if convert, ok := m[strings.ToLower(dataType)]; ok {
 		return convert(detailType)
 	}
 	return defaultDataType
