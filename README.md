@@ -1758,8 +1758,11 @@ Logical operations must be wrapped in `{{}}`,and end must used `{{end}}`, All te
 Use case in raw SQL:
 
 ```go
-// select * from users where {{if name !=""}} name=@name{{end}}
-methond(name string) (gen.T,error) 
+// select * from users where 
+//  {{if name !=""}} 
+//      name=@name
+//  {{end}}
+methond(name string) (gen.T,error)
 ```
 
 Use case in raw SQL template:
@@ -1792,7 +1795,10 @@ select * from @@table where
 Use case in raw SQL
 
 ```go
-// select * from {{where}}id=@id{{end}}
+// select * from 
+//  {{where}}
+//      id=@id
+//  {{end}}
 methond(id int) error
 ```
 
@@ -1817,8 +1823,12 @@ select * from @@table
 Use case in raw SQL
 
 ```go
-// update users {{set}}name=@name{{end}}
-methond() error
+// update users 
+//  {{set}}
+//      name=@name
+//  {{end}}
+// where id=@id
+methond(name string,id int) error
 ```
 
 Use case in raw SQL template
@@ -1906,7 +1916,7 @@ type Method interface {
     //      {{end}}
     //  {{end}}
     FindByOrList(users []gen.T) ([]gen.T, error)
-  }
+}
 ```
 
 #### Unit Test
