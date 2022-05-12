@@ -60,14 +60,13 @@ type genInfo struct {
 	Interfaces []*check.InterfaceMethod
 }
 
-func (i *genInfo) appendMethods(methods []*check.InterfaceMethod) error {
+func (i *genInfo) appendMethods(methods []*check.InterfaceMethod) {
 	for _, newMethod := range methods {
 		if i.methodInGenInfo(newMethod) {
 			continue
 		}
 		i.Interfaces = append(i.Interfaces, newMethod)
 	}
-	return nil
 }
 
 func (i *genInfo) methodInGenInfo(m *check.InterfaceMethod) bool {
@@ -232,11 +231,7 @@ func (g *Generator) apply(fc interface{}, structs []*check.BaseStruct) {
 			g.db.Logger.Error(context.Background(), "check interface fail: %v", err)
 			panic("check interface fail")
 		}
-		err = data.appendMethods(functions)
-		if err != nil {
-			g.db.Logger.Error(context.Background(), "check interface fail: %v", err)
-			panic("check interface fail")
-		}
+		data.appendMethods(functions)
 	}
 }
 
@@ -271,7 +266,7 @@ func (g *Generator) generateQueryFile() (err error) {
 		return nil
 	}
 
-	if err := os.MkdirAll(g.OutPath, os.ModePerm); err != nil {
+	if err = os.MkdirAll(g.OutPath, os.ModePerm); err != nil {
 		return fmt.Errorf("make dir outpath(%s) fail: %s", g.OutPath, err)
 	}
 
@@ -450,7 +445,7 @@ func (g *Generator) generateModelFile() error {
 		return err
 	}
 
-	if err := os.MkdirAll(modelOutPath, os.ModePerm); err != nil {
+	if err = os.MkdirAll(modelOutPath, os.ModePerm); err != nil {
 		return fmt.Errorf("create model pkg path(%s) fail: %s", modelOutPath, err)
 	}
 
