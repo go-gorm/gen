@@ -20,11 +20,11 @@ import (
 type DBType string
 
 const (
-	// DBMySQL Gorm Drivers mysql || postgres || sqlite || sqlserver
-	DBMySQL     DBType = "mysql"
-	DBPostgres  DBType = "postgres"
-	DBSQLite    DBType = "sqlite"
-	DBSQLServer DBType = "sqlserver"
+	// dbMySQL Gorm Drivers mysql || postgres || sqlite || sqlserver
+	dbMySQL     DBType = "mysql"
+	dbPostgres  DBType = "postgres"
+	dbSQLite    DBType = "sqlite"
+	dbSQLServer DBType = "sqlserver"
 )
 const (
 	// DefaultOutPath default path
@@ -59,13 +59,13 @@ func connectDB(t DBType, dsn string) (*gorm.DB, error) {
 	}
 
 	switch t {
-	case DBMySQL:
+	case dbMySQL:
 		return gorm.Open(mysql.Open(dsn))
-	case DBPostgres:
+	case dbPostgres:
 		return gorm.Open(postgres.Open(dsn))
-	case DBSQLite:
+	case dbSQLite:
 		return gorm.Open(sqlite.Open(dsn))
-	case DBSQLServer:
+	case dbSQLServer:
 		return gorm.Open(sqlserver.Open(dsn))
 	default:
 		return nil, fmt.Errorf("unknow db %q (support mysql || postgres || sqlite || sqlserver for now)", t)
@@ -99,7 +99,7 @@ func loadConfigFile(path string) (*CmdParams, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer file.Close() // nolint
 	var yamlConfig YamlConfig
 	if cmdErr := yaml.NewDecoder(file).Decode(&yamlConfig); cmdErr != nil {
 		return nil, cmdErr
@@ -107,8 +107,8 @@ func loadConfigFile(path string) (*CmdParams, error) {
 	return yamlConfig.Database, nil
 }
 
-// cmdParse is parser for cmd
-func cmdParser() (*CmdParams, error) {
+// argParse is parser for cmd
+func argParse() *CmdParams {
 	// choose is file or flag
 	genPath := flag.String("c", "", "is path for gen.yml")
 	dsn := flag.String("dsn", "", "consult[https://gorm.io/docs/connecting_to_the_database.html]")
@@ -163,14 +163,14 @@ func cmdParser() (*CmdParams, error) {
 	if *fieldWithTypeTag {
 		cmdParse.FieldWithTypeTag = *fieldWithTypeTag
 	}
-	return &cmdParse, nil
+	return &cmdParse
 }
 
 func main() {
 	// cmdParse
-	config, cmdErr := cmdParser()
-	if cmdErr != nil || config == nil {
-		log.Fatalln("cmdParse config is failed:", cmdErr)
+	config := argParse()
+	if config == nil {
+		log.Fatalln("parse config fail")
 	}
 	db, err := connectDB(DBType(config.DB), config.DSN)
 	if err != nil {

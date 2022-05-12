@@ -8,17 +8,23 @@ import (
 	"gorm.io/gorm/schema"
 )
 
+// RelationshipType table relationship
 type RelationshipType schema.RelationshipType
 
 const (
-	HasOne    RelationshipType = RelationshipType(schema.HasOne)    // HasOneRel has one relationship
-	HasMany   RelationshipType = RelationshipType(schema.HasMany)   // HasManyRel has many relationships
+	// HasOne a has one association sets up a one-to-one connection with another model. Reference https://gorm.io/docs/has_one.html
+	HasOne RelationshipType = RelationshipType(schema.HasOne) // HasOneRel has one relationship
+	// HasMany a has many association sets up a one-to-many connection with another model. Reference https://gorm.io/docs/has_many.html
+	HasMany RelationshipType = RelationshipType(schema.HasMany) // HasManyRel has many relationships
+	// BelongsTo A belongs to association sets up a one-to-one connection with another model. Reference https://gorm.io/docs/belongs_to.html
 	BelongsTo RelationshipType = RelationshipType(schema.BelongsTo) // BelongsToRel belongs to relationship
+	// Many2Many Many to Many add a join table between two models. Reference https://gorm.io/docs/many2many.html
 	Many2Many RelationshipType = RelationshipType(schema.Many2Many) // Many2ManyRel many to many relationship
 )
 
 var ns = schema.NamingStrategy{}
 
+// RelationField interface for relation field
 type RelationField interface {
 	Name() string
 	Path() string
@@ -38,6 +44,7 @@ type RelationField interface {
 	GetPage() (offset, limit int)
 }
 
+// Relation relation meta info
 type Relation struct {
 	relationship RelationshipType
 
@@ -55,20 +62,28 @@ type Relation struct {
 	limit, offset int
 }
 
+// Name relation field' name
 func (r Relation) Name() string { return r.fieldName }
 
+// Path relation field's path
 func (r Relation) Path() string { return r.fieldPath }
 
+// Type relation field's type
 func (r Relation) Type() string { return r.fieldType }
 
+// Model relation field's model
 func (r Relation) Model() interface{} { return r.fieldModel }
 
+// Relationship relationship between field and table struct
 func (r Relation) Relationship() RelationshipType { return r.relationship }
 
+// RelationshipName relationship's name
 func (r Relation) RelationshipName() string { return ns.SchemaName(string(r.relationship)) }
 
+// ChildRelations return child relations
 func (r Relation) ChildRelations() []Relation { return r.childRelations }
 
+// Field build field
 func (r Relation) Field(fields ...string) Expr {
 	if len(fields) > 0 {
 		return NewString("", r.fieldName+"."+strings.Join(fields, ".")).appendBuildOpts(WithoutQuote)
@@ -76,41 +91,63 @@ func (r Relation) Field(fields ...string) Expr {
 	return NewString("", r.fieldName).appendBuildOpts(WithoutQuote)
 }
 
+// AppendChildRelation append child relationship
 func (r *Relation) AppendChildRelation(relations ...Relation) {
 	r.childRelations = append(r.childRelations, wrapPath(r.fieldPath, relations)...)
 }
 
+// On relation condition
 func (r Relation) On(conds ...Expr) RelationField {
 	r.conds = append(r.conds, conds...)
 	return &r
 }
+
+// Select relation select columns
 func (r Relation) Select(columns ...Expr) RelationField {
 	r.selects = append(r.selects, columns...)
 	return &r
 }
+
+// Order relation order columns
 func (r Relation) Order(columns ...Expr) RelationField {
 	r.order = append(r.order, columns...)
 	return &r
 }
+
+// Clauses set relation clauses
 func (r Relation) Clauses(hints ...clause.Expression) RelationField {
 	r.clauses = append(r.clauses, hints...)
 	return &r
 }
+
+// Offset set relation offset
 func (r Relation) Offset(offset int) RelationField {
 	r.offset = offset
 	return &r
 }
+
+// Limit set relation limit
 func (r Relation) Limit(limit int) RelationField {
 	r.limit = limit
 	return &r
 }
 
-func (r *Relation) GetConds() []Expr                { return r.conds }
-func (r *Relation) GetSelects() []Expr              { return r.selects }
-func (r *Relation) GetOrderCol() []Expr             { return r.order }
-func (r *Relation) GetClauses() []clause.Expression { return r.clauses }
-func (r *Relation) GetPage() (offset, limit int)    { return r.offset, r.limit }
+// GetConds get query conditions
+func (r *Relation) GetConds() []Expr { return r.conds }
 
+// GetSelects get select columns
+func (r *Relation) GetSelects() []Expr { return r.selects }
+
+// GetOrderCol get order columns
+func (r *Relation) GetOrderCol() []Expr { return r.order }
+
+// GetClauses get clauses
+func (r *Relation) GetClauses() []clause.Expression { return r.clauses }
+
+// GetPage get offset and limit
+func (r *Relation) GetPage() (offset, limit int) { return r.offset, r.limit }
+
+// StructField return struct field code
 func (r *Relation) StructField() (fieldStr string) {
 	for _, relation := range r.childRelations {
 		fieldStr += relation.fieldName + " struct {\nfield.RelationField\n" + relation.StructField() + "}\n"
@@ -118,6 +155,7 @@ func (r *Relation) StructField() (fieldStr string) {
 	return fieldStr
 }
 
+// StructFieldInit return field initialize code
 func (r *Relation) StructFieldInit() string {
 	initStr := fmt.Sprintf("RelationField: field.NewRelation(%q, %q),\n", r.fieldPath, r.fieldType)
 	for _, relation := range r.childRelations {
@@ -144,6 +182,7 @@ var defaultRelationshipPrefix = map[RelationshipType]string{
 	Many2Many: "[]",
 }
 
+// RelateConfig config for relationship
 type RelateConfig struct {
 	RelatePointer      bool
 	RelateSlice        bool
@@ -155,6 +194,7 @@ type RelateConfig struct {
 	OverwriteTag string
 }
 
+// RelateFieldPrefix return generated relation field's type
 func (c *RelateConfig) RelateFieldPrefix(relationshipType RelationshipType) string {
 	switch {
 	case c.RelatePointer:
