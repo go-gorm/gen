@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/build"
 	"os"
+	"path/filepath"
 	"reflect"
 	"runtime"
 	"strings"
@@ -71,4 +72,56 @@ func GetInterfacePath(v interface{}) (paths []*InterfacePath, err error) {
 func fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
+}
+
+// GetCustomMethod get diy methods
+func GetCustomMethod(v interface{}) (method *CustomMethods, err error) {
+	method = new(CustomMethods)
+
+	// get diy method info by input value, must input a function or a struct
+	value := reflect.ValueOf(v)
+	switch value.Kind() {
+	case reflect.Func:
+		fullPath := runtime.FuncForPC(value.Pointer()).Name()
+		err = method.parserPath(fullPath)
+		if err != nil {
+			return
+		}
+	case reflect.Struct:
+		method.pkgPath = value.Type().PkgPath()
+		method.BaseStructType = value.Type().Name()
+	default:
+		err = fmt.Errorf("method param must be a function or struct")
+		return
+	}
+
+	ctx := build.Default
+	var p *build.Package
+
+	// if struct in main file
+	if method.pkgPath == "main" {
+		_, file, _, _ := runtime.Caller(2)
+		p, err = ctx.ImportDir(filepath.Dir(file), build.ImportComment)
+	} else {
+		p, err = ctx.Import(method.pkgPath, "", build.ImportComment)
+	}
+	if err != nil {
+		err = fmt.Errorf("diy method dir not found:%s.%s", method.pkgPath, method.MethodName)
+		return
+	}
+
+	for _, file := range p.GoFiles {
+		goFile := p.Dir + "/" + file
+		if fileExists(goFile) {
+			method.pkgFiles = append(method.pkgFiles, goFile)
+		}
+	}
+	if len(method.pkgFiles) == 0 {
+		err = fmt.Errorf("diy method file not found:%s.%s", method.pkgPath, method.MethodName)
+		return
+	}
+
+	// read files got methods
+	err = method.LoadMethods()
+	return
 }

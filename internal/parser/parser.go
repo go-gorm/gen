@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"io/ioutil"
 	"log"
 	"path/filepath"
 	"strings"
@@ -31,14 +32,6 @@ func (i *InterfaceInfo) IsMatchStruct(name string) bool {
 		}
 	}
 	return false
-}
-
-// Method interface's method
-type Method struct {
-	MethodName string
-	Doc        string
-	Params     []Param
-	Result     []Param
 }
 
 // ParseFile get interface's info from source file
@@ -172,6 +165,28 @@ func (p *Param) TypeName() string {
 	return p.Type
 }
 
+// TmplString param to string in tmpl
+func (p *Param) TmplString() string {
+	var res strings.Builder
+	if p.Name != "" {
+		res.WriteString(p.Name)
+		res.WriteString(" ")
+	}
+
+	if p.IsArray {
+		res.WriteString("[]")
+	}
+	if p.IsPointer {
+		res.WriteString("*")
+	}
+	if p.Package != "" {
+		res.WriteString(p.Package)
+		res.WriteString(".")
+	}
+	res.WriteString(p.Type)
+	return res.String()
+}
+
 func (p *Param) AllowType() bool {
 	switch p.Type {
 	case "string", "bytes":
@@ -261,4 +276,128 @@ func astGetType(expr ast.Expr) string {
 	}
 	return ""
 
+}
+
+// Method Apply to query struct and base struct custom method
+type Method struct {
+	BaseStruct Param
+	MethodName string
+	Doc        string
+	Params     []Param
+	Result     []Param
+	Body       string
+}
+
+//GetParamInTmpl return method bind info string
+func (m *Method) GetBaseStructTmpl() string {
+	return m.BaseStruct.TmplString()
+}
+
+//GetParamInTmpl return param list
+func (m *Method) GetParamInTmpl() string {
+	return paramToString(m.Params)
+}
+
+// GetResultParamInTmpl return result list
+func (m *Method) GetResultParamInTmpl() string {
+	return paramToString(m.Result)
+}
+
+// paramToString param list to string used in tmpl
+func paramToString(params []Param) string {
+	var res []string
+	for _, param := range params {
+		res = append(res, param.TmplString())
+	}
+	return strings.Join(res, ",")
+}
+
+// DocComment return comment sql add "//" every line
+func (m *Method) DocComment() string {
+	return strings.Replace(strings.TrimSpace(m.Doc), "\n", "\n//", -1)
+}
+
+// CustomMethods user Custom methods bind to db base struct
+type CustomMethods struct {
+	BaseStructType string
+	MethodName     string
+	pkgPath        string
+	currentFile    string
+	pkgFiles       []string
+	Methods        []*Method
+}
+
+func (m *CustomMethods) parserPath(path string) error {
+	pathList := strings.Split(path, ".")
+	if len(pathList) < 3 {
+		return fmt.Errorf("parser diy method error")
+	}
+
+	m.pkgPath = strings.Join(pathList[:len(pathList)-2], ".")
+	methodName := pathList[len(pathList)-1]
+	m.MethodName = methodName[:len(methodName)-3]
+
+	structName := pathList[len(pathList)-2]
+	m.BaseStructType = strings.Trim(structName, "()*")
+	return nil
+}
+
+// Visit ast visit function
+func (m *CustomMethods) Visit(n ast.Node) (w ast.Visitor) {
+	switch t := n.(type) {
+	case *ast.FuncDecl:
+		// check base struct and method name is expect
+		baseStruct := getParamList(t.Recv)
+		if len(baseStruct) != 1 {
+			return
+		}
+		if baseStruct[0].Type != m.BaseStructType {
+			return
+		}
+		// if m.MethodName is null will generate all methods
+		if m.MethodName != "" && m.MethodName != t.Name.Name {
+			return
+		}
+
+		// use ast read bind start package is UNDEFINED ,set it null string
+		baseStruct[0].Package = ""
+		m.Methods = append(m.Methods, &Method{
+			BaseStruct: baseStruct[0],
+			MethodName: t.Name.String(),
+			Doc:        t.Doc.Text(),
+			Body:       getBody(m.currentFile, int(t.Body.Pos()), int(t.Body.End())),
+			Params:     getParamList(t.Type.Params),
+			Result:     getParamList(t.Type.Results),
+		})
+	}
+
+	return m
+}
+
+// read old file get method body
+func getBody(fileName string, start, end int) string {
+	f1, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		return "{}"
+	}
+	if start > len(f1) || end > len(f1) {
+		return "{}"
+	}
+
+	return string(f1[start-1 : end])
+}
+
+// LoadMethods ast read file get diy method
+func (m *CustomMethods) LoadMethods() error {
+	for _, filename := range m.pkgFiles {
+		fileset := token.NewFileSet()
+		f, err := parser.ParseFile(fileset, filename, nil, parser.ParseComments)
+		if err != nil {
+			return fmt.Errorf("can't parse file %q: %s", filename, err)
+		}
+		m.currentFile = filename
+		ast.Walk(m, f)
+	}
+
+	return nil
 }

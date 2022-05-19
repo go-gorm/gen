@@ -27,6 +27,7 @@ type BaseStruct struct {
 	Fields         []*model.Field
 	Source         model.SourceCode
 	ImportPkgPaths []string
+	CustomMethods  []*parser.Method // user custom method bind to db base struct
 }
 
 // parseStruct get all elements of struct with gorm's Parse, ignore unexported elements
@@ -125,6 +126,37 @@ func (b *BaseStruct) StructComment() string {
 		return fmt.Sprintf(`mapped from table <%s>`, b.TableName)
 	}
 	return `mapped from object`
+}
+
+// CheckCustomMethod check diy method duplication name
+func (b *BaseStruct) CheckCustomMethod() error {
+	var methods []*parser.Method
+	var duplicateMethodName []string
+	for _, method := range b.CustomMethods {
+		if customMethodInList(method.MethodName, methods) || method.MethodName == "TableName" {
+			duplicateMethodName = append(duplicateMethodName, method.MethodName)
+			continue
+		}
+		method.BaseStruct.Package = ""
+		method.BaseStruct.Type = b.StructName
+		methods = append(methods, method)
+
+	}
+	b.CustomMethods = methods
+	if len(duplicateMethodName) > 0 {
+		return fmt.Errorf("can't generate same name method for a struct,ignored the last method:%s", strings.Join(duplicateMethodName, ","))
+	}
+	return nil
+}
+
+// customMethodInList duplication name
+func customMethodInList(methodName string, methods []*parser.Method) bool {
+	for _, diyMethod := range methods {
+		if diyMethod.MethodName == methodName {
+			return true
+		}
+	}
+	return false
 }
 
 func GetStructNames(bases []*BaseStruct) (res []string) {

@@ -10,7 +10,7 @@ import (
 )
 
 // InterfaceMethod interface's method
-type InterfaceMethod struct {
+type InterfaceMethod struct { // feature will replace InterfaceMethod to parser.Method
 	Doc           string         // comment
 	S             string         // First letter of
 	OriginStruct  parser.Param   // origin struct name
@@ -99,18 +99,7 @@ func (m *InterfaceMethod) SQLParamName(param string) string {
 func paramToString(params []parser.Param) string {
 	var res []string
 	for _, param := range params {
-		tmplString := fmt.Sprintf("%s ", param.Name)
-		if param.IsArray {
-			tmplString += "[]"
-		}
-		if param.IsPointer {
-			tmplString += "*"
-		}
-		if param.Package != "" {
-			tmplString += fmt.Sprintf("%s.", param.Package)
-		}
-		tmplString += param.Type
-		res = append(res, tmplString)
+		res = append(res, param.TmplString())
 	}
 	return strings.Join(res, ",")
 }
