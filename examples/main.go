@@ -18,5 +18,6 @@ func main() {
 	fmt.Println("hello world")
 	defer fmt.Println("bye~")
 
+	query.SetDefault(dal.DB)
 	biz.Query(context.Background())
 }
