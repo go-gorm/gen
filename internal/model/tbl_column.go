@@ -3,6 +3,7 @@ package model
 import (
 	"bytes"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"gorm.io/gorm"
@@ -108,15 +109,24 @@ func (c *Column) buildGormTag() string {
 	}
 
 	if dtValue := c.defaultTagValue(); !isValidPriKey && c.needDefaultTag(dtValue) { // cannot set default tag for primary key
-		buf.WriteString(fmt.Sprintf(";default:%s", dtValue))
+		buf.WriteString(fmt.Sprintf(`;default:%s`, dtValue))
 	}
 	return buf.String()
 }
 
 // needDefaultTag check if default tag needed
 func (c *Column) needDefaultTag(defaultTagValue string) bool {
-	return defaultTagValue != "" && defaultTagValue != "0" &&
-		c.Name() != "created_at" && c.Name() != "updated_at"
+	switch c.ScanType().Kind() {
+	case reflect.Bool:
+		return defaultTagValue != "false"
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64:
+		return defaultTagValue != "0"
+	case reflect.String:
+		return defaultTagValue != ""
+	case reflect.Struct:
+		return strings.Trim(defaultTagValue, "'0:- ") != ""
+	}
+	return c.Name() != "created_at" && c.Name() != "updated_at"
 }
 
 // defaultTagValue return gorm default tag's value
