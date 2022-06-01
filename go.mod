@@ -8,7 +8,7 @@ require (
 	golang.org/x/tools v0.1.10
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/datatypes v1.0.6
-	gorm.io/driver/mysql v1.3.3
+	gorm.io/driver/mysql v1.3.4
 	gorm.io/driver/postgres v1.3.7
 	gorm.io/driver/sqlite v1.3.2
 	gorm.io/driver/sqlserver v1.3.2
