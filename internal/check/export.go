@@ -25,10 +25,15 @@ func CheckStructs(db *gorm.DB, structs ...interface{}) (bases []*BaseStruct, err
 
 		structType := reflect.TypeOf(st)
 		name := getStructName(structType.String())
+		newStructName := name
+		if st, ok := st.(interface{ GenInternalDoName() string }); ok {
+			newStructName = st.GenInternalDoName()
+		}
+
 		base := &BaseStruct{
 			S:             getPureName(name),
 			StructName:    name,
-			NewStructName: uncaptialize(name),
+			NewStructName: uncaptialize(newStructName),
 			StructInfo:    parser.Param{PkgPath: structType.PkgPath(), Type: name, Package: getPackageName(structType.String())},
 			Source:        model.Struct,
 			db:            db,
