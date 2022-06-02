@@ -116,6 +116,9 @@ func (c *Column) buildGormTag() string {
 
 // needDefaultTag check if default tag needed
 func (c *Column) needDefaultTag(defaultTagValue string) bool {
+	if defaultTagValue == "" {
+		return false
+	}
 	switch c.ScanType().Kind() {
 	case reflect.Bool:
 		return defaultTagValue != "false"
@@ -124,7 +127,7 @@ func (c *Column) needDefaultTag(defaultTagValue string) bool {
 	case reflect.String:
 		return defaultTagValue != ""
 	case reflect.Struct:
-		return strings.Trim(defaultTagValue, "'0:- ") != ""
+		return strings.Trim(defaultTagValue, "'0:- ") != "" && strings.TrimSpace(defaultTagValue) != "CURRENT_TIMESPAMP"
 	}
 	return c.Name() != "created_at" && c.Name() != "updated_at"
 }
