@@ -7,6 +7,7 @@ import (
 
 	"gorm.io/gorm/clause"
 	"gorm.io/hints"
+	"gorm.io/plugin/dbresolver"
 )
 
 func checkConds(conds []clause.Expression) error {
@@ -37,7 +38,7 @@ var banClauses = map[string]bool{
 // CheckClause check security of Expression
 func CheckClause(cond clause.Expression) error {
 	switch cond := cond.(type) {
-	case hints.Hints, hints.IndexHint:
+	case hints.Hints, hints.IndexHint, dbresolver.Operation:
 		return nil
 	case clause.OnConflict:
 		return checkOnConflict(cond)
