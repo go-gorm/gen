@@ -14,6 +14,7 @@ require (
 	gorm.io/driver/sqlserver v1.3.2
 	gorm.io/gorm v1.23.5
 	gorm.io/hints v1.1.0
+	gorm.io/plugin/dbresolver v1.2.1
 )
 
 // replace golang.org/x/net => golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
