@@ -24,6 +24,9 @@ const (
 
 	// WithQueryIface generate code with exported interface object
 	WithQueryIface
+
+	// WithExportedDoModel export generated Do model (inside models). Default is unexported (uncapitalized)
+	WithExportedDoModel
 )
 
 // Config generator's basic configuration

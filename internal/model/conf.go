@@ -27,6 +27,8 @@ type Conf struct {
 	TableName   string
 	ModelName   string
 
+	ExportDoModel bool
+
 	ImportPkgPaths []string
 
 	SchemaNameOpts []SchemaNameOpt

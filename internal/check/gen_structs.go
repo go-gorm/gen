@@ -72,10 +72,15 @@ func GenBaseStruct(db *gorm.DB, conf model.Conf) (base *BaseStruct, err error) {
 		FileName:       fileName,
 		TableName:      tableName,
 		StructName:     structName,
-		NewStructName:  uncaptialize(structName),
 		S:              strings.ToLower(structName[0:1]),
 		StructInfo:     parser.Param{Type: structName, Package: modelPkg},
 		ImportPkgPaths: conf.ImportPkgPaths,
+	}
+
+	if conf.ExportDoModel {
+		base.NewStructName = structName
+	} else {
+		base.NewStructName = uncaptialize(structName)
 	}
 
 	modifyOpts, filterOpts, createOpts := conf.SortOpt()

@@ -109,6 +109,7 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 	for i, opt := range fieldOpts {
 		modelFieldOpts[i] = opt
 	}
+
 	s, err := check.GenBaseStruct(g.db, model.Conf{
 		ModelPkg:       g.Config.ModelPkgPath,
 		TablePrefix:    g.getTablePrefix(),
@@ -133,6 +134,7 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 
 			FieldOpts: modelFieldOpts,
 		},
+		ExportDoModel: g.judgeMode(WithExportedDoModel),
 	})
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)
@@ -175,6 +177,7 @@ func (g *Generator) GenerateModelFrom(obj helper.Object) *check.BaseStruct {
 		TableNameNS:    g.tableNameNS,
 		ModelNameNS:    g.modelNameNS,
 		FileNameNS:     g.fileNameNS,
+		ExportDoModel:  g.judgeMode(WithExportedDoModel),
 	})
 	if err != nil {
 		panic(fmt.Errorf("generate struct from object fail: %w", err))
