@@ -22,6 +22,8 @@ import(
 	"gorm.io/gen/field"
 	"gorm.io/gen/helper"
 
+	"gorm.io/plugin/dbresolver"
+
 	{{if .StructPkgPath}}"{{.StructPkgPath}}"{{end}}
 	{{range .ImportPkgPaths}}{{.}}` + "\n" + `{{end}}
 )
