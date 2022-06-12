@@ -1,0 +1,34 @@
+run:
+  deadline: 30s
+  tests: false
+  skip-dirs-use-default: true
+  skip-dirs:
+    - test
+
+linters-settings:
+  gofmt:
+    simplify: true
+  govet:
+    check-shadowing: true
+  goimports:
+    local-prefixes: gorm.io,gorm.io/gen
+  unused:
+    check-exported: false
+  revive:
+      min-confidence: 0.8
+
+linters:
+  presets:
+    - unused
+  enable:
+    - govet
+    - revive
+    - bodyclose
+    - errcheck
+    - exportloopref
+    - staticcheck
+  disable:
+    - gofumpt
+
+issues:
+  exclude-use-default: false

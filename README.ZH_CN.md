@@ -19,6 +19,7 @@
 
 - 自动生成 CRUD 和 DIY 方法
 - 自动根据表结构生成模型（model）代码
+- 事务、嵌套事务、保存点、回滚事务点
 - 完全兼容 GORM
 - 更安全、更友好
 - 多种生成代码模式
@@ -94,6 +95,7 @@
         - [预加载](#preloading)
           - [预加载（Preload）](#preload)
           - [预加载全部数据（Preload All）](#preload-all)
+          - [预加载指定列](#preload-with-select)
           - [根据条件预加载](#preload-with-conditions)
           - [嵌套预加载](#nested-preloading)
       - [更新](#update)
@@ -184,9 +186,13 @@ func main() {
   
     // apply basic crud api on structs or table models which is specified by table name with function
     // GenerateModel/GenerateModelAs. And generator will generate table models' code when calling Excute.
+    // 想对已有的model生成crud等基础方法可以直接指定model struct ，例如model.User{}
+    // 如果是想直接生成表的model和crud方法，则可以指定标名称，例如g.GenerateModel("company")
+    // 想自定义某个表生成特性，比如struct的名称/字段类型/tag等，可以指定opt，例如g.GenerateModel("company",gen.FieldIgnore("address")), g.GenerateModelAs("people", "Person", gen.FieldIgnore("address"))
     g.ApplyBasic(model.User{}, g.GenerateModel("company"), g.GenerateModelAs("people", "Person", gen.FieldIgnore("address")))
     
     // apply diy interfaces on structs or table models
+    // 如果想给某些表或者model生成自定义方法，可以用ApplyInterface，第一个参数是方法接口，可以参考DIY部分文档定义
     g.ApplyInterface(func(method model.Method) {}, model.User{}, g.GenerateModel("company"))
 
     // execute the action of code generation
@@ -216,6 +222,7 @@ demo
 │   └── query  # generated code's directory
 |       ├── user.gen.go # generated code for user
 │       └── gen.go # generated code
+|       └── user.gen_test.go # generated unit test
 ├── biz
 │   └── query.go # call function in dal/gorm_generated.go and query databases
 ├── config
@@ -257,6 +264,7 @@ FieldType          // specify field type
 FieldTypeReg       // specify field type (match with regexp)
 FieldTag           // specify gorm and json tag
 FieldJSONTag       // specify json tag
+FieldJSONTagWithNS // specify new tag with name strategy
 FieldGORMTag       // specify gorm tag
 FieldNewTag        // append new tag
 FieldNewTagWithNS  // specify new tag with name strategy
@@ -729,6 +737,7 @@ c := q.CreditCard
 type Result struct {
     Name  string
     Email string
+    ID    int64
 }
 
 var result Result
@@ -1328,6 +1337,8 @@ u.WithContext(ctx).Omit(field.AssociationFields).Create(&user)
 
 ###### <span id="find-associations">查询关联</span>
 
+查询匹配的关联
+
 ```go
 u := query.Use(db).User
 
@@ -1411,6 +1422,8 @@ db.Select(field.AssociationsFields).Delete(&user)
 ```
 
 ##### <span id="preloading">预加载</span>
+
+此功能目前仅支持现有模型
 
 ###### <span id="preload">预加载（Preload）</span>
 
@@ -1586,7 +1599,7 @@ u.WithContext(ctx).Where(u.Activate.Is(true)).UpdateSimple(u.Age.Value(17), u.Nu
 // UPDATE users SET age=17, number=0, birthday=NULL, updated_at='2013-11-17 21:34:10' WHERE active=true;
 ```
 
-> **NOTE** When update with struct, GEN will only update non-zero fields, you might want to use `map` to update attributes or use `Select` to specify fields to update
+> **注意** 当通过 struct 更新的时候，GEN 将只会更新其非零值的字段，你可能需要用 `map` 去更新属性，或者用 `select` 去明确指定哪些字段是需要被更新的
 
 ##### <span id="update-selected-fields">更新指定字段</span>
 
@@ -1869,7 +1882,6 @@ select * from @@table where
 
 ##### <span id="method-interface-example">方法接口示例</span>
 
-
 ```go
 type Method interface {
     // Where("name=@name and age=@age")
@@ -1909,11 +1921,10 @@ type Method interface {
     //      {{for _,user:=range users}}
     //          {{if user.Age >18}
     //              OR name=@user.Name 
-    //         {{end}}
+    //          {{end}}
     //      {{end}}
     //  {{end}}
-    FindByOrList(cond bool, id int, key, value string) ([]gen.T, error)
-
+    FindByOrList(users []gen.T) ([]gen.T, error)
 }
 ```
 
@@ -1924,7 +1935,6 @@ type Method interface {
 自定义方法的单元测试需要自定义对应的测试用例，它应该和测试文件放在同一个包里。
 
 一个测试用例包含输入和期望结果，输入应和对应的方法参数匹配，期望应和对应的方法返回值相匹配。这将在测试中被断言为 “**Equal（相等）**”。
-
 
 ```go
 package query

@@ -48,7 +48,7 @@ type Config struct {
 	// name strategy for syncing table from db
 	tableNameNS func(tableName string) (targetTableName string)
 	modelNameNS func(tableName string) (modelName string)
-	fileNameNS  func(tableName string) (fieldName string)
+	fileNameNS  func(tableName string) (fileName string)
 
 	dataTypeMap    map[string]func(detailType string) (dataType string)
 	fieldJSONTagNS func(columnName string) (tagContent string)
@@ -75,7 +75,7 @@ func (cfg *Config) WithModelNameStrategy(ns func(tableName string) (modelName st
 }
 
 // WithFileNameStrategy specify file name naming strategy, only work when syncing table from db
-func (cfg *Config) WithFileNameStrategy(ns func(tableName string) (fieldName string)) {
+func (cfg *Config) WithFileNameStrategy(ns func(tableName string) (fileName string)) {
 	cfg.fileNameNS = ns
 }
 

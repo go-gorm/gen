@@ -8,14 +8,18 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-// Star a symbol of "*"
-var Star = NewString("", "*")
-var ALL = Star
+var (
+	// Star a symbol of "*"
+	Star = NewString("", "*")
+	// ALL same with Star
+	ALL = Star
+)
 
-type FieldOption func(clause.Column) clause.Column
+// Option field option
+type Option func(clause.Column) clause.Column
 
 var (
-	banColumnRaw FieldOption = func(col clause.Column) clause.Column {
+	banColumnRaw Option = func(col clause.Column) clause.Column {
 		col.Raw = false
 		return col
 	}
@@ -23,85 +27,102 @@ var (
 
 // ======================== generic field =======================
 
-func NewField(table, column string, opts ...FieldOption) Field {
+// NewField create new field
+func NewField(table, column string, opts ...Option) Field {
 	return Field{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
 // ======================== integer =======================
 
-func NewInt(table, column string, opts ...FieldOption) Int {
+// NewInt create new Int
+func NewInt(table, column string, opts ...Option) Int {
 	return Int{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
-func NewInt8(table, column string, opts ...FieldOption) Int8 {
+// NewInt8 create new Int8
+func NewInt8(table, column string, opts ...Option) Int8 {
 	return Int8{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
-func NewInt16(table, column string, opts ...FieldOption) Int16 {
+// NewInt16 ...
+func NewInt16(table, column string, opts ...Option) Int16 {
 	return Int16{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
-func NewInt32(table, column string, opts ...FieldOption) Int32 {
+// NewInt32 ...
+func NewInt32(table, column string, opts ...Option) Int32 {
 	return Int32{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
-func NewInt64(table, column string, opts ...FieldOption) Int64 {
+// NewInt64 ...
+func NewInt64(table, column string, opts ...Option) Int64 {
 	return Int64{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
-func NewUint(table, column string, opts ...FieldOption) Uint {
+// NewUint ...
+func NewUint(table, column string, opts ...Option) Uint {
 	return Uint{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
-func NewUint8(table, column string, opts ...FieldOption) Uint8 {
+// NewUint8 ...
+func NewUint8(table, column string, opts ...Option) Uint8 {
 	return Uint8{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
-func NewUint16(table, column string, opts ...FieldOption) Uint16 {
+// NewUint16 ...
+func NewUint16(table, column string, opts ...Option) Uint16 {
 	return Uint16{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
-func NewUint32(table, column string, opts ...FieldOption) Uint32 {
+// NewUint32 ...
+func NewUint32(table, column string, opts ...Option) Uint32 {
 	return Uint32{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
-func NewUint64(table, column string, opts ...FieldOption) Uint64 {
+// NewUint64 ...
+func NewUint64(table, column string, opts ...Option) Uint64 {
 	return Uint64{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
 // ======================== float =======================
 
-func NewFloat32(table, column string, opts ...FieldOption) Float32 {
+// NewFloat32 ...
+func NewFloat32(table, column string, opts ...Option) Float32 {
 	return Float32{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
-func NewFloat64(table, column string, opts ...FieldOption) Float64 {
+// NewFloat64 ...
+func NewFloat64(table, column string, opts ...Option) Float64 {
 	return Float64{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
 // ======================== string =======================
 
-func NewString(table, column string, opts ...FieldOption) String {
+// NewString ...
+func NewString(table, column string, opts ...Option) String {
 	return String{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
-func NewBytes(table, column string, opts ...FieldOption) Bytes {
+// NewBytes ...
+func NewBytes(table, column string, opts ...Option) Bytes {
 	return Bytes{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
 // ======================== bool =======================
 
-func NewBool(table, column string, opts ...FieldOption) Bool {
+// NewBool ...
+func NewBool(table, column string, opts ...Option) Bool {
 	return Bool{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
 // ======================== time =======================
 
-func NewTime(table, column string, opts ...FieldOption) Time {
+// NewTime ...
+func NewTime(table, column string, opts ...Option) Time {
 	return Time{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
-func toColumn(table, column string, opts ...FieldOption) clause.Column {
+func toColumn(table, column string, opts ...Option) clause.Column {
 	col := clause.Column{Table: table, Name: column}
 	for _, opt := range opts {
 		col = opt(col)
@@ -110,14 +131,18 @@ func toColumn(table, column string, opts ...FieldOption) clause.Column {
 }
 
 // ======================== boolean operate ========================
+
+// Or return or condition
 func Or(exprs ...Expr) Expr {
 	return &expr{e: clause.Or(toExpression(exprs...)...)}
 }
 
+// And return and condition
 func And(exprs ...Expr) Expr {
 	return &expr{e: clause.And(toExpression(exprs...)...)}
 }
 
+// Not return not condition
 func Not(exprs ...Expr) Expr {
 	return &expr{e: clause.Not(toExpression(exprs...)...)}
 }
@@ -131,6 +156,10 @@ func toExpression(conds ...Expr) []clause.Expression {
 }
 
 // ======================== subquery method ========================
+
+// ContainsSubQuery return contains subquery
+// when len(columns) == 1, equal to columns[0] IN (subquery)
+// when len(columns) > 1, equal to (columns[0], columns[1], ...) IN (subquery)
 func ContainsSubQuery(columns []Expr, subQuery *gorm.DB) Expr {
 	switch len(columns) {
 	case 0:
@@ -153,6 +182,7 @@ func ContainsSubQuery(columns []Expr, subQuery *gorm.DB) Expr {
 	}
 }
 
+// AssignSubQuery assign with subquery
 func AssignSubQuery(columns []Expr, subQuery *gorm.DB) AssignExpr {
 	cols := make([]string, len(columns))
 	for i, c := range columns {
@@ -170,19 +200,28 @@ func AssignSubQuery(columns []Expr, subQuery *gorm.DB) AssignExpr {
 	}}}
 }
 
-type CompareOperate string
+// CompareOperator compare operator
+type CompareOperator string
 
 const (
-	EqOp     CompareOperate = " = "
-	NeqOp    CompareOperate = " <> "
-	GtOp     CompareOperate = " > "
-	GteOp    CompareOperate = " >= "
-	LtOp     CompareOperate = " < "
-	LteOp    CompareOperate = " <= "
-	ExistsOp CompareOperate = "EXISTS "
+	// EqOp =
+	EqOp CompareOperator = " = "
+	// NeqOp <>
+	NeqOp CompareOperator = " <> "
+	// GtOp >
+	GtOp CompareOperator = " > "
+	// GteOp >=
+	GteOp CompareOperator = " >= "
+	// LtOp <
+	LtOp CompareOperator = " < "
+	// LteOp <=
+	LteOp CompareOperator = " <= "
+	// ExistsOp EXISTS
+	ExistsOp CompareOperator = "EXISTS "
 )
 
-func CompareSubQuery(op CompareOperate, column Expr, subQuery *gorm.DB) Expr {
+// CompareSubQuery compare with sub query
+func CompareSubQuery(op CompareOperator, column Expr, subQuery *gorm.DB) Expr {
 	if op == ExistsOp {
 		return expr{e: clause.Expr{
 			SQL:  fmt.Sprint(op, "(?)"),
@@ -195,6 +234,7 @@ func CompareSubQuery(op CompareOperate, column Expr, subQuery *gorm.DB) Expr {
 	}}
 }
 
+// Value ...
 type Value interface {
 	expr() clause.Expr
 
@@ -209,6 +249,7 @@ func (v val) expr() clause.Expr   { return clause.Expr(v) }
 func (v val) BeCond() interface{} { return v }
 func (val) CondError() error      { return nil }
 
+// Values convert value to expression which implement Value
 func Values(value interface{}) Value {
 	return val(clause.Expr{
 		SQL:                "?",
@@ -217,6 +258,7 @@ func Values(value interface{}) Value {
 	})
 }
 
+// ContainsValue return expression which compare with value
 func ContainsValue(columns []Expr, value Value) Expr {
 	switch len(columns) {
 	case 0:
@@ -239,11 +281,16 @@ func ContainsValue(columns []Expr, value Value) Expr {
 	}
 }
 
+// EmptyExpr return a empty expression
 func EmptyExpr() Expr { return expr{e: clause.Expr{}} }
 
+// AssociationFields all association
 var AssociationFields Expr = NewString("", clause.Associations)
+
+// Associations ...
 var Associations RelationField = NewRelation(clause.Associations, "")
 
+// NewRelation return a new Relation for association
 func NewRelation(fieldName string, fieldType string, relations ...Relation) *Relation {
 	return &Relation{
 		fieldName:      fieldName,
@@ -253,6 +300,7 @@ func NewRelation(fieldName string, fieldType string, relations ...Relation) *Rel
 	}
 }
 
+// NewRelationWithType return a Relation with specified field type
 func NewRelationWithType(relationship RelationshipType, fieldName string, fieldType string, relations ...Relation) *Relation {
 	return &Relation{
 		relationship:   relationship,
@@ -263,6 +311,7 @@ func NewRelationWithType(relationship RelationshipType, fieldName string, fieldT
 	}
 }
 
+// NewRelationWithModel return a Relation with specified model struct
 func NewRelationWithModel(relationship RelationshipType, fieldName string, fieldType string, fieldModel interface{}, relations ...Relation) *Relation {
 	return &Relation{
 		relationship: relationship,
