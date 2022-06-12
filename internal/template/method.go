@@ -33,6 +33,14 @@ func ({{.S}} {{.NewStructName}}Do) WithContext(ctx context.Context) *{{.NewStruc
 	return {{.S}}.withDO({{.S}}.DO.WithContext(ctx))
 }
 
+func ({{.S}} {{.NewStructName}}Do) ReadDB(ctx context.Context) *{{.NewStructName}}Do {
+	return {{.S}}.WithContext(ctx).Clauses(dbresolver.Read)
+}
+
+func ({{.S}} {{.NewStructName}}Do) WriteDB(ctx context.Context) *{{.NewStructName}}Do {
+	return {{.S}}.WithContext(ctx).Clauses(dbresolver.Write)
+}
+
 func ({{.S}} {{.NewStructName}}Do) Clauses(conds ...clause.Expression) *{{.NewStructName}}Do {
 	return {{.S}}.withDO({{.S}}.DO.Clauses(conds...))
 }
