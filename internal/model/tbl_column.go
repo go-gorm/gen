@@ -127,7 +127,7 @@ func (c *Column) needDefaultTag(defaultTagValue string) bool {
 	case reflect.String:
 		return defaultTagValue != ""
 	case reflect.Struct:
-		return strings.Trim(defaultTagValue, "'0:- ") != "" && strings.TrimSpace(defaultTagValue) != "CURRENT_TIMESPAMP"
+		return strings.Trim(defaultTagValue, "'0:- ") != "" && strings.ToUpper(strings.TrimSpace(defaultTagValue)) != "CURRENT_TIMESTAMP"
 	}
 	return c.Name() != "created_at" && c.Name() != "updated_at"
 }
@@ -138,7 +138,7 @@ func (c *Column) defaultTagValue() string {
 	if !ok {
 		return ""
 	}
-	if strings.TrimSpace(value) == "" {
+	if value != "" && strings.TrimSpace(value) == "" {
 		return "'" + value + "'"
 	}
 	return value
