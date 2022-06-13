@@ -169,6 +169,8 @@ func main() {
         /* FieldNullable: true,*/
         //if you want to assign field which has default value in `Create` API, set FieldCoverable true, reference: https://gorm.io/docs/create.html#Default-Values
         /* FieldCoverable: true,*/
+        // if you want generate field with unsigned integer type, set FieldSignable true
+        /* FieldSignable: true,*/
         //if you want to generate index tags from database, set FieldWithIndexTag true
         /* FieldWithIndexTag: true,*/
         //if you want to generate type tags from database, set FieldWithTypeTag true
@@ -564,12 +566,13 @@ Easier to write complicated SQL query with Group Conditions
 
 ```go
 p := query.Use(db).Pizza
+pd := p.WithContext(ctx)
 
-pizzas, err := p.WithContext(ctx).Where(
-    p.WithContext(ctx).Where(p.Pizza.Eq("pepperoni")).
-        Where(p.WithContext(ctx).Where(p.Size.Eq("small")).Or(p.Size.Eq("medium"))),
+pizzas, err := pd.Where(
+    pd.Where(p.Pizza.Eq("pepperoni")).
+        Where(pd.Where(p.Size.Eq("small")).Or(p.Size.Eq("medium"))),
 ).Or(
-    p.WithContext(ctx).Where(p.Pizza.Eq("hawaiian")).Where(p.Size.Eq("xlarge")),
+    pd.Where(p.Pizza.Eq("hawaiian")).Where(p.Size.Eq("xlarge")),
 ).Find()
 
 // SELECT * FROM `pizzas` WHERE (pizza = "pepperoni" AND (size = "small" OR size = "medium")) OR (pizza = "hawaiian" AND size = "xlarge")
@@ -721,19 +724,33 @@ users, err := u.WithContext(ctx).Distinct(u.Name, u.Age).Order(u.Name, u.Age.Des
 Specify Joins conditions
 
 ```go
-u := query.Use(db).User
-e := query.Use(db).Email
-c := query.Use(db).CreditCard
+q := query.Use(db)
+u := q.User
+e := q.Email
+c := q.CreditCard
 
 type Result struct {
     Name  string
     Email string
+    ID    int64
 }
 
 var result Result
 
 err := u.WithContext(ctx).Select(u.Name, e.Email).LeftJoin(e, e.UserID.EqCol(u.ID)).Scan(&result)
 // SELECT users.name, emails.email FROM `users` left join emails on emails.user_id = users.id
+
+// self join
+var result Result
+u2 := u.As("u2")
+err := u.WithContext(ctx).Select(u.Name, u2.ID).LeftJoin(u2, u2.ID.EqCol(u.ID)).Scan(&result)
+// SELECT users.name, u2.id FROM `users` left join `users` u2 on u2.id = users.id
+
+//join with sub query
+var result Result
+e2 := e.As("e2")
+err := u.WithContext(ctx).Select(u.Name, e2.Email).LeftJoin(e.WithContext(ctx).Select(e.Email, e.UserID).Where(e.UserID.Gt(100)).As("e2"), e2.UserID.EqCol(u.ID)).Scan(&result)
+// SELECT users.name, e2.email FROM `users` left join (select email,user_id from emails  where user_id > 100) as e2 on e2.user_id = users.id
 
 rows, err := u.WithContext(ctx).Select(u.Name, e.Email).LeftJoin(e, e.UserID.EqCol(u.ID)).Rows()
 for rows.Next() {
@@ -1741,8 +1758,11 @@ Logical operations must be wrapped in `{{}}`,and end must used `{{end}}`, All te
 Use case in raw SQL:
 
 ```go
-// select * from users where {{if name !=""}} name=@name{{end}}
-methond(name string) (gen.T,error) 
+// select * from users where 
+//  {{if name !=""}} 
+//      name=@name
+//  {{end}}
+methond(name string) (gen.T,error)
 ```
 
 Use case in raw SQL template:
@@ -1775,7 +1795,10 @@ select * from @@table where
 Use case in raw SQL
 
 ```go
-// select * from {{where}}id=@id{{end}}
+// select * from 
+//  {{where}}
+//      id=@id
+//  {{end}}
 methond(id int) error
 ```
 
@@ -1800,8 +1823,12 @@ select * from @@table
 Use case in raw SQL
 
 ```go
-// update users {{set}}name=@name{{end}}
-methond() error
+// update users 
+//  {{set}}
+//      name=@name
+//  {{end}}
+// where id=@id
+methond(name string,id int) error
 ```
 
 Use case in raw SQL template
@@ -1889,7 +1916,7 @@ type Method interface {
     //      {{end}}
     //  {{end}}
     FindByOrList(users []gen.T) ([]gen.T, error)
-  }
+}
 ```
 
 #### Unit Test

@@ -9,6 +9,7 @@ import (
 
 var _ Expr = new(Field)
 
+// AssignExpr assign expression
 type AssignExpr interface {
 	Expr
 
@@ -31,6 +32,8 @@ type Expr interface {
 	expression() clause.Expression
 }
 
+// OrderExpr order expression
+// used in Order()
 type OrderExpr interface {
 	Expr
 	Desc() Expr
@@ -65,6 +68,7 @@ func (e expr) expression() clause.Expression {
 
 func (e expr) ColumnName() sql { return sql(e.col.Name) }
 
+// BuildOpt build option
 type BuildOpt uint
 
 const (
@@ -74,7 +78,7 @@ const (
 	// WithAll build column with table and alias
 	WithAll
 
-	// WithoutQuote
+	// WithoutQuote build column without quote
 	WithoutQuote
 )
 

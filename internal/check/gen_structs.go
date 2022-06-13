@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm/schema"
 	"gorm.io/gorm/utils/tests"
 
+	"gorm.io/gen/helper"
 	"gorm.io/gen/internal/model"
 	"gorm.io/gen/internal/parser"
 )
@@ -23,22 +24,22 @@ const (
 	DefaultModelPkg = "model"
 )
 
-// GenBaseStructs generate db model by table name
-func GenBaseStructs(db *gorm.DB, conf model.Conf) (bases *BaseStruct, err error) {
+// GenBaseStruct generate db model by table name
+func GenBaseStruct(db *gorm.DB, conf model.Conf) (base *BaseStruct, err error) {
 	modelPkg := conf.ModelPkg
 	tablePrefix := conf.TablePrefix
 	tableName := conf.TableName
-	modelName := conf.ModelName
+	structName := conf.ModelName
 
 	if _, ok := db.Config.Dialector.(tests.DummyDialector); ok {
-		return nil, fmt.Errorf("UseDB() is necessary to generate model struct [%s] from database table [%s]", modelName, tableName)
+		return nil, fmt.Errorf("UseDB() is necessary to generate model struct [%s] from database table [%s]", structName, tableName)
 	}
 
 	if conf.ModelNameNS != nil {
-		modelName = conf.ModelNameNS(tableName)
+		structName = conf.ModelNameNS(tableName)
 	}
-	if err = checkModelName(modelName); err != nil {
-		return nil, fmt.Errorf("model name %q is invalid: %w", modelName, err)
+	if err = checkStructName(structName); err != nil {
+		return nil, fmt.Errorf("model name %q is invalid: %w", structName, err)
 	}
 
 	if conf.TableNameNS != nil {
@@ -63,15 +64,15 @@ func GenBaseStructs(db *gorm.DB, conf model.Conf) (bases *BaseStruct, err error)
 	}
 	modelPkg = filepath.Base(modelPkg)
 
-	base := &BaseStruct{
+	base = &BaseStruct{
 		Source:         model.Table,
 		GenBaseStruct:  true,
 		FileName:       fileName,
 		TableName:      tableName,
-		StructName:     modelName,
-		NewStructName:  uncaptialize(modelName),
-		S:              strings.ToLower(modelName[0:1]),
-		StructInfo:     parser.Param{Type: modelName, Package: modelPkg},
+		StructName:     structName,
+		NewStructName:  uncaptialize(structName),
+		S:              strings.ToLower(structName[0:1]),
+		StructInfo:     parser.Param{Type: structName, Package: modelPkg},
 		ImportPkgPaths: conf.ImportPkgPaths,
 	}
 
@@ -80,7 +81,7 @@ func GenBaseStructs(db *gorm.DB, conf model.Conf) (bases *BaseStruct, err error)
 		col.SetDataTypeMap(conf.DataTypeMap)
 		col.WithNS(conf.FieldJSONTagNS, conf.FieldNewTagNS)
 
-		m := col.ToField(conf.FieldNullable, conf.FieldCoverable)
+		m := col.ToField(conf.FieldNullable, conf.FieldCoverable, conf.FieldSignable)
 
 		if filterField(m, filterOpts) == nil {
 			continue
@@ -93,7 +94,7 @@ func GenBaseStructs(db *gorm.DB, conf model.Conf) (bases *BaseStruct, err error)
 		if ns, ok := db.NamingStrategy.(schema.NamingStrategy); ok {
 			ns.SingularTable = true
 			m.Name = ns.SchemaName(ns.TablePrefix + m.Name)
-		} else {
+		} else if db.NamingStrategy != nil {
 			m.Name = db.NamingStrategy.SchemaName(m.Name)
 		}
 
@@ -139,7 +140,7 @@ func modifyField(m *model.Field, opts []model.FieldOpt) *model.Field {
 // get mysql db' name
 var modelNameReg = regexp.MustCompile(`^\w+$`)
 
-func checkModelName(name string) error {
+func checkStructName(name string) error {
 	if name == "" {
 		return nil
 	}
@@ -150,4 +151,65 @@ func checkModelName(name string) error {
 		return fmt.Errorf("model name must be initial capital")
 	}
 	return nil
+}
+
+func GenBaseStructFromObject(obj helper.Object, conf model.Conf) (*BaseStruct, error) {
+	err := helper.CheckObject(obj)
+	if err != nil {
+		return nil, err
+	}
+
+	pkgName := filepath.Base(conf.ModelPkg)
+	if pkgName == "" {
+		pkgName = DefaultModelPkg
+	}
+
+	tableName := obj.TableName()
+	if conf.TableNameNS != nil {
+		tableName = conf.TableNameNS(tableName)
+	}
+
+	structName := obj.StructName()
+	if conf.ModelNameNS != nil {
+		structName = conf.ModelNameNS(structName)
+	}
+
+	fileName := obj.FileName()
+	if fileName == "" {
+		fileName = tableName
+	}
+	if fileName == "" {
+		fileName = structName
+	}
+	if conf.FileNameNS != nil {
+		fileName = conf.FileNameNS(fileName)
+	} else {
+		fileName = schema.NamingStrategy{SingularTable: true}.TableName(fileName)
+	}
+
+	base := &BaseStruct{
+		Source:         model.Object,
+		GenBaseStruct:  true,
+		FileName:       fileName,
+		TableName:      tableName,
+		StructName:     structName,
+		NewStructName:  uncaptialize(structName),
+		S:              strings.ToLower(structName[0:1]),
+		StructInfo:     parser.Param{Type: structName, Package: pkgName},
+		ImportPkgPaths: append(conf.ImportPkgPaths, obj.ImportPkgPaths()...),
+	}
+
+	for _, field := range obj.Fields() {
+		base.Fields = append(base.Fields, &model.Field{
+			Name:             field.Name(),
+			Type:             field.Type(),
+			ColumnName:       field.ColumnName(),
+			GORMTag:          field.GORMTag(),
+			JSONTag:          field.JSONTag(),
+			NewTag:           field.Tag(),
+			ColumnComment:    field.Comment(),
+			MultilineComment: strings.Contains(field.Comment(), "\n"),
+		})
+	}
+	return base, nil
 }

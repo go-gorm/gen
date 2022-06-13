@@ -13,13 +13,7 @@ import (
 	"gorm.io/gorm/schema"
 
 	"gorm.io/gen/field"
-)
-
-var (
-	createClauses = []string{"INSERT", "VALUES", "ON CONFLICT"}
-	queryClauses  = []string{"SELECT", "FROM", "WHERE", "GROUP BY", "ORDER BY", "LIMIT", "FOR"}
-	updateClauses = []string{"UPDATE", "SET", "WHERE"}
-	deleteClauses = []string{"DELETE", "FROM", "WHERE"}
+	"gorm.io/gen/helper"
 )
 
 // ResultInfo query/execute info
@@ -172,6 +166,11 @@ func (d DO) As(alias string) Dao {
 	return &d
 }
 
+// Alias return alias name
+func (d *DO) Alias() string {
+	return d.alias
+}
+
 // Columns return columns for Subquery
 func (*DO) Columns(cols ...field.Expr) columns { return cols }
 
@@ -317,12 +316,20 @@ func (d *DO) join(table schema.Tabler, joinType clause.JoinType, conds []field.E
 		return d.withError(ErrEmptyCondition)
 	}
 
-	from := getFromClause(d.db)
-	from.Joins = append(from.Joins, clause.Join{
+	join := clause.Join{
 		Type:  joinType,
 		Table: clause.Table{Name: table.TableName()},
 		ON:    clause.Where{Exprs: toExpression(conds...)},
-	})
+	}
+	if do, ok := table.(Dao); ok {
+		join.Expression = helper.NewJoinTblExpr(join, Table(do).underlyingDB().Statement.TableExpr)
+	}
+	if al, ok := table.(interface{ Alias() string }); ok {
+		join.Table.Alias = al.Alias()
+	}
+
+	from := getFromClause(d.db)
+	from.Joins = append(from.Joins, join)
 	return d.getInstance(d.db.Clauses(from))
 }
 

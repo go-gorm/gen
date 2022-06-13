@@ -33,6 +33,14 @@ func ({{.S}} {{.NewStructName}}Do) WithContext(ctx context.Context) I{{.StructNa
 	return {{.S}}.withDO({{.S}}.DO.WithContext(ctx))
 }
 
+func ({{.S}} {{.NewStructName}}Do) ReadDB(ctx context.Context) I{{.StructName}}Do {
+	return {{.S}}.WithContext(ctx).Clauses(dbresolver.Read)
+}
+
+func ({{.S}} {{.NewStructName}}Do) WriteDB(ctx context.Context) I{{.StructName}}Do {
+	return {{.S}}.WithContext(ctx).Clauses(dbresolver.Write)
+}
+
 func ({{.S}} {{.NewStructName}}Do) Clauses(conds ...clause.Expression) I{{.StructName}}Do {
 	return {{.S}}.withDO({{.S}}.DO.Clauses(conds...))
 }
@@ -179,12 +187,18 @@ func ({{.S}} {{.NewStructName}}Do) Assign(attrs ...field.AssignExpr) I{{.StructN
 	return {{.S}}.withDO({{.S}}.DO.Assign(attrs...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Joins(field field.RelationField) I{{.StructName}}Do {
-	return {{.S}}.withDO({{.S}}.DO.Joins(field))
+func ({{.S}} {{.NewStructName}}Do) Joins(fields ...field.RelationField) I{{.StructName}}Do {
+	for _, _f := range fields {
+        {{.S}} = *{{.S}}.withDO({{.S}}.DO.Joins(_f))
+    }
+	return &{{.S}}
 }
 
-func ({{.S}} {{.NewStructName}}Do) Preload(field field.RelationField) I{{.StructName}}Do {
-	return {{.S}}.withDO({{.S}}.DO.Preload(field))
+func ({{.S}} {{.NewStructName}}Do) Preload(fields ...field.RelationField) I{{.StructName}}Do {
+    for _, _f := range fields {
+        {{.S}} = *{{.S}}.withDO({{.S}}.DO.Preload(_f))
+    }
+	return &{{.S}}
 }
 
 func ({{.S}} {{.NewStructName}}Do) FirstOrInit() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error) {
@@ -204,17 +218,12 @@ func ({{.S}} {{.NewStructName}}Do) FirstOrCreate() (*{{.StructInfo.Package}}.{{.
 }
 
 func ({{.S}} {{.NewStructName}}Do) FindByPage(offset int, limit int) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, count int64, err error) {
-	if limit <= 0 {
-		count, err = {{.S}}.Count()
-		return
-	}
-
 	result, err = {{.S}}.Offset(offset).Limit(limit).Find()
 	if err != nil{
 		return
 	}
 
-	if size := len(result); 0 < size && size < limit {
+	if size := len(result); 0 < limit && 0 < size && size < limit {
 		count = int64(size+offset)
 		return
 	}

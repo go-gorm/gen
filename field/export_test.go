@@ -285,6 +285,26 @@ func TestExpr_Build(t *testing.T) {
 			ExpectedVars: []interface{}{"sh"},
 			Result:       "FIND_IN_SET(`address`,?)",
 		},
+		{
+			Expr:         field.NewString("", "address").Replace("address", "path"),
+			ExpectedVars: []interface{}{"address", "path"},
+			Result:       "REPLACE(`address`,?,?)",
+		},
+		{
+			Expr:         field.NewString("", "address").Concat("[", "]"),
+			ExpectedVars: []interface{}{"[", "]"},
+			Result:       "CONCAT(?,`address`,?)",
+		},
+		{
+			Expr:         field.NewString("", "address").Concat("", "_"),
+			ExpectedVars: []interface{}{"_"},
+			Result:       "CONCAT(`address`,?)",
+		},
+		{
+			Expr:         field.NewString("", "address").Replace("address", "path").Concat("[", "]"),
+			ExpectedVars: []interface{}{"[", "address", "path", "]"},
+			Result:       "CONCAT(?,REPLACE(`address`,?,?),?)",
+		},
 		// ======================== time ========================
 		{
 			Expr:         field.NewTime("", "creatAt").Eq(timeData),

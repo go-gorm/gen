@@ -295,12 +295,12 @@ type Teacher struct {
 	Name field.String
 }
 
-var teacher = func() *Teacher {
+var teacher = func() Teacher {
 	t := Teacher{
 		ID:   field.NewInt64("teacher", "id"),
 		Name: field.NewString("teacher", "name"),
 	}
 	t.UseDB(db.Session(&gorm.Session{Context: context.Background(), DryRun: true}))
 	t.UseModel(TeacherRaw{})
-	return &t
+	return t
 }()

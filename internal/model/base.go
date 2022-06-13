@@ -2,6 +2,7 @@ package model
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 
 	"gorm.io/gen/field"
@@ -27,6 +28,7 @@ type SourceCode int
 const (
 	Struct SourceCode = iota
 	Table
+	Object
 )
 
 type KeyWords struct {
@@ -76,12 +78,14 @@ func (g *KeyWords) Contain(text string) bool {
 var (
 	defaultDataType             = "string"
 	dataType        dataTypeMap = map[string]dataTypeMapping{
-		"int":        (func(string) string { return "int32" }),
+		"numeric":    func(string) string { return "int32" },
 		"integer":    func(string) string { return "int32" },
+		"int":        func(string) string { return "int32" },
 		"smallint":   func(string) string { return "int32" },
 		"mediumint":  func(string) string { return "int32" },
 		"bigint":     func(string) string { return "int64" },
 		"float":      func(string) string { return "float32" },
+		"real":       func(string) string { return "float64" },
 		"double":     func(string) string { return "float64" },
 		"decimal":    func(string) string { return "float64" },
 		"char":       func(string) string { return "string" },
@@ -119,7 +123,7 @@ type dataTypeMapping func(detailType string) (finalType string)
 type dataTypeMap map[string]dataTypeMapping
 
 func (m dataTypeMap) Get(dataType, detailType string) string {
-	if convert, ok := m[dataType]; ok {
+	if convert, ok := m[strings.ToLower(dataType)]; ok {
 		return convert(detailType)
 	}
 	return defaultDataType
@@ -138,6 +142,24 @@ type Field struct {
 	OverwriteTag     string
 
 	Relation *field.Relation
+}
+
+func (m *Field) Tags() string {
+	if m.OverwriteTag != "" {
+		return strings.TrimSpace(m.OverwriteTag)
+	}
+
+	var tags strings.Builder
+	if gormTag := strings.TrimSpace(m.GORMTag); gormTag != "" {
+		tags.WriteString(fmt.Sprintf(`gorm:"%s" `, gormTag))
+	}
+	if jsonTag := strings.TrimSpace(m.JSONTag); jsonTag != "" {
+		tags.WriteString(fmt.Sprintf(`json:"%s" `, jsonTag))
+	}
+	if newTag := strings.TrimSpace(m.NewTag); newTag != "" {
+		tags.WriteString(newTag)
+	}
+	return strings.TrimSpace(tags.String())
 }
 
 func (m *Field) IsRelation() bool { return m.Relation != nil }

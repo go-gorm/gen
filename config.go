@@ -5,10 +5,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gorm.io/gen/internal/check"
-	"gorm.io/gen/internal/model"
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils/tests"
+
+	"gorm.io/gen/internal/check"
+	"gorm.io/gen/internal/model"
 )
 
 type GenerateMode uint
@@ -33,6 +34,7 @@ type Config struct {
 	// generate model global configuration
 	FieldNullable     bool // generate pointer when field is nullable
 	FieldCoverable    bool // generate pointer when field has default value, to fix problem zero value cannot be assign: https://gorm.io/docs/create.html#Default-Values
+	FieldSignable     bool // detect integer field's unsigned type, adjust generated data type
 	FieldWithIndexTag bool // generate with gorm index tag
 	FieldWithTypeTag  bool // generate with gorm column type tag
 
@@ -46,7 +48,7 @@ type Config struct {
 	// name strategy for syncing table from db
 	tableNameNS func(tableName string) (targetTableName string)
 	modelNameNS func(tableName string) (modelName string)
-	fileNameNS  func(tableName string) (fieldName string)
+	fileNameNS  func(tableName string) (fileName string)
 
 	dataTypeMap    map[string]func(detailType string) (dataType string)
 	fieldJSONTagNS func(columnName string) (tagContent string)
@@ -73,7 +75,7 @@ func (cfg *Config) WithModelNameStrategy(ns func(tableName string) (modelName st
 }
 
 // WithFileNameStrategy specify file name naming strategy, only work when syncing table from db
-func (cfg *Config) WithFileNameStrategy(ns func(tableName string) (fieldName string)) {
+func (cfg *Config) WithFileNameStrategy(ns func(tableName string) (fileName string)) {
 	cfg.fileNameNS = ns
 }
 
@@ -93,8 +95,15 @@ func (cfg *Config) WithNewTagNameStrategy(ns func(columnName string) (tagContent
 }
 
 // WithImportPkgPath specify import package path
-func (cfg *Config) WithImportPkgPath(path ...string) {
-	cfg.importPkgPaths = append(cfg.importPkgPaths, path...)
+func (cfg *Config) WithImportPkgPath(paths ...string) {
+	for i, path := range paths {
+		path = strings.TrimSpace(path)
+		if len(path) > 0 && path[0] != '"' && path[len(path)-1] != '"' { // without quote
+			path = `"` + path + `"`
+		}
+		paths[i] = path
+	}
+	cfg.importPkgPaths = append(cfg.importPkgPaths, paths...)
 }
 
 // Revise format path and db

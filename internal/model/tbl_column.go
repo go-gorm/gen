@@ -3,6 +3,7 @@ package model
 import (
 	"bytes"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"gorm.io/gorm"
@@ -43,8 +44,11 @@ func (c *Column) WithNS(jsonTagNS, newTagNS func(columnName string) string) {
 	}
 }
 
-func (c *Column) ToField(nullable, coverable bool) *Field {
+func (c *Column) ToField(nullable, coverable, signable bool) *Field {
 	fieldType := c.GetDataType()
+	if signable && strings.Contains(c.columnType(), "unsigned") && strings.HasPrefix(fieldType, "int") {
+		fieldType = "u" + fieldType
+	}
 	switch {
 	case c.Name() == "deleted_at" && fieldType == "time.Time":
 		fieldType = "gorm.DeletedAt"
@@ -52,10 +56,16 @@ func (c *Column) ToField(nullable, coverable bool) *Field {
 		if n, ok := c.Nullable(); ok && n {
 			fieldType = "*" + fieldType
 		}
-	case coverable && c.withDefaultValue():
+	case coverable && c.needDefaultTag(c.defaultTagValue()):
 		fieldType = "*" + fieldType
 	}
-	f := &Field{
+
+	var comment string
+	if c, ok := c.Comment(); ok {
+		comment = c
+	}
+
+	return &Field{
 		Name:             c.Name(),
 		Type:             fieldType,
 		ColumnName:       c.Name(),
@@ -63,11 +73,8 @@ func (c *Column) ToField(nullable, coverable bool) *Field {
 		GORMTag:          c.buildGormTag(),
 		JSONTag:          c.jsonTagNS(c.Name()),
 		NewTag:           c.newTagNS(c.Name()),
+		ColumnComment:    comment,
 	}
-	if c, ok := c.Comment(); ok {
-		f.ColumnComment = c
-	}
-	return f
 }
 
 func (c *Column) multilineComment() bool {
@@ -78,7 +85,10 @@ func (c *Column) multilineComment() bool {
 func (c *Column) buildGormTag() string {
 	var buf bytes.Buffer
 	buf.WriteString(fmt.Sprintf("column:%s;type:%s", c.Name(), c.columnType()))
-	if p, ok := c.PrimaryKey(); ok && p {
+
+	isPriKey, ok := c.PrimaryKey()
+	isValidPriKey := ok && isPriKey
+	if isValidPriKey {
 		buf.WriteString(";primaryKey")
 		if at, ok := c.AutoIncrement(); ok {
 			buf.WriteString(fmt.Sprintf(";autoIncrement:%t", at))
@@ -97,22 +107,41 @@ func (c *Column) buildGormTag() string {
 			buf.WriteString(fmt.Sprintf(";index:%s,priority:%d", idx.IndexName, idx.SeqInIndex))
 		}
 	}
-	if c.withDefaultValue() {
-		buf.WriteString(fmt.Sprintf(";default:%s", c.defaultValue()))
+
+	if dtValue := c.defaultTagValue(); !isValidPriKey && c.needDefaultTag(dtValue) { // cannot set default tag for primary key
+		buf.WriteString(fmt.Sprintf(`;default:%s`, dtValue))
 	}
 	return buf.String()
 }
 
-// withDefaultValue check if col has default value and not created_at or updated_at
-func (c *Column) withDefaultValue() (normal bool) {
-	return c.defaultValue() != "" && c.Name() != "created_at" && c.Name() != "updated_at"
+// needDefaultTag check if default tag needed
+func (c *Column) needDefaultTag(defaultTagValue string) bool {
+	if defaultTagValue == "" {
+		return false
+	}
+	switch c.ScanType().Kind() {
+	case reflect.Bool:
+		return defaultTagValue != "false"
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64:
+		return defaultTagValue != "0"
+	case reflect.String:
+		return defaultTagValue != ""
+	case reflect.Struct:
+		return strings.Trim(defaultTagValue, "'0:- ") != "" && strings.TrimSpace(defaultTagValue) != "CURRENT_TIMESPAMP"
+	}
+	return c.Name() != "created_at" && c.Name() != "updated_at"
 }
 
-func (c *Column) defaultValue() (v string) {
-	if df, ok := c.DefaultValue(); ok {
-		return df
+// defaultTagValue return gorm default tag's value
+func (c *Column) defaultTagValue() string {
+	value, ok := c.DefaultValue()
+	if !ok {
+		return ""
 	}
-	return ""
+	if strings.TrimSpace(value) == "" {
+		return "'" + value + "'"
+	}
+	return value
 }
 
 func (c *Column) columnType() (v string) {

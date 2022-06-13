@@ -19,6 +19,7 @@
 
 - 自动生成 CRUD 和 DIY 方法
 - 自动根据表结构生成模型（model）代码
+- 事务、嵌套事务、保存点、回滚事务点
 - 完全兼容 GORM
 - 更安全、更友好
 - 多种生成代码模式
@@ -94,6 +95,7 @@
         - [预加载](#preloading)
           - [预加载（Preload）](#preload)
           - [预加载全部数据（Preload All）](#preload-all)
+          - [预加载指定列](#preload-with-select)
           - [根据条件预加载](#preload-with-conditions)
           - [嵌套预加载](#nested-preloading)
       - [更新](#update)
@@ -167,6 +169,8 @@ func main() {
         /* FieldNullable: true,*/
         //if you want to assign field which has default value in `Create` API, set FieldCoverable true, reference: https://gorm.io/docs/create.html#Default-Values
         /* FieldCoverable: true,*/
+        // if you want generate field with unsigned integer type, set FieldSignable true
+        /* FieldSignable: true,*/
         //if you want to generate index tags from database, set FieldWithIndexTag true
         /* FieldWithIndexTag: true,*/
         //if you want to generate type tags from database, set FieldWithTypeTag true
@@ -182,9 +186,13 @@ func main() {
   
     // apply basic crud api on structs or table models which is specified by table name with function
     // GenerateModel/GenerateModelAs. And generator will generate table models' code when calling Excute.
+    // 想对已有的model生成crud等基础方法可以直接指定model struct ，例如model.User{}
+    // 如果是想直接生成表的model和crud方法，则可以指定标名称，例如g.GenerateModel("company")
+    // 想自定义某个表生成特性，比如struct的名称/字段类型/tag等，可以指定opt，例如g.GenerateModel("company",gen.FieldIgnore("address")), g.GenerateModelAs("people", "Person", gen.FieldIgnore("address"))
     g.ApplyBasic(model.User{}, g.GenerateModel("company"), g.GenerateModelAs("people", "Person", gen.FieldIgnore("address")))
     
     // apply diy interfaces on structs or table models
+    // 如果想给某些表或者model生成自定义方法，可以用ApplyInterface，第一个参数是方法接口，可以参考DIY部分文档定义
     g.ApplyInterface(func(method model.Method) {}, model.User{}, g.GenerateModel("company"))
 
     // execute the action of code generation
@@ -214,6 +222,7 @@ demo
 │   └── query  # generated code's directory
 |       ├── user.gen.go # generated code for user
 │       └── gen.go # generated code
+|       └── user.gen_test.go # generated unit test
 ├── biz
 │   └── query.go # call function in dal/gorm_generated.go and query databases
 ├── config
@@ -255,6 +264,7 @@ FieldType          // specify field type
 FieldTypeReg       // specify field type (match with regexp)
 FieldTag           // specify gorm and json tag
 FieldJSONTag       // specify json tag
+FieldJSONTagWithNS // specify new tag with name strategy
 FieldGORMTag       // specify gorm tag
 FieldNewTag        // append new tag
 FieldNewTagWithNS  // specify new tag with name strategy
@@ -560,12 +570,13 @@ users, err := u.WithContext(ctx).Where(u.Role.Eq("admin")).Or(u.Role.Eq("super_a
 
 ```go
 p := query.Use(db).Pizza
+pd := p.WithContext(ctx)
 
-pizzas, err := p.WithContext(ctx).Where(
-    p.WithContext(ctx).Where(p.Pizza.Eq("pepperoni")).
-        Where(p.WithContext(ctx).Where(p.Size.Eq("small")).Or(p.Size.Eq("medium"))),
+pizzas, err := pd.Where(
+    pd.Where(p.Pizza.Eq("pepperoni")).
+        Where(pd.Where(p.Size.Eq("small")).Or(p.Size.Eq("medium"))),
 ).Or(
-    p.WithContext(ctx).Where(p.Pizza.Eq("hawaiian")).Where(p.Size.Eq("xlarge")),
+    pd.Where(p.Pizza.Eq("hawaiian")).Where(p.Size.Eq("xlarge")),
 ).Find()
 
 // SELECT * FROM `pizzas` WHERE (pizza = "pepperoni" AND (size = "small" OR size = "medium")) OR (pizza = "hawaiian" AND size = "xlarge")
@@ -718,19 +729,33 @@ users, err := u.WithContext(ctx).Distinct(u.Name, u.Age).Order(u.Name, u.Age.Des
 联表查询方法，`Join` 方法对应 `inner join`，此外还有 `LeftJoin` 方法和 `RightJoin` 方法。
 
 ```go
-u := query.Use(db).User
-e := query.Use(db).Email
-c := query.Use(db).CreditCard
+q := query.Use(db)
+u := q.User
+e := q.Email
+c := q.CreditCard
 
 type Result struct {
     Name  string
     Email string
+    ID    int64
 }
 
 var result Result
 
 err := u.WithContext(ctx).Select(u.Name, e.Email).LeftJoin(e, e.UserID.EqCol(u.ID)).Scan(&result)
 // SELECT users.name, emails.email FROM `users` left join emails on emails.user_id = users.id
+
+// self join
+var result Result
+u2 := u.As("u2")
+err := u.WithContext(ctx).Select(u.Name, u2.ID).LeftJoin(u2, u2.ID.EqCol(u.ID)).Scan(&result)
+// SELECT users.name, u2.id FROM `users` left join `users` u2 on u2.id = users.id
+
+//join with sub query
+var result Result
+e2 := e.As("e2")
+err := u.WithContext(ctx).Select(u.Name, e2.Email).LeftJoin(e.WithContext(ctx).Select(e.Email, e.UserID).Where(e.UserID.Gt(100)).As("e2"), e2.UserID.EqCol(u.ID)).Scan(&result)
+// SELECT users.name, e2.email FROM `users` left join (select email,user_id from emails  where user_id > 100) as e2 on e2.user_id = users.id
 
 rows, err := u.WithContext(ctx).Select(u.Name, e.Email).LeftJoin(e, e.UserID.EqCol(u.ID)).Rows()
 for rows.Next() {
@@ -1312,6 +1337,8 @@ u.WithContext(ctx).Omit(field.AssociationFields).Create(&user)
 
 ###### <span id="find-associations">查询关联</span>
 
+查询匹配的关联
+
 ```go
 u := query.Use(db).User
 
@@ -1395,6 +1422,8 @@ db.Select(field.AssociationsFields).Delete(&user)
 ```
 
 ##### <span id="preloading">预加载</span>
+
+此功能目前仅支持现有模型
 
 ###### <span id="preload">预加载（Preload）</span>
 
@@ -1570,7 +1599,7 @@ u.WithContext(ctx).Where(u.Activate.Is(true)).UpdateSimple(u.Age.Value(17), u.Nu
 // UPDATE users SET age=17, number=0, birthday=NULL, updated_at='2013-11-17 21:34:10' WHERE active=true;
 ```
 
-> **NOTE** When update with struct, GEN will only update non-zero fields, you might want to use `map` to update attributes or use `Select` to specify fields to update
+> **注意** 当通过 struct 更新的时候，GEN 将只会更新其非零值的字段，你可能需要用 `map` 去更新属性，或者用 `select` 去明确指定哪些字段是需要被更新的
 
 ##### <span id="update-selected-fields">更新指定字段</span>
 
@@ -1853,7 +1882,6 @@ select * from @@table where
 
 ##### <span id="method-interface-example">方法接口示例</span>
 
-
 ```go
 type Method interface {
     // Where("name=@name and age=@age")
@@ -1893,11 +1921,10 @@ type Method interface {
     //      {{for _,user:=range users}}
     //          {{if user.Age >18}
     //              OR name=@user.Name 
-    //         {{end}}
+    //          {{end}}
     //      {{end}}
     //  {{end}}
-    FindByOrList(cond bool, id int, key, value string) ([]gen.T, error)
-
+    FindByOrList(users []gen.T) ([]gen.T, error)
 }
 ```
 
@@ -1908,7 +1935,6 @@ type Method interface {
 自定义方法的单元测试需要自定义对应的测试用例，它应该和测试文件放在同一个包里。
 
 一个测试用例包含输入和期望结果，输入应和对应的方法参数匹配，期望应和对应的方法返回值相匹配。这将在测试中被断言为 “**Equal（相等）**”。
-
 
 ```go
 package query
