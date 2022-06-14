@@ -380,9 +380,6 @@ func getBody(fileName string, start, end int) string {
 	if err != nil {
 		return "{}"
 	}
-	if start > len(f1) || end > len(f1) {
-		return "{}"
-	}
 
 	return string(f1[start-1 : end])
 }

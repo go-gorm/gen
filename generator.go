@@ -235,25 +235,6 @@ func (g *Generator) apply(fc interface{}, structs []*check.BaseStruct) {
 	}
 }
 
-// ApplyMethod generated struct bind custom method, input a method of struct or a struct(bind all method of struct).
-// eg: g.ApplyMethod(user.IsEmpty, tblUser) or g.ApplyMethod(model.User, tblUser)
-func (g *Generator) ApplyMethod(method interface{}, baseStructs ...*check.BaseStruct) {
-	for _, baseStruct := range baseStructs {
-		m, err := parser.GetCustomMethod(method)
-		if err != nil {
-			panic("add diy method err:" + err.Error())
-		}
-
-		baseStruct.CustomMethods = append(baseStruct.CustomMethods, m.Methods...)
-
-		err = baseStruct.CheckCustomMethod()
-		if err != nil {
-			g.db.Logger.Warn(context.Background(), err.Error())
-		}
-	}
-
-}
-
 // Execute generate code to output path
 func (g *Generator) Execute() {
 	g.successInfo("Start generating code.")

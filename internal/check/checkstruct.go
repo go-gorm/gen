@@ -1,6 +1,7 @@
 package check
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -147,6 +148,23 @@ func (b *BaseStruct) CheckCustomMethod() error {
 		return fmt.Errorf("can't generate same name method for a struct,ignored the last method:%s", strings.Join(duplicateMethodName, ","))
 	}
 	return nil
+}
+
+// AddMethod generated model struct bind custom method, input a method of struct or a struct(bind all method of struct).
+// eg: g.GenerateModel("users").AddMethod(user.IsEmpty,user.GetName) or g.GenerateModel("users").AddMethod(model.User)
+func (b *BaseStruct) AddMethod(methods ...interface{}) *BaseStruct {
+	for _, method := range methods {
+		customMethods, err := parser.GetCustomMethod(method)
+		if err != nil {
+			panic("add diy method err:" + err.Error())
+		}
+		b.CustomMethods = append(b.CustomMethods, customMethods.Methods...)
+	}
+	err := b.CheckCustomMethod()
+	if err != nil {
+		b.db.Logger.Warn(context.Background(), err.Error())
+	}
+	return b
 }
 
 // customMethodInList duplication name
