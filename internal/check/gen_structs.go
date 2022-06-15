@@ -65,6 +65,7 @@ func GenBaseStruct(db *gorm.DB, conf model.Conf) (base *BaseStruct, err error) {
 	modelPkg = filepath.Base(modelPkg)
 
 	base = &BaseStruct{
+		db:             db,
 		Source:         model.Table,
 		GenBaseStruct:  true,
 		FileName:       fileName,
