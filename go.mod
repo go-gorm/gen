@@ -10,7 +10,7 @@ require (
 	gorm.io/datatypes v1.0.7-0.20220608135749-9359a769c0b6
 	gorm.io/driver/mysql v1.3.4
 	gorm.io/driver/postgres v1.3.7
-	gorm.io/driver/sqlite v1.3.2
+	gorm.io/driver/sqlite v1.3.4
 	gorm.io/driver/sqlserver v1.3.2
 	gorm.io/gorm v1.23.5
 	gorm.io/hints v1.1.0
