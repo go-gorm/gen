@@ -1,6 +1,7 @@
 package check
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -27,6 +28,7 @@ type BaseStruct struct {
 	Fields         []*model.Field
 	Source         model.SourceCode
 	ImportPkgPaths []string
+	DIYMethods     []*parser.Method // user custom method bind to db base struct
 }
 
 // parseStruct get all elements of struct with gorm's Parse, ignore unexported elements
@@ -125,6 +127,48 @@ func (b *BaseStruct) StructComment() string {
 		return fmt.Sprintf(`mapped from table <%s>`, b.TableName)
 	}
 	return `mapped from object`
+}
+
+// ReviseDIYMethod check diy method duplication name
+func (b *BaseStruct) ReviseDIYMethod() error {
+	var duplicateMethodName []string
+
+	methods := make([]*parser.Method, 0, len(b.DIYMethods))
+	methodMap := make(map[string]bool, len(b.DIYMethods))
+	for _, method := range b.DIYMethods {
+		if methodMap[method.MethodName] || method.MethodName == "TableName" {
+			duplicateMethodName = append(duplicateMethodName, method.MethodName)
+			continue
+		}
+		method.BaseStruct.Package = ""
+		method.BaseStruct.Type = b.StructName
+		methods = append(methods, method)
+		methodMap[method.MethodName] = true
+	}
+	b.DIYMethods = methods
+
+	if len(duplicateMethodName) > 0 {
+		return fmt.Errorf("can't generate struct with duplicated method, please check method name: %s", strings.Join(duplicateMethodName, ","))
+	}
+	return nil
+}
+
+// AddMethod generated model struct bind custom method, input a method of struct or a struct(bind all method of struct).
+// eg: g.GenerateModel("users").AddMethod(user.IsEmpty,user.GetName) or g.GenerateModel("users").AddMethod(model.User)
+func (b *BaseStruct) AddMethod(methods ...interface{}) *BaseStruct {
+	for _, method := range methods {
+		diyMethods, err := parser.GetDIYMethod(method)
+		if err != nil {
+			panic("add diy method err:" + err.Error())
+		}
+		b.DIYMethods = append(b.DIYMethods, diyMethods.Methods...)
+	}
+
+	err := b.ReviseDIYMethod()
+	if err != nil {
+		b.db.Logger.Warn(context.Background(), err.Error())
+	}
+	return b
 }
 
 func GetStructNames(bases []*BaseStruct) (res []string) {

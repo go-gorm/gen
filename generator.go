@@ -458,16 +458,27 @@ func (g *Generator) generateModelFile() error {
 		pool.Wait()
 		go func(data *check.BaseStruct) {
 			defer pool.Done()
+
 			var buf bytes.Buffer
 			err = render(tmpl.Model, &buf, data)
 			if err != nil {
 				errChan <- err
+				return
+			}
+
+			for _, customMethod := range data.DIYMethods {
+				err = render(tmpl.StructCustomMethod, &buf, customMethod)
+				if err != nil {
+					errChan <- err
+					return
+				}
 			}
 
 			modelFile := modelOutPath + data.FileName + ".gen.go"
 			err = g.output(modelFile, buf.Bytes())
 			if err != nil {
 				errChan <- err
+				return
 			}
 
 			g.successInfo(fmt.Sprintf("generate model file(table <%s> -> {%s.%s}): %s", data.TableName, data.StructInfo.Package, data.StructInfo.Type, modelFile))

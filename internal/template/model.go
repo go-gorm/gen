@@ -35,3 +35,8 @@ func (*{{.StructName}}) TableName() string {
 }
 {{- end}}
 `
+const StructCustomMethod = `
+
+{{if .Doc -}}// {{.DocComment -}}{{end}}
+func ({{.GetBaseStructTmpl}}){{.MethodName}}({{.GetParamInTmpl}})({{.GetResultParamInTmpl}}){{.Body}}
+`
