@@ -28,7 +28,7 @@ type BaseStruct struct {
 	Fields         []*model.Field
 	Source         model.SourceCode
 	ImportPkgPaths []string
-	CustomMethods  []*parser.Method // user custom method bind to db base struct
+	DIYMethods     []*parser.Method // user custom method bind to db base struct
 }
 
 // parseStruct get all elements of struct with gorm's Parse, ignore unexported elements
@@ -129,23 +129,26 @@ func (b *BaseStruct) StructComment() string {
 	return `mapped from object`
 }
 
-// CheckCustomMethod check diy method duplication name
-func (b *BaseStruct) CheckCustomMethod() error {
-	var methods []*parser.Method
+// ReviseDIYMethod check diy method duplication name
+func (b *BaseStruct) ReviseDIYMethod() error {
 	var duplicateMethodName []string
-	for _, method := range b.CustomMethods {
-		if customMethodInList(method.MethodName, methods) || method.MethodName == "TableName" {
+
+	methods := make([]*parser.Method, 0, len(b.DIYMethods))
+	methodMap := make(map[string]bool, len(b.DIYMethods))
+	for _, method := range b.DIYMethods {
+		if methodMap[method.MethodName] || method.MethodName == "TableName" {
 			duplicateMethodName = append(duplicateMethodName, method.MethodName)
 			continue
 		}
 		method.BaseStruct.Package = ""
 		method.BaseStruct.Type = b.StructName
 		methods = append(methods, method)
-
+		methodMap[method.MethodName] = true
 	}
-	b.CustomMethods = methods
+	b.DIYMethods = methods
+
 	if len(duplicateMethodName) > 0 {
-		return fmt.Errorf("can't generate same name method for a struct,ignored the last method:%s", strings.Join(duplicateMethodName, ","))
+		return fmt.Errorf("can't generate struct with duplicated method, please check method name: %s", strings.Join(duplicateMethodName, ","))
 	}
 	return nil
 }
@@ -154,27 +157,18 @@ func (b *BaseStruct) CheckCustomMethod() error {
 // eg: g.GenerateModel("users").AddMethod(user.IsEmpty,user.GetName) or g.GenerateModel("users").AddMethod(model.User)
 func (b *BaseStruct) AddMethod(methods ...interface{}) *BaseStruct {
 	for _, method := range methods {
-		customMethods, err := parser.GetCustomMethod(method)
+		diyMethods, err := parser.GetDIYMethod(method)
 		if err != nil {
 			panic("add diy method err:" + err.Error())
 		}
-		b.CustomMethods = append(b.CustomMethods, customMethods.Methods...)
+		b.DIYMethods = append(b.DIYMethods, diyMethods.Methods...)
 	}
-	err := b.CheckCustomMethod()
+
+	err := b.ReviseDIYMethod()
 	if err != nil {
 		b.db.Logger.Warn(context.Background(), err.Error())
 	}
 	return b
-}
-
-// customMethodInList duplication name
-func customMethodInList(methodName string, methods []*parser.Method) bool {
-	for _, diyMethod := range methods {
-		if diyMethod.MethodName == methodName {
-			return true
-		}
-	}
-	return false
 }
 
 func GetStructNames(bases []*BaseStruct) (res []string) {

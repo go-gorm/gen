@@ -74,9 +74,9 @@ func fileExists(path string) bool {
 	return err == nil
 }
 
-// GetCustomMethod get diy methods
-func GetCustomMethod(v interface{}) (method *CustomMethods, err error) {
-	method = new(CustomMethods)
+// GetDIYMethod get diy methods
+func GetDIYMethod(v interface{}) (method *DIYMethods, err error) {
+	method = new(DIYMethods)
 
 	// get diy method info by input value, must input a function or a struct
 	value := reflect.ValueOf(v)
@@ -85,20 +85,19 @@ func GetCustomMethod(v interface{}) (method *CustomMethods, err error) {
 		fullPath := runtime.FuncForPC(value.Pointer()).Name()
 		err = method.parserPath(fullPath)
 		if err != nil {
-			return
+			return nil, err
 		}
 	case reflect.Struct:
 		method.pkgPath = value.Type().PkgPath()
 		method.BaseStructType = value.Type().Name()
 	default:
-		err = fmt.Errorf("method param must be a function or struct")
-		return
+		return nil, fmt.Errorf("method param must be a function or struct")
 	}
 
-	ctx := build.Default
 	var p *build.Package
 
 	// if struct in main file
+	ctx := build.Default
 	if method.pkgPath == "main" {
 		_, file, _, _ := runtime.Caller(2)
 		p, err = ctx.ImportDir(filepath.Dir(file), build.ImportComment)
@@ -106,8 +105,7 @@ func GetCustomMethod(v interface{}) (method *CustomMethods, err error) {
 		p, err = ctx.Import(method.pkgPath, "", build.ImportComment)
 	}
 	if err != nil {
-		err = fmt.Errorf("diy method dir not found:%s.%s", method.pkgPath, method.MethodName)
-		return
+		return nil, fmt.Errorf("diy method dir not found:%s.%s %w", method.pkgPath, method.MethodName, err)
 	}
 
 	for _, file := range p.GoFiles {
@@ -117,11 +115,9 @@ func GetCustomMethod(v interface{}) (method *CustomMethods, err error) {
 		}
 	}
 	if len(method.pkgFiles) == 0 {
-		err = fmt.Errorf("diy method file not found:%s.%s", method.pkgPath, method.MethodName)
-		return
+		return nil, fmt.Errorf("diy method file not found:%s.%s", method.pkgPath, method.MethodName)
 	}
 
 	// read files got methods
-	err = method.LoadMethods()
-	return
+	return method, method.LoadMethods()
 }

@@ -317,8 +317,8 @@ func (m *Method) DocComment() string {
 	return strings.Replace(strings.TrimSpace(m.Doc), "\n", "\n//", -1)
 }
 
-// CustomMethods user Custom methods bind to db base struct
-type CustomMethods struct {
+// DIYMethods user Custom methods bind to db base struct
+type DIYMethods struct {
 	BaseStructType string
 	MethodName     string
 	pkgPath        string
@@ -327,7 +327,7 @@ type CustomMethods struct {
 	Methods        []*Method
 }
 
-func (m *CustomMethods) parserPath(path string) error {
+func (m *DIYMethods) parserPath(path string) error {
 	pathList := strings.Split(path, ".")
 	if len(pathList) < 3 {
 		return fmt.Errorf("parser diy method error")
@@ -343,7 +343,7 @@ func (m *CustomMethods) parserPath(path string) error {
 }
 
 // Visit ast visit function
-func (m *CustomMethods) Visit(n ast.Node) (w ast.Visitor) {
+func (m *DIYMethods) Visit(n ast.Node) (w ast.Visitor) {
 	switch t := n.(type) {
 	case *ast.FuncDecl:
 		// check base struct and method name is expect
@@ -385,10 +385,9 @@ func getBody(fileName string, start, end int) string {
 }
 
 // LoadMethods ast read file get diy method
-func (m *CustomMethods) LoadMethods() error {
+func (m *DIYMethods) LoadMethods() error {
 	for _, filename := range m.pkgFiles {
-		fileset := token.NewFileSet()
-		f, err := parser.ParseFile(fileset, filename, nil, parser.ParseComments)
+		f, err := parser.ParseFile(token.NewFileSet(), filename, nil, parser.ParseComments)
 		if err != nil {
 			return fmt.Errorf("can't parse file %q: %s", filename, err)
 		}
