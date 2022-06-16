@@ -272,6 +272,24 @@ FieldRelate        // specify relationship with other tables
 FieldRelateModel   // specify relationship with exist models
 ```
 
+Generate model bind custom method
+```Go
+type User struct{
+	ID int32
+}
+func (u *User)IsEmpty()bool{
+    if m == nil {
+    return true
+    }
+    return m.ID == 0
+}
+user := User{}
+// add custom method to generated model struct
+g.GenerateModel("people").AddMethod(user.IsEmpty)
+// also you can input a struct,will bind all method
+g.GenerateModel("people").AddMethod(User{})
+```
+
 #### Data Mapping
 
 Specify data mapping relationship to be whatever you want.
