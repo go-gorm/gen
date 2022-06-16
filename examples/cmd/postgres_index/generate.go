@@ -7,9 +7,9 @@ import (
 )
 
 func init() {
-	dal.DB = dal.ConnectDB(conf.MySQLDSN).Debug()
+	dal.DB = dal.ConnectDB(conf.PgSQLDSN).Debug()
 
-	prepare(dal.DB) // prepare table for generate
+	//prepare(dal.DB) // prepare table for generate
 }
 
 func main() {

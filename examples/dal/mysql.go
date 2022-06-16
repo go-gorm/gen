@@ -2,6 +2,7 @@ package dal
 
 import (
 	"fmt"
+	"gorm.io/driver/postgres"
 	"strings"
 
 	"gorm.io/driver/mysql"
@@ -16,6 +17,8 @@ func ConnectDB(dsn string) (db *gorm.DB) {
 
 	if strings.HasSuffix(dsn, "sqlite.db") {
 		db, err = gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+	} else if strings.Contains(dsn, "host=") {
+		db, err = gorm.Open(postgres.Open(dsn))
 	} else {
 		db, err = gorm.Open(mysql.Open(dsn))
 	}
