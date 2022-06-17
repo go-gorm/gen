@@ -14,8 +14,7 @@ func init() {
 
 func main() {
 	g := gen.NewGenerator(gen.Config{
-		OutPath:           "../../dal/query",
-		FieldWithIndexTag: true,
+		OutPath: "../../dal/query",
 	})
 
 	g.UseDB(dal.DB)
