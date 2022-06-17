@@ -3,7 +3,6 @@ package check
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"gorm.io/gorm"
 
@@ -20,7 +19,7 @@ const (
 type ITableInfo interface {
 	GetTbColumns(schemaName string, tableName string) (result []*model.Column, err error)
 
-	GetTbIndex(schemaName string, tableName string) (result []*model.Index, err error)
+	GetTbIndex(schemaName string, tableName string) (indexes []gorm.Index, err error)
 }
 
 func getITableInfo(db *gorm.DB) ITableInfo {
@@ -73,9 +72,6 @@ func (t *defaultTableInfo) GetTbColumns(schemaName string, tableName string) (re
 }
 
 //GetTbIndex  index
-func (t *defaultTableInfo) GetTbIndex(schemaName string, tableName string) (result []*model.Index, err error) {
-	if dn := t.db.Dialector.Name(); dn != "mysql" {
-		return nil, fmt.Errorf("%s dose not support index", dn)
-	}
-	return result, t.db.Raw(indexQuery, schemaName, tableName).Scan(&result).Error
+func (t *defaultTableInfo) GetTbIndex(schemaName string, tableName string) (indexes []gorm.Index, err error) {
+	return t.db.Migrator().GetIndexes(tableName)
 }

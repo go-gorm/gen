@@ -98,13 +98,16 @@ func (c *Column) buildGormTag() string {
 	}
 
 	for _, idx := range c.Indexes {
-		if idx == nil || idx.IsPrimaryKey() {
+		if idx == nil {
 			continue
 		}
-		if idx.IsUnique() {
-			buf.WriteString(fmt.Sprintf(";uniqueIndex:%s,priority:%d", idx.IndexName, idx.SeqInIndex))
+		if pk, _ := idx.PrimaryKey(); pk { //ignore PrimaryKey
+			continue
+		}
+		if uniq, _ := idx.Unique(); uniq {
+			buf.WriteString(fmt.Sprintf(";uniqueIndex:%s,priority:%d", idx.Name(), idx.Priority))
 		} else {
-			buf.WriteString(fmt.Sprintf(";index:%s,priority:%d", idx.IndexName, idx.SeqInIndex))
+			buf.WriteString(fmt.Sprintf(";index:%s,priority:%d", idx.Name(), idx.Priority))
 		}
 	}
 
