@@ -59,6 +59,15 @@ var (
 			}
 			return m
 		}
+	} // FieldComment specify field comment in generated struct
+	FieldComment = func(columnName string, comment string) model.ModifyFieldOpt {
+		return func(m *model.Field) *model.Field {
+			if m.ColumnName == columnName {
+				m.ColumnComment = comment
+				m.MultilineComment = strings.Contains(comment, "\n")
+			}
+			return m
+		}
 	}
 	// FieldType specify field type in generated struct
 	FieldType = func(columnName string, newType string) model.ModifyFieldOpt {
