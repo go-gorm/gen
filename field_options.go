@@ -59,7 +59,8 @@ var (
 			}
 			return m
 		}
-	} // FieldComment specify field comment in generated struct
+	}
+	// FieldComment specify field comment in generated struct
 	FieldComment = func(columnName string, comment string) model.ModifyFieldOpt {
 		return func(m *model.Field) *model.Field {
 			if m.ColumnName == columnName {
