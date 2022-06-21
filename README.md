@@ -256,6 +256,7 @@ FieldNew           // create new field
 FieldIgnore        // ignore field
 FieldIgnoreReg     // ignore field (match with regexp)
 FieldRename        // rename field in struct
+FieldComment       // specify field comment in generated struct
 FieldType          // specify field type
 FieldTypeReg       // specify field type (match with regexp)
 FieldTag           // specify gorm and json tag
