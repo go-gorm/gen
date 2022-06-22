@@ -57,7 +57,7 @@ func trimLeft(input string) string {
 	switch {
 	case strings.HasPrefix(lowercase, "and "):
 		return input[4:]
-	case strings.HasPrefix(lowercase, "or"):
+	case strings.HasPrefix(lowercase, "or "):
 		return input[3:]
 	case strings.HasPrefix(lowercase, "xor "):
 		return input[4:]

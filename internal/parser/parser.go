@@ -381,7 +381,7 @@ func getBody(fileName string, start, end int) string {
 		return "{}"
 	}
 
-	return string(f1[start-1 : end])
+	return string(f1[start-1 : end-1])
 }
 
 // LoadMethods ast read file get diy method
