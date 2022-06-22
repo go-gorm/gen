@@ -260,6 +260,7 @@ FieldNew           // create new field
 FieldIgnore        // ignore field
 FieldIgnoreReg     // ignore field (match with regexp)
 FieldRename        // rename field in struct
+FieldComment       // specify field comment in generated struct
 FieldType          // specify field type
 FieldTypeReg       // specify field type (match with regexp)
 FieldTag           // specify gorm and json tag
@@ -274,6 +275,24 @@ FieldAddPrefix     // add prefix to struct field's name
 FieldAddSuffix     // add suffix to struct field's name
 FieldRelate        // specify relationship with other tables
 FieldRelateModel   // specify relationship with exist models
+```
+
+**生成结构体绑定自定义方法**
+```Go
+type User struct{
+	ID int32
+}
+func (u *User)IsEmpty()bool{
+    if m == nil {
+    return true
+    }
+    return m.ID == 0
+}
+user := User{}
+// 可以直接添加一个绑定了结构体的方法
+g.GenerateModel("people").AddMethod(user.IsEmpty)
+// 也可以传入一个结构体，会将这个结构体上绑定的所有方法绑定到新生成的结构体上
+g.GenerateModel("people").AddMethod(User{})
 ```
 
 #### <span id="data-mapping">类型映射</span>

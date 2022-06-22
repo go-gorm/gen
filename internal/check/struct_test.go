@@ -78,7 +78,7 @@ func TestBaseStruct_AddMethod(t *testing.T) {
 							Type: "bool",
 						},
 					},
-					Body: "{\n\tif u == nil {\n\t\treturn true\n\t}\n\n\treturn u.ID == 0\n}\n",
+					Body: "{\n\tif u == nil {\n\t\treturn true\n\t}\n\n\treturn u.ID == 0\n}",
 				},
 			},
 		},
@@ -98,7 +98,7 @@ func TestBaseStruct_AddMethod(t *testing.T) {
 							Type: "bool",
 						},
 					},
-					Body: "{\n\tif u == nil {\n\t\treturn true\n\t}\n\n\treturn u.ID == 0\n}\n",
+					Body: "{\n\tif u == nil {\n\t\treturn true\n\t}\n\n\treturn u.ID == 0\n}",
 				},
 				{
 					BaseStruct: parser.Param{
@@ -114,7 +114,7 @@ func TestBaseStruct_AddMethod(t *testing.T) {
 							Type: "string",
 						},
 					},
-					Body: "{\n\tu.Name = name\n}\n",
+					Body: "{\n\tu.Name = name\n}",
 				},
 				{
 					BaseStruct: parser.Param{
@@ -129,7 +129,7 @@ func TestBaseStruct_AddMethod(t *testing.T) {
 							Type: "string",
 						},
 					},
-					Body: "{\n\treturn strings.ToLower(u.Name)\n}\n",
+					Body: "{\n\treturn strings.ToLower(u.Name)\n}",
 				},
 			},
 		},

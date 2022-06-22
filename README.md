@@ -256,6 +256,7 @@ FieldNew           // create new field
 FieldIgnore        // ignore field
 FieldIgnoreReg     // ignore field (match with regexp)
 FieldRename        // rename field in struct
+FieldComment       // specify field comment in generated struct
 FieldType          // specify field type
 FieldTypeReg       // specify field type (match with regexp)
 FieldTag           // specify gorm and json tag
@@ -270,6 +271,24 @@ FieldAddPrefix     // add prefix to struct field's name
 FieldAddSuffix     // add suffix to struct field's name
 FieldRelate        // specify relationship with other tables
 FieldRelateModel   // specify relationship with exist models
+```
+
+Generate model bind custom method
+```Go
+type User struct{
+	ID int32
+}
+func (u *User)IsEmpty()bool{
+    if m == nil {
+    return true
+    }
+    return m.ID == 0
+}
+user := User{}
+// add custom method to generated model struct
+g.GenerateModel("people").AddMethod(user.IsEmpty)
+// also you can input a struct,will bind all method
+g.GenerateModel("people").AddMethod(User{})
 ```
 
 #### Data Mapping

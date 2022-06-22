@@ -12,9 +12,10 @@ require (
 	gorm.io/driver/postgres v1.3.7
 	gorm.io/driver/sqlite v1.3.4
 	gorm.io/driver/sqlserver v1.3.2
-	gorm.io/gorm v1.23.6
+	gorm.io/gorm v1.23.7-0.20220614054850-8d457146283e
 	gorm.io/hints v1.1.0
 	gorm.io/plugin/dbresolver v1.2.1
 )
 
 // replace golang.org/x/net => golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
+replace gorm.io/gorm => github.com/go-gorm/gorm v1.23.7-0.20220617030057-1305f637f834
