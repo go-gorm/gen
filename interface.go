@@ -21,11 +21,11 @@ type (
 var (
 	_ Condition = (field.Expr)(nil)
 	_ Condition = (field.Value)(nil)
-	_ Condition = (subQuery)(nil)
+	_ Condition = (SubQuery)(nil)
 	_ Condition = (Dao)(nil)
 )
 
-type subQuery interface {
+type SubQuery interface {
 	underlyingDB() *gorm.DB
 	underlyingDO() *DO
 
@@ -34,7 +34,7 @@ type subQuery interface {
 
 // Dao CRUD methods
 type Dao interface {
-	subQuery
+	SubQuery
 	schema.Tabler
 	As(alias string) Dao
 

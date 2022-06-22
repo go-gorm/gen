@@ -38,7 +38,7 @@ var (
 	// }
 )
 
-func checkBuildExpr(t *testing.T, e subQuery, opts []stmtOpt, result string, vars []interface{}) {
+func checkBuildExpr(t *testing.T, e SubQuery, opts []stmtOpt, result string, vars []interface{}) {
 	stmt := build(e.underlyingDB().Statement, opts...)
 
 	sql := strings.TrimSpace(stmt.SQL.String())
@@ -75,7 +75,7 @@ func build(stmt *gorm.Statement, opts ...stmtOpt) *gorm.Statement {
 
 func TestDO_methods(t *testing.T) {
 	testcases := []struct {
-		Expr         subQuery
+		Expr         SubQuery
 		Opts         []stmtOpt
 		ExpectedVars []interface{}
 		Result       string

@@ -375,12 +375,16 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 		return err
 	}
 
-	structTmpl := tmpl.BaseStructWithContext
+	structTmpl := tmpl.TableQueryStructWithContext
 	if g.judgeMode(WithoutContext) {
-		structTmpl = tmpl.BaseStruct
+		structTmpl = tmpl.TableQueryStruct
+	}
+	err = render(structTmpl, &buf, data.BaseStruct)
+	if err != nil {
+		return err
 	}
 
-	err = render(structTmpl, &buf, data.BaseStruct)
+	err = render(tmpl.TableQueryIface, &buf, data)
 	if err != nil {
 		return err
 	}
