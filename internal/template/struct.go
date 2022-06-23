@@ -187,7 +187,7 @@ type I{{.StructName}}Do interface {
 	schema.Tabler
 
 	{{range .Interfaces -}}
-	{{.MethodName}}({{.GetParamInTmpl}})({{.GetResultParamInTmpl}})
+	{{.FuncSign}}
 	{{end}}
 }
 `

@@ -1,5 +1,6 @@
 package template
 
+// DefaultQuery default query
 const DefaultQuery = `
 var (
 	Q =new(Query)
@@ -17,6 +18,7 @@ func SetDefault(db *gorm.DB) {
 
 `
 
+// QueryMethod query method template
 const QueryMethod = `
 func Use(db *gorm.DB) *Query {
 	return &Query{
@@ -88,7 +90,8 @@ func (q *QueryTx) RollbackTo(name string) error {
 
 `
 
-const QueryMethod_TEST = `
+// QueryMethodTest query method test template
+const QueryMethodTest = `
 
 const dbName = "gen_test.db"
 

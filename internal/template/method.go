@@ -1,10 +1,11 @@
 package template
 
+// DIYMethod DIY method
 const DIYMethod = `
 
 //{{.DocComment }}
-func ({{.S}} {{.TargetStruct}}Do){{.MethodName}}({{.GetParamInTmpl}})({{.GetResultParamInTmpl}}){
-	{{if .HasSqlData}}params :=make(map[string]interface{},0)
+func ({{.S}} {{.TargetStruct}}Do){{.FuncSign}}{
+	{{if .HasSQLData}}params :=make(map[string]interface{},0)
 
 	{{end}}var generateSQL strings.Builder
 	{{range $line:=.Sections.Tmpl}}{{$line}}
@@ -12,8 +13,8 @@ func ({{.S}} {{.TargetStruct}}Do){{.MethodName}}({{.GetParamInTmpl}})({{.GetResu
 
 	{{if .HasNeedNewResult}}result ={{if .ResultData.IsMap}}make{{else}}new{{end}}({{if ne .ResultData.Package ""}}{{.ResultData.Package}}.{{end}}{{.ResultData.Type}}){{end}}
 	{{if or .ReturnRowsAffected .ReturnError}}var executeSQL *gorm.DB
-	{{end}}{{if .HasSqlData}}if len(params)>0{
-		{{if or .ReturnRowsAffected .ReturnError}}executeSQL{{else}}_{{end}}= {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL.String(){{if .HasSqlData}},params{{end}}){{if not .ResultData.IsNull}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}
+	{{end}}{{if .HasSQLData}}if len(params)>0{
+		{{if or .ReturnRowsAffected .ReturnError}}executeSQL{{else}}_{{end}}= {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL.String(){{if .HasSQLData}},params{{end}}){{if not .ResultData.IsNull}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}
 	}else{
 		{{if or .ReturnRowsAffected .ReturnError}}executeSQL{{else}}_{{end}}= {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL.String()){{if not .ResultData.IsNull}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}
 	}{{else}}{{if or .ReturnRowsAffected .ReturnError}}executeSQL{{else}}_{{end}}= {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL.String()){{if not .ResultData.IsNull}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}{{end}}
@@ -24,6 +25,7 @@ func ({{.S}} {{.TargetStruct}}Do){{.MethodName}}({{.GetParamInTmpl}})({{.GetResu
 
 `
 
+// CRUDMethod CRUD method
 const CRUDMethod = `
 func ({{.S}} {{.NewStructName}}Do) Debug() I{{.StructName}}Do {
 	return {{.S}}.withDO({{.S}}.DO.Debug())
@@ -253,7 +255,8 @@ func ({{.S}} *{{.NewStructName}}Do) withDO(do gen.Dao) (*{{.NewStructName}}Do) {
 
 `
 
-const CRUDMethod_TEST = `
+// CRUDMethodTest CRUD method test
+const CRUDMethodTest = `
 func init() {
 	InitializeDB()
 	err := db.AutoMigrate(&{{.StructInfo.Package}}.{{.StructName}}{})
@@ -384,7 +387,8 @@ func Test_{{.NewStructName}}Query(t *testing.T) {
 }
 `
 
-const DIYMethod_TEST_Basic = `
+// DIYMethodTestBasic DIY method test basic
+const DIYMethodTestBasic = `
 type Input struct {
 	Args []interface{}
 }
@@ -400,7 +404,8 @@ type TestCase struct {
 
 `
 
-const DIYMethod_TEST = `
+// DIYMethodTest DIY method test
+const DIYMethodTest = `
 
 var {{.OriginStruct.Type}}{{.MethodName}}TestCase = []TestCase{}
 

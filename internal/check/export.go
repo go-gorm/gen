@@ -81,7 +81,7 @@ func BuildDiyMethod(f *parser.InterfaceSet, s *BaseStruct, data []*InterfaceMeth
 				}
 				_, err = t.Sections.BuildSQL()
 				if err != nil {
-					err = fmt.Errorf("sql [%s] build err:%w", t.SqlString, err)
+					err = fmt.Errorf("sql [%s] build err:%w", t.SQLString, err)
 					return
 				}
 				checkResults = append(checkResults, t)

@@ -337,11 +337,11 @@ func (g *Generator) generateQueryFile() (err error) {
 			g.db.Logger.Error(context.Background(), "generate query unit test fail: %s", err)
 			return nil
 		}
-		err = render(tmpl.DIYMethod_TEST_Basic, &buf, nil)
+		err = render(tmpl.DIYMethodTestBasic, &buf, nil)
 		if err != nil {
 			return err
 		}
-		err = render(tmpl.QueryMethod_TEST, &buf, g)
+		err = render(tmpl.QueryMethodTest, &buf, g)
 		if err != nil {
 			g.db.Logger.Error(context.Background(), "generate query unit test fail: %s", err)
 			return nil
@@ -422,13 +422,13 @@ func (g *Generator) generateQueryUnitTestFile(data *genInfo) (err error) {
 		return err
 	}
 
-	err = render(tmpl.CRUDMethod_TEST, &buf, data.BaseStruct)
+	err = render(tmpl.CRUDMethodTest, &buf, data.BaseStruct)
 	if err != nil {
 		return err
 	}
 
 	for _, method := range data.Interfaces {
-		err = render(tmpl.DIYMethod_TEST, &buf, method)
+		err = render(tmpl.DIYMethodTest, &buf, method)
 		if err != nil {
 			return err
 		}

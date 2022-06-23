@@ -7,7 +7,7 @@ import (
 )
 
 func checkBuildExpr(t *testing.T, SQL string, splitResult, generateResult []string, i *InterfaceMethod) {
-	i.SqlString = SQL
+	i.SQLString = SQL
 	err := i.sqlStateCheckAndSplit()
 	if err != nil {
 		t.Errorf("err:%s\n", err)
