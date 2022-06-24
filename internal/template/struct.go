@@ -17,7 +17,7 @@ const (
 	}
 	` + tableMethod + asMethond + updateFieldMethod + `
 	
-	func ({{.S}} *{{.NewStructName}}) WithContext(ctx context.Context) I{{.StructName}}Do { return {{.S}}.{{.NewStructName}}Do.WithContext(ctx)}
+	func ({{.S}} *{{.NewStructName}}) WithContext(ctx context.Context) {{.ReturnObject}} { return {{.S}}.{{.NewStructName}}Do.WithContext(ctx)}
 
 	func ({{.S}} {{.NewStructName}}) TableName() string { return {{.S}}.{{.NewStructName}}Do.TableName() } 
 

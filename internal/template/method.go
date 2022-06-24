@@ -27,95 +27,95 @@ func ({{.S}} {{.TargetStruct}}Do){{.FuncSign}}{
 
 // CRUDMethod CRUD method
 const CRUDMethod = `
-func ({{.S}} {{.NewStructName}}Do) Debug() I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Debug() {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Debug())
 }
 
-func ({{.S}} {{.NewStructName}}Do) WithContext(ctx context.Context) I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) WithContext(ctx context.Context) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.WithContext(ctx))
 }
 
-func ({{.S}} {{.NewStructName}}Do) ReadDB() I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) ReadDB() {{.ReturnObject}} {
 	return {{.S}}.Clauses(dbresolver.Read)
 }
 
-func ({{.S}} {{.NewStructName}}Do) WriteDB() I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) WriteDB() {{.ReturnObject}} {
 	return {{.S}}.Clauses(dbresolver.Write)
 }
 
-func ({{.S}} {{.NewStructName}}Do) Clauses(conds ...clause.Expression) I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Clauses(conds ...clause.Expression) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Clauses(conds...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Returning(value interface{}, columns ...string) I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Returning(value interface{}, columns ...string) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Returning(value, columns...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Not(conds ...gen.Condition) I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Not(conds ...gen.Condition) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Not(conds...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Or(conds ...gen.Condition) I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Or(conds ...gen.Condition) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Or(conds...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Select(conds ...field.Expr) I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Select(conds ...field.Expr) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Select(conds...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Where(conds ...gen.Condition) I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Where(conds ...gen.Condition) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Where(conds...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Exists(subquery interface{UnderlyingDB() *gorm.DB}) I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Exists(subquery interface{UnderlyingDB() *gorm.DB}) {{.ReturnObject}} {
 	return {{.S}}.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Order(conds ...field.Expr) I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Order(conds ...field.Expr) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Order(conds...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Distinct(cols ...field.Expr) I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Distinct(cols ...field.Expr) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Distinct(cols...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Omit(cols ...field.Expr) I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Omit(cols ...field.Expr) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Omit(cols...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Join(table schema.Tabler, on ...field.Expr) I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Join(table schema.Tabler, on ...field.Expr) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Join(table, on...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) LeftJoin(table schema.Tabler, on ...field.Expr) I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) LeftJoin(table schema.Tabler, on ...field.Expr) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.LeftJoin(table, on...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) RightJoin(table schema.Tabler, on ...field.Expr) I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) RightJoin(table schema.Tabler, on ...field.Expr) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.RightJoin(table, on...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Group(cols ...field.Expr) I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Group(cols ...field.Expr) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Group(cols...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Having(conds ...gen.Condition) I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Having(conds ...gen.Condition) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Having(conds...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Limit(limit int) I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Limit(limit int) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Limit(limit))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Offset(offset int) I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Offset(offset int) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Offset(offset))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Scopes(funcs ...func(gen.Dao) gen.Dao) I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Scopes(funcs ...func(gen.Dao) gen.Dao) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Scopes(funcs...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Unscoped() I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Unscoped() {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Unscoped())
 }
 
@@ -181,22 +181,22 @@ func ({{.S}} {{.NewStructName}}Do) FindInBatches(result *[]*{{.StructInfo.Packag
 	return {{.S}}.DO.FindInBatches(result, batchSize, fc)
 }
 
-func ({{.S}} {{.NewStructName}}Do) Attrs(attrs ...field.AssignExpr) I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Attrs(attrs ...field.AssignExpr) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Attrs(attrs...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Assign(attrs ...field.AssignExpr) I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Assign(attrs ...field.AssignExpr) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Assign(attrs...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Joins(fields ...field.RelationField) I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Joins(fields ...field.RelationField) {{.ReturnObject}} {
 	for _, _f := range fields {
         {{.S}} = *{{.S}}.withDO({{.S}}.DO.Joins(_f))
     }
 	return &{{.S}}
 }
 
-func ({{.S}} {{.NewStructName}}Do) Preload(fields ...field.RelationField) I{{.StructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Preload(fields ...field.RelationField) {{.ReturnObject}} {
     for _, _f := range fields {
         {{.S}} = *{{.S}}.withDO({{.S}}.DO.Preload(_f))
     }

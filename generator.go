@@ -103,7 +103,7 @@ func (g *Generator) GenerateModel(tableName string, opts ...FieldOpt) *check.Bas
 	return g.GenerateModelAs(tableName, g.db.Config.NamingStrategy.SchemaName(tableName), opts...)
 }
 
-// GenerateModel catch table info from db, return a BaseStruct
+// GenerateModelAs catch table info from db, return a BaseStruct
 func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...FieldOpt) *check.BaseStruct {
 	modelFieldOpts := make([]model.FieldOpt, len(fieldOpts))
 	for i, opt := range fieldOpts {
@@ -375,6 +375,8 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 		return err
 	}
 
+	data.BaseStruct = data.BaseStruct.IfaceMode(g.judgeMode(WithQueryIface))
+
 	structTmpl := tmpl.TableQueryStructWithContext
 	if g.judgeMode(WithoutContext) {
 		structTmpl = tmpl.TableQueryStruct
@@ -384,9 +386,11 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 		return err
 	}
 
-	err = render(tmpl.TableQueryIface, &buf, data)
-	if err != nil {
-		return err
+	if g.judgeMode(WithQueryIface) {
+		err = render(tmpl.TableQueryIface, &buf, data)
+		if err != nil {
+			return err
+		}
 	}
 
 	for _, method := range data.Interfaces {
