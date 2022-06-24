@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -17,6 +16,7 @@ import (
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/imports"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 
 	"gorm.io/gen/helper"
@@ -89,6 +89,9 @@ type Generator struct {
 // UseDB set db connection
 func (g *Generator) UseDB(db *gorm.DB) {
 	if db != nil {
+		if db.Logger == nil {
+			db.Logger = logger.Default
+		}
 		g.db = db
 	}
 }
@@ -256,7 +259,6 @@ func (g *Generator) Execute() {
 func (g *Generator) successInfo(logInfos ...string) {
 	for _, l := range logInfos {
 		g.db.Logger.Info(context.Background(), l)
-		log.Println(l)
 	}
 }
 
