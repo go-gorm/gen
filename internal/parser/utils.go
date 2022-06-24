@@ -29,3 +29,11 @@ func getParamList(fields *ast.FieldList) []Param {
 	}
 	return pars
 }
+
+func fixParamPackagePath(imports map[string]string, params []Param) {
+	for i := range params {
+		if importPath, exist := imports[params[i].Package]; exist {
+			params[i].PkgPath = importPath
+		}
+	}
+}

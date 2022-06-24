@@ -369,7 +369,7 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 	err = render(tmpl.Header, &buf, map[string]interface{}{
 		"Package":        g.queryPkgName,
 		"StructPkgPath":  structPkgPath,
-		"ImportPkgPaths": data.ImportPkgPaths,
+		"ImportPkgPaths": getImportPkgPaths(data),
 	})
 	if err != nil {
 		return err
@@ -556,4 +556,23 @@ func render(tmpl string, wr io.Writer, data interface{}) error {
 		return err
 	}
 	return t.Execute(wr, data)
+}
+
+func getImportPkgPaths(data *genInfo) []string {
+	importPathMap := make(map[string]struct{})
+	for _, path := range data.ImportPkgPaths {
+		importPathMap[path] = struct{}{}
+	}
+	// imports.Process (called in Generator.output) will guess missing imports, and will be
+	// much faster if import path is already specified. So add all imports from DIY interface package.
+	for _, method := range data.Interfaces {
+		for _, param := range method.Params {
+			importPathMap[param.PkgPath] = struct{}{}
+		}
+	}
+	importPkgPaths := make([]string, 0, len(importPathMap))
+	for importPath := range importPathMap {
+		importPkgPaths = append(importPkgPaths, importPath)
+	}
+	return importPkgPaths
 }
