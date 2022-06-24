@@ -7,13 +7,16 @@ import (
 	"go/token"
 	"io/ioutil"
 	"log"
+	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
 // InterfaceSet ...
 type InterfaceSet struct {
 	Interfaces []InterfaceInfo
+	imports    map[string]string // package name -> quoted "package path"
 }
 
 // InterfaceInfo ...
@@ -55,6 +58,19 @@ func (i *InterfaceSet) ParseFile(paths []*InterfacePath, structNames []string) e
 // Visit ast visit function
 func (i *InterfaceSet) Visit(n ast.Node) (w ast.Visitor) {
 	switch n := n.(type) {
+	case *ast.ImportSpec:
+		importName, _ := strconv.Unquote(n.Path.Value)
+		importName = path.Base(importName)
+		if n.Name != nil {
+			name := n.Name.Name
+			// ignore dummy imports
+			// TODO: full support for dot imports requires type checking the whole package
+			if name == "_" || name == "." {
+				return i
+			}
+			importName = name
+		}
+		i.imports[importName] = n.Path.Value
 	case *ast.TypeSpec:
 		if data, ok := n.Type.(*ast.InterfaceType); ok {
 			r := InterfaceInfo{
@@ -66,14 +82,15 @@ func (i *InterfaceSet) Visit(n ast.Node) (w ast.Visitor) {
 
 			for _, m := range methods {
 				for _, name := range m.Names {
-					r.Methods = append(r.Methods, &Method{
+					method := &Method{
 						MethodName: name.Name,
 						Doc:        m.Doc.Text(),
 						Params:     getParamList(m.Type.(*ast.FuncType).Params),
 						Result:     getParamList(m.Type.(*ast.FuncType).Results),
-					})
+					}
+					fixParamPackagePath(i.imports, method.Params)
+					r.Methods = append(r.Methods, method)
 				}
-
 			}
 			i.Interfaces = append(i.Interfaces, r)
 		}
@@ -90,7 +107,7 @@ func (i *InterfaceSet) getInterfaceFromFile(filename string, name, Package strin
 		return fmt.Errorf("can't parse file %q: %s", filename, err)
 	}
 
-	astResult := new(InterfaceSet)
+	astResult := &InterfaceSet{imports: make(map[string]string)}
 	ast.Walk(astResult, f)
 
 	for _, info := range astResult.Interfaces {
