@@ -89,10 +89,13 @@ type Generator struct {
 // UseDB set db connection
 func (g *Generator) UseDB(db *gorm.DB) {
 	if db != nil {
-		if db.Logger == nil {
-			db.Logger = logger.Default
+		copyDB := *db
+
+		if copyDB.Logger == nil {
+			copyDB.Logger = logger.Default
 		}
-		g.db = db
+
+		g.db = &copyDB
 	}
 }
 
