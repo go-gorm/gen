@@ -206,7 +206,7 @@ func (p *Param) TmplString() string {
 
 func (p *Param) AllowType() bool {
 	switch p.Type {
-	case "string", "bytes":
+	case "string", "bytes", "[]byte":
 		return true
 	case "int", "int8", "int16", "int32", "int64", "uint", "uint8", "uint16", "uint32", "uint64":
 		return true

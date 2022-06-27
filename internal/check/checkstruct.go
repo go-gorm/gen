@@ -71,7 +71,7 @@ func (b *BaseStruct) getFieldRealType(f reflect.Type) string {
 		return "time.Time"
 	}
 	if f.String() == "[]uint8" || f.String() == "json.RawMessage" {
-		return "bytes"
+		return "[]byte"
 	}
 	return f.Kind().String()
 }

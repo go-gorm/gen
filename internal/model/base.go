@@ -164,6 +164,7 @@ func (m *Field) Tags() string {
 
 func (m *Field) IsRelation() bool { return m.Relation != nil }
 
+// GenType return query Field.
 func (m *Field) GenType() string {
 	if m.IsRelation() {
 		return m.Type
