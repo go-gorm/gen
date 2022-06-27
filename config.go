@@ -124,6 +124,8 @@ func (cfg *Config) Revise() (err error) {
 	}
 	if cfg.OutFile == "" {
 		cfg.OutFile = cfg.OutPath + "/gen.go"
+	} else if !strings.Contains(cfg.OutFile, "/") {
+		cfg.OutFile = cfg.OutPath + "/" + cfg.OutFile
 	}
 	cfg.queryPkgName = filepath.Base(cfg.OutPath)
 
