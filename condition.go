@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+// Cond convert expression array to condition array
 func Cond(exprs ...clause.Expression) []Condition {
 	return exprToCondition(exprs...)
 }

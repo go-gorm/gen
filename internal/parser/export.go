@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// InterfacePath interface path
 type InterfacePath struct {
 	Name     string
 	FullName string

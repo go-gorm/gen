@@ -25,6 +25,7 @@ var (
 	_ Condition = (Dao)(nil)
 )
 
+// SubQuery sub query interface
 type SubQuery interface {
 	underlyingDB() *gorm.DB
 	underlyingDO() *DO
