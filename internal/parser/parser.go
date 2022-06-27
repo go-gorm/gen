@@ -305,12 +305,17 @@ type Method struct {
 	Body       string
 }
 
-//GetParamInTmpl return method bind info string
+// FuncSign function signature
+func (m Method) FuncSign() string {
+	return fmt.Sprintf("%s(%s) (%s)", m.MethodName, m.GetParamInTmpl(), m.GetResultParamInTmpl())
+}
+
+// GetBaseStructTmpl return method bind info string
 func (m *Method) GetBaseStructTmpl() string {
 	return m.BaseStruct.TmplString()
 }
 
-//GetParamInTmpl return param list
+// GetParamInTmpl return param list
 func (m *Method) GetParamInTmpl() string {
 	return paramToString(m.Params)
 }
@@ -322,9 +327,9 @@ func (m *Method) GetResultParamInTmpl() string {
 
 // paramToString param list to string used in tmpl
 func paramToString(params []Param) string {
-	var res []string
-	for _, param := range params {
-		res = append(res, param.TmplString())
+	res := make([]string, len(params))
+	for i, param := range params {
+		res[i] = param.TmplString()
 	}
 	return strings.Join(res, ",")
 }

@@ -35,6 +35,8 @@ func (*{{.StructName}}) TableName() string {
 }
 {{- end}}
 `
+
+// StructCustomMethod struct custom method
 const StructCustomMethod = `
 
 {{if .Doc -}}// {{.DocComment -}}{{end}}

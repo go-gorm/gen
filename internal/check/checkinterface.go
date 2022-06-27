@@ -20,8 +20,8 @@ type InterfaceMethod struct { // feature will replace InterfaceMethod to parser.
 	Result        []parser.Param // function output params
 	ResultData    parser.Param   // output data
 	Sections      *Sections      // Parse split SQL into sections
-	SqlParams     []parser.Param // variable in sql need function input
-	SqlString     string         // SQL
+	SQLParams     []parser.Param // variable in sql need function input
+	SQLString     string         // SQL
 	GormOption    string         // gorm execute method Find or Exec or Take
 	Table         string         // specified by user. if empty, generate it with gorm
 	InterfaceName string         // origin interface name
@@ -29,9 +29,14 @@ type InterfaceMethod struct { // feature will replace InterfaceMethod to parser.
 	HasForParams  bool           //
 }
 
-// HasSqlData has variable or for params will creat params map
-func (m *InterfaceMethod) HasSqlData() bool {
-	return len(m.SqlParams) > 0 || m.HasForParams
+// FuncSign function signature
+func (m *InterfaceMethod) FuncSign() string {
+	return fmt.Sprintf("%s(%s) (%s)", m.MethodName, m.GetParamInTmpl(), m.GetResultParamInTmpl())
+}
+
+// HasSQLData has variable or for params will creat params map
+func (m *InterfaceMethod) HasSQLData() bool {
+	return len(m.SQLParams) > 0 || m.HasForParams
 }
 
 // HasGotPoint parameter has pointer or not
@@ -52,6 +57,7 @@ func (m *InterfaceMethod) GormRunMethodName() string {
 	return "Take"
 }
 
+// ReturnRowsAffected return rows affected
 func (m *InterfaceMethod) ReturnRowsAffected() bool {
 	for _, res := range m.Result {
 		if res.Name == "rowsAffected" {
@@ -61,6 +67,7 @@ func (m *InterfaceMethod) ReturnRowsAffected() bool {
 	return false
 }
 
+// ReturnError return error
 func (m *InterfaceMethod) ReturnError() bool {
 	for _, res := range m.Result {
 		if res.IsError() {
@@ -205,7 +212,7 @@ func (m *InterfaceMethod) checkResult(result []parser.Param) (err error) {
 
 // checkSQL get sql from comment and check it
 func (m *InterfaceMethod) checkSQL() (err error) {
-	m.SqlString = m.parseDocString()
+	m.SQLString = m.parseDocString()
 	if err = m.sqlStateCheckAndSplit(); err != nil {
 		err = fmt.Errorf("interface %s member method %s check sql err:%w", m.InterfaceName, m.MethodName, err)
 	}
@@ -260,7 +267,7 @@ func (m *InterfaceMethod) getSQLDocString() string {
 
 // sqlStateCheckAndSplit check sql with an adeterministic finite automaton
 func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
-	sqlString := m.SqlString
+	sqlString := m.SQLString
 	m.Sections = NewSections()
 	var buf model.SQLBuffer
 	for i := 0; !strOutRange(i, sqlString); i++ {
@@ -390,7 +397,7 @@ func (m *InterfaceMethod) checkSQLVarByParams(param string, status model.Status)
 			switch status {
 			case model.DATA:
 				if !m.isParamExist(param) {
-					m.SqlParams = append(m.SqlParams, p)
+					m.SQLParams = append(m.SQLParams, p)
 				}
 			case model.VARIABLE:
 				if p.Type != "string" || p.IsArray {
@@ -419,7 +426,7 @@ func (m *InterfaceMethod) checkSQLVarByParams(param string, status model.Status)
 
 // isParamExist check param duplicate
 func (m *InterfaceMethod) isParamExist(paramName string) bool {
-	for _, param := range m.SqlParams {
+	for _, param := range m.SQLParams {
 		if param.Name == paramName {
 			return true
 		}

@@ -29,6 +29,8 @@ type BaseStruct struct {
 	Source         model.SourceCode
 	ImportPkgPaths []string
 	DIYMethods     []*parser.Method // user custom method bind to db base struct
+
+	interfaceMode bool
 }
 
 // parseStruct get all elements of struct with gorm's Parse, ignore unexported elements
@@ -74,6 +76,7 @@ func (b *BaseStruct) getFieldRealType(f reflect.Type) string {
 	return f.Kind().String()
 }
 
+// ReviseFieldName revise field name
 func (b *BaseStruct) ReviseFieldName() {
 	for _, m := range b.Fields {
 		m.EscapeKeyword()
@@ -88,9 +91,9 @@ func (b *BaseStruct) appendOrUpdateField(f *model.Field) {
 	if f.ColumnName == "" {
 		return
 	}
-	for index, m := range b.Fields {
+	for i, m := range b.Fields {
 		if m.Name == f.Name {
-			b.Fields[index] = f
+			b.Fields[i] = f
 			return
 		}
 	}
@@ -113,6 +116,7 @@ func (b *BaseStruct) check() (err error) {
 	return nil
 }
 
+// Relations related field
 func (b *BaseStruct) Relations() (result []field.Relation) {
 	for _, f := range b.Fields {
 		if f.IsRelation() {
@@ -122,6 +126,7 @@ func (b *BaseStruct) Relations() (result []field.Relation) {
 	return result
 }
 
+// StructComment struct comment
 func (b *BaseStruct) StructComment() string {
 	if b.TableName != "" {
 		return fmt.Sprintf(`mapped from table <%s>`, b.TableName)
@@ -171,11 +176,26 @@ func (b *BaseStruct) AddMethod(methods ...interface{}) *BaseStruct {
 	return b
 }
 
-func GetStructNames(bases []*BaseStruct) (res []string) {
-	for _, base := range bases {
-		res = append(res, base.StructName)
+// IfaceMode object mode
+func (b BaseStruct) IfaceMode(on bool) *BaseStruct {
+	b.interfaceMode = on
+	return &b
+}
+
+// ReturnObject return object in generated code
+func (b *BaseStruct) ReturnObject() string {
+	if b.interfaceMode {
+		return fmt.Sprint("I", b.StructName, "Do")
 	}
-	return res
+	return fmt.Sprint("*", b.NewStructName, "Do")
+}
+
+// GetStructNames get struct names from base structs
+func GetStructNames(bases []*BaseStruct) (names []string) {
+	for _, base := range bases {
+		names = append(names, base.StructName)
+	}
+	return names
 }
 
 func isStructType(data reflect.Value) bool {

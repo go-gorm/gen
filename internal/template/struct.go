@@ -1,27 +1,32 @@
 package template
 
 const (
-	BaseStruct = createMethod + `
+	// TableQueryStruct table query struct
+	TableQueryStruct = createMethod + `
 	type {{.NewStructName}} struct {
 		{{.NewStructName}}Do
 		` + fields + `
 	}
-	` + tableMethod + asMethond + updateFieldMethod + getFieldMethod + fillFieldMapMethod + cloneMethod + relationship + defineMethodStruct
+	` + tableMethod + asMethond + updateFieldMethod + getFieldMethod + fillFieldMapMethod + cloneMethod + relationship
 
-	BaseStructWithContext = createMethod + `
+	// TableQueryStructWithContext table query struct with context
+	TableQueryStructWithContext = createMethod + `
 	type {{.NewStructName}} struct {
 		{{.NewStructName}}Do {{.NewStructName}}Do
 		` + fields + `
 	}
 	` + tableMethod + asMethond + updateFieldMethod + `
 	
-	func ({{.S}} *{{.NewStructName}}) WithContext(ctx context.Context) *{{.NewStructName}}Do { return {{.S}}.{{.NewStructName}}Do.WithContext(ctx) }
+	func ({{.S}} *{{.NewStructName}}) WithContext(ctx context.Context) {{.ReturnObject}} { return {{.S}}.{{.NewStructName}}Do.WithContext(ctx)}
 
 	func ({{.S}} {{.NewStructName}}) TableName() string { return {{.S}}.{{.NewStructName}}Do.TableName() } 
 
 	func ({{.S}} {{.NewStructName}}) Alias() string { return {{.S}}.{{.NewStructName}}Do.Alias() }
 
 	` + getFieldMethod + fillFieldMapMethod + cloneMethod + relationship + defineMethodStruct
+
+	// TableQueryIface table query interface
+	TableQueryIface = defineDoInterface
 )
 
 const (
@@ -121,6 +126,69 @@ func ({{.S}} *{{.NewStructName}}) fillFieldMap() {
 		{{- if .ColumnName -}}{{$.S}}.fieldMap["{{.ColumnName}}"] = {{$.S}}.{{.Name}}{{- end -}}
 	{{end}}
 	{{end -}}
+}
+`
+
+	defineDoInterface = `
+
+type I{{.StructName}}Do interface {
+	Debug() I{{.StructName}}Do
+	WithContext(ctx context.Context) I{{.StructName}}Do
+	WithResult(fc func(tx gen.Dao)) gen.ResultInfo
+	As(alias string) gen.Dao
+	Columns(cols ...field.Expr) gen.Columns
+	Clauses(conds ...clause.Expression) I{{.StructName}}Do
+	Not(conds ...gen.Condition) I{{.StructName}}Do
+	Or(conds ...gen.Condition) I{{.StructName}}Do
+	Select(conds ...field.Expr) I{{.StructName}}Do
+	Where(conds ...gen.Condition) I{{.StructName}}Do
+	Order(conds ...field.Expr) I{{.StructName}}Do
+	Distinct(cols ...field.Expr) I{{.StructName}}Do
+	Omit(cols ...field.Expr) I{{.StructName}}Do
+	Join(table schema.Tabler, on ...field.Expr) I{{.StructName}}Do
+	LeftJoin(table schema.Tabler, on ...field.Expr) I{{.StructName}}Do
+	RightJoin(table schema.Tabler, on ...field.Expr) I{{.StructName}}Do
+	Group(cols ...field.Expr) I{{.StructName}}Do
+	Having(conds ...gen.Condition) I{{.StructName}}Do
+	Limit(limit int) I{{.StructName}}Do
+	Offset(offset int) I{{.StructName}}Do
+	Count() (count int64, err error)
+	Scopes(funcs ...func(gen.Dao) gen.Dao) I{{.StructName}}Do
+	Unscoped() I{{.StructName}}Do
+	Create(values ...*{{.StructInfo.Package}}.{{.StructInfo.Type}}) error
+	CreateInBatches(values []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, batchSize int) error
+	Save(values ...*{{.StructInfo.Package}}.{{.StructInfo.Type}}) error
+	First() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error)
+	Take() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error)
+	Last() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error)
+	Find() ([]*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error)
+	FindInBatch(batchSize int, fc func(tx gen.Dao, batch int) error) (results []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, err error)
+	FindInBatches(result *[]*{{.StructInfo.Package}}.{{.StructInfo.Type}}, batchSize int, fc func(tx gen.Dao, batch int) error) error
+	Pluck(column field.Expr, dest interface{}) error
+	Delete() (info gen.ResultInfo, err error)
+	Update(column field.Expr, value interface{}) (info gen.ResultInfo, err error)
+	UpdateSimple(columns ...field.AssignExpr) (info gen.ResultInfo, err error)
+	Updates(value interface{}) (info gen.ResultInfo, err error)
+	UpdateColumn(column field.Expr, value interface{}) (info gen.ResultInfo, err error)
+	UpdateColumnSimple(columns ...field.AssignExpr) (info gen.ResultInfo, err error)
+	UpdateColumns(value interface{}) (info gen.ResultInfo, err error)
+	UpdateFrom(q gen.SubQuery) gen.Dao
+	Attrs(attrs ...field.AssignExpr) I{{.StructName}}Do
+	Assign(attrs ...field.AssignExpr) I{{.StructName}}Do
+	Joins(fields ...field.RelationField) I{{.StructName}}Do
+	Preload(fields ...field.RelationField) I{{.StructName}}Do
+	FirstOrInit() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error)
+	FirstOrCreate() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error)
+	FindByPage(offset int, limit int) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, count int64, err error)
+	ScanByPage(result interface{}, offset int, limit int) (count int64, err error)
+	Scan(result interface{}) (err error)
+	Returning(value interface{}, columns ...string) I{{.StructName}}Do
+	UnderlyingDB() *gorm.DB
+	schema.Tabler
+
+	{{range .Interfaces -}}
+	{{.FuncSign}}
+	{{end}}
 }
 `
 )

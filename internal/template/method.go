@@ -1,10 +1,11 @@
 package template
 
+// DIYMethod DIY method
 const DIYMethod = `
 
 //{{.DocComment }}
-func ({{.S}} {{.TargetStruct}}Do){{.MethodName}}({{.GetParamInTmpl}})({{.GetResultParamInTmpl}}){
-	{{if .HasSqlData}}params :=make(map[string]interface{},0)
+func ({{.S}} {{.TargetStruct}}Do){{.FuncSign}}{
+	{{if .HasSQLData}}params :=make(map[string]interface{},0)
 
 	{{end}}var generateSQL strings.Builder
 	{{range $line:=.Sections.Tmpl}}{{$line}}
@@ -12,8 +13,8 @@ func ({{.S}} {{.TargetStruct}}Do){{.MethodName}}({{.GetParamInTmpl}})({{.GetResu
 
 	{{if .HasNeedNewResult}}result ={{if .ResultData.IsMap}}make{{else}}new{{end}}({{if ne .ResultData.Package ""}}{{.ResultData.Package}}.{{end}}{{.ResultData.Type}}){{end}}
 	{{if or .ReturnRowsAffected .ReturnError}}var executeSQL *gorm.DB
-	{{end}}{{if .HasSqlData}}if len(params)>0{
-		{{if or .ReturnRowsAffected .ReturnError}}executeSQL{{else}}_{{end}}= {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL.String(){{if .HasSqlData}},params{{end}}){{if not .ResultData.IsNull}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}
+	{{end}}{{if .HasSQLData}}if len(params)>0{
+		{{if or .ReturnRowsAffected .ReturnError}}executeSQL{{else}}_{{end}}= {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL.String(){{if .HasSQLData}},params{{end}}){{if not .ResultData.IsNull}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}
 	}else{
 		{{if or .ReturnRowsAffected .ReturnError}}executeSQL{{else}}_{{end}}= {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL.String()){{if not .ResultData.IsNull}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}
 	}{{else}}{{if or .ReturnRowsAffected .ReturnError}}executeSQL{{else}}_{{end}}= {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL.String()){{if not .ResultData.IsNull}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}{{end}}
@@ -24,96 +25,97 @@ func ({{.S}} {{.TargetStruct}}Do){{.MethodName}}({{.GetParamInTmpl}})({{.GetResu
 
 `
 
+// CRUDMethod CRUD method
 const CRUDMethod = `
-func ({{.S}} {{.NewStructName}}Do) Debug() *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Debug() {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Debug())
 }
 
-func ({{.S}} {{.NewStructName}}Do) WithContext(ctx context.Context) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) WithContext(ctx context.Context) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.WithContext(ctx))
 }
 
-func ({{.S}} {{.NewStructName}}Do) ReadDB() *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) ReadDB() {{.ReturnObject}} {
 	return {{.S}}.Clauses(dbresolver.Read)
 }
 
-func ({{.S}} {{.NewStructName}}Do) WriteDB() *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) WriteDB() {{.ReturnObject}} {
 	return {{.S}}.Clauses(dbresolver.Write)
 }
 
-func ({{.S}} {{.NewStructName}}Do) Clauses(conds ...clause.Expression) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Clauses(conds ...clause.Expression) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Clauses(conds...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Returning(value interface{}, columns ...string) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Returning(value interface{}, columns ...string) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Returning(value, columns...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Not(conds ...gen.Condition) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Not(conds ...gen.Condition) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Not(conds...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Or(conds ...gen.Condition) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Or(conds ...gen.Condition) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Or(conds...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Select(conds ...field.Expr) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Select(conds ...field.Expr) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Select(conds...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Where(conds ...gen.Condition) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Where(conds ...gen.Condition) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Where(conds...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Exists(subquery interface{UnderlyingDB() *gorm.DB}) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Exists(subquery interface{UnderlyingDB() *gorm.DB}) {{.ReturnObject}} {
 	return {{.S}}.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Order(conds ...field.Expr) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Order(conds ...field.Expr) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Order(conds...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Distinct(cols ...field.Expr) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Distinct(cols ...field.Expr) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Distinct(cols...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Omit(cols ...field.Expr) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Omit(cols ...field.Expr) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Omit(cols...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Join(table schema.Tabler, on ...field.Expr) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Join(table schema.Tabler, on ...field.Expr) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Join(table, on...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) LeftJoin(table schema.Tabler, on ...field.Expr) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) LeftJoin(table schema.Tabler, on ...field.Expr) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.LeftJoin(table, on...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) RightJoin(table schema.Tabler, on ...field.Expr) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) RightJoin(table schema.Tabler, on ...field.Expr) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.RightJoin(table, on...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Group(cols ...field.Expr) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Group(cols ...field.Expr) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Group(cols...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Having(conds ...gen.Condition) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Having(conds ...gen.Condition) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Having(conds...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Limit(limit int) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Limit(limit int) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Limit(limit))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Offset(offset int) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Offset(offset int) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Offset(offset))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Scopes(funcs ...func(gen.Dao) gen.Dao) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Scopes(funcs ...func(gen.Dao) gen.Dao) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Scopes(funcs...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Unscoped() *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Unscoped() {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Unscoped())
 }
 
@@ -179,22 +181,22 @@ func ({{.S}} {{.NewStructName}}Do) FindInBatches(result *[]*{{.StructInfo.Packag
 	return {{.S}}.DO.FindInBatches(result, batchSize, fc)
 }
 
-func ({{.S}} {{.NewStructName}}Do) Attrs(attrs ...field.AssignExpr) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Attrs(attrs ...field.AssignExpr) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Attrs(attrs...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Assign(attrs ...field.AssignExpr) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Assign(attrs ...field.AssignExpr) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Assign(attrs...))
 }
 
-func ({{.S}} {{.NewStructName}}Do) Joins(fields ...field.RelationField) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Joins(fields ...field.RelationField) {{.ReturnObject}} {
 	for _, _f := range fields {
         {{.S}} = *{{.S}}.withDO({{.S}}.DO.Joins(_f))
     }
 	return &{{.S}}
 }
 
-func ({{.S}} {{.NewStructName}}Do) Preload(fields ...field.RelationField) *{{.NewStructName}}Do {
+func ({{.S}} {{.NewStructName}}Do) Preload(fields ...field.RelationField) {{.ReturnObject}} {
     for _, _f := range fields {
         {{.S}} = *{{.S}}.withDO({{.S}}.DO.Preload(_f))
     }
@@ -242,6 +244,10 @@ func ({{.S}} {{.NewStructName}}Do) ScanByPage(result interface{}, offset int, li
 	return
 }
 
+func ({{.S}} {{.NewStructName}}Do) Scan(result interface{}) (err error) {
+	return {{.S}}.DO.Scan(result)
+}
+
 func ({{.S}} *{{.NewStructName}}Do) withDO(do gen.Dao) (*{{.NewStructName}}Do) {
 	{{.S}}.DO = *do.(*gen.DO)
 	return {{.S}}
@@ -249,7 +255,8 @@ func ({{.S}} *{{.NewStructName}}Do) withDO(do gen.Dao) (*{{.NewStructName}}Do) {
 
 `
 
-const CRUDMethod_TEST = `
+// CRUDMethodTest CRUD method test
+const CRUDMethodTest = `
 func init() {
 	InitializeDB()
 	err := db.AutoMigrate(&{{.StructInfo.Package}}.{{.StructName}}{})
@@ -380,7 +387,8 @@ func Test_{{.NewStructName}}Query(t *testing.T) {
 }
 `
 
-const DIYMethod_TEST_Basic = `
+// DIYMethodTestBasic DIY method test basic
+const DIYMethodTestBasic = `
 type Input struct {
 	Args []interface{}
 }
@@ -396,7 +404,8 @@ type TestCase struct {
 
 `
 
-const DIYMethod_TEST = `
+// DIYMethodTest DIY method test
+const DIYMethodTest = `
 
 var {{.OriginStruct.Type}}{{.MethodName}}TestCase = []TestCase{}
 

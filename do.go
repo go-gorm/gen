@@ -172,7 +172,7 @@ func (d *DO) Alias() string {
 }
 
 // Columns return columns for Subquery
-func (*DO) Columns(cols ...field.Expr) columns { return cols }
+func (*DO) Columns(cols ...field.Expr) Columns { return cols }
 
 // ======================== chainable api ========================
 func (d *DO) Not(conds ...Condition) Dao {
@@ -503,7 +503,7 @@ func (d *DO) Preload(field field.RelationField) Dao {
 }
 
 // UpdateFrom specify update sub query
-func (d *DO) UpdateFrom(q subQuery) Dao {
+func (d *DO) UpdateFrom(q SubQuery) Dao {
 	var tableName strings.Builder
 	d.db.Statement.QuoteTo(&tableName, d.TableName())
 	if d.alias != "" {
@@ -623,7 +623,7 @@ func (d *DO) Update(column field.Expr, value interface{}) (info ResultInfo, err 
 	switch value := value.(type) {
 	case field.AssignExpr:
 		result = tx.Update(columnStr, value.AssignExpr())
-	case subQuery:
+	case SubQuery:
 		result = tx.Update(columnStr, value.underlyingDB())
 	default:
 		result = tx.Update(columnStr, value)
@@ -671,7 +671,7 @@ func (d *DO) UpdateColumn(column field.Expr, value interface{}) (info ResultInfo
 	switch value := value.(type) {
 	case field.Expr:
 		result = tx.UpdateColumn(columnStr, value.RawExpr())
-	case subQuery:
+	case SubQuery:
 		result = d.db.UpdateColumn(columnStr, value.underlyingDB())
 	default:
 		result = d.db.UpdateColumn(columnStr, value)
@@ -854,7 +854,7 @@ func toInterfaceSlice(value interface{}) []interface{} {
 // 	Table(u.Select(u.ID, u.Name).Where(u.Age.Gt(18))).Select()
 // the above usage is equivalent to SQL statement:
 // 	SELECT * FROM (SELECT `id`, `name` FROM `users_info` WHERE `age` > ?)"
-func Table(subQueries ...subQuery) Dao {
+func Table(subQueries ...SubQuery) Dao {
 	if len(subQueries) == 0 {
 		return &DO{}
 	}
@@ -879,15 +879,15 @@ func Table(subQueries ...subQuery) Dao {
 
 // ======================== sub query method ========================
 
-type columns []field.Expr
+type Columns []field.Expr
 
 // Set assign value by subquery
-func (cs columns) Set(query subQuery) field.AssignExpr {
+func (cs Columns) Set(query SubQuery) field.AssignExpr {
 	return field.AssignSubQuery(cs, query.underlyingDB())
 }
 
 // In accept query or value
-func (cs columns) In(queryOrValue Condition) field.Expr {
+func (cs Columns) In(queryOrValue Condition) field.Expr {
 	if len(cs) == 0 {
 		return field.EmptyExpr()
 	}
@@ -895,53 +895,53 @@ func (cs columns) In(queryOrValue Condition) field.Expr {
 	switch query := queryOrValue.(type) {
 	case field.Value:
 		return field.ContainsValue(cs, query)
-	case subQuery:
+	case SubQuery:
 		return field.ContainsSubQuery(cs, query.underlyingDB())
 	default:
 		return field.EmptyExpr()
 	}
 }
 
-func (cs columns) NotIn(queryOrValue Condition) field.Expr {
+func (cs Columns) NotIn(queryOrValue Condition) field.Expr {
 	return field.Not(cs.In(queryOrValue))
 }
 
-func (cs columns) Eq(query subQuery) field.Expr {
+func (cs Columns) Eq(query SubQuery) field.Expr {
 	if len(cs) == 0 {
 		return field.EmptyExpr()
 	}
 	return field.CompareSubQuery(field.EqOp, cs[0], query.underlyingDB())
 }
 
-func (cs columns) Neq(query subQuery) field.Expr {
+func (cs Columns) Neq(query SubQuery) field.Expr {
 	if len(cs) == 0 {
 		return field.EmptyExpr()
 	}
 	return field.CompareSubQuery(field.NeqOp, cs[0], query.underlyingDB())
 }
 
-func (cs columns) Gt(query subQuery) field.Expr {
+func (cs Columns) Gt(query SubQuery) field.Expr {
 	if len(cs) == 0 {
 		return field.EmptyExpr()
 	}
 	return field.CompareSubQuery(field.GtOp, cs[0], query.underlyingDB())
 }
 
-func (cs columns) Gte(query subQuery) field.Expr {
+func (cs Columns) Gte(query SubQuery) field.Expr {
 	if len(cs) == 0 {
 		return field.EmptyExpr()
 	}
 	return field.CompareSubQuery(field.GteOp, cs[0], query.underlyingDB())
 }
 
-func (cs columns) Lt(query subQuery) field.Expr {
+func (cs Columns) Lt(query SubQuery) field.Expr {
 	if len(cs) == 0 {
 		return field.EmptyExpr()
 	}
 	return field.CompareSubQuery(field.LtOp, cs[0], query.underlyingDB())
 }
 
-func (cs columns) Lte(query subQuery) field.Expr {
+func (cs Columns) Lte(query SubQuery) field.Expr {
 	if len(cs) == 0 {
 		return field.EmptyExpr()
 	}
