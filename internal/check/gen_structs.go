@@ -21,6 +21,7 @@ import (
  */
 
 const (
+	// DefaultModelPkg ...
 	DefaultModelPkg = "model"
 )
 
@@ -154,6 +155,7 @@ func checkStructName(name string) error {
 	return nil
 }
 
+// GenBaseStructFromObject generate base struct from object
 func GenBaseStructFromObject(obj helper.Object, conf model.Conf) (*BaseStruct, error) {
 	err := helper.CheckObject(obj)
 	if err != nil {

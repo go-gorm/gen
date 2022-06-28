@@ -26,12 +26,12 @@ func checkBuildExpr(t *testing.T, SQL string, splitResult, generateResult []stri
 		t.Errorf("err:%s", err)
 	}
 
-	if len(i.Sections.Tmpl) != len(generateResult) {
-		t.Errorf("Sql length exp:%v got:%v", len(i.Sections.Tmpl), len(generateResult))
+	if len(i.Sections.Tmpls) != len(generateResult) {
+		t.Errorf("Sql length exp:%v got:%v", len(i.Sections.Tmpls), len(generateResult))
 	}
 	for index := range generateResult {
-		if generateResult[index] != i.Sections.Tmpl[index] {
-			t.Errorf("Sql expects \nexp:%v \ngot:%v", generateResult[index], i.Sections.Tmpl[index])
+		if generateResult[index] != i.Sections.Tmpls[index] {
+			t.Errorf("Sql expects \nexp:%v \ngot:%v", generateResult[index], i.Sections.Tmpls[index])
 		}
 	}
 
