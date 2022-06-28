@@ -7,6 +7,7 @@ import (
 	"gorm.io/gen/internal/model"
 )
 
+// ForRange for range clause for diy method
 type ForRange struct {
 	index     string
 	value     string
@@ -21,9 +22,12 @@ func (f *ForRange) String() string {
 func (f *ForRange) mapIndexName(prefix, dataName, clauseName string) string {
 	return fmt.Sprintf("\"%s%sFor%s_\"+strconv.Itoa(%s)", prefix, strings.Replace(dataName, ".", "", -1), strings.Title(clauseName), f.index)
 }
+
+// DataValue return data value
 func (f *ForRange) DataValue(dataName, clauseName string) string {
 	return f.mapIndexName("@", dataName, clauseName)
 }
+
 func (f *ForRange) appendDataToParams(dataName, clauseName string) string {
 	return fmt.Sprintf("params[%s]=%s%s", f.mapIndexName("", dataName, clauseName), f.value, f.suffix)
 }

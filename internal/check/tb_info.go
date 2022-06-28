@@ -9,13 +9,7 @@ import (
 	"gorm.io/gen/internal/model"
 )
 
-const (
-	//query table index
-	indexQuery = "SELECT TABLE_NAME,COLUMN_NAME,INDEX_NAME,SEQ_IN_INDEX,NON_UNIQUE " +
-		"FROM information_schema.STATISTICS " +
-		"WHERE TABLE_SCHEMA = ? AND TABLE_NAME =?"
-)
-
+// ITableInfo table info interface
 type ITableInfo interface {
 	GetTbColumns(schemaName string, tableName string) (result []*model.Column, err error)
 
@@ -59,7 +53,7 @@ type defaultTableInfo struct {
 	db *gorm.DB
 }
 
-//GetTbColumns  struct
+// GetTbColumns  struct
 func (t *defaultTableInfo) GetTbColumns(schemaName string, tableName string) (result []*model.Column, err error) {
 	types, err := t.db.Migrator().ColumnTypes(tableName)
 	if err != nil {
@@ -71,7 +65,7 @@ func (t *defaultTableInfo) GetTbColumns(schemaName string, tableName string) (re
 	return result, nil
 }
 
-//GetTbIndex  index
+// GetTbIndex  index
 func (t *defaultTableInfo) GetTbIndex(schemaName string, tableName string) (indexes []gorm.Index, err error) {
 	return t.db.Migrator().GetIndexes(tableName)
 }

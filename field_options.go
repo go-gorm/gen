@@ -79,7 +79,7 @@ var (
 			return m
 		}
 	}
-	// FieldIgnoreType ignore some columns by RegExp
+	// FieldTypeReg ignore some columns by RegExp
 	FieldTypeReg = func(columnNameReg string, newType string) model.ModifyFieldOpt {
 		reg := regexp.MustCompile(columnNameReg)
 		return func(m *model.Field) *model.Field {

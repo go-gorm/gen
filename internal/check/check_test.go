@@ -4,6 +4,7 @@ import "strings"
 
 //struct test custom method,if this in struct_test.go file, Will be ignored running the test
 
+// OnlyForTestUser ...
 type OnlyForTestUser struct {
 	ID   int32
 	Name string

@@ -56,6 +56,7 @@ func (d *DO) UseDB(db *gorm.DB, opts ...doOptions) {
 	d.db = db
 }
 
+// ReplaceDB replace db connection
 func (d *DO) ReplaceDB(db *gorm.DB) { d.db = db }
 
 // UseModel specify a data model structure as a source for table name
@@ -140,9 +141,11 @@ func (d *DO) withError(err error) *DO {
 	return d.getInstance(newDB)
 }
 
-// implements Condition
+// BeCond implements Condition
 func (d *DO) BeCond() interface{} { return d.buildCondition() }
-func (d *DO) CondError() error    { return nil }
+
+// CondError implements Condition
+func (d *DO) CondError() error { return nil }
 
 // Debug return a DO with db in debug mode
 func (d *DO) Debug() Dao { return d.getInstance(d.db.Debug()) }

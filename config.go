@@ -12,6 +12,7 @@ import (
 	"gorm.io/gen/internal/model"
 )
 
+// GenerateMode generate mode
 type GenerateMode uint
 
 const (

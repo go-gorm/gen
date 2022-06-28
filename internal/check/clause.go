@@ -11,7 +11,7 @@ import (
 // Clause a symbol of clause, it can be sql condition clause, if clause, where clause, set clause and else clause
 type Clause interface {
 	String() string
-	Creat() string
+	Create() string
 }
 
 var (
@@ -47,10 +47,12 @@ func (s SQLClause) String() string {
 	return strings.ReplaceAll(sqlString, `"+"`, "")
 }
 
-func (s SQLClause) Creat() string {
+// Create create clause
+func (s SQLClause) Create() string {
 	return fmt.Sprintf("%s.WriteString(%s)", s.VarName, s.String())
 }
 
+// Finish finish clause
 func (s SQLClause) Finish() string {
 	return fmt.Sprintf("%s.WriteString(%s)", s.VarName, s.String())
 }
@@ -66,10 +68,12 @@ func (i IfClause) String() string {
 	return i.slice.Value
 }
 
-func (i IfClause) Creat() string {
+// Create create clause
+func (i IfClause) Create() string {
 	return fmt.Sprintf("%s {", i.String())
 }
 
+// Finish finish clause
 func (i IfClause) Finish() string {
 	return "}"
 }
@@ -83,10 +87,12 @@ func (e ElseClause) String() (res string) {
 	return e.slice.Value
 }
 
-func (e ElseClause) Creat() string {
+// Create create clause
+func (e ElseClause) Create() string {
 	return fmt.Sprintf("} %s {", e.String())
 }
 
+// Finish finish clause
 func (e ElseClause) Finish() string {
 	return ""
 }
@@ -100,9 +106,13 @@ type WhereClause struct {
 func (w WhereClause) String() string {
 	return fmt.Sprintf("helper.WhereTrim(%s.String())", w.VarName)
 }
-func (w WhereClause) Creat() string {
+
+// Create create clause
+func (w WhereClause) Create() string {
 	return fmt.Sprintf("var %s strings.Builder", w.VarName)
 }
+
+// Finish finish clause
 func (w WhereClause) Finish(name string) string {
 	return fmt.Sprintf("helper.JoinWhereBuilder(&%s,%s)", name, w.VarName)
 }
@@ -117,10 +127,12 @@ func (s SetClause) String() string {
 	return fmt.Sprintf("helper.SetTrim(%s.String())", s.VarName)
 }
 
-func (s SetClause) Creat() string {
+// Create create clause
+func (s SetClause) Create() string {
 	return fmt.Sprintf("var %s strings.Builder", s.VarName)
 }
 
+// Finish finish clause
 func (s SetClause) Finish(name string) string {
 	return fmt.Sprintf("helper.JoinSetBuilder(&%s,%s)", name, s.VarName)
 }
@@ -136,10 +148,13 @@ type ForClause struct {
 func (f ForClause) String() string {
 	return f.forSlice.Value + "{"
 }
-func (f ForClause) Creat() string {
+
+// Create create clause
+func (f ForClause) Create() string {
 	return f.String()
 }
 
+// Finish finish clause
 func (f ForClause) Finish() string {
 	return "}"
 }
@@ -147,7 +162,7 @@ func (f ForClause) Finish() string {
 // Sections split sql into chunks
 type Sections struct {
 	members      []section
-	Tmpl         []string
+	Tmpls        []string
 	currentIndex int
 	ClauseTotal  map[model.Status]int
 	forValue     []ForRange
@@ -177,7 +192,7 @@ func (s *Sections) SubIndex() {
 	s.currentIndex--
 }
 
-// HasMore: is has more section
+// HasMore is has more section
 func (s *Sections) HasMore() bool {
 	return s.currentIndex < len(s.members)-1
 }
@@ -192,8 +207,8 @@ func (s *Sections) current() section {
 	return s.members[s.currentIndex]
 }
 
-func (s *Sections) tmplAppend(value string) {
-	s.Tmpl = append(s.Tmpl, value)
+func (s *Sections) appendTmpl(value string) {
+	s.Tmpls = append(s.Tmpls, value)
 }
 
 func (s *Sections) isInForValue(value string) (ForRange, bool) {
@@ -208,6 +223,7 @@ func (s *Sections) isInForValue(value string) (ForRange, bool) {
 	}
 	return ForRange{}, false
 }
+
 func (s *Sections) hasSameName(value string) bool {
 	for _, p := range s.members {
 		if p.Type == model.FOR && p.ForRange.value == value {
@@ -215,7 +231,6 @@ func (s *Sections) hasSameName(value string) bool {
 		}
 	}
 	return false
-
 }
 
 // BuildSQL sql sections and append to tmpl, return a Clause array
@@ -231,28 +246,28 @@ func (s *Sections) BuildSQL() ([]Clause, error) {
 		case model.SQL, model.DATA, model.VARIABLE:
 			sqlClause := s.parseSQL(name)
 			res = append(res, sqlClause)
-			s.tmplAppend(sqlClause.Finish())
+			s.appendTmpl(sqlClause.Finish())
 		case model.IF:
 			ifClause, err := s.parseIF(name)
 			if err != nil {
 				return nil, err
 			}
 			res = append(res, ifClause)
-			s.tmplAppend(ifClause.Finish())
+			s.appendTmpl(ifClause.Finish())
 		case model.WHERE:
 			whereClause, err := s.parseWhere()
 			if err != nil {
 				return nil, err
 			}
 			res = append(res, whereClause)
-			s.tmplAppend(whereClause.Finish(name))
+			s.appendTmpl(whereClause.Finish(name))
 		case model.SET:
 			setClause, err := s.parseSet()
 			if err != nil {
 				return nil, err
 			}
 			res = append(res, setClause)
-			s.tmplAppend(setClause.Finish(name))
+			s.appendTmpl(setClause.Finish(name))
 		case model.FOR:
 			forClause, err := s.parseFor(name)
 			_, _ = forClause, err
@@ -260,7 +275,7 @@ func (s *Sections) BuildSQL() ([]Clause, error) {
 				return nil, err
 			}
 			res = append(res, forClause)
-			s.tmplAppend(forClause.Finish())
+			s.appendTmpl(forClause.Finish())
 		case model.END:
 		default:
 			return nil, fmt.Errorf("unknow clause:%s", c.Value)
@@ -278,7 +293,7 @@ func (s *Sections) parseIF(name string) (res IfClause, err error) {
 	c := s.current()
 	res.slice = c
 
-	s.tmplAppend(res.Creat())
+	s.appendTmpl(res.Create())
 	if !s.HasMore() {
 		return
 	}
@@ -288,7 +303,7 @@ func (s *Sections) parseIF(name string) (res IfClause, err error) {
 		case model.SQL, model.DATA, model.VARIABLE:
 			sqlClause := s.parseSQL(name)
 			res.Value = append(res.Value, sqlClause)
-			s.tmplAppend(sqlClause.Finish())
+			s.appendTmpl(sqlClause.Finish())
 		case model.IF:
 			var ifClause IfClause
 			ifClause, err = s.parseIF(name)
@@ -296,7 +311,7 @@ func (s *Sections) parseIF(name string) (res IfClause, err error) {
 				return
 			}
 			res.Value = append(res.Value, ifClause)
-			s.tmplAppend(ifClause.Finish())
+			s.appendTmpl(ifClause.Finish())
 		case model.WHERE:
 			var whereClause WhereClause
 			whereClause, err = s.parseWhere()
@@ -304,7 +319,7 @@ func (s *Sections) parseIF(name string) (res IfClause, err error) {
 				return
 			}
 			res.Value = append(res.Value, whereClause)
-			s.tmplAppend(whereClause.Finish(name))
+			s.appendTmpl(whereClause.Finish(name))
 		case model.SET:
 			var setClause SetClause
 			setClause, err = s.parseSet()
@@ -312,7 +327,7 @@ func (s *Sections) parseIF(name string) (res IfClause, err error) {
 				return
 			}
 			res.Value = append(res.Value, setClause)
-			s.tmplAppend(setClause.Finish(name))
+			s.appendTmpl(setClause.Finish(name))
 		case model.ELSE:
 			var elseClause ElseClause
 			elseClause, err = s.parseElSE(name)
@@ -327,7 +342,7 @@ func (s *Sections) parseIF(name string) (res IfClause, err error) {
 				return
 			}
 			res.Value = append(res.Value, forClause)
-			s.tmplAppend(res.Finish())
+			s.appendTmpl(res.Finish())
 		case model.END:
 			return
 		default:
@@ -348,7 +363,7 @@ func (s *Sections) parseIF(name string) (res IfClause, err error) {
 // parseElSE parse else clause, the clause' type must be one of if, where, set, SQL condition
 func (s *Sections) parseElSE(name string) (res ElseClause, err error) {
 	res.slice = s.current()
-	s.tmplAppend(res.Creat())
+	s.appendTmpl(res.Create())
 
 	if !s.HasMore() {
 		return
@@ -359,7 +374,7 @@ func (s *Sections) parseElSE(name string) (res ElseClause, err error) {
 		case model.SQL, model.DATA, model.VARIABLE:
 			sqlClause := s.parseSQL(name)
 			res.Value = append(res.Value, sqlClause)
-			s.tmplAppend(sqlClause.Creat())
+			s.appendTmpl(sqlClause.Create())
 		case model.IF:
 			var ifClause IfClause
 			ifClause, err = s.parseIF(name)
@@ -367,7 +382,7 @@ func (s *Sections) parseElSE(name string) (res ElseClause, err error) {
 				return
 			}
 			res.Value = append(res.Value, ifClause)
-			s.tmplAppend(ifClause.Finish())
+			s.appendTmpl(ifClause.Finish())
 		case model.WHERE:
 			var whereClause WhereClause
 			whereClause, err = s.parseWhere()
@@ -375,7 +390,7 @@ func (s *Sections) parseElSE(name string) (res ElseClause, err error) {
 				return
 			}
 			res.Value = append(res.Value, whereClause)
-			s.tmplAppend(whereClause.Finish(name))
+			s.appendTmpl(whereClause.Finish(name))
 		case model.SET:
 			var setClause SetClause
 			setClause, err = s.parseSet()
@@ -383,7 +398,7 @@ func (s *Sections) parseElSE(name string) (res ElseClause, err error) {
 				return
 			}
 			res.Value = append(res.Value, setClause)
-			s.tmplAppend(setClause.Finish(name))
+			s.appendTmpl(setClause.Finish(name))
 		case model.ELSE:
 			var elseClause ElseClause
 			elseClause, err = s.parseElSE(name)
@@ -398,7 +413,7 @@ func (s *Sections) parseElSE(name string) (res ElseClause, err error) {
 				return
 			}
 			res.Value = append(res.Value, forClause)
-			s.tmplAppend(forClause.Finish())
+			s.appendTmpl(forClause.Finish())
 		default:
 			s.SubIndex()
 			return
@@ -415,7 +430,7 @@ func (s *Sections) parseElSE(name string) (res ElseClause, err error) {
 func (s *Sections) parseWhere() (res WhereClause, err error) {
 	c := s.current()
 	res.VarName = s.GetName(c.Type)
-	s.tmplAppend(res.Creat())
+	s.appendTmpl(res.Create())
 	res.Type = c.Type
 
 	if !s.HasMore() {
@@ -427,7 +442,7 @@ func (s *Sections) parseWhere() (res WhereClause, err error) {
 		case model.SQL, model.DATA, model.VARIABLE:
 			sqlClause := s.parseSQL(res.VarName)
 			res.Value = append(res.Value, sqlClause)
-			s.tmplAppend(sqlClause.Finish())
+			s.appendTmpl(sqlClause.Finish())
 		case model.IF:
 			var ifClause IfClause
 			ifClause, err = s.parseIF(res.VarName)
@@ -435,7 +450,7 @@ func (s *Sections) parseWhere() (res WhereClause, err error) {
 				return
 			}
 			res.Value = append(res.Value, ifClause)
-			s.tmplAppend(ifClause.Finish())
+			s.appendTmpl(ifClause.Finish())
 		case model.FOR:
 			var forClause ForClause
 			forClause, err = s.parseFor(res.VarName)
@@ -443,7 +458,7 @@ func (s *Sections) parseWhere() (res WhereClause, err error) {
 				return
 			}
 			res.Value = append(res.Value, forClause)
-			s.tmplAppend(forClause.Finish())
+			s.appendTmpl(forClause.Finish())
 		case model.END:
 			return
 		default:
@@ -466,7 +481,7 @@ func (s *Sections) parseWhere() (res WhereClause, err error) {
 func (s *Sections) parseSet() (res SetClause, err error) {
 	c := s.current()
 	res.VarName = s.GetName(c.Type)
-	s.tmplAppend(res.Creat())
+	s.appendTmpl(res.Create())
 	if !s.HasMore() {
 		return
 	}
@@ -478,7 +493,7 @@ func (s *Sections) parseSet() (res SetClause, err error) {
 		case model.SQL, model.DATA, model.VARIABLE:
 			sqlClause := s.parseSQL(res.VarName)
 			res.Value = append(res.Value, sqlClause)
-			s.tmplAppend(sqlClause.Finish())
+			s.appendTmpl(sqlClause.Finish())
 		case model.IF:
 			var ifClause IfClause
 			ifClause, err = s.parseIF(res.VarName)
@@ -486,7 +501,7 @@ func (s *Sections) parseSet() (res SetClause, err error) {
 				return
 			}
 			res.Value = append(res.Value, ifClause)
-			s.tmplAppend(ifClause.Finish())
+			s.appendTmpl(ifClause.Finish())
 		case model.FOR:
 			var forClause ForClause
 			forClause, err = s.parseFor(res.VarName)
@@ -494,7 +509,7 @@ func (s *Sections) parseSet() (res SetClause, err error) {
 				return
 			}
 			res.Value = append(res.Value, forClause)
-			s.tmplAppend(forClause.Finish())
+			s.appendTmpl(forClause.Finish())
 		case model.END:
 			return
 		default:
@@ -511,10 +526,11 @@ func (s *Sections) parseSet() (res SetClause, err error) {
 	}
 	return
 }
+
 func (s *Sections) parseFor(name string) (res ForClause, err error) {
 	c := s.current()
 	res.forSlice = c
-	s.tmplAppend(res.Creat())
+	s.appendTmpl(res.Create())
 	s.forValue = append(s.forValue, res.forSlice.ForRange)
 
 	if !s.HasMore() {
@@ -526,7 +542,7 @@ func (s *Sections) parseFor(name string) (res ForClause, err error) {
 		case model.SQL, model.DATA, model.VARIABLE:
 			strClause := s.parseSQL(name)
 			res.Value = append(res.Value, strClause)
-			s.tmplAppend(fmt.Sprintf("%s.WriteString(%s)", name, strClause.String()))
+			s.appendTmpl(fmt.Sprintf("%s.WriteString(%s)", name, strClause.String()))
 		case model.IF:
 			var ifClause IfClause
 			ifClause, err = s.parseIF(name)
@@ -534,7 +550,7 @@ func (s *Sections) parseFor(name string) (res ForClause, err error) {
 				return
 			}
 			res.Value = append(res.Value, ifClause)
-			s.tmplAppend(ifClause.Finish())
+			s.appendTmpl(ifClause.Finish())
 		case model.FOR:
 			var forClause ForClause
 			forClause, err = s.parseFor(name)
@@ -542,7 +558,7 @@ func (s *Sections) parseFor(name string) (res ForClause, err error) {
 				return
 			}
 			res.Value = append(res.Value, forClause)
-			s.tmplAppend(forClause.Finish())
+			s.appendTmpl(forClause.Finish())
 		case model.END:
 			s.forValue = s.forValue[:len(s.forValue)-1]
 			return
@@ -575,10 +591,10 @@ func (s *Sections) parseSQL(name string) (res SQLClause) {
 		case model.DATA:
 			forRange, isInForRange := s.isInForValue(c.Value)
 			if isInForRange {
-				s.tmplAppend(forRange.appendDataToParams(c.Value, name))
+				s.appendTmpl(forRange.appendDataToParams(c.Value, name))
 				c.Value = forRange.DataValue(c.Value, name)
 			} else {
-				s.tmplAppend(c.AddDataToParamMap())
+				s.appendTmpl(c.AddDataToParamMap())
 				c.Value = strconv.Quote("@" + c.SQLParamName())
 			}
 			res.Value = append(res.Value, c.Value)
