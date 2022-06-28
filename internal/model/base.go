@@ -181,7 +181,7 @@ func (m *Field) GenType() string {
 		return strings.Title(typ)
 	case "time.Time":
 		return "Time"
-	case "json.RawMessage":
+	case "json.RawMessage", "[]byte":
 		return "Bytes"
 	default:
 		return "Field"
