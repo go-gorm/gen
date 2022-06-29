@@ -35,6 +35,7 @@
     - [项目路径](#project-directory)
   - [API 示例](#api-examples)
     - [生成](#generate)
+      - [生成模式](#generate-mode)
       - [模型生成](#generate-model)
       - [类型映射](#data-mapping)
     - [字段表达式](#field-expression)
@@ -236,6 +237,20 @@ demo
 ## <span id="api-examples">API 示例</span>
 
 ### <span id="generate">生成</span>
+
+#### <span id="generate-mode">生成模式</span>
+
+```go
+ g := gen.NewGenerator(gen.Config{
+        ...
+        Mode: gen.WithoutContext|gen.WithDefaultQuery|gen.WithQueryInterface,
+        ...
+ })
+```
+
+- `WithDefaultQuery` 生成默认查询结构体(作为全局变量使用)
+- `WithoutContext` 生成没有context调用限制的代码供查询
+- `WithQueryInterface` 生成interface形式的查询代码(可导出)
 
 #### <span id="generate-model">模型生成</span>
 

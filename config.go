@@ -22,8 +22,8 @@ const (
 	// WithoutContext generate code without context constrain
 	WithoutContext
 
-	// WithQueryIface generate code with exported interface object
-	WithQueryIface
+	// WithQueryInterface generate code with exported interface object
+	WithQueryInterface
 )
 
 // Config generator's basic configuration

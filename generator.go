@@ -375,7 +375,7 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 		return err
 	}
 
-	data.BaseStruct = data.BaseStruct.IfaceMode(g.judgeMode(WithQueryIface))
+	data.BaseStruct = data.BaseStruct.IfaceMode(g.judgeMode(WithQueryInterface))
 
 	structTmpl := tmpl.TableQueryStructWithContext
 	if g.judgeMode(WithoutContext) {
@@ -386,7 +386,7 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 		return err
 	}
 
-	if g.judgeMode(WithQueryIface) {
+	if g.judgeMode(WithQueryInterface) {
 		err = render(tmpl.TableQueryIface, &buf, data)
 		if err != nil {
 			return err
