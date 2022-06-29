@@ -8,15 +8,6 @@ import (
 	"gorm.io/gen/internal/model"
 )
 
-// Section split sql into chunks
-type Section struct {
-	members      []section
-	Tmpls        []string
-	currentIndex int
-	ClauseTotal  map[model.Status]int
-	forValue     []ForRange
-}
-
 // NewSection create and initialize Sections
 func NewSection() *Section {
 	return &Section{
@@ -27,7 +18,16 @@ func NewSection() *Section {
 	}
 }
 
-// next: return next section and increase index by 1
+// Section split sql into chunks
+type Section struct {
+	members      []section
+	Tmpls        []string
+	currentIndex int
+	ClauseTotal  map[model.Status]int
+	forValue     []ForRange
+}
+
+// next return next section and increase index by 1
 func (s *Section) next() section {
 	if s.currentIndex < len(s.members)-1 {
 		s.currentIndex++

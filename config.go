@@ -8,7 +8,6 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils/tests"
 
-	"gorm.io/gen/internal/generate"
 	"gorm.io/gen/internal/model"
 )
 
@@ -113,7 +112,7 @@ func (cfg *Config) WithImportPkgPath(paths ...string) {
 // Revise format path and db
 func (cfg *Config) Revise() (err error) {
 	if strings.TrimSpace(cfg.ModelPkgPath) == "" {
-		cfg.ModelPkgPath = generate.DefaultModelPkg
+		cfg.ModelPkgPath = model.DefaultModelPkg
 	}
 
 	cfg.OutPath, err = filepath.Abs(cfg.OutPath)

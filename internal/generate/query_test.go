@@ -8,7 +8,7 @@ import (
 )
 
 func checkCustomMethod(t *testing.T, expMethods []*parser.Method, methods ...interface{}) {
-	base := &BaseStruct{
+	base := &QueryStructMeta{
 		GenBaseStruct: true,
 		FileName:      "users",
 		S:             "u",
@@ -33,8 +33,8 @@ func checkCustomMethod(t *testing.T, expMethods []*parser.Method, methods ...int
 		for _, genMethod := range genMethods {
 			if genMethod.MethodName == expMethod.MethodName {
 				switch {
-				case !reflect.DeepEqual(genMethod.BaseStruct, expMethod.BaseStruct):
-					t.Errorf("gen custom method BaseStruct unexpectate \nexp:%v \ngot:%v\n", expMethod.BaseStruct, genMethod.BaseStruct)
+				case !reflect.DeepEqual(genMethod.Receiver, expMethod.Receiver):
+					t.Errorf("gen custom method BaseStruct unexpectate \nexp:%v \ngot:%v\n", expMethod.Receiver, genMethod.Receiver)
 				case !reflect.DeepEqual(genMethod.Doc, expMethod.Doc):
 					t.Errorf("gen custom method Doc unexpectate \nexp:%v \ngot:%v\n", expMethod.Doc, genMethod.Doc)
 				case !reflect.DeepEqual(genMethod.Params, expMethod.Params):
@@ -66,7 +66,7 @@ func TestBaseStruct_AddMethod(t *testing.T) {
 			MethodOrStruct: u.IsEmpty, // param is a function
 			CustomMethods: []*parser.Method{
 				{
-					BaseStruct: parser.Param{
+					Receiver: parser.Param{
 						Name:      "u",
 						Type:      "User",
 						IsPointer: true,
@@ -86,7 +86,7 @@ func TestBaseStruct_AddMethod(t *testing.T) {
 			MethodOrStruct: u, // param is a struct
 			CustomMethods: []*parser.Method{
 				{
-					BaseStruct: parser.Param{
+					Receiver: parser.Param{
 						Name:      "u",
 						Type:      "User",
 						IsPointer: true,
@@ -101,7 +101,7 @@ func TestBaseStruct_AddMethod(t *testing.T) {
 					Body: "{\n\tif u == nil {\n\t\treturn true\n\t}\n\n\treturn u.ID == 0\n}",
 				},
 				{
-					BaseStruct: parser.Param{
+					Receiver: parser.Param{
 						Name:      "u",
 						Type:      "User",
 						IsPointer: true,
@@ -117,7 +117,7 @@ func TestBaseStruct_AddMethod(t *testing.T) {
 					Body: "{\n\tu.Name = name\n}",
 				},
 				{
-					BaseStruct: parser.Param{
+					Receiver: parser.Param{
 						Name:      "u",
 						Type:      "User",
 						IsPointer: true,

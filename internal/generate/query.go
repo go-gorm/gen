@@ -14,8 +14,8 @@ import (
 	"gorm.io/gen/internal/parser"
 )
 
-// BaseStruct struct info in generated code
-type BaseStruct struct {
+// QueryStructMeta struct info in generated code
+type QueryStructMeta struct {
 	db *gorm.DB
 
 	GenBaseStruct  bool   // whether to generate db model
@@ -34,7 +34,7 @@ type BaseStruct struct {
 }
 
 // parseStruct get all elements of struct with gorm's Parse, ignore unexported elements
-func (b *BaseStruct) parseStruct(st interface{}) error {
+func (b *QueryStructMeta) parseStruct(st interface{}) error {
 	stmt := gorm.Statement{DB: b.db}
 	err := stmt.Parse(st)
 	if err != nil {
@@ -58,7 +58,7 @@ func (b *BaseStruct) parseStruct(st interface{}) error {
 }
 
 // getFieldRealType  get basic type of field
-func (b *BaseStruct) getFieldRealType(f reflect.Type) string {
+func (b *QueryStructMeta) getFieldRealType(f reflect.Type) string {
 	scanValuer := reflect.TypeOf((*field.ScanValuer)(nil)).Elem()
 	if f.Implements(scanValuer) || reflect.New(f).Type().Implements(scanValuer) {
 		return "field"
@@ -77,14 +77,14 @@ func (b *BaseStruct) getFieldRealType(f reflect.Type) string {
 }
 
 // ReviseFieldName revise field name
-func (b *BaseStruct) ReviseFieldName() {
+func (b *QueryStructMeta) ReviseFieldName() {
 	for _, m := range b.Fields {
 		m.EscapeKeyword()
 	}
 }
 
 // check field if in BaseStruct update else append
-func (b *BaseStruct) appendOrUpdateField(f *model.Field) {
+func (b *QueryStructMeta) appendOrUpdateField(f *model.Field) {
 	if f.IsRelation() {
 		b.appendField(f)
 	}
@@ -100,13 +100,13 @@ func (b *BaseStruct) appendOrUpdateField(f *model.Field) {
 	b.appendField(f)
 }
 
-func (b *BaseStruct) appendField(f *model.Field) { b.Fields = append(b.Fields, f) }
+func (b *QueryStructMeta) appendField(f *model.Field) { b.Fields = append(b.Fields, f) }
 
 // HasField check if BaseStruct has fields
-func (b *BaseStruct) HasField() bool { return len(b.Fields) > 0 }
+func (b *QueryStructMeta) HasField() bool { return len(b.Fields) > 0 }
 
 // check if struct is exportable and if struct in main package and if field's type is regular
-func (b *BaseStruct) check() (err error) {
+func (b *QueryStructMeta) check() (err error) {
 	if b.StructInfo.InMainPkg() {
 		return fmt.Errorf("can't generated data object for struct in main package, ignore:%s", b.StructName)
 	}
@@ -117,7 +117,7 @@ func (b *BaseStruct) check() (err error) {
 }
 
 // Relations related field
-func (b *BaseStruct) Relations() (result []field.Relation) {
+func (b *QueryStructMeta) Relations() (result []field.Relation) {
 	for _, f := range b.Fields {
 		if f.IsRelation() {
 			result = append(result, *f.Relation)
@@ -127,7 +127,7 @@ func (b *BaseStruct) Relations() (result []field.Relation) {
 }
 
 // StructComment struct comment
-func (b *BaseStruct) StructComment() string {
+func (b *QueryStructMeta) StructComment() string {
 	if b.TableName != "" {
 		return fmt.Sprintf(`mapped from table <%s>`, b.TableName)
 	}
@@ -135,9 +135,8 @@ func (b *BaseStruct) StructComment() string {
 }
 
 // ReviseDIYMethod check diy method duplication name
-func (b *BaseStruct) ReviseDIYMethod() error {
+func (b *QueryStructMeta) ReviseDIYMethod() error {
 	var duplicateMethodName []string
-
 	methods := make([]*parser.Method, 0, len(b.DIYMethods))
 	methodMap := make(map[string]bool, len(b.DIYMethods))
 	for _, method := range b.DIYMethods {
@@ -145,8 +144,8 @@ func (b *BaseStruct) ReviseDIYMethod() error {
 			duplicateMethodName = append(duplicateMethodName, method.MethodName)
 			continue
 		}
-		method.BaseStruct.Package = ""
-		method.BaseStruct.Type = b.StructName
+		method.Receiver.Package = ""
+		method.Receiver.Type = b.StructName
 		methods = append(methods, method)
 		methodMap[method.MethodName] = true
 	}
@@ -160,7 +159,7 @@ func (b *BaseStruct) ReviseDIYMethod() error {
 
 // AddMethod generated model struct bind custom method, input a method of struct or a struct(bind all method of struct).
 // eg: g.GenerateModel("users").AddMethod(user.IsEmpty,user.GetName) or g.GenerateModel("users").AddMethod(model.User)
-func (b *BaseStruct) AddMethod(methods ...interface{}) *BaseStruct {
+func (b *QueryStructMeta) AddMethod(methods ...interface{}) *QueryStructMeta {
 	for _, method := range methods {
 		diyMethods, err := parser.GetDIYMethod(method)
 		if err != nil {
@@ -177,43 +176,22 @@ func (b *BaseStruct) AddMethod(methods ...interface{}) *BaseStruct {
 }
 
 // IfaceMode object mode
-func (b BaseStruct) IfaceMode(on bool) *BaseStruct {
+func (b QueryStructMeta) IfaceMode(on bool) *QueryStructMeta {
 	b.interfaceMode = on
 	return &b
 }
 
 // ReturnObject return object in generated code
-func (b *BaseStruct) ReturnObject() string {
+func (b *QueryStructMeta) ReturnObject() string {
 	if b.interfaceMode {
 		return fmt.Sprint("I", b.StructName, "Do")
 	}
 	return fmt.Sprint("*", b.NewStructName, "Do")
 }
 
-// GetStructNames get struct names from base structs
-func GetStructNames(bases []*BaseStruct) (names []string) {
-	for _, base := range bases {
-		names = append(names, base.StructName)
-	}
-	return names
-}
-
 func isStructType(data reflect.Value) bool {
 	return data.Kind() == reflect.Struct ||
 		(data.Kind() == reflect.Ptr && data.Elem().Kind() == reflect.Struct)
-}
-
-// ParseStructRelationShip parse struct's relationship
-// No one should use it directly in project
-func ParseStructRelationShip(relationship *schema.Relationships) []field.Relation {
-	cache := make(map[string]bool)
-	return append(append(append(append(
-		make([]field.Relation, 0, 4),
-		pullRelationShip(cache, relationship.HasOne)...),
-		pullRelationShip(cache, relationship.HasMany)...),
-		pullRelationShip(cache, relationship.BelongsTo)...),
-		pullRelationShip(cache, relationship.Many2Many)...,
-	)
 }
 
 func pullRelationShip(cache map[string]bool, relationships []*schema.Relationship) []field.Relation {

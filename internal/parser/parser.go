@@ -307,7 +307,7 @@ func astGetType(expr ast.Expr) string {
 
 // Method Apply to query struct and base struct custom method
 type Method struct {
-	BaseStruct Param
+	Receiver   Param
 	MethodName string
 	Doc        string
 	Params     []Param
@@ -322,7 +322,7 @@ func (m Method) FuncSign() string {
 
 // GetBaseStructTmpl return method bind info string
 func (m *Method) GetBaseStructTmpl() string {
-	return m.BaseStruct.TmplString()
+	return m.Receiver.TmplString()
 }
 
 // GetParamInTmpl return param list
@@ -379,11 +379,11 @@ func (m *DIYMethods) Visit(n ast.Node) (w ast.Visitor) {
 	switch t := n.(type) {
 	case *ast.FuncDecl:
 		// check base struct and method name is expect
-		baseStruct := getParamList(t.Recv)
-		if len(baseStruct) != 1 {
+		structMeta := getParamList(t.Recv)
+		if len(structMeta) != 1 {
 			return
 		}
-		if baseStruct[0].Type != m.BaseStructType {
+		if structMeta[0].Type != m.BaseStructType {
 			return
 		}
 		// if m.MethodName is null will generate all methods
@@ -392,9 +392,9 @@ func (m *DIYMethods) Visit(n ast.Node) (w ast.Visitor) {
 		}
 
 		// use ast read bind start package is UNDEFINED ,set it null string
-		baseStruct[0].Package = ""
+		structMeta[0].Package = ""
 		m.Methods = append(m.Methods, &Method{
-			BaseStruct: baseStruct[0],
+			Receiver:   structMeta[0],
 			MethodName: t.Name.String(),
 			Doc:        t.Doc.Text(),
 			Body:       getBody(m.currentFile, int(t.Body.Pos()), int(t.Body.End())),

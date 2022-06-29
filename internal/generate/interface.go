@@ -117,7 +117,7 @@ func (m *InterfaceMethod) DocComment() string {
 }
 
 // checkParams check all parameters
-func (m *InterfaceMethod) checkMethod(methods []*InterfaceMethod, s *BaseStruct) (err error) {
+func (m *InterfaceMethod) checkMethod(methods []*InterfaceMethod, s *QueryStructMeta) (err error) {
 	if model.GormKeywords.FullMatch(m.MethodName) {
 		return fmt.Errorf("can not use keyword as method name:%s", m.MethodName)
 	}

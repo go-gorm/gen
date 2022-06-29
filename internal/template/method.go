@@ -8,7 +8,7 @@ func ({{.S}} {{.TargetStruct}}Do){{.FuncSign}}{
 	{{if .HasSQLData}}params :=make(map[string]interface{},0)
 
 	{{end}}var generateSQL strings.Builder
-	{{range $line:=.Sections.Tmpls}}{{$line}}
+	{{range $line:=.Section.Tmpls}}{{$line}}
 	{{end}}
 
 	{{if .HasNeedNewResult}}result ={{if .ResultData.IsMap}}make{{else}}new{{end}}({{if ne .ResultData.Package ""}}{{.ResultData.Package}}.{{end}}{{.ResultData.Type}}){{end}}
