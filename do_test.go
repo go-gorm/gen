@@ -43,7 +43,7 @@ func checkBuildExpr(t *testing.T, e SubQuery, opts []stmtOpt, result string, var
 
 	sql := strings.TrimSpace(stmt.SQL.String())
 	if sql != result {
-		t.Errorf("Sql expects %v got %v", result, sql)
+		t.Errorf("SQL expects %v got %v", result, sql)
 	}
 
 	if !reflect.DeepEqual(stmt.Vars, vars) {

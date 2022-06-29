@@ -11,8 +11,8 @@ import (
 	"gorm.io/gen/internal/parser"
 )
 
-// CheckStructs check the legitimacy of structures
-func CheckStructs(db *gorm.DB, structs ...interface{}) (bases []*BaseStruct, err error) {
+// ConvertStructs convert to base structures
+func ConvertStructs(db *gorm.DB, structs ...interface{}) (bases []*BaseStruct, err error) {
 	for _, st := range structs {
 		if base, ok := st.(*BaseStruct); ok {
 			bases = append(bases, base)
@@ -54,7 +54,7 @@ func CheckStructs(db *gorm.DB, structs ...interface{}) (bases []*BaseStruct, err
 // BuildDiyMethod check the legitimacy of interfaces
 func BuildDiyMethod(f *parser.InterfaceSet, s *BaseStruct, data []*InterfaceMethod) (checkResults []*InterfaceMethod, err error) {
 	for _, interfaceInfo := range f.Interfaces {
-		if interfaceInfo.IsMatchStruct(s.StructName) {
+		if interfaceInfo.MatchStruct(s.StructName) {
 			for _, method := range interfaceInfo.Methods {
 				t := &InterfaceMethod{
 					S:             s.S,

@@ -28,7 +28,8 @@ type InterfaceInfo struct {
 	ApplyStruct []string
 }
 
-func (i *InterfaceInfo) IsMatchStruct(name string) bool {
+// MatchStruct ...
+func (i *InterfaceInfo) MatchStruct(name string) bool {
 	for _, s := range i.ApplyStruct {
 		if s == name {
 			return true
@@ -43,7 +44,7 @@ func (i *InterfaceSet) ParseFile(paths []*InterfacePath, structNames []string) e
 		for _, file := range path.Files {
 			absFilePath, err := filepath.Abs(file)
 			if err != nil {
-				return fmt.Errorf("file not found：%s", file)
+				return fmt.Errorf("file not found: %s", file)
 			}
 
 			err = i.getInterfaceFromFile(absFilePath, path.Name, path.FullName, structNames)
@@ -131,50 +132,62 @@ type Param struct { // (user model.User)
 	IsPointer bool   // is pointer or not
 }
 
+// Eq if param equal to another
 func (p *Param) Eq(q Param) bool {
 	return p.Package == q.Package && p.Type == q.Type
 }
 
+// IsError ...
 func (p *Param) IsError() bool {
 	return p.Type == "error"
 }
 
+// IsGenM ...
 func (p *Param) IsGenM() bool {
 	return p.Package == "gen" && p.Type == "M"
 }
 
+// IsGenRowsAffected ...
 func (p *Param) IsGenRowsAffected() bool {
 	return p.Package == "gen" && p.Type == "RowsAffected"
 }
 
+// IsMap ...
 func (p *Param) IsMap() bool {
 	return strings.HasPrefix(p.Type, "map[")
 }
 
+// IsGenT ...
 func (p *Param) IsGenT() bool {
 	return p.Package == "gen" && p.Type == "T"
 }
 
+// IsInterface ...
 func (p *Param) IsInterface() bool {
 	return p.Type == "interface{}"
 }
 
+// IsNull ...
 func (p *Param) IsNull() bool {
 	return p.Package == "" && p.Type == "" && p.Name == ""
 }
 
+// InMainPkg ...
 func (p *Param) InMainPkg() bool {
 	return p.Package == "main"
 }
 
+// IsTime ...
 func (p *Param) IsTime() bool {
 	return p.Package == "time" && p.Type == "Time"
 }
 
+// SetName ...
 func (p *Param) SetName(name string) {
 	p.Name = name
 }
 
+// TypeName ...
 func (p *Param) TypeName() string {
 	if p.IsArray {
 		return "[]" + p.Type
@@ -204,7 +217,7 @@ func (p *Param) TmplString() string {
 	return res.String()
 }
 
-// judge whether the param type is basic type
+// IsBaseType judge whether the param type is basic type
 func (p *Param) IsBaseType() bool {
 	switch p.Type {
 	case "string", "byte":
@@ -249,7 +262,7 @@ func (p *Param) astGetParamType(param *ast.Field) {
 	}
 }
 
-func (p *Param) astGetEltType(expr ast.Expr) string {
+func (p *Param) astGetEltType(expr ast.Expr) {
 	switch v := expr.(type) {
 	case *ast.Ident:
 		p.Type = v.Name
@@ -269,7 +282,6 @@ func (p *Param) astGetEltType(expr ast.Expr) string {
 	default:
 		log.Fatalf("unknow param type: %+v", v)
 	}
-	return p.Type
 }
 
 func (p *Param) astGetPackageName(expr ast.Expr) {
@@ -277,12 +289,10 @@ func (p *Param) astGetPackageName(expr ast.Expr) {
 	case *ast.Ident:
 		p.Package = v.Name
 	}
-
 }
 
-func (p *Param) astGetMapType(expr *ast.MapType) string {
+func (p *Param) astGetMapType(expr *ast.MapType) {
 	p.Type = fmt.Sprintf("map[%s]%s", astGetType(expr.Key), astGetType(expr.Value))
-	return ""
 }
 
 func astGetType(expr ast.Expr) string {
@@ -293,7 +303,6 @@ func astGetType(expr ast.Expr) string {
 		return "interface{}"
 	}
 	return ""
-
 }
 
 // Method Apply to query struct and base struct custom method

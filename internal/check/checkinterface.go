@@ -298,10 +298,10 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 		case '\\':
 			if sqlString[i+1] == '@' {
 				i++
-				buf.WriteSql(sqlString[i])
+				buf.WriteSQL(sqlString[i])
 				continue
 			}
-			buf.WriteSql(b)
+			buf.WriteSQL(b)
 		case '{', '@':
 			if sqlClause := buf.Dump(); strings.TrimSpace(sqlClause) != "" {
 				m.Sections.members = append(m.Sections.members, section{
@@ -345,7 +345,7 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 						m.Sections.members = append(m.Sections.members, part)
 						break
 					}
-					buf.WriteSql(sqlString[i])
+					buf.WriteSQL(sqlString[i])
 				}
 			}
 			if b == '@' {
@@ -366,11 +366,11 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 						i--
 						break
 					}
-					buf.WriteSql(sqlString[i])
+					buf.WriteSQL(sqlString[i])
 				}
 			}
 		default:
-			buf.WriteSql(b)
+			buf.WriteSQL(b)
 		}
 	}
 	if sqlClause := buf.Dump(); strings.TrimSpace(sqlClause) != "" {

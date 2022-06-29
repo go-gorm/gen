@@ -193,7 +193,7 @@ func (g *Generator) ApplyBasic(models ...interface{}) {
 // ApplyInterface specifies method interfaces on structures, implment codes will be generated after calling g.Execute()
 // eg: g.ApplyInterface(func(model.Method){}, model.User{}, model.Company{})
 func (g *Generator) ApplyInterface(fc interface{}, models ...interface{}) {
-	structs, err := check.CheckStructs(g.db, models...)
+	structs, err := check.ConvertStructs(g.db, models...)
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "check struct fail: %v", err)
 		panic("check struct fail")
