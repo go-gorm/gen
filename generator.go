@@ -138,7 +138,7 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)
 		panic("generate struct fail")
 	}
-	g.modelData[meta.StructName] = meta
+	g.modelData[meta.ModelStructName] = meta
 
 	g.successInfo(fmt.Sprintf("got %d columns from table <%s>", len(meta.Fields), meta.TableName))
 	return meta
@@ -179,7 +179,7 @@ func (g *Generator) GenerateModelFrom(obj helper.Object) *generate.QueryStructMe
 	if err != nil {
 		panic(fmt.Errorf("generate struct from object fail: %w", err))
 	}
-	g.modelData[s.StructName] = s
+	g.modelData[s.ModelStructName] = s
 
 	g.successInfo(fmt.Sprintf("parse object %s", obj.StructName()))
 	return s
@@ -460,7 +460,7 @@ func (g *Generator) generateModelFile() error {
 	errChan := make(chan error)
 	pool := pools.NewPool(concurrent)
 	for _, data := range g.modelData {
-		if data == nil || !data.GenBaseStruct {
+		if data == nil || !data.Generated {
 			continue
 		}
 		pool.Wait()
@@ -547,13 +547,13 @@ func (g *Generator) output(fileName string, content []byte) error {
 }
 
 func (g *Generator) pushQueryStructMeta(meta *generate.QueryStructMeta) (*genInfo, error) {
-	structName := meta.StructName
+	structName := meta.ModelStructName
 	if g.Data[structName] == nil {
 		g.Data[structName] = &genInfo{QueryStructMeta: meta}
 	}
 	if g.Data[structName].Source != meta.Source {
 		return nil, fmt.Errorf("cannot generate struct with the same name from different source:%s.%s and %s.%s",
-			meta.StructInfo.Package, meta.StructName, g.Data[structName].StructInfo.Package, g.Data[structName].StructName)
+			meta.StructInfo.Package, meta.ModelStructName, g.Data[structName].StructInfo.Package, g.Data[structName].ModelStructName)
 	}
 	return g.Data[structName], nil
 }

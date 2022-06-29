@@ -9,12 +9,12 @@ import (
 
 func checkCustomMethod(t *testing.T, expMethods []*parser.Method, methods ...interface{}) {
 	base := &QueryStructMeta{
-		GenBaseStruct: true,
-		FileName:      "users",
-		S:             "u",
-		NewStructName: "user",
-		StructName:    "User",
-		TableName:     "users",
+		Generated:       true,
+		FileName:        "users",
+		S:               "u",
+		QueryStructName: "user",
+		ModelStructName: "User",
+		TableName:       "users",
 		StructInfo: parser.Param{
 			PkgPath: "",
 			Package: "model",

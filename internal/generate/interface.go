@@ -131,7 +131,7 @@ func (m *InterfaceMethod) checkMethod(methods []*InterfaceMethod, s *QueryStruct
 	for _, f := range s.Fields {
 		if f.Name == m.MethodName {
 			return fmt.Errorf("can not generate method same name with struct field:[%s.%s] and [%s.%s]",
-				m.InterfaceName, m.MethodName, s.StructName, f.Name)
+				m.InterfaceName, m.MethodName, s.ModelStructName, f.Name)
 		}
 	}
 

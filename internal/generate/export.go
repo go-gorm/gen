@@ -34,17 +34,17 @@ func GetQueryStructMeta(db *gorm.DB, conf *model.Config) (*QueryStructMeta, erro
 	}
 
 	return &QueryStructMeta{
-		db:             db,
-		Source:         model.Table,
-		GenBaseStruct:  true,
-		FileName:       fileName,
-		TableName:      tableName,
-		StructName:     structName,
-		NewStructName:  uncaptialize(structName),
-		S:              strings.ToLower(structName[0:1]),
-		StructInfo:     parser.Param{Type: structName, Package: conf.ModelPkg},
-		ImportPkgPaths: conf.ImportPkgPaths,
-		Fields:         getFields(db, conf, columns),
+		db:              db,
+		Source:          model.Table,
+		Generated:       true,
+		FileName:        fileName,
+		TableName:       tableName,
+		ModelStructName: structName,
+		QueryStructName: uncaptialize(structName),
+		S:               strings.ToLower(structName[0:1]),
+		StructInfo:      parser.Param{Type: structName, Package: conf.ModelPkg},
+		ImportPkgPaths:  conf.ImportPkgPaths,
+		Fields:          getFields(db, conf, columns),
 	}, nil
 }
 
@@ -95,16 +95,16 @@ func GetQueryStructMetaFromObject(obj helper.Object, conf *model.Config) (*Query
 	}
 
 	return &QueryStructMeta{
-		Source:         model.Object,
-		GenBaseStruct:  true,
-		FileName:       fileName,
-		TableName:      tableName,
-		StructName:     structName,
-		NewStructName:  uncaptialize(structName),
-		S:              strings.ToLower(structName[0:1]),
-		StructInfo:     parser.Param{Type: structName, Package: conf.ModelPkg},
-		ImportPkgPaths: append(conf.ImportPkgPaths, obj.ImportPkgPaths()...),
-		Fields:         fields,
+		Source:          model.Object,
+		Generated:       true,
+		FileName:        fileName,
+		TableName:       tableName,
+		ModelStructName: structName,
+		QueryStructName: uncaptialize(structName),
+		S:               strings.ToLower(structName[0:1]),
+		StructInfo:      parser.Param{Type: structName, Package: conf.ModelPkg},
+		ImportPkgPaths:  append(conf.ImportPkgPaths, obj.ImportPkgPaths()...),
+		Fields:          fields,
 	}, nil
 }
 
@@ -128,12 +128,12 @@ func ConvertStructs(db *gorm.DB, structs ...interface{}) (metas []*QueryStructMe
 		}
 
 		meta := &QueryStructMeta{
-			S:             getPureName(name),
-			StructName:    name,
-			NewStructName: uncaptialize(newStructName),
-			StructInfo:    parser.Param{PkgPath: structType.PkgPath(), Type: name, Package: getPackageName(structType.String())},
-			Source:        model.Struct,
-			db:            db,
+			S:               getPureName(name),
+			ModelStructName: name,
+			QueryStructName: uncaptialize(newStructName),
+			StructInfo:      parser.Param{PkgPath: structType.PkgPath(), Type: name, Package: getPackageName(structType.String())},
+			Source:          model.Struct,
+			db:              db,
 		}
 		if err := meta.parseStruct(st); err != nil {
 			return nil, fmt.Errorf("transform struct [%s.%s] error:%s", meta.StructInfo.Package, name, err)
@@ -151,11 +151,11 @@ func ConvertStructs(db *gorm.DB, structs ...interface{}) (metas []*QueryStructMe
 // BuildDIYMethod check the legitimacy of interfaces
 func BuildDIYMethod(f *parser.InterfaceSet, s *QueryStructMeta, data []*InterfaceMethod) (checkResults []*InterfaceMethod, err error) {
 	for _, interfaceInfo := range f.Interfaces {
-		if interfaceInfo.MatchStruct(s.StructName) {
+		if interfaceInfo.MatchStruct(s.ModelStructName) {
 			for _, method := range interfaceInfo.Methods {
 				t := &InterfaceMethod{
 					S:             s.S,
-					TargetStruct:  s.NewStructName,
+					TargetStruct:  s.QueryStructName,
 					OriginStruct:  s.StructInfo,
 					MethodName:    method.MethodName,
 					Params:        method.Params,
@@ -204,7 +204,7 @@ func ParseStructRelationShip(relationship *schema.Relationships) []field.Relatio
 // GetStructNames get struct names from base structs
 func GetStructNames(bases []*QueryStructMeta) (names []string) {
 	for _, base := range bases {
-		names = append(names, base.StructName)
+		names = append(names, base.ModelStructName)
 	}
 	return names
 }

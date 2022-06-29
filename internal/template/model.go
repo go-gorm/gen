@@ -13,10 +13,10 @@ import (
 	{{range .ImportPkgPaths}}{{.}} ` + "\n" + `{{end}}
 )
 
-{{if .TableName -}}const TableName{{.StructName}} = "{{.TableName}}"{{- end}}
+{{if .TableName -}}const TableName{{.ModelStructName}} = "{{.TableName}}"{{- end}}
 
-// {{.StructName}} {{.StructComment}}
-type {{.StructName}} struct {
+// {{.ModelStructName}} {{.StructComment}}
+type {{.ModelStructName}} struct {
     {{range .Fields}}
 	{{if .MultilineComment -}}
 	/*
@@ -29,9 +29,9 @@ type {{.StructName}} struct {
 }
 
 {{if .TableName -}}
-// TableName {{.StructName}}'s table name
-func (*{{.StructName}}) TableName() string {
-    return TableName{{.StructName}}
+// TableName {{.ModelStructName}}'s table name
+func (*{{.ModelStructName}}) TableName() string {
+    return TableName{{.ModelStructName}}
 }
 {{- end}}
 `

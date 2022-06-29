@@ -18,17 +18,17 @@ import (
 type QueryStructMeta struct {
 	db *gorm.DB
 
-	GenBaseStruct  bool   // whether to generate db model
-	FileName       string // generated file name
-	S              string // the first letter(lower case)of simple Name
-	NewStructName  string // internal query struct name
-	StructName     string // origin/model struct name
-	TableName      string // table name in db server
-	StructInfo     parser.Param
-	Fields         []*model.Field
-	Source         model.SourceCode
-	ImportPkgPaths []string
-	DIYMethods     []*parser.Method // user custom method bind to db base struct
+	Generated       bool   // whether to generate db model
+	FileName        string // generated file name
+	S               string // the first letter(lower case)of simple Name (receiver)
+	QueryStructName string // internal query struct name
+	ModelStructName string // origin/model struct name
+	TableName       string // table name in db server
+	StructInfo      parser.Param
+	Fields          []*model.Field
+	Source          model.SourceCode
+	ImportPkgPaths  []string
+	DIYMethods      []*parser.Method // user custom method bind to db base struct
 
 	interfaceMode bool
 }
@@ -108,10 +108,10 @@ func (b *QueryStructMeta) HasField() bool { return len(b.Fields) > 0 }
 // check if struct is exportable and if struct in main package and if field's type is regular
 func (b *QueryStructMeta) check() (err error) {
 	if b.StructInfo.InMainPkg() {
-		return fmt.Errorf("can't generated data object for struct in main package, ignore:%s", b.StructName)
+		return fmt.Errorf("can't generated data object for struct in main package, ignore:%s", b.ModelStructName)
 	}
-	if !isCapitalize(b.StructName) {
-		return fmt.Errorf("can't generated data object for non-exportable struct, ignore:%s", b.NewStructName)
+	if !isCapitalize(b.ModelStructName) {
+		return fmt.Errorf("can't generated data object for non-exportable struct, ignore:%s", b.QueryStructName)
 	}
 	return nil
 }
@@ -145,7 +145,7 @@ func (b *QueryStructMeta) ReviseDIYMethod() error {
 			continue
 		}
 		method.Receiver.Package = ""
-		method.Receiver.Type = b.StructName
+		method.Receiver.Type = b.ModelStructName
 		methods = append(methods, method)
 		methodMap[method.MethodName] = true
 	}
@@ -184,9 +184,9 @@ func (b QueryStructMeta) IfaceMode(on bool) *QueryStructMeta {
 // ReturnObject return object in generated code
 func (b *QueryStructMeta) ReturnObject() string {
 	if b.interfaceMode {
-		return fmt.Sprint("I", b.StructName, "Do")
+		return fmt.Sprint("I", b.ModelStructName, "Do")
 	}
-	return fmt.Sprint("*", b.NewStructName, "Do")
+	return fmt.Sprint("*", b.QueryStructName, "Do")
 }
 
 func isStructType(data reflect.Value) bool {
