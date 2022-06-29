@@ -51,8 +51,8 @@ func ConvertStructs(db *gorm.DB, structs ...interface{}) (bases []*BaseStruct, e
 	return
 }
 
-// BuildDiyMethod check the legitimacy of interfaces
-func BuildDiyMethod(f *parser.InterfaceSet, s *BaseStruct, data []*InterfaceMethod) (checkResults []*InterfaceMethod, err error) {
+// BuildDIYMethod check the legitimacy of interfaces
+func BuildDIYMethod(f *parser.InterfaceSet, s *BaseStruct, data []*InterfaceMethod) (checkResults []*InterfaceMethod, err error) {
 	for _, interfaceInfo := range f.Interfaces {
 		if interfaceInfo.MatchStruct(s.StructName) {
 			for _, method := range interfaceInfo.Methods {
@@ -79,7 +79,7 @@ func BuildDiyMethod(f *parser.InterfaceSet, s *BaseStruct, data []*InterfaceMeth
 				if err = t.checkSQL(); err != nil {
 					return
 				}
-				_, err = t.Sections.BuildSQL()
+				_, err = t.Section.BuildSQL()
 				if err != nil {
 					err = fmt.Errorf("sql [%s] build err:%w", t.SQLString, err)
 					return

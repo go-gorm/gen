@@ -109,7 +109,7 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 	for i, opt := range fieldOpts {
 		modelFieldOpts[i] = opt
 	}
-	s, err := check.GenBaseStruct(g.db, model.Conf{
+	s, err := check.GetBaseStruct(g.db, model.Conf{
 		ModelPkg:       g.Config.ModelPkgPath,
 		TablePrefix:    g.getTablePrefix(),
 		TableName:      tableName,
@@ -226,7 +226,7 @@ func (g *Generator) apply(fc interface{}, structs []*check.BaseStruct) {
 			panic("gen struct fail")
 		}
 
-		functions, err := check.BuildDiyMethod(readInterface, interfaceStruct, data.Interfaces)
+		functions, err := check.BuildDIYMethod(readInterface, interfaceStruct, data.Interfaces)
 		if err != nil {
 			g.db.Logger.Error(context.Background(), "check interface fail: %v", err)
 			panic("check interface fail")

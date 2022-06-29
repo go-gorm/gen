@@ -25,8 +25,8 @@ const (
 	DefaultModelPkg = "model"
 )
 
-// GenBaseStruct generate db model by table name
-func GenBaseStruct(db *gorm.DB, conf model.Conf) (base *BaseStruct, err error) {
+// GetBaseStruct generate db model by table name
+func GetBaseStruct(db *gorm.DB, conf model.Conf) (*BaseStruct, error) {
 	modelPkg := conf.ModelPkg
 	tablePrefix := conf.TablePrefix
 	tableName := conf.TableName
@@ -39,7 +39,7 @@ func GenBaseStruct(db *gorm.DB, conf model.Conf) (base *BaseStruct, err error) {
 	if conf.ModelNameNS != nil {
 		structName = conf.ModelNameNS(tableName)
 	}
-	if err = checkStructName(structName); err != nil {
+	if err := checkStructName(structName); err != nil {
 		return nil, fmt.Errorf("model name %q is invalid: %w", structName, err)
 	}
 
@@ -65,20 +65,8 @@ func GenBaseStruct(db *gorm.DB, conf model.Conf) (base *BaseStruct, err error) {
 	}
 	modelPkg = filepath.Base(modelPkg)
 
-	base = &BaseStruct{
-		db:             db,
-		Source:         model.Table,
-		GenBaseStruct:  true,
-		FileName:       fileName,
-		TableName:      tableName,
-		StructName:     structName,
-		NewStructName:  uncaptialize(structName),
-		S:              strings.ToLower(structName[0:1]),
-		StructInfo:     parser.Param{Type: structName, Package: modelPkg},
-		ImportPkgPaths: conf.ImportPkgPaths,
-	}
-
 	modifyOpts, filterOpts, createOpts := conf.SortOpt()
+	fields := make([]*model.Field, 0, len(columns)+len(createOpts))
 	for _, col := range columns {
 		col.SetDataTypeMap(conf.DataTypeMap)
 		col.WithNS(conf.FieldJSONTagNS, conf.FieldNewTagNS)
@@ -100,12 +88,10 @@ func GenBaseStruct(db *gorm.DB, conf model.Conf) (base *BaseStruct, err error) {
 			m.Name = db.NamingStrategy.SchemaName(m.Name)
 		}
 
-		base.Fields = append(base.Fields, m)
+		fields = append(fields, m)
 	}
-
 	for _, create := range createOpts {
 		m := create.Operator()(nil)
-
 		if m.Relation != nil {
 			if m.Relation.Model() != nil {
 				stmt := gorm.Statement{DB: db}
@@ -116,11 +102,22 @@ func GenBaseStruct(db *gorm.DB, conf model.Conf) (base *BaseStruct, err error) {
 			}
 			m.Type = strings.ReplaceAll(m.Type, modelPkg+".", "") // remove modelPkg in field's Type, avoid import error
 		}
-
-		base.Fields = append(base.Fields, m)
+		fields = append(fields, m)
 	}
 
-	return base, nil
+	return &BaseStruct{
+		db:             db,
+		Source:         model.Table,
+		GenBaseStruct:  true,
+		FileName:       fileName,
+		TableName:      tableName,
+		StructName:     structName,
+		NewStructName:  uncaptialize(structName),
+		S:              strings.ToLower(structName[0:1]),
+		StructInfo:     parser.Param{Type: structName, Package: modelPkg},
+		ImportPkgPaths: conf.ImportPkgPaths,
+		Fields:         fields,
+	}, nil
 }
 
 func filterField(m *model.Field, opts []model.FieldOpt) *model.Field {
@@ -190,20 +187,9 @@ func GenBaseStructFromObject(obj helper.Object, conf model.Conf) (*BaseStruct, e
 		fileName = schema.NamingStrategy{SingularTable: true}.TableName(fileName)
 	}
 
-	base := &BaseStruct{
-		Source:         model.Object,
-		GenBaseStruct:  true,
-		FileName:       fileName,
-		TableName:      tableName,
-		StructName:     structName,
-		NewStructName:  uncaptialize(structName),
-		S:              strings.ToLower(structName[0:1]),
-		StructInfo:     parser.Param{Type: structName, Package: pkgName},
-		ImportPkgPaths: append(conf.ImportPkgPaths, obj.ImportPkgPaths()...),
-	}
-
+	fields := make([]*model.Field, 0, 16)
 	for _, field := range obj.Fields() {
-		base.Fields = append(base.Fields, &model.Field{
+		fields = append(fields, &model.Field{
 			Name:             field.Name(),
 			Type:             field.Type(),
 			ColumnName:       field.ColumnName(),
@@ -214,5 +200,17 @@ func GenBaseStructFromObject(obj helper.Object, conf model.Conf) (*BaseStruct, e
 			MultilineComment: strings.Contains(field.Comment(), "\n"),
 		})
 	}
-	return base, nil
+
+	return &BaseStruct{
+		Source:         model.Object,
+		GenBaseStruct:  true,
+		FileName:       fileName,
+		TableName:      tableName,
+		StructName:     structName,
+		NewStructName:  uncaptialize(structName),
+		S:              strings.ToLower(structName[0:1]),
+		StructInfo:     parser.Param{Type: structName, Package: pkgName},
+		ImportPkgPaths: append(conf.ImportPkgPaths, obj.ImportPkgPaths()...),
+		Fields:         fields,
+	}, nil
 }
