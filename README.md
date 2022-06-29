@@ -35,6 +35,7 @@ Gen: Friendly & Safer [GORM](https://github.com/go-gorm/gorm) powered by Code Ge
     - [Project Directory](#project-directory)
   - [API Examples](#api-examples)
     - [Generate](#generate)
+      - [Generate Mode](#generate-mode)
       - [Generate Model](#generate-model)
       - [Data Mapping](#data-mapping)
     - [Field Expression](#field-expression)
@@ -232,6 +233,20 @@ demo
 ## API Examples
 
 ### Generate
+
+#### Generate Mode
+
+```go
+ g := gen.NewGenerator(gen.Config{
+        ...
+        Mode: gen.WithoutContext|gen.WithDefaultQuery|gen.WithQueryInterface,
+        ...
+ })
+```
+
+- `WithDefaultQuery` generate default query struct
+- `WithoutContext` generate code without context constrain
+- `WithQueryInterface` generate interface instead of struct for querying
 
 #### Generate Model
 
