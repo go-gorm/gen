@@ -1,4 +1,4 @@
-package check
+package generate
 
 import (
 	"reflect"
