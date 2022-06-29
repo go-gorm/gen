@@ -14,11 +14,11 @@ func checkBuildExpr(t *testing.T, SQL string, splitResult, generateResult []stri
 	}
 
 	if len(i.Sections.members) != len(splitResult) {
-		t.Errorf("Sql length exp:%v got:%v", len(generateResult), len(i.Sections.members))
+		t.Errorf("SQL length exp:%v got:%v", len(generateResult), len(i.Sections.members))
 	}
 	for index := range splitResult {
 		if splitResult[index] != i.Sections.members[index].Value {
-			t.Errorf("Sql expects \nexp:%v \ngot:%v", splitResult[index], i.Sections.members[index].Value)
+			t.Errorf("SQL expects \nexp:%v \ngot:%v", splitResult[index], i.Sections.members[index].Value)
 		}
 	}
 	_, err = i.Sections.BuildSQL()
@@ -27,11 +27,11 @@ func checkBuildExpr(t *testing.T, SQL string, splitResult, generateResult []stri
 	}
 
 	if len(i.Sections.Tmpls) != len(generateResult) {
-		t.Errorf("Sql length exp:%v got:%v", len(i.Sections.Tmpls), len(generateResult))
+		t.Errorf("SQL length exp:%v got:%v", len(i.Sections.Tmpls), len(generateResult))
 	}
 	for index := range generateResult {
 		if generateResult[index] != i.Sections.Tmpls[index] {
-			t.Errorf("Sql expects \nexp:%v \ngot:%v", generateResult[index], i.Sections.Tmpls[index])
+			t.Errorf("SQL expects \nexp:%v \ngot:%v", generateResult[index], i.Sections.Tmpls[index])
 		}
 	}
 

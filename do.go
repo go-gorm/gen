@@ -178,6 +178,8 @@ func (d *DO) Alias() string {
 func (*DO) Columns(cols ...field.Expr) Columns { return cols }
 
 // ======================== chainable api ========================
+
+// Not ...
 func (d *DO) Not(conds ...Condition) Dao {
 	exprs, err := condToExpression(conds)
 	if err != nil {
@@ -189,6 +191,7 @@ func (d *DO) Not(conds ...Condition) Dao {
 	return d.getInstance(d.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Not(exprs...)}}))
 }
 
+// Or ...
 func (d *DO) Or(conds ...Condition) Dao {
 	exprs, err := condToExpression(conds)
 	if err != nil {
@@ -200,6 +203,7 @@ func (d *DO) Or(conds ...Condition) Dao {
 	return d.getInstance(d.db.Clauses(clause.Where{Exprs: []clause.Expression{clause.Or(clause.And(exprs...))}}))
 }
 
+// Select ...
 func (d *DO) Select(columns ...field.Expr) Dao {
 	if len(columns) == 0 {
 		return d.getInstance(d.db.Clauses(clause.Select{}))
@@ -211,6 +215,7 @@ func (d *DO) Select(columns ...field.Expr) Dao {
 	return d.getInstance(d.db.Select(strings.Join(query, ","), args...))
 }
 
+// Where ...
 func (d *DO) Where(conds ...Condition) Dao {
 	exprs, err := condToExpression(conds)
 	if err != nil {
@@ -222,6 +227,7 @@ func (d *DO) Where(conds ...Condition) Dao {
 	return d.getInstance(d.db.Clauses(clause.Where{Exprs: exprs}))
 }
 
+// Order ...
 func (d *DO) Order(columns ...field.Expr) Dao {
 	// lazy build Columns
 	// if c, ok := d.db.Statement.Clauses[clause.OrderBy{}.Name()]; ok {
@@ -236,10 +242,10 @@ func (d *DO) Order(columns ...field.Expr) Dao {
 	if len(columns) == 0 {
 		return d
 	}
-	return d.getInstance(d.db.Order(d.calcOrderValue(columns...)))
+	return d.getInstance(d.db.Order(d.toOrderValue(columns...)))
 }
 
-func (d *DO) calcOrderValue(columns ...field.Expr) string {
+func (d *DO) toOrderValue(columns ...field.Expr) string {
 	// eager build Columns
 	orderArray := make([]string, len(columns))
 	for i, c := range columns {
@@ -248,10 +254,12 @@ func (d *DO) calcOrderValue(columns ...field.Expr) string {
 	return strings.Join(orderArray, ",")
 }
 
+// Distinct ...
 func (d *DO) Distinct(columns ...field.Expr) Dao {
 	return d.getInstance(d.db.Distinct(toInterfaceSlice(toColExprFullName(d.db.Statement, columns...))...))
 }
 
+// Omit ...
 func (d *DO) Omit(columns ...field.Expr) Dao {
 	if len(columns) == 0 {
 		return d
@@ -259,6 +267,7 @@ func (d *DO) Omit(columns ...field.Expr) Dao {
 	return d.getInstance(d.db.Omit(getColumnName(columns...)...))
 }
 
+// Group ...
 func (d *DO) Group(columns ...field.Expr) Dao {
 	if len(columns) == 0 {
 		return d
@@ -270,6 +279,7 @@ func (d *DO) Group(columns ...field.Expr) Dao {
 	return d.getInstance(d.db.Group(name))
 }
 
+// Having ...
 func (d *DO) Having(conds ...Condition) Dao {
 	exprs, err := condToExpression(conds)
 	if err != nil {
@@ -281,14 +291,17 @@ func (d *DO) Having(conds ...Condition) Dao {
 	return d.getInstance(d.db.Clauses(clause.GroupBy{Having: exprs}))
 }
 
+// Limit ...
 func (d *DO) Limit(limit int) Dao {
 	return d.getInstance(d.db.Limit(limit))
 }
 
+// Offset ...
 func (d *DO) Offset(offset int) Dao {
 	return d.getInstance(d.db.Offset(offset))
 }
 
+// Scopes ...
 func (d *DO) Scopes(funcs ...func(Dao) Dao) Dao {
 	fcs := make([]func(*gorm.DB) *gorm.DB, len(funcs))
 	for i, f := range funcs {
@@ -298,18 +311,22 @@ func (d *DO) Scopes(funcs ...func(Dao) Dao) Dao {
 	return d.getInstance(d.db.Scopes(fcs...))
 }
 
+// Unscoped ...
 func (d *DO) Unscoped() Dao {
 	return d.getInstance(d.db.Unscoped())
 }
 
+// Join ...
 func (d *DO) Join(table schema.Tabler, conds ...field.Expr) Dao {
 	return d.join(table, clause.InnerJoin, conds)
 }
 
+// LeftJoin ...
 func (d *DO) LeftJoin(table schema.Tabler, conds ...field.Expr) Dao {
 	return d.join(table, clause.LeftJoin, conds)
 }
 
+// RightJoin ...
 func (d *DO) RightJoin(table schema.Tabler, conds ...field.Expr) Dao {
 	return d.join(table, clause.RightJoin, conds)
 }
@@ -336,6 +353,7 @@ func (d *DO) join(table schema.Tabler, joinType clause.JoinType, conds []field.E
 	return d.getInstance(d.db.Clauses(from))
 }
 
+// Attrs ...
 func (d *DO) Attrs(attrs ...field.AssignExpr) Dao {
 	if len(attrs) == 0 {
 		return d
@@ -343,6 +361,7 @@ func (d *DO) Attrs(attrs ...field.AssignExpr) Dao {
 	return d.getInstance(d.db.Attrs(d.attrsValue(attrs)...))
 }
 
+// Assign ...
 func (d *DO) Assign(attrs ...field.AssignExpr) Dao {
 	if len(attrs) == 0 {
 		return d
@@ -360,6 +379,7 @@ func (d *DO) attrsValue(attrs []field.AssignExpr) []interface{} {
 	return values
 }
 
+// Joins ...
 func (d *DO) Joins(field field.RelationField) Dao {
 	var args []interface{}
 
@@ -473,6 +493,7 @@ func (d *DO) Joins(field field.RelationField) Dao {
 // 	return d.getInstance(d.db.Preload(string(column.Path())))
 // }
 
+// Preload ...
 func (d *DO) Preload(field field.RelationField) Dao {
 	var args []interface{}
 	if conds := field.GetConds(); len(conds) > 0 {
@@ -489,7 +510,7 @@ func (d *DO) Preload(field field.RelationField) Dao {
 	}
 	if columns := field.GetOrderCol(); len(columns) > 0 {
 		args = append(args, func(db *gorm.DB) *gorm.DB {
-			return db.Order(d.calcOrderValue(columns...))
+			return db.Order(d.toOrderValue(columns...))
 		})
 	}
 	if clauses := field.GetClauses(); len(clauses) > 0 {
@@ -544,26 +565,33 @@ func getFromClause(db *gorm.DB) *clause.From {
 }
 
 // ======================== finisher api ========================
+
+// Create ...
 func (d *DO) Create(value interface{}) error {
 	return d.db.Create(value).Error
 }
 
+// CreateInBatches ...
 func (d *DO) CreateInBatches(value interface{}, batchSize int) error {
 	return d.db.CreateInBatches(value, batchSize).Error
 }
 
+// Save ...
 func (d *DO) Save(value interface{}) error {
 	return d.db.Clauses(clause.OnConflict{UpdateAll: true}).Create(value).Error
 }
 
+// First ...
 func (d *DO) First() (result interface{}, err error) {
 	return d.singleQuery(d.db.First)
 }
 
+// Take ...
 func (d *DO) Take() (result interface{}, err error) {
 	return d.singleQuery(d.db.Take)
 }
 
+// Last ...
 func (d *DO) Last() (result interface{}, err error) {
 	return d.singleQuery(d.db.Last)
 }
@@ -586,6 +614,7 @@ func (d *DO) singleScan() (result interface{}, err error) {
 	return
 }
 
+// Find ...
 func (d *DO) Find() (results interface{}, err error) {
 	return d.multiQuery(d.db.Find)
 }
@@ -606,18 +635,22 @@ func (d *DO) findToMap() (interface{}, error) {
 	return results, err
 }
 
+// FindInBatches ...
 func (d *DO) FindInBatches(dest interface{}, batchSize int, fc func(tx Dao, batch int) error) error {
 	return d.db.FindInBatches(dest, batchSize, func(tx *gorm.DB, batch int) error { return fc(d.getInstance(tx), batch) }).Error
 }
 
+// FirstOrInit ...
 func (d *DO) FirstOrInit() (result interface{}, err error) {
 	return d.singleQuery(d.db.FirstOrInit)
 }
 
+// FirstOrCreate ...
 func (d *DO) FirstOrCreate() (result interface{}, err error) {
 	return d.singleQuery(d.db.FirstOrCreate)
 }
 
+// Update ...
 func (d *DO) Update(column field.Expr, value interface{}) (info ResultInfo, err error) {
 	tx := d.db.Model(d.newResultPointer())
 	columnStr := column.BuildColumn(d.db.Statement, field.WithoutQuote).String()
@@ -634,6 +667,7 @@ func (d *DO) Update(column field.Expr, value interface{}) (info ResultInfo, err 
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
+// UpdateSimple ...
 func (d *DO) UpdateSimple(columns ...field.AssignExpr) (info ResultInfo, err error) {
 	if len(columns) == 0 {
 		return
@@ -643,6 +677,7 @@ func (d *DO) UpdateSimple(columns ...field.AssignExpr) (info ResultInfo, err err
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
+// Updates ...
 func (d *DO) Updates(value interface{}) (info ResultInfo, err error) {
 	var result *gorm.DB
 	var rawTyp, typ reflect.Type
@@ -666,6 +701,7 @@ func (d *DO) Updates(value interface{}) (info ResultInfo, err error) {
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
+// UpdateColumn ...
 func (d *DO) UpdateColumn(column field.Expr, value interface{}) (info ResultInfo, err error) {
 	tx := d.db.Model(d.newResultPointer())
 	columnStr := column.BuildColumn(d.db.Statement, field.WithoutQuote).String()
@@ -682,6 +718,7 @@ func (d *DO) UpdateColumn(column field.Expr, value interface{}) (info ResultInfo
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
+// UpdateColumnSimple ...
 func (d *DO) UpdateColumnSimple(columns ...field.AssignExpr) (info ResultInfo, err error) {
 	if len(columns) == 0 {
 		return
@@ -691,6 +728,7 @@ func (d *DO) UpdateColumnSimple(columns ...field.AssignExpr) (info ResultInfo, e
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
+// UpdateColumns ...
 func (d *DO) UpdateColumns(value interface{}) (info ResultInfo, err error) {
 	result := d.db.Model(d.newResultPointer()).UpdateColumns(value)
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
@@ -718,35 +756,43 @@ func (d *DO) assignSet(exprs []field.AssignExpr) (set clause.Set) {
 	return append(set, callbacks.ConvertToAssignments(stmt)...)
 }
 
+// Delete ...
 func (d *DO) Delete() (info ResultInfo, err error) {
 	result := d.db.Model(d.newResultPointer()).Delete(reflect.New(d.modelType).Interface())
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
+// Count ...
 func (d *DO) Count() (count int64, err error) {
 	return count, d.db.Session(&gorm.Session{}).Model(d.newResultPointer()).Count(&count).Error
 }
 
+// Row ...
 func (d *DO) Row() *sql.Row {
 	return d.db.Model(d.newResultPointer()).Row()
 }
 
+// Rows ...
 func (d *DO) Rows() (*sql.Rows, error) {
 	return d.db.Model(d.newResultPointer()).Rows()
 }
 
+// Scan ...
 func (d *DO) Scan(dest interface{}) error {
 	return d.db.Model(d.newResultPointer()).Scan(dest).Error
 }
 
+// Pluck ...
 func (d *DO) Pluck(column field.Expr, dest interface{}) error {
 	return d.db.Model(d.newResultPointer()).Pluck(column.ColumnName().String(), dest).Error
 }
 
+// ScanRows ...
 func (d *DO) ScanRows(rows *sql.Rows, dest interface{}) error {
 	return d.db.Model(d.newResultPointer()).ScanRows(rows, dest)
 }
 
+// WithResult ...
 func (d DO) WithResult(fc func(tx Dao)) ResultInfo {
 	d.db = d.db.Set("", "")
 	fc(&d)
@@ -882,6 +928,7 @@ func Table(subQueries ...SubQuery) Dao {
 
 // ======================== sub query method ========================
 
+// Columns columns array
 type Columns []field.Expr
 
 // Set assign value by subquery
@@ -905,10 +952,12 @@ func (cs Columns) In(queryOrValue Condition) field.Expr {
 	}
 }
 
+// NotIn ...
 func (cs Columns) NotIn(queryOrValue Condition) field.Expr {
 	return field.Not(cs.In(queryOrValue))
 }
 
+// Eq ...
 func (cs Columns) Eq(query SubQuery) field.Expr {
 	if len(cs) == 0 {
 		return field.EmptyExpr()
@@ -916,6 +965,7 @@ func (cs Columns) Eq(query SubQuery) field.Expr {
 	return field.CompareSubQuery(field.EqOp, cs[0], query.underlyingDB())
 }
 
+// Neq ...
 func (cs Columns) Neq(query SubQuery) field.Expr {
 	if len(cs) == 0 {
 		return field.EmptyExpr()
@@ -923,6 +973,7 @@ func (cs Columns) Neq(query SubQuery) field.Expr {
 	return field.CompareSubQuery(field.NeqOp, cs[0], query.underlyingDB())
 }
 
+// Gt ...
 func (cs Columns) Gt(query SubQuery) field.Expr {
 	if len(cs) == 0 {
 		return field.EmptyExpr()
@@ -930,6 +981,7 @@ func (cs Columns) Gt(query SubQuery) field.Expr {
 	return field.CompareSubQuery(field.GtOp, cs[0], query.underlyingDB())
 }
 
+// Gte ...
 func (cs Columns) Gte(query SubQuery) field.Expr {
 	if len(cs) == 0 {
 		return field.EmptyExpr()
@@ -937,6 +989,7 @@ func (cs Columns) Gte(query SubQuery) field.Expr {
 	return field.CompareSubQuery(field.GteOp, cs[0], query.underlyingDB())
 }
 
+// Lt ...
 func (cs Columns) Lt(query SubQuery) field.Expr {
 	if len(cs) == 0 {
 		return field.EmptyExpr()
@@ -944,6 +997,7 @@ func (cs Columns) Lt(query SubQuery) field.Expr {
 	return field.CompareSubQuery(field.LtOp, cs[0], query.underlyingDB())
 }
 
+// Lte ...
 func (cs Columns) Lte(query SubQuery) field.Expr {
 	if len(cs) == 0 {
 		return field.EmptyExpr()

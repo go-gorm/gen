@@ -8,34 +8,46 @@ import (
 	"gorm.io/gen/field"
 )
 
+// Status sql status
 type Status int
 
 const (
+	// UNKNOWN ...
 	UNKNOWN Status = iota
+	// SQL ...
 	SQL
+	// DATA ...
 	DATA
+	// VARIABLE ...
 	VARIABLE
+	// IF ...
 	IF
+	// ELSE ...
 	ELSE
+	// WHERE ...
 	WHERE
+	// SET ...
 	SET
+	// FOR ...
 	FOR
+	// END ...
 	END
 )
 
+// SourceCode source code
 type SourceCode int
 
 const (
+	// Struct ...
 	Struct SourceCode = iota
+	// Table ...
 	Table
+	// Object ...
 	Object
 )
 
-type KeyWords struct {
-	words []string
-}
-
-var GormKeywords = KeyWords{
+// GormKeywords ...
+var GormKeywords = KeyWord{
 	words: []string{
 		"UnderlyingDB", "UseDB", "UseModel", "UseTable", "Quote", "Debug", "TableName", "WithContext",
 		"As", "Not", "Or", "Build", "Columns", "Hints",
@@ -51,13 +63,20 @@ var GormKeywords = KeyWords{
 	},
 }
 
-var GenKeywords = KeyWords{
+// GenKeywords ...
+var GenKeywords = KeyWord{
 	words: []string{
 		"generateSQL", "whereClause", "setClause",
 	},
 }
 
-func (g *KeyWords) FullMatch(word string) bool {
+// KeyWord ...
+type KeyWord struct {
+	words []string
+}
+
+// FullMatch full match
+func (g *KeyWord) FullMatch(word string) bool {
 	for _, item := range g.words {
 		if word == item {
 			return true
@@ -66,7 +85,8 @@ func (g *KeyWords) FullMatch(word string) bool {
 	return false
 }
 
-func (g *KeyWords) Contain(text string) bool {
+// Contain contain
+func (g *KeyWord) Contain(text string) bool {
 	for _, item := range g.words {
 		if strings.Contains(text, item) {
 			return true
@@ -144,6 +164,7 @@ type Field struct {
 	Relation *field.Relation
 }
 
+// Tags ...
 func (m *Field) Tags() string {
 	if m.OverwriteTag != "" {
 		return strings.TrimSpace(m.OverwriteTag)
@@ -162,8 +183,10 @@ func (m *Field) Tags() string {
 	return strings.TrimSpace(tags.String())
 }
 
+// IsRelation ...
 func (m *Field) IsRelation() bool { return m.Relation != nil }
 
+// GenType ...
 func (m *Field) GenType() string {
 	if m.IsRelation() {
 		return m.Type
@@ -188,6 +211,7 @@ func (m *Field) GenType() string {
 	}
 }
 
+// EscapeKeyword escape keyword
 func (m *Field) EscapeKeyword() *Field {
 	if GormKeywords.FullMatch(m.Name) {
 		m.Name += "_"
@@ -195,9 +219,11 @@ func (m *Field) EscapeKeyword() *Field {
 	return m
 }
 
+// SQLBuffer sql buffer
 type SQLBuffer struct{ bytes.Buffer }
 
-func (s *SQLBuffer) WriteSql(b byte) {
+// WriteSQL ...
+func (s *SQLBuffer) WriteSQL(b byte) {
 	switch b {
 	case '\n', '\t', ' ':
 		if s.Len() == 0 || s.Bytes()[s.Len()-1] != ' ' {
@@ -208,6 +234,7 @@ func (s *SQLBuffer) WriteSql(b byte) {
 	}
 }
 
+// Dump ...
 func (s *SQLBuffer) Dump() string {
 	defer s.Reset()
 	return s.String()

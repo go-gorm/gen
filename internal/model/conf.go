@@ -37,6 +37,7 @@ type Conf struct {
 	FieldConf
 }
 
+// SortOpt sort option
 func (cf *Conf) SortOpt() (modifyOpts []FieldOpt, filterOpts []FieldOpt, createOpts []FieldOpt) {
 	if cf == nil {
 		return
@@ -44,6 +45,7 @@ func (cf *Conf) SortOpt() (modifyOpts []FieldOpt, filterOpts []FieldOpt, createO
 	return sortFieldOpt(cf.FieldOpts)
 }
 
+// GetSchemaName get schema name
 func (cf *Conf) GetSchemaName(db *gorm.DB) string {
 	if cf == nil {
 		return defaultSchemaNameOpt(db)

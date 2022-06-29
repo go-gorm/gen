@@ -20,10 +20,12 @@ type Column struct {
 	newTagNS    func(columnName string) string                       `gorm:"-"`
 }
 
+// SetDataTypeMap set data type map
 func (c *Column) SetDataTypeMap(m map[string]func(detailType string) (dataType string)) {
 	c.dataTypeMap = m
 }
 
+// GetDataType get data type
 func (c *Column) GetDataType() (fieldtype string) {
 	if mapping, ok := c.dataTypeMap[c.DatabaseTypeName()]; ok {
 		return mapping(c.columnType())
@@ -34,6 +36,7 @@ func (c *Column) GetDataType() (fieldtype string) {
 	return dataType.Get(c.DatabaseTypeName(), c.columnType())
 }
 
+// WithNS with name strategy
 func (c *Column) WithNS(jsonTagNS, newTagNS func(columnName string) string) {
 	c.jsonTagNS, c.newTagNS = jsonTagNS, newTagNS
 	if c.jsonTagNS == nil {
@@ -44,6 +47,7 @@ func (c *Column) WithNS(jsonTagNS, newTagNS func(columnName string) string) {
 	}
 }
 
+// ToField convert to field
 func (c *Column) ToField(nullable, coverable, signable bool) *Field {
 	fieldType := c.GetDataType()
 	if signable && strings.Contains(c.columnType(), "unsigned") && strings.HasPrefix(fieldType, "int") {

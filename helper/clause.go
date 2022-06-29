@@ -6,11 +6,13 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+// Cond ...
 type Cond struct {
 	Cond   bool
 	Result string
 }
 
+// IfClause if clause
 func IfClause(conds []Cond) string {
 	judge := func(c Cond) string {
 		if c.Cond {
@@ -26,10 +28,12 @@ func IfClause(conds []Cond) string {
 	return " " + strings.Join(clauses, " ")
 }
 
+// WhereClause where clause
 func WhereClause(conds []string) string {
 	return joinClause(conds, "WHERE", whereValue, " ")
 }
 
+// SetClause set clause
 func SetClause(conds []string) string {
 	return joinClause(conds, "SET", setValue, ",")
 }
@@ -106,6 +110,7 @@ func setValue(value string) string {
 	return strings.Trim(value, ", ")
 }
 
+// JoinWhereBuilder join where builder
 func JoinWhereBuilder(src *strings.Builder, whereValue strings.Builder) {
 	value := trimAll(whereValue.String())
 	if value != "" {
@@ -115,6 +120,7 @@ func JoinWhereBuilder(src *strings.Builder, whereValue strings.Builder) {
 	}
 }
 
+// JoinSetBuilder join set builder
 func JoinSetBuilder(src *strings.Builder, setValue strings.Builder) {
 	value := trimAll(setValue.String())
 	if value != "" {
@@ -130,10 +136,12 @@ type JoinTblExpr struct {
 	TableExpr clause.Expression
 }
 
+// NewJoinTblExpr create new join table expr
 func NewJoinTblExpr(join clause.Join, tbExpr clause.Expression) JoinTblExpr {
 	return JoinTblExpr{Join: join, TableExpr: tbExpr}
 }
 
+// Build ...
 func (join JoinTblExpr) Build(builder clause.Builder) {
 	if builder == nil {
 		return
