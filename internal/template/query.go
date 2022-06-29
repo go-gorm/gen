@@ -50,7 +50,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 
 type queryCtx struct{ 
 	{{range $name,$d :=.Data -}}
-	{{$d.StructName}} I{{$d.StructName}}Do
+	{{$d.StructName}} {{$d.ReturnObject}}
 	{{end}}
 }
 
