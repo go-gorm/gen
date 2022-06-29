@@ -204,9 +204,10 @@ func (p *Param) TmplString() string {
 	return res.String()
 }
 
-func (p *Param) AllowType() bool {
+// judge whether the param type is basic type
+func (p *Param) IsBaseType() bool {
 	switch p.Type {
-	case "string", "bytes":
+	case "string", "byte":
 		return true
 	case "int", "int8", "int16", "int32", "int64", "uint", "uint8", "uint16", "uint32", "uint64":
 		return true
