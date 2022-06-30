@@ -437,7 +437,6 @@ func (d *DO) Joins(field field.RelationField) Dao {
 			Exprs: exprs,
 		}))
 	}
-
 	if columns := field.GetSelects(); len(columns) > 0 {
 		colNames := make([]string, len(columns))
 		for i, c := range columns {
@@ -447,7 +446,6 @@ func (d *DO) Joins(field field.RelationField) Dao {
 			return db.Select(colNames)
 		})
 	}
-
 	if columns := field.GetOrderCol(); len(columns) > 0 {
 		var os []string
 		for _, oe := range columns {
@@ -476,6 +474,11 @@ func (d *DO) Joins(field field.RelationField) Dao {
 		args = append(args, func(db *gorm.DB) *gorm.DB {
 			return db.Clauses(clauses...)
 		})
+	}
+	if funcs := field.GetScopes(); len(funcs) > 0 {
+		for _, f := range funcs {
+			args = append(args, (func(*gorm.DB) *gorm.DB)(f))
+		}
 	}
 	if offset, limit := field.GetPage(); offset|limit != 0 {
 		args = append(args, func(db *gorm.DB) *gorm.DB {
@@ -517,6 +520,11 @@ func (d *DO) Preload(field field.RelationField) Dao {
 		args = append(args, func(db *gorm.DB) *gorm.DB {
 			return db.Clauses(clauses...)
 		})
+	}
+	if funcs := field.GetScopes(); len(funcs) > 0 {
+		for _, f := range funcs {
+			args = append(args, (func(*gorm.DB) *gorm.DB)(f))
+		}
 	}
 	if offset, limit := field.GetPage(); offset|limit != 0 {
 		args = append(args, func(db *gorm.DB) *gorm.DB {
