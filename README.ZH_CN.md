@@ -1204,7 +1204,7 @@ user, err := u.WithContext(ctx).Where(u.Name.Eq("non_existing")).Assign(u.Age.Va
 // user -> User{ID: 112, Name: "non_existing", Age: 20}
 
 // Found user with `name` = `modi`, update it with Assign attributes
-user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Assign(u.Age.Value(20)).FirstOrCreate(&user)
+user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Assign(u.Age.Value(20)).FirstOrCreate()
 // SELECT * FROM users WHERE name = 'modi' ORDER BY id LIMIT 1;
 // UPDATE users SET age=20 WHERE id = 111;
 // user -> User{ID: 111, Name: "modi", Age: 20}
