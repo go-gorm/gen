@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/schema"
 )
@@ -22,6 +23,15 @@ const (
 	Many2Many RelationshipType = RelationshipType(schema.Many2Many) // Many2ManyRel many to many relationship
 )
 
+type relationScope func(*gorm.DB) *gorm.DB
+
+var (
+	// RelationFieldUnscoped relation fild unscoped
+	RelationFieldUnscoped relationScope = func(tx *gorm.DB) *gorm.DB {
+		return tx.Unscoped()
+	}
+)
+
 var ns = schema.NamingStrategy{}
 
 // RelationField interface for relation field
@@ -34,6 +44,7 @@ type RelationField interface {
 	Select(conds ...Expr) RelationField
 	Order(columns ...Expr) RelationField
 	Clauses(hints ...clause.Expression) RelationField
+	Scopes(funcs ...relationScope) RelationField
 	Offset(offset int) RelationField
 	Limit(limit int) RelationField
 
@@ -41,6 +52,7 @@ type RelationField interface {
 	GetSelects() []Expr
 	GetOrderCol() []Expr
 	GetClauses() []clause.Expression
+	GetScopes() []relationScope
 	GetPage() (offset, limit int)
 }
 
@@ -59,6 +71,7 @@ type Relation struct {
 	selects       []Expr
 	order         []Expr
 	clauses       []clause.Expression
+	scopes        []relationScope
 	limit, offset int
 }
 
@@ -120,6 +133,12 @@ func (r Relation) Clauses(hints ...clause.Expression) RelationField {
 	return &r
 }
 
+// Scopes set scopes func
+func (r Relation) Scopes(funcs ...relationScope) RelationField {
+	r.scopes = append(r.scopes, funcs...)
+	return &r
+}
+
 // Offset set relation offset
 func (r Relation) Offset(offset int) RelationField {
 	r.offset = offset
@@ -143,6 +162,9 @@ func (r *Relation) GetOrderCol() []Expr { return r.order }
 
 // GetClauses get clauses
 func (r *Relation) GetClauses() []clause.Expression { return r.clauses }
+
+// GetScopes get scope functions
+func (r *Relation) GetScopes() []relationScope { return r.scopes } // nolint
 
 // GetPage get offset and limit
 func (r *Relation) GetPage() (offset, limit int) { return r.offset, r.limit }
