@@ -1,4 +1,4 @@
-package check
+package generate
 
 import (
 	"testing"
@@ -13,25 +13,25 @@ func checkBuildExpr(t *testing.T, SQL string, splitResult, generateResult []stri
 		t.Errorf("err:%s\n", err)
 	}
 
-	if len(i.Sections.members) != len(splitResult) {
-		t.Errorf("SQL length exp:%v got:%v", len(generateResult), len(i.Sections.members))
+	if len(i.Section.members) != len(splitResult) {
+		t.Errorf("SQL length exp:%v got:%v", len(generateResult), len(i.Section.members))
 	}
 	for index := range splitResult {
-		if splitResult[index] != i.Sections.members[index].Value {
-			t.Errorf("SQL expects \nexp:%v \ngot:%v", splitResult[index], i.Sections.members[index].Value)
+		if splitResult[index] != i.Section.members[index].Value {
+			t.Errorf("SQL expects \nexp:%v \ngot:%v", splitResult[index], i.Section.members[index].Value)
 		}
 	}
-	_, err = i.Sections.BuildSQL()
+	_, err = i.Section.BuildSQL()
 	if err != nil {
 		t.Errorf("err:%s", err)
 	}
 
-	if len(i.Sections.Tmpls) != len(generateResult) {
-		t.Errorf("SQL length exp:%v got:%v", len(i.Sections.Tmpls), len(generateResult))
+	if len(i.Section.Tmpls) != len(generateResult) {
+		t.Errorf("SQL length exp:%v got:%v", len(i.Section.Tmpls), len(generateResult))
 	}
 	for index := range generateResult {
-		if generateResult[index] != i.Sections.Tmpls[index] {
-			t.Errorf("SQL expects \nexp:%v \ngot:%v", generateResult[index], i.Sections.Tmpls[index])
+		if generateResult[index] != i.Section.Tmpls[index] {
+			t.Errorf("SQL expects \nexp:%v \ngot:%v", generateResult[index], i.Section.Tmpls[index])
 		}
 	}
 

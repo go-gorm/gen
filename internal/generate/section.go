@@ -1,4 +1,4 @@
-package check
+package generate
 
 import (
 	"fmt"
@@ -8,169 +8,9 @@ import (
 	"gorm.io/gen/internal/model"
 )
 
-// Clause a symbol of clause, it can be sql condition clause, if clause, where clause, set clause and else clause
-type Clause interface {
-	String() string
-	Create() string
-}
-
-var (
-	_ Clause = new(SQLClause)
-	_ Clause = new(IfClause)
-	_ Clause = new(ElseClause)
-	_ Clause = new(WhereClause)
-	_ Clause = new(SetClause)
-)
-
-type clause struct {
-	VarName string
-	Type    model.Status
-}
-
-// SQLClause sql condition clause
-type SQLClause struct {
-	clause
-	Value []string
-}
-
-func (s SQLClause) String() string {
-	sqlString := strings.Join(s.Value, "+")
-	// trim left space
-	if strings.HasPrefix(sqlString, "\"") {
-		sqlString = `"` + strings.TrimLeft(sqlString, `" `)
-	}
-	// make sure right has only one space
-	if !strings.HasSuffix(sqlString, ` "`) {
-		sqlString += `+" "`
-	}
-	// Remove redundant connection symbols
-	return strings.ReplaceAll(sqlString, `"+"`, "")
-}
-
-// Create create clause
-func (s SQLClause) Create() string {
-	return fmt.Sprintf("%s.WriteString(%s)", s.VarName, s.String())
-}
-
-// Finish finish clause
-func (s SQLClause) Finish() string {
-	return fmt.Sprintf("%s.WriteString(%s)", s.VarName, s.String())
-}
-
-// IfClause if clause
-type IfClause struct {
-	clause
-	Value []Clause
-	slice section
-}
-
-func (i IfClause) String() string {
-	return i.slice.Value
-}
-
-// Create create clause
-func (i IfClause) Create() string {
-	return fmt.Sprintf("%s {", i.String())
-}
-
-// Finish finish clause
-func (i IfClause) Finish() string {
-	return "}"
-}
-
-// ElseClause else clause
-type ElseClause struct {
-	IfClause
-}
-
-func (e ElseClause) String() (res string) {
-	return e.slice.Value
-}
-
-// Create create clause
-func (e ElseClause) Create() string {
-	return fmt.Sprintf("} %s {", e.String())
-}
-
-// Finish finish clause
-func (e ElseClause) Finish() string {
-	return ""
-}
-
-// WhereClause where clause
-type WhereClause struct {
-	clause
-	Value []Clause
-}
-
-func (w WhereClause) String() string {
-	return fmt.Sprintf("helper.WhereTrim(%s.String())", w.VarName)
-}
-
-// Create create clause
-func (w WhereClause) Create() string {
-	return fmt.Sprintf("var %s strings.Builder", w.VarName)
-}
-
-// Finish finish clause
-func (w WhereClause) Finish(name string) string {
-	return fmt.Sprintf("helper.JoinWhereBuilder(&%s,%s)", name, w.VarName)
-}
-
-// SetClause set clause
-type SetClause struct {
-	clause
-	Value []Clause
-}
-
-func (s SetClause) String() string {
-	return fmt.Sprintf("helper.SetTrim(%s.String())", s.VarName)
-}
-
-// Create create clause
-func (s SetClause) Create() string {
-	return fmt.Sprintf("var %s strings.Builder", s.VarName)
-}
-
-// Finish finish clause
-func (s SetClause) Finish(name string) string {
-	return fmt.Sprintf("helper.JoinSetBuilder(&%s,%s)", name, s.VarName)
-}
-
-// ForClause set clause
-type ForClause struct {
-	clause
-	Value    []Clause
-	ForRange ForRange
-	forSlice section
-}
-
-func (f ForClause) String() string {
-	return f.forSlice.Value + "{"
-}
-
-// Create create clause
-func (f ForClause) Create() string {
-	return f.String()
-}
-
-// Finish finish clause
-func (f ForClause) Finish() string {
-	return "}"
-}
-
-// Sections split sql into chunks
-type Sections struct {
-	members      []section
-	Tmpls        []string
-	currentIndex int
-	ClauseTotal  map[model.Status]int
-	forValue     []ForRange
-}
-
-// NewSections create and initialize Sections
-func NewSections() *Sections {
-	return &Sections{
+// NewSection create and initialize Sections
+func NewSection() *Section {
+	return &Section{
 		ClauseTotal: map[model.Status]int{
 			model.WHERE: 0,
 			model.SET:   0,
@@ -178,8 +18,17 @@ func NewSections() *Sections {
 	}
 }
 
-// next: return next section and increase index by 1
-func (s *Sections) next() section {
+// Section split sql into chunks
+type Section struct {
+	members      []section
+	Tmpls        []string
+	currentIndex int
+	ClauseTotal  map[model.Status]int
+	forValue     []ForRange
+}
+
+// next return next section and increase index by 1
+func (s *Section) next() section {
 	if s.currentIndex < len(s.members)-1 {
 		s.currentIndex++
 		return s.members[s.currentIndex]
@@ -188,30 +37,30 @@ func (s *Sections) next() section {
 }
 
 // SubIndex take index one step back
-func (s *Sections) SubIndex() {
+func (s *Section) SubIndex() {
 	s.currentIndex--
 }
 
 // HasMore is has more section
-func (s *Sections) HasMore() bool {
+func (s *Section) HasMore() bool {
 	return s.currentIndex < len(s.members)-1
 }
 
 // IsNull whether section is empty
-func (s *Sections) IsNull() bool {
+func (s *Section) IsNull() bool {
 	return len(s.members) == 0
 }
 
 // current return current section
-func (s *Sections) current() section {
+func (s *Section) current() section {
 	return s.members[s.currentIndex]
 }
 
-func (s *Sections) appendTmpl(value string) {
+func (s *Section) appendTmpl(value string) {
 	s.Tmpls = append(s.Tmpls, value)
 }
 
-func (s *Sections) isInForValue(value string) (ForRange, bool) {
+func (s *Section) isInForValue(value string) (ForRange, bool) {
 	valueList := strings.Split(value, ".")
 	for _, v := range s.forValue {
 		if v.value == valueList[0] {
@@ -224,7 +73,7 @@ func (s *Sections) isInForValue(value string) (ForRange, bool) {
 	return ForRange{}, false
 }
 
-func (s *Sections) hasSameName(value string) bool {
+func (s *Section) hasSameName(value string) bool {
 	for _, p := range s.members {
 		if p.Type == model.FOR && p.ForRange.value == value {
 			return true
@@ -234,7 +83,7 @@ func (s *Sections) hasSameName(value string) bool {
 }
 
 // BuildSQL sql sections and append to tmpl, return a Clause array
-func (s *Sections) BuildSQL() ([]Clause, error) {
+func (s *Section) BuildSQL() ([]Clause, error) {
 	if s.IsNull() {
 		return nil, fmt.Errorf("sql is null")
 	}
@@ -289,7 +138,7 @@ func (s *Sections) BuildSQL() ([]Clause, error) {
 }
 
 // parseIF parse if clause
-func (s *Sections) parseIF(name string) (res IfClause, err error) {
+func (s *Section) parseIF(name string) (res IfClause, err error) {
 	c := s.current()
 	res.slice = c
 
@@ -361,7 +210,7 @@ func (s *Sections) parseIF(name string) (res IfClause, err error) {
 }
 
 // parseElSE parse else clause, the clause' type must be one of if, where, set, SQL condition
-func (s *Sections) parseElSE(name string) (res ElseClause, err error) {
+func (s *Section) parseElSE(name string) (res ElseClause, err error) {
 	res.slice = s.current()
 	s.appendTmpl(res.Create())
 
@@ -427,7 +276,7 @@ func (s *Sections) parseElSE(name string) (res ElseClause, err error) {
 }
 
 // parseWhere parse where clause, the clause' type must be one of if, SQL condition
-func (s *Sections) parseWhere() (res WhereClause, err error) {
+func (s *Section) parseWhere() (res WhereClause, err error) {
 	c := s.current()
 	res.VarName = s.GetName(c.Type)
 	s.appendTmpl(res.Create())
@@ -478,7 +327,7 @@ func (s *Sections) parseWhere() (res WhereClause, err error) {
 }
 
 // parseSet parse set clause, the clause' type must be one of if, SQL condition
-func (s *Sections) parseSet() (res SetClause, err error) {
+func (s *Section) parseSet() (res SetClause, err error) {
 	c := s.current()
 	res.VarName = s.GetName(c.Type)
 	s.appendTmpl(res.Create())
@@ -527,7 +376,7 @@ func (s *Sections) parseSet() (res SetClause, err error) {
 	return
 }
 
-func (s *Sections) parseFor(name string) (res ForClause, err error) {
+func (s *Section) parseFor(name string) (res ForClause, err error) {
 	c := s.current()
 	res.forSlice = c
 	s.appendTmpl(res.Create())
@@ -578,7 +427,7 @@ func (s *Sections) parseFor(name string) (res ForClause, err error) {
 }
 
 // parseSQL parse sql condition, the clause' type must be one of SQL condition, VARIABLE, Data
-func (s *Sections) parseSQL(name string) (res SQLClause) {
+func (s *Section) parseSQL(name string) (res SQLClause) {
 	res.VarName = name
 	res.Type = model.SQL
 	for {
@@ -610,7 +459,7 @@ func (s *Sections) parseSQL(name string) (res SQLClause) {
 }
 
 // checkSQLVar check sql variable by for loops value and external params
-func (s *Sections) checkSQLVar(param string, status model.Status, method *InterfaceMethod) (result section, err error) {
+func (s *Section) checkSQLVar(param string, status model.Status, method *InterfaceMethod) (result section, err error) {
 	paramName := strings.Split(param, ".")[0]
 	for index, part := range s.members {
 		if part.Type == model.FOR && part.ForRange.value == paramName {
@@ -636,7 +485,7 @@ func (s *Sections) checkSQLVar(param string, status model.Status, method *Interf
 }
 
 // GetName ...
-func (s *Sections) GetName(status model.Status) string {
+func (s *Section) GetName(status model.Status) string {
 	switch status {
 	case model.WHERE:
 		defer func() { s.ClauseTotal[model.WHERE]++ }()
@@ -647,4 +496,125 @@ func (s *Sections) GetName(status model.Status) string {
 	default:
 		return "generateSQL"
 	}
+}
+
+// checkTemplate check sql template's syntax (if/else/where/set/for)
+func (s *Section) checkTemplate(tmpl string) (part section, err error) {
+	part.Value = tmpl
+	part.SQLSlice = s
+	part.splitTemplate()
+
+	err = part.checkTemplate()
+
+	return
+}
+
+type section struct {
+	Type      model.Status
+	Value     string
+	ForRange  ForRange
+	SQLSlice  *Section
+	splitList []string
+}
+
+func (s *section) isEnd() bool {
+	return s.Type == model.END
+}
+
+func (s *section) String() string {
+	if s.Type == model.FOR {
+		return s.ForRange.String()
+	}
+	return s.Value
+}
+
+func (s *section) splitTemplate() {
+	s.splitList = strings.FieldsFunc(strings.TrimSpace(s.Value), func(r rune) bool {
+		return r == ':' || r == ' ' || r == '=' || r == ','
+	})
+}
+
+func (s *section) checkTemplate() error {
+	if len(s.splitList) == 0 {
+		return fmt.Errorf("template is null")
+	}
+	if model.GenKeywords.Contain(s.Value) {
+		return fmt.Errorf("template can not use gen keywords")
+	}
+
+	err := s.sectionType(s.splitList[0])
+	if err != nil {
+		return err
+	}
+
+	if s.Type == model.FOR {
+		if len(s.splitList) != 5 {
+			return fmt.Errorf("for range syntax error: %s", s.Value)
+		}
+		if s.SQLSlice.hasSameName(s.splitList[2]) {
+			return fmt.Errorf("cannot use the same value name in different for loops")
+		}
+		s.ForRange.index = s.splitList[1]
+		s.ForRange.value = s.splitList[2]
+		s.ForRange.rangeList = s.splitList[4]
+	}
+	return nil
+}
+
+func (s *section) sectionType(str string) error {
+	switch str {
+	case "if":
+		s.Type = model.IF
+	case "else":
+		s.Type = model.ELSE
+	case "for":
+		s.Type = model.FOR
+	case "where":
+		s.Type = model.WHERE
+	case "set":
+		s.Type = model.SET
+	case "end":
+		s.Type = model.END
+	default:
+		return fmt.Errorf("unknown syntax: %s", str)
+	}
+	return nil
+}
+
+func (s *section) SetForRangeKey(key string) {
+	s.ForRange.index = key
+	s.Value = s.String()
+}
+
+func (s *section) AddDataToParamMap() string {
+	return fmt.Sprintf("params[%q] = %s", s.SQLParamName(), s.Value)
+}
+
+func (s *section) SQLParamName() string {
+	return strings.Replace(s.Value, ".", "", -1)
+}
+
+// ForRange for range clause for diy method
+type ForRange struct {
+	index     string
+	value     string
+	suffix    string
+	rangeList string
+}
+
+func (f *ForRange) String() string {
+	return fmt.Sprintf("for %s, %s := range %s", f.index, f.value, f.rangeList)
+}
+
+func (f *ForRange) mapIndexName(prefix, dataName, clauseName string) string {
+	return fmt.Sprintf("\"%s%sFor%s_\"+strconv.Itoa(%s)", prefix, strings.Replace(dataName, ".", "", -1), strings.Title(clauseName), f.index)
+}
+
+// DataValue return data value
+func (f *ForRange) DataValue(dataName, clauseName string) string {
+	return f.mapIndexName("@", dataName, clauseName)
+}
+
+func (f *ForRange) appendDataToParams(dataName, clauseName string) string {
+	return fmt.Sprintf("params[%s]=%s%s", f.mapIndexName("", dataName, clauseName), f.value, f.suffix)
 }

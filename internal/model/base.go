@@ -8,6 +8,11 @@ import (
 	"gorm.io/gen/field"
 )
 
+const (
+	// DefaultModelPkg ...
+	DefaultModelPkg = "model"
+)
+
 // Status sql status
 type Status int
 

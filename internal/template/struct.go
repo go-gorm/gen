@@ -3,25 +3,25 @@ package template
 const (
 	// TableQueryStruct table query struct
 	TableQueryStruct = createMethod + `
-	type {{.NewStructName}} struct {
-		{{.NewStructName}}Do
+	type {{.QueryStructName}} struct {
+		{{.QueryStructName}}Do
 		` + fields + `
 	}
 	` + tableMethod + asMethond + updateFieldMethod + getFieldMethod + fillFieldMapMethod + cloneMethod + relationship
 
 	// TableQueryStructWithContext table query struct with context
 	TableQueryStructWithContext = createMethod + `
-	type {{.NewStructName}} struct {
-		{{.NewStructName}}Do {{.NewStructName}}Do
+	type {{.QueryStructName}} struct {
+		{{.QueryStructName}}Do {{.QueryStructName}}Do
 		` + fields + `
 	}
 	` + tableMethod + asMethond + updateFieldMethod + `
 	
-	func ({{.S}} *{{.NewStructName}}) WithContext(ctx context.Context) {{.ReturnObject}} { return {{.S}}.{{.NewStructName}}Do.WithContext(ctx)}
+	func ({{.S}} *{{.QueryStructName}}) WithContext(ctx context.Context) {{.ReturnObject}} { return {{.S}}.{{.QueryStructName}}Do.WithContext(ctx)}
 
-	func ({{.S}} {{.NewStructName}}) TableName() string { return {{.S}}.{{.NewStructName}}Do.TableName() } 
+	func ({{.S}} {{.QueryStructName}}) TableName() string { return {{.S}}.{{.QueryStructName}}Do.TableName() } 
 
-	func ({{.S}} {{.NewStructName}}) Alias() string { return {{.S}}.{{.NewStructName}}Do.Alias() }
+	func ({{.S}} {{.QueryStructName}}) Alias() string { return {{.S}}.{{.QueryStructName}}Do.Alias() }
 
 	` + getFieldMethod + fillFieldMapMethod + cloneMethod + relationship + defineMethodStruct
 
@@ -31,19 +31,19 @@ const (
 
 const (
 	createMethod = `
-	func new{{.StructName}}(db *gorm.DB) {{.NewStructName}} {
-		_{{.NewStructName}} := {{.NewStructName}}{}
+	func new{{.ModelStructName}}(db *gorm.DB) {{.QueryStructName}} {
+		_{{.QueryStructName}} := {{.QueryStructName}}{}
 	
-		_{{.NewStructName}}.{{.NewStructName}}Do.UseDB(db)
-		_{{.NewStructName}}.{{.NewStructName}}Do.UseModel(&{{.StructInfo.Package}}.{{.StructInfo.Type}}{})
+		_{{.QueryStructName}}.{{.QueryStructName}}Do.UseDB(db)
+		_{{.QueryStructName}}.{{.QueryStructName}}Do.UseModel(&{{.StructInfo.Package}}.{{.StructInfo.Type}}{})
 	
-		tableName := _{{.NewStructName}}.{{.NewStructName}}Do.TableName()
-		_{{$.NewStructName}}.ALL = field.NewField(tableName, "*")
+		tableName := _{{.QueryStructName}}.{{.QueryStructName}}Do.TableName()
+		_{{$.QueryStructName}}.ALL = field.NewField(tableName, "*")
 		{{range .Fields -}}
 		{{if not .IsRelation -}}
-			{{- if .ColumnName -}}_{{$.NewStructName}}.{{.Name}} = field.New{{.GenType}}(tableName, "{{.ColumnName}}"){{- end -}}
+			{{- if .ColumnName -}}_{{$.QueryStructName}}.{{.Name}} = field.New{{.GenType}}(tableName, "{{.ColumnName}}"){{- end -}}
 		{{- else -}}
-			_{{$.NewStructName}}.{{.Relation.Name}} = {{$.NewStructName}}{{.Relation.RelationshipName}}{{.Relation.Name}}{
+			_{{$.QueryStructName}}.{{.Relation.Name}} = {{$.QueryStructName}}{{.Relation.RelationshipName}}{{.Relation.Name}}{
 				db: db.Session(&gorm.Session{}),
 
 				{{.Relation.StructFieldInit}}
@@ -51,9 +51,9 @@ const (
 		{{end}}
 		{{end}}
 
-		_{{$.NewStructName}}.fillFieldMap()
+		_{{$.QueryStructName}}.fillFieldMap()
 		
-		return _{{.NewStructName}}
+		return _{{.QueryStructName}}
 	}
 	`
 	fields = `
@@ -62,27 +62,27 @@ const (
 	{{if not .IsRelation -}}
 		{{- if .ColumnName -}}{{.Name}} field.{{.GenType}}{{- end -}}
 	{{- else -}}
-		{{.Relation.Name}} {{$.NewStructName}}{{.Relation.RelationshipName}}{{.Relation.Name}}
+		{{.Relation.Name}} {{$.QueryStructName}}{{.Relation.RelationshipName}}{{.Relation.Name}}
 	{{end}}
 	{{end}}
 
 	fieldMap  map[string]field.Expr
 `
 	tableMethod = `
-func ({{.S}} {{.NewStructName}}) Table(newTableName string) *{{.NewStructName}} { 
-	{{.S}}.{{.NewStructName}}Do.UseTable(newTableName)
+func ({{.S}} {{.QueryStructName}}) Table(newTableName string) *{{.QueryStructName}} { 
+	{{.S}}.{{.QueryStructName}}Do.UseTable(newTableName)
 	return {{.S}}.updateTableName(newTableName)
 }
 `
 
 	asMethond = `	
-func ({{.S}} {{.NewStructName}}) As(alias string) *{{.NewStructName}} { 
-	{{.S}}.{{.NewStructName}}Do.DO = *({{.S}}.{{.NewStructName}}Do.As(alias).(*gen.DO))
+func ({{.S}} {{.QueryStructName}}) As(alias string) *{{.QueryStructName}} { 
+	{{.S}}.{{.QueryStructName}}Do.DO = *({{.S}}.{{.QueryStructName}}Do.As(alias).(*gen.DO))
 	return {{.S}}.updateTableName(alias)
 }
 `
 	updateFieldMethod = `
-func ({{.S}} *{{.NewStructName}}) updateTableName(table string) *{{.NewStructName}} { 
+func ({{.S}} *{{.QueryStructName}}) updateTableName(table string) *{{.QueryStructName}} { 
 	{{.S}}.ALL = field.NewField(table, "*")
 	{{range .Fields -}}
 	{{if not .IsRelation -}}
@@ -97,13 +97,13 @@ func ({{.S}} *{{.NewStructName}}) updateTableName(table string) *{{.NewStructNam
 `
 
 	cloneMethod = `
-func ({{.S}} {{.NewStructName}}) clone(db *gorm.DB) {{.NewStructName}} {
-	{{.S}}.{{.NewStructName}}Do.ReplaceDB(db)
+func ({{.S}} {{.QueryStructName}}) clone(db *gorm.DB) {{.QueryStructName}} {
+	{{.S}}.{{.QueryStructName}}Do.ReplaceDB(db)
 	return {{.S}}
 }
 `
 	getFieldMethod = `
-func ({{.S}} *{{.NewStructName}}) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
+func ({{.S}} *{{.QueryStructName}}) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := {{.S}}.fieldMap[fieldName]
 	if !ok || _f == nil {
 		return nil, false
@@ -116,10 +116,10 @@ func ({{.S}} *{{.NewStructName}}) GetFieldByName(fieldName string) (field.OrderE
 		`{{- $relation := .Relation }}{{- $relationship := $relation.RelationshipName}}` +
 		relationStruct + relationTx +
 		`{{end}}{{end}}`
-	defineMethodStruct = `type {{.NewStructName}}Do struct { gen.DO }`
+	defineMethodStruct = `type {{.QueryStructName}}Do struct { gen.DO }`
 
 	fillFieldMapMethod = `
-func ({{.S}} *{{.NewStructName}}) fillFieldMap() {
+func ({{.S}} *{{.QueryStructName}}) fillFieldMap() {
 	{{.S}}.fieldMap =  make(map[string]field.Expr, {{len .Fields}})
 	{{range .Fields -}}
 	{{if not .IsRelation -}}
@@ -131,30 +131,30 @@ func ({{.S}} *{{.NewStructName}}) fillFieldMap() {
 
 	defineDoInterface = `
 
-type I{{.StructName}}Do interface {
-	Debug() I{{.StructName}}Do
-	WithContext(ctx context.Context) I{{.StructName}}Do
+type I{{.ModelStructName}}Do interface {
+	Debug() I{{.ModelStructName}}Do
+	WithContext(ctx context.Context) I{{.ModelStructName}}Do
 	WithResult(fc func(tx gen.Dao)) gen.ResultInfo
 	As(alias string) gen.Dao
 	Columns(cols ...field.Expr) gen.Columns
-	Clauses(conds ...clause.Expression) I{{.StructName}}Do
-	Not(conds ...gen.Condition) I{{.StructName}}Do
-	Or(conds ...gen.Condition) I{{.StructName}}Do
-	Select(conds ...field.Expr) I{{.StructName}}Do
-	Where(conds ...gen.Condition) I{{.StructName}}Do
-	Order(conds ...field.Expr) I{{.StructName}}Do
-	Distinct(cols ...field.Expr) I{{.StructName}}Do
-	Omit(cols ...field.Expr) I{{.StructName}}Do
-	Join(table schema.Tabler, on ...field.Expr) I{{.StructName}}Do
-	LeftJoin(table schema.Tabler, on ...field.Expr) I{{.StructName}}Do
-	RightJoin(table schema.Tabler, on ...field.Expr) I{{.StructName}}Do
-	Group(cols ...field.Expr) I{{.StructName}}Do
-	Having(conds ...gen.Condition) I{{.StructName}}Do
-	Limit(limit int) I{{.StructName}}Do
-	Offset(offset int) I{{.StructName}}Do
+	Clauses(conds ...clause.Expression) I{{.ModelStructName}}Do
+	Not(conds ...gen.Condition) I{{.ModelStructName}}Do
+	Or(conds ...gen.Condition) I{{.ModelStructName}}Do
+	Select(conds ...field.Expr) I{{.ModelStructName}}Do
+	Where(conds ...gen.Condition) I{{.ModelStructName}}Do
+	Order(conds ...field.Expr) I{{.ModelStructName}}Do
+	Distinct(cols ...field.Expr) I{{.ModelStructName}}Do
+	Omit(cols ...field.Expr) I{{.ModelStructName}}Do
+	Join(table schema.Tabler, on ...field.Expr) I{{.ModelStructName}}Do
+	LeftJoin(table schema.Tabler, on ...field.Expr) I{{.ModelStructName}}Do
+	RightJoin(table schema.Tabler, on ...field.Expr) I{{.ModelStructName}}Do
+	Group(cols ...field.Expr) I{{.ModelStructName}}Do
+	Having(conds ...gen.Condition) I{{.ModelStructName}}Do
+	Limit(limit int) I{{.ModelStructName}}Do
+	Offset(offset int) I{{.ModelStructName}}Do
 	Count() (count int64, err error)
-	Scopes(funcs ...func(gen.Dao) gen.Dao) I{{.StructName}}Do
-	Unscoped() I{{.StructName}}Do
+	Scopes(funcs ...func(gen.Dao) gen.Dao) I{{.ModelStructName}}Do
+	Unscoped() I{{.ModelStructName}}Do
 	Create(values ...*{{.StructInfo.Package}}.{{.StructInfo.Type}}) error
 	CreateInBatches(values []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, batchSize int) error
 	Save(values ...*{{.StructInfo.Package}}.{{.StructInfo.Type}}) error
@@ -173,16 +173,16 @@ type I{{.StructName}}Do interface {
 	UpdateColumnSimple(columns ...field.AssignExpr) (info gen.ResultInfo, err error)
 	UpdateColumns(value interface{}) (info gen.ResultInfo, err error)
 	UpdateFrom(q gen.SubQuery) gen.Dao
-	Attrs(attrs ...field.AssignExpr) I{{.StructName}}Do
-	Assign(attrs ...field.AssignExpr) I{{.StructName}}Do
-	Joins(fields ...field.RelationField) I{{.StructName}}Do
-	Preload(fields ...field.RelationField) I{{.StructName}}Do
+	Attrs(attrs ...field.AssignExpr) I{{.ModelStructName}}Do
+	Assign(attrs ...field.AssignExpr) I{{.ModelStructName}}Do
+	Joins(fields ...field.RelationField) I{{.ModelStructName}}Do
+	Preload(fields ...field.RelationField) I{{.ModelStructName}}Do
 	FirstOrInit() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error)
 	FirstOrCreate() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error)
 	FindByPage(offset int, limit int) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, count int64, err error)
 	ScanByPage(result interface{}, offset int, limit int) (count int64, err error)
 	Scan(result interface{}) (err error)
-	Returning(value interface{}, columns ...string) I{{.StructName}}Do
+	Returning(value interface{}, columns ...string) I{{.ModelStructName}}Do
 	UnderlyingDB() *gorm.DB
 	schema.Tabler
 
@@ -195,7 +195,7 @@ type I{{.StructName}}Do interface {
 
 const (
 	relationStruct = `
-type {{$.NewStructName}}{{$relationship}}{{$relation.Name}} struct{
+type {{$.QueryStructName}}{{$relationship}}{{$relation.Name}} struct{
 	db *gorm.DB
 	
 	field.RelationField
@@ -203,7 +203,7 @@ type {{$.NewStructName}}{{$relationship}}{{$relation.Name}} struct{
 	{{$relation.StructField}}
 }
 
-func (a {{$.NewStructName}}{{$relationship}}{{$relation.Name}}) Where(conds ...field.Expr) *{{$.NewStructName}}{{$relationship}}{{$relation.Name}} {
+func (a {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}) Where(conds ...field.Expr) *{{$.QueryStructName}}{{$relationship}}{{$relation.Name}} {
 	if len(conds) == 0 {
 		return &a
 	}
@@ -216,24 +216,24 @@ func (a {{$.NewStructName}}{{$relationship}}{{$relation.Name}}) Where(conds ...f
 	return &a
 }
 
-func (a {{$.NewStructName}}{{$relationship}}{{$relation.Name}}) WithContext(ctx context.Context) *{{$.NewStructName}}{{$relationship}}{{$relation.Name}} {
+func (a {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}) WithContext(ctx context.Context) *{{$.QueryStructName}}{{$relationship}}{{$relation.Name}} {
 	a.db = a.db.WithContext(ctx)
 	return &a
 }
 
-func (a {{$.NewStructName}}{{$relationship}}{{$relation.Name}}) Model(m *{{$.StructInfo.Package}}.{{$.StructInfo.Type}}) *{{$.NewStructName}}{{$relationship}}{{$relation.Name}}Tx {
-	return &{{$.NewStructName}}{{$relationship}}{{$relation.Name}}Tx{a.db.Model(m).Association(a.Name())}
+func (a {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}) Model(m *{{$.StructInfo.Package}}.{{$.StructInfo.Type}}) *{{$.QueryStructName}}{{$relationship}}{{$relation.Name}}Tx {
+	return &{{$.QueryStructName}}{{$relationship}}{{$relation.Name}}Tx{a.db.Model(m).Association(a.Name())}
 }
 
 `
 	relationTx = `
-type {{$.NewStructName}}{{$relationship}}{{$relation.Name}}Tx struct{ tx *gorm.Association }
+type {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}Tx struct{ tx *gorm.Association }
 
-func (a {{$.NewStructName}}{{$relationship}}{{$relation.Name}}Tx) Find() (result {{if eq $relationship "HasMany" "Many2Many"}}[]{{end}}*{{$relation.Type}}, err error) {
+func (a {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}Tx) Find() (result {{if eq $relationship "HasMany" "Many2Many"}}[]{{end}}*{{$relation.Type}}, err error) {
 	return result, a.tx.Find(&result)
 }
 
-func (a {{$.NewStructName}}{{$relationship}}{{$relation.Name}}Tx) Append(values ...*{{$relation.Type}}) (err error) {
+func (a {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}Tx) Append(values ...*{{$relation.Type}}) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -241,7 +241,7 @@ func (a {{$.NewStructName}}{{$relationship}}{{$relation.Name}}Tx) Append(values 
 	return a.tx.Append(targetValues...)
 }
 
-func (a {{$.NewStructName}}{{$relationship}}{{$relation.Name}}Tx) Replace(values ...*{{$relation.Type}}) (err error) {
+func (a {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}Tx) Replace(values ...*{{$relation.Type}}) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -249,7 +249,7 @@ func (a {{$.NewStructName}}{{$relationship}}{{$relation.Name}}Tx) Replace(values
 	return a.tx.Replace(targetValues...)
 }
 
-func (a {{$.NewStructName}}{{$relationship}}{{$relation.Name}}Tx) Delete(values ...*{{$relation.Type}}) (err error) {
+func (a {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}Tx) Delete(values ...*{{$relation.Type}}) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -257,11 +257,11 @@ func (a {{$.NewStructName}}{{$relationship}}{{$relation.Name}}Tx) Delete(values 
 	return a.tx.Delete(targetValues...)
 }
 
-func (a {{$.NewStructName}}{{$relationship}}{{$relation.Name}}Tx) Clear() error {
+func (a {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}Tx) Clear() error {
 	return a.tx.Clear()
 }
 
-func (a {{$.NewStructName}}{{$relationship}}{{$relation.Name}}Tx) Count() int64 {
+func (a {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}Tx) Count() int64 {
 	return a.tx.Count()
 }
 `

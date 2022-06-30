@@ -1,4 +1,4 @@
-package check
+package generate
 
 import (
 	"fmt"
@@ -19,7 +19,7 @@ type InterfaceMethod struct { // feature will replace InterfaceMethod to parser.
 	Params        []parser.Param // function input params
 	Result        []parser.Param // function output params
 	ResultData    parser.Param   // output data
-	Sections      *Sections      // Parse split SQL into sections
+	Section       *Section       // Parse split SQL into sections
 	SQLParams     []parser.Param // variable in sql need function input
 	SQLString     string         // SQL
 	GormOption    string         // gorm execute method Find or Exec or Take
@@ -117,7 +117,7 @@ func (m *InterfaceMethod) DocComment() string {
 }
 
 // checkParams check all parameters
-func (m *InterfaceMethod) checkMethod(methods []*InterfaceMethod, s *BaseStruct) (err error) {
+func (m *InterfaceMethod) checkMethod(methods []*InterfaceMethod, s *QueryStructMeta) (err error) {
 	if model.GormKeywords.FullMatch(m.MethodName) {
 		return fmt.Errorf("can not use keyword as method name:%s", m.MethodName)
 	}
@@ -131,7 +131,7 @@ func (m *InterfaceMethod) checkMethod(methods []*InterfaceMethod, s *BaseStruct)
 	for _, f := range s.Fields {
 		if f.Name == m.MethodName {
 			return fmt.Errorf("can not generate method same name with struct field:[%s.%s] and [%s.%s]",
-				m.InterfaceName, m.MethodName, s.StructName, f.Name)
+				m.InterfaceName, m.MethodName, s.ModelStructName, f.Name)
 		}
 	}
 
@@ -268,7 +268,7 @@ func (m *InterfaceMethod) getSQLDocString() string {
 // sqlStateCheckAndSplit check sql with an adeterministic finite automaton
 func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 	sqlString := m.SQLString
-	m.Sections = NewSections()
+	m.Section = NewSection()
 	var buf model.SQLBuffer
 	for i := 0; !strOutRange(i, sqlString); i++ {
 		b := sqlString[i]
@@ -304,7 +304,7 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 			buf.WriteSQL(b)
 		case '{', '@':
 			if sqlClause := buf.Dump(); strings.TrimSpace(sqlClause) != "" {
-				m.Sections.members = append(m.Sections.members, section{
+				m.Section.members = append(m.Section.members, section{
 					Type:  model.SQL,
 					Value: strconv.Quote(sqlClause),
 				})
@@ -338,11 +338,11 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 					if sqlString[i] == '}' && sqlString[i+1] == '}' {
 						i++
 						sqlClause := buf.Dump()
-						part, err := m.Sections.checkTemplate(sqlClause)
+						part, err := m.Section.checkTemplate(sqlClause)
 						if err != nil {
 							return fmt.Errorf("sql [%s] dynamic template %s err:%w", sqlString, sqlClause, err)
 						}
-						m.Sections.members = append(m.Sections.members, part)
+						m.Section.members = append(m.Section.members, part)
 						break
 					}
 					buf.WriteSQL(sqlString[i])
@@ -358,11 +358,11 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 				for ; ; i++ {
 					if strOutRange(i, sqlString) || isEnd(sqlString[i]) {
 						varString := buf.Dump()
-						params, err := m.Sections.checkSQLVar(varString, status, m)
+						params, err := m.Section.checkSQLVar(varString, status, m)
 						if err != nil {
 							return fmt.Errorf("sql [%s] varable %s err:%s", sqlString, varString, err)
 						}
-						m.Sections.members = append(m.Sections.members, params)
+						m.Section.members = append(m.Section.members, params)
 						i--
 						break
 					}
@@ -374,7 +374,7 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 		}
 	}
 	if sqlClause := buf.Dump(); strings.TrimSpace(sqlClause) != "" {
-		m.Sections.members = append(m.Sections.members, section{
+		m.Section.members = append(m.Section.members, section{
 			Type:  model.SQL,
 			Value: strconv.Quote(sqlClause),
 		})
@@ -432,15 +432,4 @@ func (m *InterfaceMethod) isParamExist(paramName string) bool {
 		}
 	}
 	return false
-}
-
-// checkTemplate check sql template's syntax (if/else/where/set/for)
-func (s *Sections) checkTemplate(tmpl string) (section, error) {
-	var part section
-	part.Value = tmpl
-	part.SQLSlice = s
-	part.splitTemplate()
-	err := part.checkTemple()
-
-	return part, err
 }

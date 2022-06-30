@@ -5,14 +5,14 @@ const DefaultQuery = `
 var (
 	Q =new(Query)
 	{{range $name,$d :=.Data -}}
-	{{$d.StructName}} *{{$d.NewStructName}}
+	{{$d.ModelStructName}} *{{$d.QueryStructName}}
 	{{end -}}
 )
 
 func SetDefault(db *gorm.DB) {
 	*Q = *Use(db)
 	{{range $name,$d :=.Data -}}
-	{{$d.StructName}} = &Q.{{$d.StructName}}
+	{{$d.ModelStructName}} = &Q.{{$d.ModelStructName}}
 	{{end -}}
 }
 
@@ -24,7 +24,7 @@ func Use(db *gorm.DB) *Query {
 	return &Query{
 		db: db,
 		{{range $name,$d :=.Data -}}
-		{{$d.StructName}}: new{{$d.StructName}}(db),
+		{{$d.ModelStructName}}: new{{$d.ModelStructName}}(db),
 		{{end -}}
 	}
 }
@@ -33,7 +33,7 @@ type Query struct{
 	db *gorm.DB
 
 	{{range $name,$d :=.Data -}}
-	{{$d.StructName}} {{$d.NewStructName}}
+	{{$d.ModelStructName}} {{$d.QueryStructName}}
 	{{end}}
 }
 
@@ -43,21 +43,21 @@ func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
 		db: db,
 		{{range $name,$d :=.Data -}}
-		{{$d.StructName}}: q.{{$d.StructName}}.clone(db),
+		{{$d.ModelStructName}}: q.{{$d.ModelStructName}}.clone(db),
 		{{end}}
 	}
 }
 
 type queryCtx struct{ 
 	{{range $name,$d :=.Data -}}
-	{{$d.StructName}} I{{$d.StructName}}Do
+	{{$d.ModelStructName}} {{$d.ReturnObject}}
 	{{end}}
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx  {
 	return &queryCtx{
 		{{range $name,$d :=.Data -}}
-		{{$d.StructName}}: q.{{$d.StructName}}.WithContext(ctx),
+		{{$d.ModelStructName}}: q.{{$d.ModelStructName}}.WithContext(ctx),
 		{{end}}
 	}
 }
@@ -143,7 +143,7 @@ func Test_WithContext(t *testing.T) {
 
 	for _, ctx := range []context.Context{
 		{{range $name,$d :=.Data -}}
-		qCtx.{{$d.StructName}}.UnderlyingDB().Statement.Context,
+		qCtx.{{$d.ModelStructName}}.UnderlyingDB().Statement.Context,
 		{{end}}
 	} {
 		if v := ctx.Value(key); v != value {

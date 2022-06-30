@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"gorm.io/gen/field"
-	"gorm.io/gen/internal/check"
+	"gorm.io/gen/internal/generate"
 	"gorm.io/gen/internal/model"
 	"gorm.io/gorm/schema"
 )
@@ -173,7 +173,7 @@ var (
 		}
 	}
 	// FieldRelate relate to table in database
-	FieldRelate = func(relationship field.RelationshipType, fieldName string, table *check.BaseStruct, config *field.RelateConfig) model.CreateFieldOpt {
+	FieldRelate = func(relationship field.RelationshipType, fieldName string, table *generate.QueryStructMeta, config *field.RelateConfig) model.CreateFieldOpt {
 		if config == nil {
 			config = &field.RelateConfig{}
 		}
