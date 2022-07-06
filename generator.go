@@ -42,15 +42,14 @@ func init() { runtime.GOMAXPROCS(runtime.NumCPU()) }
 
 // NewGenerator create a new generator
 func NewGenerator(cfg Config) *Generator {
-	err := cfg.Revise()
-	if err != nil {
+	if err := cfg.Revise(); err != nil {
 		panic(fmt.Errorf("create generator fail: %w", err))
 	}
 
 	return &Generator{
-		Config:    cfg,
-		Data:      make(map[string]*genInfo),
-		modelData: make(map[string]*generate.QueryStructMeta),
+		Config: cfg,
+		Data:   make(map[string]*genInfo),
+		models: make(map[string]*generate.QueryStructMeta),
 	}
 }
 
@@ -82,8 +81,8 @@ func (i *genInfo) methodInGenInfo(m *generate.InterfaceMethod) bool {
 type Generator struct {
 	Config
 
-	Data      map[string]*genInfo                  //gen query data
-	modelData map[string]*generate.QueryStructMeta //gen model data
+	Data   map[string]*genInfo                  //gen query data
+	models map[string]*generate.QueryStructMeta //gen model data
 }
 
 // UseDB set db connection
@@ -105,20 +104,62 @@ func (g *Generator) GenerateModel(tableName string, opts ...FieldOpt) *generate.
 
 // GenerateModelAs catch table info from db, return a BaseStruct
 func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...FieldOpt) *generate.QueryStructMeta {
+	meta, err := generate.GetQueryStructMeta(g.db, g.genModelConfig(tableName, modelName, fieldOpts))
+	if err != nil {
+		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)
+		panic("generate struct fail")
+	}
+	g.models[meta.ModelStructName] = meta
+
+	g.info(fmt.Sprintf("got %d columns from table <%s>", len(meta.Fields), meta.TableName))
+	return meta
+}
+
+// GenerateAllTable generate all tables in db
+func (g *Generator) GenerateAllTable(opts ...FieldOpt) (tableModels []interface{}) {
+	tableList, err := g.db.Migrator().GetTables()
+	if err != nil {
+		panic(fmt.Errorf("get all tables fail: %w", err))
+	}
+
+	g.info(fmt.Sprintf("find %d table from db: %s", len(tableList), tableList))
+
+	tableModels = make([]interface{}, len(tableList))
+	for i, tableName := range tableList {
+		tableModels[i] = g.GenerateModel(tableName, opts...)
+	}
+	return tableModels
+}
+
+// GenerateModelFrom generate model from object
+func (g *Generator) GenerateModelFrom(obj helper.Object) *generate.QueryStructMeta {
+	s, err := generate.GetQueryStructMetaFromObject(obj, g.genModelObjConfig())
+	if err != nil {
+		panic(fmt.Errorf("generate struct from object fail: %w", err))
+	}
+	g.models[s.ModelStructName] = s
+
+	g.info(fmt.Sprintf("parse object %s", obj.StructName()))
+	return s
+}
+
+func (g *Generator) genModelConfig(tableName string, modelName string, fieldOpts []FieldOpt) *model.Config {
 	modelFieldOpts := make([]model.FieldOpt, len(fieldOpts))
 	for i, opt := range fieldOpts {
 		modelFieldOpts[i] = opt
 	}
-	meta, err := generate.GetQueryStructMeta(g.db, &model.Config{
+	return &model.Config{
 		ModelPkg:       g.Config.ModelPkgPath,
 		TablePrefix:    g.getTablePrefix(),
 		TableName:      tableName,
 		ModelName:      modelName,
 		ImportPkgPaths: g.importPkgPaths,
-		SchemaNameOpts: g.dbNameOpts,
-		TableNameNS:    g.tableNameNS,
-		ModelNameNS:    g.modelNameNS,
-		FileNameNS:     g.fileNameNS,
+		NameStrategy: model.NameStrategy{
+			SchemaNameOpts: g.dbNameOpts,
+			TableNameNS:    g.tableNameNS,
+			ModelNameNS:    g.modelNameNS,
+			FileNameNS:     g.fileNameNS,
+		},
 		FieldConfig: model.FieldConfig{
 			DataTypeMap: g.dataTypeMap,
 
@@ -133,15 +174,7 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 
 			FieldOpts: modelFieldOpts,
 		},
-	})
-	if err != nil {
-		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)
-		panic("generate struct fail")
 	}
-	g.modelData[meta.ModelStructName] = meta
-
-	g.successInfo(fmt.Sprintf("got %d columns from table <%s>", len(meta.Fields), meta.TableName))
-	return meta
 }
 
 func (g *Generator) getTablePrefix() string {
@@ -151,38 +184,16 @@ func (g *Generator) getTablePrefix() string {
 	return ""
 }
 
-// GenerateAllTable generate all tables in db
-func (g *Generator) GenerateAllTable(opts ...FieldOpt) (tableModels []interface{}) {
-	tableList, err := g.db.Migrator().GetTables()
-	if err != nil {
-		panic(fmt.Errorf("get all tables fail: %w", err))
-	}
-
-	g.successInfo(fmt.Sprintf("find %d table from db: %s", len(tableList), tableList))
-
-	tableModels = make([]interface{}, len(tableList))
-	for i, tableName := range tableList {
-		tableModels[i] = g.GenerateModel(tableName, opts...)
-	}
-	return tableModels
-}
-
-// GenerateModelFrom generate model from object
-func (g *Generator) GenerateModelFrom(obj helper.Object) *generate.QueryStructMeta {
-	s, err := generate.GetQueryStructMetaFromObject(obj, &model.Config{
+func (g *Generator) genModelObjConfig() *model.Config {
+	return &model.Config{
 		ModelPkg:       g.Config.ModelPkgPath,
 		ImportPkgPaths: g.importPkgPaths,
-		TableNameNS:    g.tableNameNS,
-		ModelNameNS:    g.modelNameNS,
-		FileNameNS:     g.fileNameNS,
-	})
-	if err != nil {
-		panic(fmt.Errorf("generate struct from object fail: %w", err))
+		NameStrategy: model.NameStrategy{
+			TableNameNS: g.tableNameNS,
+			ModelNameNS: g.modelNameNS,
+			FileNameNS:  g.fileNameNS,
+		},
 	}
-	g.modelData[s.ModelStructName] = s
-
-	g.successInfo(fmt.Sprintf("parse object %s", obj.StructName()))
-	return s
 }
 
 // ApplyBasic specify models which will implement basic method
@@ -202,13 +213,13 @@ func (g *Generator) ApplyInterface(fc interface{}, models ...interface{}) {
 }
 
 func (g *Generator) apply(fc interface{}, structs []*generate.QueryStructMeta) {
-	readInterface := new(parser.InterfaceSet)
 	interfacePaths, err := parser.GetInterfacePath(fc)
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "get interface name or file fail: %s", err)
 		panic("check interface fail")
 	}
 
+	readInterface := new(parser.InterfaceSet)
 	err = readInterface.ParseFile(interfacePaths, generate.GetStructNames(structs))
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "parser interface file fail: %s", err)
@@ -220,24 +231,24 @@ func (g *Generator) apply(fc interface{}, structs []*generate.QueryStructMeta) {
 			interfaceStructMeta.ReviseFieldName()
 		}
 
-		data, err := g.pushQueryStructMeta(interfaceStructMeta)
+		genInfo, err := g.pushQueryStructMeta(interfaceStructMeta)
 		if err != nil {
 			g.db.Logger.Error(context.Background(), "gen struct fail: %v", err)
 			panic("gen struct fail")
 		}
 
-		functions, err := generate.BuildDIYMethod(readInterface, interfaceStructMeta, data.Interfaces)
+		functions, err := generate.BuildDIYMethod(readInterface, interfaceStructMeta, genInfo.Interfaces)
 		if err != nil {
 			g.db.Logger.Error(context.Background(), "check interface fail: %v", err)
 			panic("check interface fail")
 		}
-		data.appendMethods(functions)
+		genInfo.appendMethods(functions)
 	}
 }
 
 // Execute generate code to output path
 func (g *Generator) Execute() {
-	g.successInfo("Start generating code.")
+	g.info("Start generating code.")
 
 	if err := g.generateModelFile(); err != nil {
 		g.db.Logger.Error(context.Background(), "generate model struct fail: %s", err)
@@ -249,11 +260,11 @@ func (g *Generator) Execute() {
 		panic("generate query code fail")
 	}
 
-	g.successInfo("Generate code done.")
+	g.info("Generate code done.")
 }
 
-// successInfo logger
-func (g *Generator) successInfo(logInfos ...string) {
+// info logger
+func (g *Generator) info(logInfos ...string) {
 	for _, l := range logInfos {
 		g.db.Logger.Info(context.Background(), l)
 		log.Println(l)
@@ -322,7 +333,7 @@ func (g *Generator) generateQueryFile() (err error) {
 	if err != nil {
 		return err
 	}
-	g.successInfo("generate query file: " + g.OutFile)
+	g.info("generate query file: " + g.OutFile)
 
 	// generate query unit test file
 	if g.WithUnitTest {
@@ -352,7 +363,7 @@ func (g *Generator) generateQueryFile() (err error) {
 			g.db.Logger.Error(context.Background(), "generate query unit test fail: %s", err)
 			return nil
 		}
-		g.successInfo("generate unit test file: " + fileName)
+		g.info("generate unit test file: " + fileName)
 	}
 
 	return nil
@@ -405,7 +416,7 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 		return err
 	}
 
-	defer g.successInfo(fmt.Sprintf("generate query file: %s/%s.gen.go", g.OutPath, data.FileName))
+	defer g.info(fmt.Sprintf("generate query file: %s/%s.gen.go", g.OutPath, data.FileName))
 	return g.output(fmt.Sprintf("%s/%s.gen.go", g.OutPath, data.FileName), buf.Bytes())
 }
 
@@ -438,13 +449,13 @@ func (g *Generator) generateQueryUnitTestFile(data *genInfo) (err error) {
 		}
 	}
 
-	defer g.successInfo(fmt.Sprintf("generate unit test file: %s/%s.gen_test.go", g.OutPath, data.FileName))
+	defer g.info(fmt.Sprintf("generate unit test file: %s/%s.gen_test.go", g.OutPath, data.FileName))
 	return g.output(fmt.Sprintf("%s/%s.gen_test.go", g.OutPath, data.FileName), buf.Bytes())
 }
 
 // generateModelFile generate model structures and save to file
 func (g *Generator) generateModelFile() error {
-	if len(g.modelData) == 0 {
+	if len(g.models) == 0 {
 		return nil
 	}
 
@@ -459,7 +470,7 @@ func (g *Generator) generateModelFile() error {
 
 	errChan := make(chan error)
 	pool := pools.NewPool(concurrent)
-	for _, data := range g.modelData {
+	for _, data := range g.models {
 		if data == nil || !data.Generated {
 			continue
 		}
@@ -489,7 +500,7 @@ func (g *Generator) generateModelFile() error {
 				return
 			}
 
-			g.successInfo(fmt.Sprintf("generate model file(table <%s> -> {%s.%s}): %s", data.TableName, data.StructInfo.Package, data.StructInfo.Type, modelFile))
+			g.info(fmt.Sprintf("generate model file(table <%s> -> {%s.%s}): %s", data.TableName, data.StructInfo.Package, data.StructInfo.Type, modelFile))
 		}(data)
 	}
 	select {

@@ -7,6 +7,28 @@ import (
 	"gorm.io/gorm"
 )
 
+// Config model configuration
+type Config struct {
+	ModelPkg    string
+	TablePrefix string
+	TableName   string
+	ModelName   string
+
+	ImportPkgPaths []string
+
+	NameStrategy
+	FieldConfig
+}
+
+// NameStrategy name strategy
+type NameStrategy struct {
+	SchemaNameOpts []SchemaNameOpt
+
+	TableNameNS func(tableName string) string
+	ModelNameNS func(tableName string) string
+	FileNameNS  func(tableName string) string
+}
+
 // FieldConfig field configuration
 type FieldConfig struct {
 	DataTypeMap map[string]func(detailType string) (dataType string)
@@ -21,23 +43,6 @@ type FieldConfig struct {
 	FieldNewTagNS  func(columnName string) string
 
 	FieldOpts []FieldOpt
-}
-
-// Config model configuration
-type Config struct {
-	ModelPkg    string
-	TablePrefix string
-	TableName   string
-	ModelName   string
-
-	ImportPkgPaths []string
-
-	SchemaNameOpts []SchemaNameOpt
-	TableNameNS    func(tableName string) string
-	ModelNameNS    func(tableName string) string
-	FileNameNS     func(tableName string) string
-
-	FieldConfig
 }
 
 // Revise revise invalid field
