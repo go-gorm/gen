@@ -165,6 +165,7 @@ type Field struct {
 	GORMTag          string
 	NewTag           string
 	OverwriteTag     string
+	IgnoreDefaultTag bool
 
 	Relation *field.Relation
 }

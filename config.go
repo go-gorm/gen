@@ -35,11 +35,12 @@ type Config struct {
 	WithUnitTest bool   // generate unit test for query code
 
 	// generate model global configuration
-	FieldNullable     bool // generate pointer when field is nullable
-	FieldCoverable    bool // generate pointer when field has default value, to fix problem zero value cannot be assign: https://gorm.io/docs/create.html#Default-Values
-	FieldSignable     bool // detect integer field's unsigned type, adjust generated data type
-	FieldWithIndexTag bool // generate with gorm index tag
-	FieldWithTypeTag  bool // generate with gorm column type tag
+	FieldNullable         bool // generate pointer when field is nullable
+	FieldCoverable        bool // generate pointer when field has default value, to fix problem zero value cannot be assign: https://gorm.io/docs/create.html#Default-Values
+	FieldSignable         bool // detect integer field's unsigned type, adjust generated data type
+	FieldWithIndexTag     bool // generate with gorm index tag
+	FieldWithTypeTag      bool // generate with gorm column type tag
+	FieldIgnoreDefaultTag bool // ignore gorm default tag
 
 	Mode GenerateMode // generate mode
 

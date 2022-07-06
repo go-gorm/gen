@@ -48,7 +48,7 @@ func (c *Column) WithNS(jsonTagNS, newTagNS func(columnName string) string) {
 }
 
 // ToField convert to field
-func (c *Column) ToField(nullable, coverable, signable bool) *Field {
+func (c *Column) ToField(nullable, coverable, signable, ignoreDefaultTag bool) *Field {
 	fieldType := c.GetDataType()
 	if signable && strings.Contains(c.columnType(), "unsigned") && strings.HasPrefix(fieldType, "int") {
 		fieldType = "u" + fieldType
@@ -74,7 +74,7 @@ func (c *Column) ToField(nullable, coverable, signable bool) *Field {
 		Type:             fieldType,
 		ColumnName:       c.Name(),
 		MultilineComment: c.multilineComment(),
-		GORMTag:          c.buildGormTag(),
+		GORMTag:          c.buildGormTag(ignoreDefaultTag),
 		JSONTag:          c.jsonTagNS(c.Name()),
 		NewTag:           c.newTagNS(c.Name()),
 		ColumnComment:    comment,
@@ -86,7 +86,7 @@ func (c *Column) multilineComment() bool {
 	return ok && strings.Contains(cm, "\n")
 }
 
-func (c *Column) buildGormTag() string {
+func (c *Column) buildGormTag(ignoreDefaultTag bool) string {
 	var buf bytes.Buffer
 	buf.WriteString(fmt.Sprintf("column:%s;type:%s", c.Name(), c.columnType()))
 
@@ -114,9 +114,10 @@ func (c *Column) buildGormTag() string {
 			buf.WriteString(fmt.Sprintf(";index:%s,priority:%d", idx.Name(), idx.Priority))
 		}
 	}
-
-	if dtValue := c.defaultTagValue(); !isValidPriKey && c.needDefaultTag(dtValue) { // cannot set default tag for primary key
-		buf.WriteString(fmt.Sprintf(`;default:%s`, dtValue))
+	if !ignoreDefaultTag {
+		if dtValue := c.defaultTagValue(); !isValidPriKey && c.needDefaultTag(dtValue) { // cannot set default tag for primary key
+			buf.WriteString(fmt.Sprintf(`;default:%s`, dtValue))
+		}
 	}
 	return buf.String()
 }

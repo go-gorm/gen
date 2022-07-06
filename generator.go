@@ -122,11 +122,12 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 		FieldConfig: model.FieldConfig{
 			DataTypeMap: g.dataTypeMap,
 
-			FieldSignable:     g.FieldSignable,
-			FieldNullable:     g.FieldNullable,
-			FieldCoverable:    g.FieldCoverable,
-			FieldWithIndexTag: g.FieldWithIndexTag,
-			FieldWithTypeTag:  g.FieldWithTypeTag,
+			FieldSignable:         g.FieldSignable,
+			FieldNullable:         g.FieldNullable,
+			FieldCoverable:        g.FieldCoverable,
+			FieldWithIndexTag:     g.FieldWithIndexTag,
+			FieldWithTypeTag:      g.FieldWithTypeTag,
+			FieldIgnoreDefaultTag: g.FieldIgnoreDefaultTag,
 
 			FieldJSONTagNS: g.fieldJSONTagNS,
 			FieldNewTagNS:  g.fieldNewTagNS,
