@@ -30,7 +30,7 @@ func testParamToString(params []parser.Param) string {
 		// TODO manage array and pointer
 		typ := param.Type
 		if param.Package != "" {
-			typ = fmt.Sprintf("%s.%s", param.Package, param.Type)
+			typ = param.Package + "." + typ
 		}
 		if param.IsArray {
 			typ = "[]" + typ
