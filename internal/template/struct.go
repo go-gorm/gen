@@ -229,7 +229,7 @@ func (a {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}) Model(m *{{$.S
 	relationTx = `
 type {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}Tx struct{ tx *gorm.Association }
 
-func (a {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}Tx) Find() (result {{if eq $relationship "HasMany" "Many2Many"}}[]{{end}}*{{$relation.Type}}, err error) {
+func (a {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}Tx) Find() (result {{if eq $relationship "HasMany" "ManyToMany"}}[]{{end}}*{{$relation.Type}}, err error) {
 	return result, a.tx.Find(&result)
 }
 
