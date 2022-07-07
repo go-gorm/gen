@@ -7,7 +7,7 @@ const (
 		{{.QueryStructName}}Do
 		` + fields + `
 	}
-	` + tableMethod + asMethond + updateFieldMethod + getFieldMethod + fillFieldMapMethod + cloneMethod + relationship
+	` + tableMethod + asMethond + updateFieldMethod + getFieldMethod + fillFieldMapMethod + cloneMethod + relationship + defineMethodStruct
 
 	// TableQueryStructWithContext table query struct with context
 	TableQueryStructWithContext = createMethod + `
