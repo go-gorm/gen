@@ -16,6 +16,3 @@ require (
 	gorm.io/hints v1.1.0
 	gorm.io/plugin/dbresolver v1.2.1
 )
-
-// replace golang.org/x/net => golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
-replace gorm.io/gorm => github.com/go-gorm/gorm v1.23.7-0.20220617030057-1305f637f834
