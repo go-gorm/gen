@@ -1756,6 +1756,12 @@ type Method interface {
 ```
 Method input parameters and return values support basic types (`int`, `string`, `bool`...), struct and placeholders (`gen.T`/`gen.M`/`gen.RowsAffected`), and types support pointers and arrays. The return value is at most a value and an error.
 
+Usage(complete case on [Quick start](#quick-start)):
+```go
+// implement model.Method on table "user" and "comany"
+g.ApplyInterface(func(method model.Method) {}, model.User{}, g.GenerateModel("company"))
+```
+
 ##### Syntax of template
 
 ###### placeholder

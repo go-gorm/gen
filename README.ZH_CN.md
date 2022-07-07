@@ -1764,6 +1764,12 @@ type Method interface {
 
 方法输入参数和返回值支持基础类型（int、string、bool等）、结构体和占位符（`gen.T`/`gen.M`/`gen.RowsAffected`）,类型支持指针和数组，返回值最多返回一个值和一个 error。
 
+用法(完整case见[快速开始](#quick-start))：
+```go
+// 在表user和company生成的结构体上实现model.Method中包含的方法
+g.ApplyInterface(func(method model.Method) {}, model.User{}, g.GenerateModel("company"))
+```
+
 ##### <span id="syntax-of-template">模板</span>
 
 ###### <span id="placeholder">占位符</span>
