@@ -22,7 +22,7 @@ type Config struct {
 
 // NameStrategy name strategy
 type NameStrategy struct {
-	SchemaNameOpts []SchemaNameOpt
+	SchemaNameOpts []TableSchemaNameOpt
 
 	TableNameNS func(tableName string) string
 	ModelNameNS func(tableName string) string
@@ -83,15 +83,15 @@ func (cfg *Config) SortOpt() (modifyOpts []FieldOpt, filterOpts []FieldOpt, crea
 	return sortFieldOpt(cfg.FieldOpts)
 }
 
-// GetSchemaName get schema name
-func (cfg *Config) GetSchemaName(db *gorm.DB) string {
+// GetTableSchemaName get schema name
+func (cfg *Config) GetTableSchemaName(db *gorm.DB, tableName string) string {
 	if cfg == nil {
-		return defaultSchemaNameOpt(db)
+		return ""
 	}
 	for _, opt := range cfg.SchemaNameOpts {
-		if name := opt(db); name != "" {
+		if name := opt(db, tableName); name != "" {
 			return name
 		}
 	}
-	return defaultSchemaNameOpt(db)
+	return ""
 }

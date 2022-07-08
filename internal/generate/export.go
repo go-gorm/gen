@@ -28,7 +28,7 @@ func GetQueryStructMeta(db *gorm.DB, conf *model.Config) (*QueryStructMeta, erro
 		return nil, fmt.Errorf("model name %q is invalid: %w", structName, err)
 	}
 
-	columns, err := getTableColumns(db, conf.GetSchemaName(db), tableName, conf.FieldWithIndexTag)
+	columns, err := getTableColumns(db, conf.GetTableSchemaName(db, tableName), tableName, conf.FieldWithIndexTag)
 	if err != nil {
 		return nil, err
 	}

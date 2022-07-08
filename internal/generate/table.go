@@ -3,6 +3,7 @@ package generate
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"gorm.io/gorm"
 
@@ -54,7 +55,7 @@ type tableInfo struct{ *gorm.DB }
 
 // GetTableColumns  struct
 func (t *tableInfo) GetTableColumns(schemaName string, tableName string) (result []*model.Column, err error) {
-	types, err := t.Migrator().ColumnTypes(tableName)
+	types, err := t.Migrator().ColumnTypes(getTBSchemaName(schemaName, tableName))
 	if err != nil {
 		return nil, err
 	}
@@ -66,5 +67,12 @@ func (t *tableInfo) GetTableColumns(schemaName string, tableName string) (result
 
 // GetTableIndex  index
 func (t *tableInfo) GetTableIndex(schemaName string, tableName string) (indexes []gorm.Index, err error) {
-	return t.Migrator().GetIndexes(tableName)
+	return t.Migrator().GetIndexes(getTBSchemaName(schemaName, tableName))
+}
+
+func getTBSchemaName(schemaName, tableName string) string {
+	if schemaName == "" {
+		return tableName
+	}
+	return fmt.Sprint(schemaName, ".", tableName)
 }

@@ -45,7 +45,7 @@ type Config struct {
 
 	queryPkgName   string // generated query code's package name
 	modelPkgPath   string // model pkg path in target project
-	dbNameOpts     []model.SchemaNameOpt
+	dbNameOpts     []model.TableSchemaNameOpt
 	importPkgPaths []string
 
 	// name strategy for syncing table from db
@@ -60,11 +60,16 @@ type Config struct {
 
 // WithDbNameOpts set get database name function
 func (cfg *Config) WithDbNameOpts(opts ...model.SchemaNameOpt) {
-	if cfg.dbNameOpts == nil {
-		cfg.dbNameOpts = opts
-	} else {
-		cfg.dbNameOpts = append(cfg.dbNameOpts, opts...)
+	for _, op := range opts {
+		opt, _ := model.DefaultTableSchemaNameOpt(op, "")
+		cfg.WithTableDbNameOpts(opt)
 	}
+}
+func (cfg *Config) WithTableDbNameOpts(opts ...model.TableSchemaNameOpt) {
+	if cfg.dbNameOpts == nil {
+		cfg.dbNameOpts = make([]model.TableSchemaNameOpt, 0, len(opts))
+	}
+	cfg.dbNameOpts = append(cfg.dbNameOpts, opts...)
 }
 
 // WithTableNameStrategy specify table name naming strategy, only work when syncing table from db

@@ -99,11 +99,19 @@ func (g *Generator) UseDB(db *gorm.DB) {
 
 // GenerateModel catch table info from db, return a BaseStruct
 func (g *Generator) GenerateModel(tableName string, opts ...FieldOpt) *generate.QueryStructMeta {
+	if schemaOpt, table := model.DefaultTableSchemaNameOpt(nil, tableName); schemaOpt != nil {
+		tableName = table
+		g.WithTableDbNameOpts(schemaOpt)
+	}
 	return g.GenerateModelAs(tableName, g.db.Config.NamingStrategy.SchemaName(tableName), opts...)
 }
 
 // GenerateModelAs catch table info from db, return a BaseStruct
 func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...FieldOpt) *generate.QueryStructMeta {
+	if schemaOpt, table := model.DefaultTableSchemaNameOpt(nil, tableName); schemaOpt != nil {
+		tableName = table
+		g.WithTableDbNameOpts(schemaOpt)
+	}
 	meta, err := generate.GetQueryStructMeta(g.db, g.genModelConfig(tableName, modelName, fieldOpts))
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)
