@@ -37,6 +37,8 @@ Install GEN as a binary tool
         only generate models (without query file)
   -withUnitTest
         generate unit test for query code
+  -fieldSignable
+        detect integer field's unsigned type, adjust generated data type
 
 ```
 #### c
@@ -105,6 +107,12 @@ Generate some tables code.
 Value : False / True
 
 Generate unit test.
+
+#### fieldSignable
+
+Value : False / True
+
+detect integer field's unsigned type, adjust generated data type
 
 
 
