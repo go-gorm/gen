@@ -298,10 +298,10 @@ type User struct{
 	ID int32
 }
 func (u *User)IsEmpty()bool{
-    if m == nil {
+    if u == nil {
     return true
     }
-    return m.ID == 0
+    return u.ID == 0
 }
 user := User{}
 // 可以直接添加一个绑定了结构体的方法
