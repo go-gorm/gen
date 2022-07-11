@@ -12,6 +12,9 @@ import (
 	"gorm.io/gorm/schema"
 )
 
+// FieldOpt field option
+type FieldOpt model.FieldOpt
+
 var ns = schema.NamingStrategy{}
 
 var (
