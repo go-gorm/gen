@@ -294,10 +294,10 @@ type User struct{
 	ID int32
 }
 func (u *User)IsEmpty()bool{
-    if m == nil {
+    if u == nil {
     return true
     }
-    return m.ID == 0
+    return u.ID == 0
 }
 user := User{}
 // add custom method to generated model struct
