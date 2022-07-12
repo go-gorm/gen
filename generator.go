@@ -548,7 +548,9 @@ func (g *Generator) output(fileName string, content []byte) error {
 		errLine, _ := strconv.Atoi(strings.Split(err.Error(), ":")[1])
 		startLine, endLine := errLine-5, errLine+5
 		fmt.Println("Format fail:", errLine, err)
-
+		if startLine < 0 {
+			startLine = 0
+		}
 		for i := startLine; i <= endLine; i++ {
 			fmt.Println(i, line[i])
 		}
