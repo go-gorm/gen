@@ -544,15 +544,18 @@ func (g *Generator) fillModelPkgPath(filePath string) {
 func (g *Generator) output(fileName string, content []byte) error {
 	result, err := imports.Process(fileName, content, nil)
 	if err != nil {
-		line := strings.Split(string(content), "\n")
+		lines := strings.Split(string(content), "\n")
 		errLine, _ := strconv.Atoi(strings.Split(err.Error(), ":")[1])
 		startLine, endLine := errLine-5, errLine+5
 		fmt.Println("Format fail:", errLine, err)
 		if startLine < 0 {
 			startLine = 0
 		}
+		if endLine > len(lines)-1 {
+			endLine = len(lines) - 1
+		}
 		for i := startLine; i <= endLine; i++ {
-			fmt.Println(i, line[i])
+			fmt.Println(i, lines[i])
 		}
 		return fmt.Errorf("cannot format file: %w", err)
 	}
