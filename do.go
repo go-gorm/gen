@@ -208,10 +208,7 @@ func (d *DO) Select(columns ...field.Expr) Dao {
 	if len(columns) == 0 {
 		return d.getInstance(d.db.Clauses(clause.Select{}))
 	}
-	query, args := buildExpr(d.db.Statement, columns...)
-	if len(args) == 0 {
-		return d.getInstance(d.db.Select(query))
-	}
+	query, args := buildExpr4Select(d.db.Statement, columns...)
 	return d.getInstance(d.db.Select(query, args...))
 }
 
@@ -430,7 +427,6 @@ func (d *DO) Joins(field field.RelationField) Dao {
 				}
 				exprs = append(exprs, e)
 			}
-
 		}
 
 		args = append(args, d.db.Clauses(clause.Where{
@@ -846,14 +842,21 @@ func buildColExpr(stmt *gorm.Statement, cols []field.Expr, opts ...field.BuildOp
 	return results
 }
 
-func buildExpr(stmt *gorm.Statement, exprs ...field.Expr) (query string, args []interface{}) {
-	var queries []string
+func buildExpr4Select(stmt *gorm.Statement, exprs ...field.Expr) (query string, args []interface{}) {
+	if len(exprs) == 0 {
+		return "", nil
+	}
+
+	var queryItems []string
 	for _, e := range exprs {
 		sql, vars := e.BuildWithArgs(stmt)
-		queries = append(queries, sql.String())
+		queryItems = append(queryItems, sql.String())
 		args = append(args, vars...)
 	}
-	return strings.Join(queries, ","), args
+	if len(args) == 0 {
+		return queryItems[0], toInterfaceSlice(queryItems[1:])
+	}
+	return strings.Join(queryItems, ","), args
 }
 
 func toExpression(exprs ...field.Expr) []clause.Expression {
