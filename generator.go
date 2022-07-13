@@ -311,8 +311,7 @@ func (g *Generator) generateQueryFile() (err error) {
 	var buf bytes.Buffer
 	err = render(tmpl.Header, &buf, map[string]interface{}{
 		"Package":        g.queryPkgName,
-		"StructPkgPath":  "",
-		"ImportPkgPaths": g.importPkgPaths,
+		"ImportPkgPaths": importList.Add(g.importPkgPaths...).Output(),
 	})
 	if err != nil {
 		return err
@@ -339,10 +338,9 @@ func (g *Generator) generateQueryFile() (err error) {
 	if g.WithUnitTest {
 		buf.Reset()
 
-		err = render(tmpl.UnitTestHeader, &buf, map[string]interface{}{
+		err = render(tmpl.Header, &buf, map[string]interface{}{
 			"Package":        g.queryPkgName,
-			"StructPkgPath":  "",
-			"ImportPkgPaths": g.importPkgPaths,
+			"ImportPkgPaths": unitTestImportList.Add(g.importPkgPaths...).Output(),
 		})
 		if err != nil {
 			g.db.Logger.Error(context.Background(), "generate query unit test fail: %s", err)
@@ -379,8 +377,7 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 	}
 	err = render(tmpl.Header, &buf, map[string]interface{}{
 		"Package":        g.queryPkgName,
-		"StructPkgPath":  structPkgPath,
-		"ImportPkgPaths": getImportPkgPaths(data),
+		"ImportPkgPaths": importList.Add(structPkgPath).Add(getImportPkgPaths(data)...).Output(),
 	})
 	if err != nil {
 		return err
@@ -428,10 +425,9 @@ func (g *Generator) generateQueryUnitTestFile(data *genInfo) (err error) {
 	if structPkgPath == "" {
 		structPkgPath = g.modelPkgPath
 	}
-	err = render(tmpl.UnitTestHeader, &buf, map[string]interface{}{
+	err = render(tmpl.Header, &buf, map[string]interface{}{
 		"Package":        g.queryPkgName,
-		"StructPkgPath":  structPkgPath,
-		"ImportPkgPaths": data.ImportPkgPaths,
+		"ImportPkgPaths": unitTestImportList.Add(structPkgPath).Add(data.ImportPkgPaths...).Output(),
 	})
 	if err != nil {
 		return err
