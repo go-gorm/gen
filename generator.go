@@ -311,7 +311,7 @@ func (g *Generator) generateQueryFile() (err error) {
 	var buf bytes.Buffer
 	err = render(tmpl.Header, &buf, map[string]interface{}{
 		"Package":        g.queryPkgName,
-		"ImportPkgPaths": importPkgs.Add(g.importPkgPaths...).Output(),
+		"ImportPkgPaths": importList.Add(g.importPkgPaths...).Output(),
 	})
 	if err != nil {
 		return err
@@ -340,7 +340,7 @@ func (g *Generator) generateQueryFile() (err error) {
 
 		err = render(tmpl.Header, &buf, map[string]interface{}{
 			"Package":        g.queryPkgName,
-			"ImportPkgPaths": unitTestImportPkgs.Add(g.importPkgPaths...).Output(),
+			"ImportPkgPaths": unitTestImportList.Add(g.importPkgPaths...).Output(),
 		})
 		if err != nil {
 			g.db.Logger.Error(context.Background(), "generate query unit test fail: %s", err)
@@ -377,7 +377,7 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 	}
 	err = render(tmpl.Header, &buf, map[string]interface{}{
 		"Package":        g.queryPkgName,
-		"ImportPkgPaths": importPkgs.Add(structPkgPath).Add(getImportPkgPaths(data)...).Output(),
+		"ImportPkgPaths": importList.Add(structPkgPath).Add(getImportPkgPaths(data)...).Output(),
 	})
 	if err != nil {
 		return err
@@ -427,7 +427,7 @@ func (g *Generator) generateQueryUnitTestFile(data *genInfo) (err error) {
 	}
 	err = render(tmpl.Header, &buf, map[string]interface{}{
 		"Package":        g.queryPkgName,
-		"ImportPkgPaths": unitTestImportPkgs.Add(structPkgPath).Add(data.ImportPkgPaths...).Output(),
+		"ImportPkgPaths": unitTestImportList.Add(structPkgPath).Add(data.ImportPkgPaths...).Output(),
 	})
 	if err != nil {
 		return err

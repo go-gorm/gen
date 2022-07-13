@@ -2,37 +2,36 @@ package gen
 
 import "strings"
 
-var importPkgs = importPkgS{}.Add(
-	"context",
-	"database/sql",
-	"strings",
-	"",
-	"gorm.io/gorm",
-	"gorm.io/gorm/schema",
-	"gorm.io/gorm/clause",
-	"",
-	"gorm.io/gen",
-	"gorm.io/gen/field",
-	"gorm.io/gen/helper",
-	"",
-	"gorm.io/plugin/dbresolver",
-	"",
+var (
+	importList = importPkgS{}.Add(
+		"context",
+		"database/sql",
+		"strings",
+		"",
+		"gorm.io/gorm",
+		"gorm.io/gorm/schema",
+		"gorm.io/gorm/clause",
+		"",
+		"gorm.io/gen",
+		"gorm.io/gen/field",
+		"gorm.io/gen/helper",
+		"",
+		"gorm.io/plugin/dbresolver",
+		"",
+	)
+	unitTestImportList = importPkgS{}.Add(
+		"context",
+		"fmt",
+		"strconv",
+		"testing",
+		"",
+		"gorm.io/driver/sqlite",
+		"gorm.io/gorm",
+		"",
+	)
 )
 
-var unitTestImportPkgs = importPkgS{}.Add(
-	"context",
-	"fmt",
-	"strconv",
-	"testing",
-	"",
-	"gorm.io/driver/sqlite",
-	"gorm.io/gorm",
-	"",
-)
-
-type importPkgS struct {
-	paths []string
-}
+type importPkgS struct{ paths []string }
 
 func (ip importPkgS) Add(paths ...string) *importPkgS {
 	for _, p := range paths {
@@ -55,6 +54,4 @@ func (ip importPkgS) Add(paths ...string) *importPkgS {
 	return &ip
 }
 
-func (ip importPkgS) Output() []string {
-	return ip.paths
-}
+func (ip *importPkgS) Output() []string { return ip.paths }
