@@ -248,6 +248,10 @@ func ({{.S}} {{.QueryStructName}}Do) Scan(result interface{}) (err error) {
 	return {{.S}}.DO.Scan(result)
 }
 
+func ({{.S}} {{.QueryStructName}}Do) Delete(models ...*{{.StructInfo.Package}}.{{.StructInfo.Type}}) (result gen.ResultInfo, err error) {
+	return {{.S}}.DO.Delete(models)
+}
+
 func ({{.S}} *{{.QueryStructName}}Do) withDO(do gen.Dao) (*{{.QueryStructName}}Do) {
 	{{.S}}.DO = *do.(*gen.DO)
 	return {{.S}}
