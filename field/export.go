@@ -285,7 +285,7 @@ func ContainsValue(columns []Expr, value Value) Expr {
 func EmptyExpr() Expr { return expr{e: clause.Expr{}} }
 
 // AssociationFields all association
-var AssociationFields Expr = NewString("", clause.Associations)
+var AssociationFields Expr = NewString("", clause.Associations).appendBuildOpts(WithoutQuote)
 
 // Associations ...
 var Associations RelationField = NewRelation(clause.Associations, "")

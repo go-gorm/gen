@@ -38,6 +38,14 @@ var ns = schema.NamingStrategy{}
 type RelationField interface {
 	Name() string
 	Path() string
+	// Field return expr for Select
+	// Field() return "<self>" field name in struct
+	// Field("RelateField") return "<self>.RelateField" for Select
+	// Field("RelateField", "RelateRelateField") return "<self>.RelateField.RelateRelateField" for Select
+	// ex:
+	// 	Select(u.CreditCards.Field()) equals to GORM: Select("CreditCards")
+	// 	Select(u.CreditCards.Field("Bank")) equals to GORM: Select("CreditCards.Bank")
+	// 	Select(u.CreditCards.Field("Bank","Owner")) equals to GORM: Select("CreditCards.Bank.Owner")
 	Field(fields ...string) Expr
 
 	On(conds ...Expr) RelationField
