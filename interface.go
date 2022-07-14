@@ -79,7 +79,7 @@ type Dao interface {
 	UpdateColumn(column field.Expr, value interface{}) (info ResultInfo, err error)
 	UpdateColumns(values interface{}) (info ResultInfo, err error)
 	UpdateColumnSimple(columns ...field.AssignExpr) (info ResultInfo, err error)
-	Delete() (info ResultInfo, err error)
+	Delete(...interface{}) (info ResultInfo, err error)
 	Count() (int64, error)
 	Row() *sql.Row
 	Rows() (*sql.Rows, error)

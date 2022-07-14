@@ -761,8 +761,18 @@ func (d *DO) assignSet(exprs []field.AssignExpr) (set clause.Set) {
 }
 
 // Delete ...
-func (d *DO) Delete() (info ResultInfo, err error) {
-	result := d.db.Model(d.newResultPointer()).Delete(reflect.New(d.modelType).Interface())
+func (d *DO) Delete(models ...interface{}) (info ResultInfo, err error) {
+	var result *gorm.DB
+	if len(models) == 0 || reflect.ValueOf(models[0]).Len() == 0 {
+		result = d.db.Model(d.newResultPointer()).Delete(reflect.New(d.modelType).Interface())
+	} else {
+		targets := reflect.MakeSlice(reflect.SliceOf(reflect.PtrTo(d.modelType)), 0, len(models))
+		value := reflect.ValueOf(models[0])
+		for i := 0; i < value.Len(); i++ {
+			targets = reflect.Append(targets, value.Index(i))
+		}
+		result = d.db.Delete(targets.Interface())
+	}
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
