@@ -2123,6 +2123,7 @@ Usage of gentool:
 
 ``` bash
 gentool -dsn "user:pwd@tcp(127.0.0.1:3306)/database?charset=utf8mb4&parseTime=True&loc=Local" -tables "orders,doctor"
+gentool -c "./gen.yml"
 ```
 
 配置文件示例:
