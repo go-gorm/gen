@@ -2123,7 +2123,7 @@ config example:
 version: "0.1"
 database:
   # consult[https://gorm.io/docs/connecting_to_the_database.html]"
-  dsn : "username:password@tcp(address:port)/db?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai"
+  dsn : "username:password@tcp(address:port)/db?charset=utf8mb4&parseTime=true&loc=Local"
   # input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]
   db  : "mysql"
   # enter the required data table or leave it blank.You can input : orders,users,goods
