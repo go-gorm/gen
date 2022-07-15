@@ -92,13 +92,13 @@ func checkInsert(c clause.Insert) error {
 	var priority, ignore string
 	if modifiers := strings.SplitN(strings.ToUpper(strings.TrimSpace(c.Modifier)), " ", 2); len(modifiers) == 2 {
 		priority, ignore = strings.TrimSpace(modifiers[0]), strings.TrimSpace(modifiers[1])
-	} else if len(modifiers) == 1 {
+	} else {
 		ignore = strings.TrimSpace(modifiers[0])
 	}
-	if priority != "" && in(priority, "LOW_PRIORITY", "DELAYED", "HIGH_PRIORITY") {
+	if priority != "" && !in(priority, "LOW_PRIORITY", "DELAYED", "HIGH_PRIORITY") {
 		return errors.New("invalid priority value")
 	}
-	if ignore != "" && in(ignore, "IGNORE") {
+	if ignore != "" && ignore != "IGNORE" {
 		return errors.New("invalid modifiers value, should be IGNORE")
 	}
 	return nil
