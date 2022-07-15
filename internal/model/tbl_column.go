@@ -56,12 +56,12 @@ func (c *Column) ToField(nullable, coverable, signable bool) *Field {
 	switch {
 	case c.Name() == "deleted_at" && fieldType == "time.Time":
 		fieldType = "gorm.DeletedAt"
+	case coverable && c.needDefaultTag(c.defaultTagValue()):
+		fieldType = "*" + fieldType
 	case nullable:
 		if n, ok := c.Nullable(); ok && n {
 			fieldType = "*" + fieldType
 		}
-	case coverable && c.needDefaultTag(c.defaultTagValue()):
-		fieldType = "*" + fieldType
 	}
 
 	var comment string
