@@ -33,17 +33,18 @@ const (
 
 // CmdParams is command line parameters
 type CmdParams struct {
-	DSN               string `yaml:"dsn"`               // consult[https://gorm.io/docs/connecting_to_the_database.html]"
-	DB                string `yaml:"db"`                // input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]
-	Tables            string `yaml:"tables"`            // enter the required data table or leave it blank
-	OnlyModel         bool   `yaml:"onlyModel"`         // only generate model
-	OutPath           string `yaml:"outPath"`           // specify a directory for output
-	OutFile           string `yaml:"outFile"`           // query code file name, default: gen.go
-	WithUnitTest      bool   `yaml:"withUnitTest"`      // generate unit test for query code
-	ModelPkgName      string `yaml:"modelPkgName"`      // generated model code's package name
-	FieldNullable     bool   `yaml:"fieldNullable"`     // generate with pointer when field is nullable
-	FieldWithIndexTag bool   `yaml:"fieldWithIndexTag"` // generate field with gorm index tag
-	FieldWithTypeTag  bool   `yaml:"fieldWithTypeTag"`  // generate field with gorm column type tag
+	DSN               string   `yaml:"dsn"`               // consult[https://gorm.io/docs/connecting_to_the_database.html]"
+	DB                string   `yaml:"db"`                // input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]
+	Tables            []string `yaml:"tables"`            // enter the required data table or leave it blank
+	OnlyModel         bool     `yaml:"onlyModel"`         // only generate model
+	OutPath           string   `yaml:"outPath"`           // specify a directory for output
+	OutFile           string   `yaml:"outFile"`           // query code file name, default: gen.go
+	WithUnitTest      bool     `yaml:"withUnitTest"`      // generate unit test for query code
+	ModelPkgName      string   `yaml:"modelPkgName"`      // generated model code's package name
+	FieldNullable     bool     `yaml:"fieldNullable"`     // generate with pointer when field is nullable
+	FieldWithIndexTag bool     `yaml:"fieldWithIndexTag"` // generate field with gorm index tag
+	FieldWithTypeTag  bool     `yaml:"fieldWithTypeTag"`  // generate field with gorm column type tag
+	FieldSignable     bool     `yaml:"fieldSignable"`     // detect integer field's unsigned type, adjust generated data type
 }
 
 // YamlConfig is yaml config struct
@@ -73,16 +74,16 @@ func connectDB(t DBType, dsn string) (*gorm.DB, error) {
 }
 
 // genModels is gorm/gen generated models
-func genModels(g *gen.Generator, db *gorm.DB, tables string) (models []interface{}, err error) {
+func genModels(g *gen.Generator, db *gorm.DB, tables []string) (models []interface{}, err error) {
 	var tablesList []string
-	if tables == "" {
+	if len(tables) == 0 {
 		// Execute tasks for all tables in the database
 		tablesList, err = db.Migrator().GetTables()
 		if err != nil {
 			return nil, fmt.Errorf("GORM migrator get all tables fail: %w", err)
 		}
 	} else {
-		tablesList = strings.Split(tables, ",")
+		tablesList = tables
 	}
 
 	// Execute some data table tasks
@@ -122,6 +123,7 @@ func argParse() *CmdParams {
 	fieldNullable := flag.Bool("fieldNullable", false, "generate with pointer when field is nullable")
 	fieldWithIndexTag := flag.Bool("fieldWithIndexTag", false, "generate field with gorm index tag")
 	fieldWithTypeTag := flag.Bool("fieldWithTypeTag", false, "generate field with gorm column type tag")
+	fieldSignable := flag.Bool("fieldSignable", false, "detect integer field's unsigned type, adjust generated data type")
 	flag.Parse()
 	var cmdParse CmdParams
 	if *genPath != "" {
@@ -137,7 +139,7 @@ func argParse() *CmdParams {
 		cmdParse.DB = *db
 	}
 	if *tableList != "" {
-		cmdParse.Tables = *tableList
+		cmdParse.Tables = strings.Split(*tableList, ",")
 	}
 	if *onlyModel {
 		cmdParse.OnlyModel = true
@@ -163,6 +165,9 @@ func argParse() *CmdParams {
 	if *fieldWithTypeTag {
 		cmdParse.FieldWithTypeTag = *fieldWithTypeTag
 	}
+	if *fieldSignable {
+		cmdParse.FieldSignable = *fieldSignable
+	}
 	return &cmdParse
 }
 
@@ -185,6 +190,7 @@ func main() {
 		FieldNullable:     config.FieldNullable,
 		FieldWithIndexTag: config.FieldWithIndexTag,
 		FieldWithTypeTag:  config.FieldWithTypeTag,
+		FieldSignable:     config.FieldSignable,
 	})
 
 	g.UseDB(db)
