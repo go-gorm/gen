@@ -212,7 +212,7 @@ func pullRelationShip(cache map[string]bool, relationships []*schema.Relationshi
 				relationship.FieldSchema.Relationships.Many2Many...),
 			)
 		}
-		result[i] = *field.NewRelation(relationship.Name, varType, childRelations...)
+		result[i] = *field.NewRelationWithType(field.RelationshipType(relationship.Type), relationship.Name, varType, childRelations...)
 	}
 	return result
 }
