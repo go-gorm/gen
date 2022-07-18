@@ -741,10 +741,7 @@ func (d *DO) UpdateColumns(value interface{}) (info ResultInfo, err error) {
 // assignSet fetch all set
 func (d *DO) assignSet(exprs []field.AssignExpr) (set clause.Set) {
 	for _, expr := range exprs {
-		column := clause.Column{Name: string(expr.ColumnName())}
-		if d.alias != "" {
-			column.Table = d.alias
-		}
+		column := clause.Column{Table: d.alias, Name: string(expr.ColumnName())}
 		switch e := expr.AssignExpr().(type) {
 		case clause.Expr:
 			set = append(set, clause.Assignment{Column: column, Value: e})
