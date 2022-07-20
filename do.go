@@ -683,25 +683,31 @@ func (d *DO) UpdateSimple(columns ...field.AssignExpr) (info ResultInfo, err err
 
 // Updates ...
 func (d *DO) Updates(value interface{}) (info ResultInfo, err error) {
-	var result *gorm.DB
-	var rawTyp, typ reflect.Type
+	var rawTyp, valTyp reflect.Type
 
 	rawTyp = reflect.TypeOf(value)
-	typ = rawTyp
-	if typ.Kind() == reflect.Ptr {
-		typ = typ.Elem()
+	if rawTyp.Kind() == reflect.Ptr {
+		valTyp = rawTyp.Elem()
+	} else {
+		valTyp = rawTyp
 	}
 
+	tx := d.db
+	if d.backfillData != nil {
+		tx = tx.Model(d.backfillData)
+	}
 	switch {
-	case typ != d.modelType:
-		result = d.db.Model(d.newResultPointer()).Updates(value)
-	case rawTyp.Kind() == reflect.Ptr:
-		result = d.db.Updates(value)
-	default:
+	case valTyp != d.modelType: // different type with model
+		if d.backfillData == nil {
+			tx = tx.Model(d.newResultPointer())
+		}
+	case rawTyp.Kind() == reflect.Ptr: // ignore ptr value
+	default: // for fixing "reflect.Value.Addr of unaddressable value" panic
 		ptr := reflect.New(d.modelType)
 		ptr.Elem().Set(reflect.ValueOf(value))
-		result = d.db.Updates(ptr.Interface())
+		value = ptr.Interface()
 	}
+	result := tx.Updates(value)
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
