@@ -98,6 +98,20 @@ func TestExpr_Build(t *testing.T) {
 			Result:       "(UNIX_TIMESTAMP(?))*?",
 			ExpectedVars: []interface{}{"2005-03-27 03:00:00", uint64(99)},
 		},
+		{
+			Expr:   field.NewInt("t1", "id").AddCol(field.NewInt("t2", "num")),
+			Result: "`t1`.`id` + `t2`.`num`",
+		},
+		{
+			Expr:         field.NewInt("t1", "id").AddCol(field.NewInt("t2", "num").Add(1)),
+			Result:       "`t1`.`id` + `t2`.`num`+?",
+			ExpectedVars: []interface{}{int(1)},
+		},
+		{
+			Expr:         field.NewInt("t1", "id").EqCol(field.NewInt("t1", "id").AddCol(field.NewInt("t2", "num").Add(1))),
+			Result:       "`t1`.`id` = `t1`.`id` + `t2`.`num`+?",
+			ExpectedVars: []interface{}{int(1)},
+		},
 		// ======================== integer ========================
 		{
 			Expr:   field.NewUint("", "id"),
