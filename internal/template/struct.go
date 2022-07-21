@@ -132,6 +132,7 @@ func ({{.S}} *{{.QueryStructName}}) fillFieldMap() {
 	defineDoInterface = `
 
 type I{{.ModelStructName}}Do interface {
+	gen.SubQuery
 	Debug() I{{.ModelStructName}}Do
 	WithContext(ctx context.Context) I{{.ModelStructName}}Do
 	WithResult(fc func(tx gen.Dao)) gen.ResultInfo
