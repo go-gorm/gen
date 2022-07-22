@@ -98,13 +98,13 @@ func (g *Generator) UseDB(db *gorm.DB) {
  */
 
 // GenerateModel catch table info from db, return a BaseStruct
-func (g *Generator) GenerateModel(tableName string, opts ...FieldOpt) *generate.QueryStructMeta {
+func (g *Generator) GenerateModel(tableName string, opts ...ModelOpt) *generate.QueryStructMeta {
 	return g.GenerateModelAs(tableName, g.db.Config.NamingStrategy.SchemaName(tableName), opts...)
 }
 
 // GenerateModelAs catch table info from db, return a BaseStruct
-func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpts ...FieldOpt) *generate.QueryStructMeta {
-	meta, err := generate.GetQueryStructMeta(g.db, g.genModelConfig(tableName, modelName, fieldOpts))
+func (g *Generator) GenerateModelAs(tableName string, modelName string, opts ...ModelOpt) *generate.QueryStructMeta {
+	meta, err := generate.GetQueryStructMeta(g.db, g.genModelConfig(tableName, modelName, opts))
 	if err != nil {
 		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)
 		panic("generate struct fail")
@@ -116,7 +116,7 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, fieldOpt
 }
 
 // GenerateAllTable generate all tables in db
-func (g *Generator) GenerateAllTable(opts ...FieldOpt) (tableModels []interface{}) {
+func (g *Generator) GenerateAllTable(opts ...ModelOpt) (tableModels []interface{}) {
 	tableList, err := g.db.Migrator().GetTables()
 	if err != nil {
 		panic(fmt.Errorf("get all tables fail: %w", err))
@@ -143,17 +143,14 @@ func (g *Generator) GenerateModelFrom(obj helper.Object) *generate.QueryStructMe
 	return s
 }
 
-func (g *Generator) genModelConfig(tableName string, modelName string, fieldOpts []FieldOpt) *model.Config {
-	modelFieldOpts := make([]model.FieldOpt, len(fieldOpts))
-	for i, opt := range fieldOpts {
-		modelFieldOpts[i] = opt
-	}
+func (g *Generator) genModelConfig(tableName string, modelName string, modelOpts []ModelOpt) *model.Config {
 	return &model.Config{
 		ModelPkg:       g.Config.ModelPkgPath,
 		TablePrefix:    g.getTablePrefix(),
 		TableName:      tableName,
 		ModelName:      modelName,
 		ImportPkgPaths: g.importPkgPaths,
+		ModelOpts:      modelOpts,
 		NameStrategy: model.NameStrategy{
 			SchemaNameOpts: g.dbNameOpts,
 			TableNameNS:    g.tableNameNS,
@@ -171,8 +168,6 @@ func (g *Generator) genModelConfig(tableName string, modelName string, fieldOpts
 
 			FieldJSONTagNS: g.fieldJSONTagNS,
 			FieldNewTagNS:  g.fieldNewTagNS,
-
-			FieldOpts: modelFieldOpts,
 		},
 	}
 }
@@ -481,8 +476,8 @@ func (g *Generator) generateModelFile() error {
 				return
 			}
 
-			for _, customMethod := range data.DIYMethods {
-				err = render(tmpl.StructCustomMethod, &buf, customMethod)
+			for _, method := range data.ModelMethods {
+				err = render(tmpl.ModelMethod, &buf, method)
 				if err != nil {
 					errChan <- err
 					return

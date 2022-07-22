@@ -22,7 +22,7 @@ func GetQueryStructMeta(db *gorm.DB, conf *model.Config) (*QueryStructMeta, erro
 		return nil, fmt.Errorf("UseDB() is necessary to generate model struct [%s] from database table [%s]", conf.ModelName, conf.TableName)
 	}
 
-	conf = conf.Revise()
+	conf = conf.Preprocess()
 	tableName, structName, fileName := conf.GetNames()
 	if err := checkStructName(structName); err != nil {
 		return nil, fmt.Errorf("model name %q is invalid: %w", structName, err)
@@ -32,7 +32,7 @@ func GetQueryStructMeta(db *gorm.DB, conf *model.Config) (*QueryStructMeta, erro
 	if err != nil {
 		return nil, err
 	}
-	meta := &QueryStructMeta{
+	return (&QueryStructMeta{
 		db:              db,
 		Source:          model.Table,
 		Generated:       true,
@@ -44,8 +44,7 @@ func GetQueryStructMeta(db *gorm.DB, conf *model.Config) (*QueryStructMeta, erro
 		StructInfo:      parser.Param{Type: structName, Package: conf.ModelPkg},
 		ImportPkgPaths:  conf.ImportPkgPaths,
 		Fields:          getFields(db, conf, columns),
-	}
-	return meta.AddMethod(conf.GetDIYMethod()...), nil
+	}).AddMethod(conf.GetModelMethods()...), nil
 }
 
 // GetQueryStructMetaFromObject generate base struct from object
@@ -55,7 +54,7 @@ func GetQueryStructMetaFromObject(obj helper.Object, conf *model.Config) (*Query
 		return nil, err
 	}
 
-	conf = conf.Revise()
+	conf = conf.Preprocess()
 
 	tableName := obj.TableName()
 	if conf.TableNameNS != nil {

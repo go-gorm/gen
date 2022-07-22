@@ -12,8 +12,8 @@ import (
 	"gorm.io/gorm/schema"
 )
 
-// FieldOpt field option
-type FieldOpt model.FieldOpt
+// ModelOpt field option
+type ModelOpt = model.Option
 
 var ns = schema.NamingStrategy{}
 
@@ -227,10 +227,8 @@ var (
 		}
 	}
 
-	// ModelMethod add custom method for table model
-	ModelMethod = func(methods ...interface{}) model.DIYMethodOpt {
-		return func() (m []interface{}) {
-			return methods
-		}
+	// MethodAppend add custom method for table model
+	MethodAppend = func(methods ...interface{}) model.AddMethodOpt {
+		return func() []interface{} { return methods }
 	}
 )

@@ -75,8 +75,8 @@ func fileExists(path string) bool {
 	return err == nil
 }
 
-// GetDIYMethod get diy methods
-func GetDIYMethod(v interface{}) (method *DIYMethods, err error) {
+// GetModelMethod get diy methods
+func GetModelMethod(v interface{}) (method *DIYMethods, err error) {
 	method = new(DIYMethods)
 
 	// get diy method info by input value, must input a function or a struct

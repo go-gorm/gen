@@ -28,7 +28,7 @@ type QueryStructMeta struct {
 	Fields          []*model.Field
 	Source          model.SourceCode
 	ImportPkgPaths  []string
-	DIYMethods      []*parser.Method // user custom method bind to db base struct
+	ModelMethods    []*parser.Method // user custom method bind to db base struct
 
 	interfaceMode bool
 }
@@ -137,9 +137,9 @@ func (b *QueryStructMeta) StructComment() string {
 // ReviseDIYMethod check diy method duplication name
 func (b *QueryStructMeta) ReviseDIYMethod() error {
 	var duplicateMethodName []string
-	methods := make([]*parser.Method, 0, len(b.DIYMethods))
-	methodMap := make(map[string]bool, len(b.DIYMethods))
-	for _, method := range b.DIYMethods {
+	methods := make([]*parser.Method, 0, len(b.ModelMethods))
+	methodMap := make(map[string]bool, len(b.ModelMethods))
+	for _, method := range b.ModelMethods {
 		if methodMap[method.MethodName] || method.MethodName == "TableName" {
 			duplicateMethodName = append(duplicateMethodName, method.MethodName)
 			continue
@@ -149,7 +149,7 @@ func (b *QueryStructMeta) ReviseDIYMethod() error {
 		methods = append(methods, method)
 		methodMap[method.MethodName] = true
 	}
-	b.DIYMethods = methods
+	b.ModelMethods = methods
 
 	if len(duplicateMethodName) > 0 {
 		return fmt.Errorf("can't generate struct with duplicated method, please check method name: %s", strings.Join(duplicateMethodName, ","))
@@ -161,11 +161,11 @@ func (b *QueryStructMeta) ReviseDIYMethod() error {
 // eg: g.GenerateModel("users").AddMethod(user.IsEmpty,user.GetName) or g.GenerateModel("users").AddMethod(model.User)
 func (b *QueryStructMeta) AddMethod(methods ...interface{}) *QueryStructMeta {
 	for _, method := range methods {
-		diyMethods, err := parser.GetDIYMethod(method)
+		modelMethods, err := parser.GetModelMethod(method)
 		if err != nil {
 			panic("add diy method err:" + err.Error())
 		}
-		b.DIYMethods = append(b.DIYMethods, diyMethods.Methods...)
+		b.ModelMethods = append(b.ModelMethods, modelMethods.Methods...)
 	}
 
 	err := b.ReviseDIYMethod()

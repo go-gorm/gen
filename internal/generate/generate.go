@@ -17,21 +17,20 @@ import (
  */
 
 func getFields(db *gorm.DB, conf *model.Config, columns []*model.Column) (fields []*model.Field) {
-	modifyOpts, filterOpts, createOpts := conf.SortOpt()
 	for _, col := range columns {
 		col.SetDataTypeMap(conf.DataTypeMap)
 		col.WithNS(conf.FieldJSONTagNS, conf.FieldNewTagNS)
 
 		m := col.ToField(conf.FieldNullable, conf.FieldCoverable, conf.FieldSignable)
 
-		if filterField(m, filterOpts) == nil {
+		if filterField(m, conf.FilterOpts) == nil {
 			continue
 		}
 		if t, ok := col.ColumnType.ColumnType(); ok && !conf.FieldWithTypeTag { // remove type tag if FieldWithTypeTag == false
 			m.GORMTag = strings.ReplaceAll(m.GORMTag, ";type:"+t, "")
 		}
 
-		m = modifyField(m, modifyOpts)
+		m = modifyField(m, conf.ModifyOpts)
 		if ns, ok := db.NamingStrategy.(schema.NamingStrategy); ok {
 			ns.SingularTable = true
 			m.Name = ns.SchemaName(ns.TablePrefix + m.Name)
@@ -41,7 +40,7 @@ func getFields(db *gorm.DB, conf *model.Config, columns []*model.Column) (fields
 
 		fields = append(fields, m)
 	}
-	for _, create := range createOpts {
+	for _, create := range conf.CreateOpts {
 		m := create.Operator()(nil)
 		if m.Relation != nil {
 			if m.Relation.Model() != nil {
@@ -59,7 +58,7 @@ func getFields(db *gorm.DB, conf *model.Config, columns []*model.Column) (fields
 	return fields
 }
 
-func filterField(m *model.Field, opts []model.FieldOpt) *model.Field {
+func filterField(m *model.Field, opts []model.FieldOption) *model.Field {
 	for _, opt := range opts {
 		if opt.Operator()(m) == nil {
 			return nil
@@ -68,7 +67,7 @@ func filterField(m *model.Field, opts []model.FieldOpt) *model.Field {
 	return m
 }
 
-func modifyField(m *model.Field, opts []model.FieldOpt) *model.Field {
+func modifyField(m *model.Field, opts []model.FieldOption) *model.Field {
 	for _, opt := range opts {
 		m = opt.Operator()(m)
 	}
