@@ -104,7 +104,7 @@ func (cfg *Config) GetModelMethods() (methods []interface{}) {
 // GetSchemaName get schema name
 func (cfg *Config) GetSchemaName(db *gorm.DB) string {
 	if cfg == nil {
-		return defaultSchemaNameOpt(db)
+		return ""
 	}
 
 	for _, opt := range cfg.SchemaNameOpts {
@@ -112,5 +112,5 @@ func (cfg *Config) GetSchemaName(db *gorm.DB) string {
 			return name
 		}
 	}
-	return defaultSchemaNameOpt(db)
+	return ""
 }
