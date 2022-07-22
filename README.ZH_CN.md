@@ -305,9 +305,9 @@ func (u *User)IsEmpty()bool{
 }
 user := User{}
 // 可以直接添加一个绑定了结构体的方法
-g.GenerateModel("people").AddMethod(user.IsEmpty)
+g.GenerateModel("people", gen.ModelMethod(user.IsEmpty))
 // 也可以传入一个结构体，会将这个结构体上绑定的所有方法绑定到新生成的结构体上
-g.GenerateModel("people").AddMethod(User{})
+g.GenerateModel("people", gen.ModelMethod(user))
 ```
 
 #### <span id="data-mapping">类型映射</span>
