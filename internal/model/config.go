@@ -80,7 +80,23 @@ func (cfg *Config) SortOpt() (modifyOpts []FieldOpt, filterOpts []FieldOpt, crea
 	if cfg == nil {
 		return
 	}
-	return sortFieldOpt(cfg.FieldOpts)
+	modifyOpts, filterOpts, createOpts, _ = sortFieldOpt(cfg.FieldOpts)
+	return
+}
+
+// GetDIYMethod get diy method from option
+func (cfg *Config) GetDIYMethod() (methods []interface{}) {
+	if cfg == nil {
+		return
+	}
+	_, _, _, methodOpts := sortFieldOpt(cfg.FieldOpts)
+	if len(methodOpts) == 0 {
+		return
+	}
+	for _, opt := range methodOpts {
+		methods = append(methods, opt()...)
+	}
+	return
 }
 
 // GetSchemaName get schema name

@@ -226,4 +226,11 @@ var (
 			}
 		}
 	}
+
+	// ModelMethod add custom method for table model
+	ModelMethod = func(methods ...interface{}) model.DIYMethodOpt {
+		return func() (m []interface{}) {
+			return methods
+		}
+	}
 )

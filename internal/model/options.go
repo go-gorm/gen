@@ -32,7 +32,13 @@ type CreateFieldOpt ModifyFieldOpt
 // Operator implement for FieldOpt
 func (o CreateFieldOpt) Operator() func(*Field) *Field { return o }
 
-func sortFieldOpt(opts []FieldOpt) (modifyOpts []FieldOpt, filterOpts []FieldOpt, createOpts []FieldOpt) {
+// DIYMethodOpt diy method option
+type DIYMethodOpt func() (methods []interface{})
+
+// Operator implement for FieldOpt
+func (o DIYMethodOpt) Operator() func(*Field) *Field { return nil }
+
+func sortFieldOpt(opts []FieldOpt) (modifyOpts []FieldOpt, filterOpts []FieldOpt, createOpts []FieldOpt, methodOpt []DIYMethodOpt) {
 	for _, opt := range opts {
 		switch opt.(type) {
 		case ModifyFieldOpt:
@@ -41,6 +47,8 @@ func sortFieldOpt(opts []FieldOpt) (modifyOpts []FieldOpt, filterOpts []FieldOpt
 			filterOpts = append(filterOpts, opt)
 		case CreateFieldOpt:
 			createOpts = append(createOpts, opt)
+		case DIYMethodOpt:
+			methodOpt = append(methodOpt, opt.(DIYMethodOpt))
 		}
 	}
 	return

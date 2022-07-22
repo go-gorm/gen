@@ -32,8 +32,7 @@ func GetQueryStructMeta(db *gorm.DB, conf *model.Config) (*QueryStructMeta, erro
 	if err != nil {
 		return nil, err
 	}
-
-	return &QueryStructMeta{
+	meta := &QueryStructMeta{
 		db:              db,
 		Source:          model.Table,
 		Generated:       true,
@@ -45,7 +44,8 @@ func GetQueryStructMeta(db *gorm.DB, conf *model.Config) (*QueryStructMeta, erro
 		StructInfo:      parser.Param{Type: structName, Package: conf.ModelPkg},
 		ImportPkgPaths:  conf.ImportPkgPaths,
 		Fields:          getFields(db, conf, columns),
-	}, nil
+	}
+	return meta.AddMethod(conf.GetDIYMethod()...), nil
 }
 
 // GetQueryStructMetaFromObject generate base struct from object
