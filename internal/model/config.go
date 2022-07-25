@@ -15,9 +15,11 @@ type Config struct {
 	ModelName   string
 
 	ImportPkgPaths []string
+	ModelOpts      []Option
 
 	NameStrategy
 	FieldConfig
+	MethodConfig
 }
 
 // NameStrategy name strategy
@@ -42,21 +44,32 @@ type FieldConfig struct {
 	FieldJSONTagNS func(columnName string) string
 	FieldNewTagNS  func(columnName string) string
 
-	FieldOpts []FieldOpt
+	ModifyOpts []FieldOption
+	FilterOpts []FieldOption
+	CreateOpts []FieldOption
 }
 
-// Revise revise invalid field
-func (cfg *Config) Revise() *Config {
+// MethodConfig method configuration
+type MethodConfig struct {
+	MethodOpts []MethodOption
+}
+
+// Preprocess revise invalid field
+func (cfg *Config) Preprocess() *Config {
 	if cfg.ModelPkg == "" {
 		cfg.ModelPkg = DefaultModelPkg
 	}
 	cfg.ModelPkg = filepath.Base(cfg.ModelPkg)
+
+	cfg.ModifyOpts, cfg.FilterOpts, cfg.CreateOpts, cfg.MethodOpts = sortOptions(cfg.ModelOpts)
+
 	return cfg
 }
 
 // GetNames get names
 func (cfg *Config) GetNames() (tableName, structName, fileName string) {
 	tableName, structName = cfg.TableName, cfg.ModelName
+
 	if cfg.ModelNameNS != nil {
 		structName = cfg.ModelNameNS(tableName)
 	}
@@ -72,26 +85,32 @@ func (cfg *Config) GetNames() (tableName, structName, fileName string) {
 	if cfg.FileNameNS != nil {
 		fileName = cfg.FileNameNS(cfg.TableName)
 	}
+
 	return
 }
 
-// SortOpt sort option
-func (cfg *Config) SortOpt() (modifyOpts []FieldOpt, filterOpts []FieldOpt, createOpts []FieldOpt) {
+// GetModelMethods get diy method from option
+func (cfg *Config) GetModelMethods() (methods []interface{}) {
 	if cfg == nil {
 		return
 	}
-	return sortFieldOpt(cfg.FieldOpts)
+
+	for _, opt := range cfg.MethodOpts {
+		methods = append(methods, opt.Methods()...)
+	}
+	return
 }
 
 // GetSchemaName get schema name
 func (cfg *Config) GetSchemaName(db *gorm.DB) string {
 	if cfg == nil {
-		return defaultSchemaNameOpt(db)
+		return ""
 	}
+
 	for _, opt := range cfg.SchemaNameOpts {
 		if name := opt(db); name != "" {
 			return name
 		}
 	}
-	return defaultSchemaNameOpt(db)
+	return ""
 }

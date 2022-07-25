@@ -23,7 +23,7 @@ func checkCustomMethod(t *testing.T, expMethods []*parser.Method, methods ...int
 		},
 	}
 	base.AddMethod(methods...)
-	genMethods := base.DIYMethods
+	genMethods := base.ModelMethods
 	if len(expMethods) != len(genMethods) {
 		t.Errorf("custom method length unexpectate exp:%v got:%v", len(expMethods), len(genMethods))
 	}

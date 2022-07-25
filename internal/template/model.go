@@ -36,8 +36,8 @@ func (*{{.ModelStructName}}) TableName() string {
 {{- end}}
 `
 
-// StructCustomMethod struct custom method
-const StructCustomMethod = `
+// ModelMethod model struct DIY method
+const ModelMethod = `
 
 {{if .Doc -}}// {{.DocComment -}}{{end}}
 func ({{.GetBaseStructTmpl}}){{.MethodName}}({{.GetParamInTmpl}})({{.GetResultParamInTmpl}}){{.Body}}
