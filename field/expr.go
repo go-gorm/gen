@@ -222,19 +222,19 @@ func (e expr) SetCol(col Expr) AssignExpr {
 
 // ======================== operate columns ========================
 func (e expr) AddCol(col Expr) Expr {
-	return e.setE(clause.Expr{SQL: "? + ?", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})
+	return Field{e.setE(clause.Expr{SQL: "? + ?", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})}
 }
 
 func (e expr) SubCol(col Expr) Expr {
-	return e.setE(clause.Expr{SQL: "? - ?", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})
+	return Field{e.setE(clause.Expr{SQL: "? - ?", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})}
 }
 
 func (e expr) MulCol(col Expr) Expr {
-	return e.setE(clause.Expr{SQL: "(?) * (?)", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})
+	return Field{e.setE(clause.Expr{SQL: "(?) * (?)", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})}
 }
 
 func (e expr) DivCol(col Expr) Expr {
-	return e.setE(clause.Expr{SQL: "(?) / (?)", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})
+	return Field{e.setE(clause.Expr{SQL: "(?) / (?)", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})}
 }
 
 // ======================== keyword ========================
