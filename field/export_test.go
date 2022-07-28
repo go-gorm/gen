@@ -103,6 +103,14 @@ func TestExpr_Build(t *testing.T) {
 			Result: "`t1`.`id` + `t2`.`num`",
 		},
 		{
+			Expr:   field.NewInt("t1", "id").AddCol(field.NewInt("t1", "num")).SubCol(field.NewInt("t1", "age")),
+			Result: "`t1`.`id` + `t1`.`num` - `t1`.`age`",
+		},
+		{
+			Expr:   field.NewInt("t1", "id").AddCol(field.NewInt("t1", "num")).SubCol(field.NewInt("t1", "age")).MulCol(field.NewInt("t1", "age")).DivCol(field.NewInt("t1", "base")),
+			Result: "((`t1`.`id` + `t1`.`num` - `t1`.`age`) * (`t1`.`age`)) / (`t1`.`base`)",
+		},
+		{
 			Expr:         field.NewInt("t1", "id").AddCol(field.NewInt("t2", "num").Add(1)),
 			Result:       "`t1`.`id` + `t2`.`num`+?",
 			ExpectedVars: []interface{}{int(1)},
