@@ -76,7 +76,7 @@ func fileExists(path string) bool {
 }
 
 // GetModelMethod get diy methods
-func GetModelMethod(v interface{}) (method *DIYMethods, err error) {
+func GetModelMethod(v interface{}, skip int) (method *DIYMethods, err error) {
 	method = new(DIYMethods)
 
 	// get diy method info by input value, must input a function or a struct
@@ -100,7 +100,7 @@ func GetModelMethod(v interface{}) (method *DIYMethods, err error) {
 	// if struct in main file
 	ctx := build.Default
 	if method.pkgPath == "main" {
-		_, file, _, _ := runtime.Caller(2)
+		_, file, _, _ := runtime.Caller(skip)
 		p, err = ctx.ImportDir(filepath.Dir(file), build.ImportComment)
 	} else {
 		p, err = ctx.Import(method.pkgPath, "", build.ImportComment)
