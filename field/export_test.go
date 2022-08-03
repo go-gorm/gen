@@ -120,6 +120,11 @@ func TestExpr_Build(t *testing.T) {
 			Result:       "`t1`.`id` = `t1`.`id` + `t2`.`num`+?",
 			ExpectedVars: []interface{}{int(1)},
 		},
+		{
+			Expr:         field.NewInt("t1", "a").AddCol(field.NewInt("t2", "b").Add(1)).(field.Field).GtCol(field.NewInt("t", "c")),
+			Result:       "`t1`.`a` + `t2`.`b`+? > `t`.`c`",
+			ExpectedVars: []interface{}{int(1)},
+		},
 		// ======================== integer ========================
 		{
 			Expr:   field.NewUint("", "id"),
