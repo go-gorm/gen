@@ -24,6 +24,9 @@ func GetQueryStructMeta(db *gorm.DB, conf *model.Config) (*QueryStructMeta, erro
 
 	conf = conf.Preprocess()
 	tableName, structName, fileName := conf.GetNames()
+	if tableName == "" {
+		return nil, nil
+	}
 	if err := checkStructName(structName); err != nil {
 		return nil, fmt.Errorf("model name %q is invalid: %w", structName, err)
 	}
@@ -110,11 +113,13 @@ func GetQueryStructMetaFromObject(obj helper.Object, conf *model.Config) (*Query
 // ConvertStructs convert to base structures
 func ConvertStructs(db *gorm.DB, structs ...interface{}) (metas []*QueryStructMeta, err error) {
 	for _, st := range structs {
+		if isNil(st) {
+			continue
+		}
 		if base, ok := st.(*QueryStructMeta); ok {
 			metas = append(metas, base)
 			continue
 		}
-
 		if !isStructType(reflect.ValueOf(st)) {
 			return nil, fmt.Errorf("%s is not a struct", reflect.TypeOf(st).String())
 		}
@@ -145,6 +150,17 @@ func ConvertStructs(db *gorm.DB, structs ...interface{}) (metas []*QueryStructMe
 		metas = append(metas, meta)
 	}
 	return
+}
+
+func isNil(i interface{}) bool {
+	if i == nil {
+		return true
+	}
+
+	// if v is not ptr, return false(i is not nil)
+	// if v is ptr, return v.IsNil()
+	v := reflect.ValueOf(i)
+	return v.Kind() == reflect.Ptr && v.IsNil()
 }
 
 // BuildDIYMethod check the legitimacy of interfaces

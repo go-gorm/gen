@@ -109,6 +109,10 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, opts ...
 		g.db.Logger.Error(context.Background(), "generate struct from table fail: %s", err)
 		panic("generate struct fail")
 	}
+	if meta == nil {
+		g.info(fmt.Sprintf("ignore table <%s>", tableName))
+		return nil
+	}
 	g.models[meta.ModelStructName] = meta
 
 	g.info(fmt.Sprintf("got %d columns from table <%s>", len(meta.Fields), meta.TableName))
