@@ -156,11 +156,11 @@ func isNil(i interface{}) bool {
 	if i == nil {
 		return true
 	}
-	vi := reflect.ValueOf(i)
-	if vi.Kind() == reflect.Ptr {
-		return vi.IsNil()
-	}
-	return false
+
+	// if v is not ptr, return false(i is not nil)
+	// if v is ptr, return v.IsNil()
+	v := reflect.ValueOf(i)
+	return v.Kind() == reflect.Ptr && v.IsNil()
 }
 
 // BuildDIYMethod check the legitimacy of interfaces
