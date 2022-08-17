@@ -166,13 +166,12 @@ func (d *DO) Clauses(conds ...clause.Expression) Dao {
 // As alias cannot be heired, As must used on tail
 func (d DO) As(alias string) Dao {
 	d.alias = alias
+	d.db = d.db.Table(fmt.Sprintf("%s AS %s", d.Quote(d.TableName()), d.Quote(alias)))
 	return &d
 }
 
 // Alias return alias name
-func (d *DO) Alias() string {
-	return d.alias
-}
+func (d *DO) Alias() string { return d.alias }
 
 // Columns return columns for Subquery
 func (*DO) Columns(cols ...field.Expr) Columns { return cols }
@@ -925,9 +924,11 @@ func toInterfaceSlice(value interface{}) []interface{} {
 // Table return a new table produced by subquery,
 // the return value has to be used as root node
 //
-// 	Table(u.Select(u.ID, u.Name).Where(u.Age.Gt(18))).Select()
+//	Table(u.Select(u.ID, u.Name).Where(u.Age.Gt(18))).Select()
+//
 // the above usage is equivalent to SQL statement:
-// 	SELECT * FROM (SELECT `id`, `name` FROM `users_info` WHERE `age` > ?)"
+//
+//	SELECT * FROM (SELECT `id`, `name` FROM `users_info` WHERE `age` > ?)"
 func Table(subQueries ...SubQuery) Dao {
 	if len(subQueries) == 0 {
 		return &DO{}
@@ -939,7 +940,8 @@ func Table(subQueries ...SubQuery) Dao {
 		tablePlaceholder[i] = "(?)"
 
 		do := query.underlyingDO()
-		tableExprs[i] = do.db
+		// ignore alias, or will misuse with sub query alias
+		tableExprs[i] = do.db.Table(do.TableName())
 		if do.alias != "" {
 			tablePlaceholder[i] += " AS " + do.Quote(do.alias)
 		}
