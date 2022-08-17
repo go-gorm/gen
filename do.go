@@ -664,7 +664,11 @@ func (d *DO) Update(column field.Expr, value interface{}) (info ResultInfo, err 
 	case field.AssignExpr:
 		result = tx.Update(columnStr, value.AssignExpr())
 	case SubQuery:
-		result = tx.Update(columnStr, value.underlyingDB())
+		subQuery := value.underlyingDB()
+		if do := value.underlyingDO(); do.Alias() != "" {
+			subQuery = subQuery.Table(fmt.Sprintf("`%s` AS `%s`", do.TableName(), do.Alias()))
+		}
+		result = tx.Update(columnStr, subQuery)
 	default:
 		result = tx.Update(columnStr, value)
 	}
@@ -925,9 +929,11 @@ func toInterfaceSlice(value interface{}) []interface{} {
 // Table return a new table produced by subquery,
 // the return value has to be used as root node
 //
-// 	Table(u.Select(u.ID, u.Name).Where(u.Age.Gt(18))).Select()
+//	Table(u.Select(u.ID, u.Name).Where(u.Age.Gt(18))).Select()
+//
 // the above usage is equivalent to SQL statement:
-// 	SELECT * FROM (SELECT `id`, `name` FROM `users_info` WHERE `age` > ?)"
+//
+//	SELECT * FROM (SELECT `id`, `name` FROM `users_info` WHERE `age` > ?)"
 func Table(subQueries ...SubQuery) Dao {
 	if len(subQueries) == 0 {
 		return &DO{}
