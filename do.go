@@ -166,6 +166,7 @@ func (d *DO) Clauses(conds ...clause.Expression) Dao {
 // As alias cannot be heired, As must used on tail
 func (d DO) As(alias string) Dao {
 	d.alias = alias
+	d.db = d.db.Table(fmt.Sprintf("%s AS %s", d.db.Statement.Quote(d.TableName()), d.db.Statement.Quote(alias)))
 	return &d
 }
 
@@ -664,11 +665,7 @@ func (d *DO) Update(column field.Expr, value interface{}) (info ResultInfo, err 
 	case field.AssignExpr:
 		result = tx.Update(columnStr, value.AssignExpr())
 	case SubQuery:
-		subQuery := value.underlyingDB()
-		if do := value.underlyingDO(); do.Alias() != "" {
-			subQuery = subQuery.Table(fmt.Sprintf("`%s` AS `%s`", do.TableName(), do.Alias()))
-		}
-		result = tx.Update(columnStr, subQuery)
+		result = tx.Update(columnStr, value.underlyingDB())
 	default:
 		result = tx.Update(columnStr, value)
 	}
