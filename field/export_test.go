@@ -133,6 +133,14 @@ func TestExpr_Build(t *testing.T) {
 			Expr:   field.ALL.Distinct().Count(),
 			Result: "COUNT(DISTINCT *)",
 		},
+		{
+			Expr:   field.NewAsterisk("user").Count(),
+			Result: "COUNT(`user`.*)",
+		},
+		{
+			Expr:   field.NewAsterisk("user").Distinct().Count(),
+			Result: "COUNT(DISTINCT `user`.*)",
+		},
 		// ======================== integer ========================
 		{
 			Expr:   field.NewUint("", "id"),

@@ -34,7 +34,7 @@ func NewField(table, column string, opts ...Option) Field {
 
 // NewAsterisk create new * field
 func NewAsterisk(table string, opts ...Option) Asterisk {
-	return Asterisk{expr: expr{col: toColumn(table, "*", opts...)}}
+	return Asterisk{asteriskExpr: asteriskExpr{expr{col: toColumn(table, "*", opts...)}}}
 }
 
 // ======================== integer =======================
