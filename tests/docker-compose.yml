@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  mysql:
+    image: 'mysql/mysql-server:latest'
+    ports:
+      - 9910:3306
+    environment:
+      - MYSQL_DATABASE=gen
+      - MYSQL_USER=gen
+      - MYSQL_PASSWORD=gen
+      - MYSQL_RANDOM_ROOT_PASSWORD="yes"

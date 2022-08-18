@@ -261,6 +261,11 @@ func TestExpr_Build(t *testing.T) {
 			ExpectedVars: []interface{}{3},
 			Result:       "`age`<<?",
 		},
+		{
+			Expr:         field.NewInt("", "age").Add(1).Mul(2).Div(3),
+			ExpectedVars: []interface{}{1, 2, 3},
+			Result:       "((`age`+?)*?)/?",
+		},
 		// ======================== float ========================
 		{
 			Expr:         field.NewFloat64("", "score").Add(3.0),
