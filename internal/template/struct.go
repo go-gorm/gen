@@ -38,7 +38,7 @@ const (
 		_{{.QueryStructName}}.{{.QueryStructName}}Do.UseModel(&{{.StructInfo.Package}}.{{.StructInfo.Type}}{})
 	
 		tableName := _{{.QueryStructName}}.{{.QueryStructName}}Do.TableName()
-		_{{$.QueryStructName}}.ALL = field.NewField(tableName, "*")
+		_{{$.QueryStructName}}.ALL = field.NewAsterisk(tableName)
 		{{range .Fields -}}
 		{{if not .IsRelation -}}
 			{{- if .ColumnName -}}_{{$.QueryStructName}}.{{.Name}} = field.New{{.GenType}}(tableName, "{{.ColumnName}}"){{- end -}}
@@ -57,7 +57,7 @@ const (
 	}
 	`
 	fields = `
-	ALL field.Field
+	ALL field.Asterisk
 	{{range .Fields -}}
 	{{if not .IsRelation -}}
 		{{- if .ColumnName -}}{{.Name}} field.{{.GenType}}{{- end -}}
@@ -83,7 +83,7 @@ func ({{.S}} {{.QueryStructName}}) As(alias string) *{{.QueryStructName}} {
 `
 	updateFieldMethod = `
 func ({{.S}} *{{.QueryStructName}}) updateTableName(table string) *{{.QueryStructName}} { 
-	{{.S}}.ALL = field.NewField(table, "*")
+	{{.S}}.ALL = field.NewAsterisk(table)
 	{{range .Fields -}}
 	{{if not .IsRelation -}}
 		{{- if .ColumnName -}}{{$.S}}.{{.Name}} = field.New{{.GenType}}(table, "{{.ColumnName}}"){{- end -}}
