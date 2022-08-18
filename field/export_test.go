@@ -125,6 +125,14 @@ func TestExpr_Build(t *testing.T) {
 			Result:       "`t1`.`a` + `t2`.`b`+? > `t`.`c`",
 			ExpectedVars: []interface{}{int(1)},
 		},
+		{
+			Expr:   field.ALL.Count(),
+			Result: "COUNT(*)",
+		},
+		{
+			Expr:   field.ALL.Distinct().Count(),
+			Result: "COUNT(DISTINCT *)",
+		},
 		// ======================== integer ========================
 		{
 			Expr:   field.NewUint("", "id"),

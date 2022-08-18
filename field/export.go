@@ -10,7 +10,7 @@ import (
 
 var (
 	// Star a symbol of "*"
-	Star = NewString("", "*")
+	Star = NewAsterisk("")
 	// ALL same with Star
 	ALL = Star
 )
@@ -30,6 +30,11 @@ var (
 // NewField create new field
 func NewField(table, column string, opts ...Option) Field {
 	return Field{expr: expr{col: toColumn(table, column, opts...)}}
+}
+
+// NewAsterisk create new * field
+func NewAsterisk(table string, opts ...Option) Asterisk {
+	return Asterisk{expr: expr{col: toColumn(table, "*", opts...)}}
 }
 
 // ======================== integer =======================

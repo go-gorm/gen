@@ -85,6 +85,7 @@ func (TeacherRaw) TableName() string {
 type user struct {
 	userDo
 
+	ALL        field.Asterisk
 	ID         field.Uint
 	Name       field.String
 	Age        field.Int
@@ -254,6 +255,7 @@ func (u userDo) FindByPage(offset int, limit int) (result []*user, count int64, 
 
 var u = func() *user {
 	u := user{
+		ALL:        field.NewAsterisk(""),
 		ID:         field.NewUint("", "id"),
 		Name:       field.NewString("", "name"),
 		Age:        field.NewInt("", "age"),
@@ -270,6 +272,7 @@ var u = func() *user {
 type Student struct {
 	DO
 
+	ALL        field.Asterisk
 	ID         field.Int64
 	Name       field.String
 	Age        field.Int
@@ -278,6 +281,7 @@ type Student struct {
 
 var student = func() *Student {
 	s := Student{
+		ALL:        field.NewAsterisk("student"),
 		ID:         field.NewInt64("student", "id"),
 		Name:       field.NewString("student", "name"),
 		Age:        field.NewInt("student", "age"),
@@ -291,12 +295,14 @@ var student = func() *Student {
 type Teacher struct {
 	DO
 
+	ALL  field.Asterisk
 	ID   field.Int64
 	Name field.String
 }
 
 var teacher = func() Teacher {
 	t := Teacher{
+		ALL:  field.NewAsterisk("teacher"),
 		ID:   field.NewInt64("teacher", "id"),
 		Name: field.NewString("teacher", "name"),
 	}
