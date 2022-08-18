@@ -109,6 +109,30 @@ func TestDO_methods(t *testing.T) {
 			Result: "SELECT DISTINCT `teacher`.`name` AS `n`",
 		},
 		{
+			Expr:   teacher.Select(field.ALL),
+			Result: "SELECT *",
+		},
+		{
+			Expr:   teacher.Select(field.ALL.Count()),
+			Result: "SELECT COUNT(*)",
+		},
+		{
+			Expr:   teacher.Select(field.ALL.Distinct().Count()),
+			Result: "SELECT COUNT(DISTINCT *)",
+		},
+		{
+			Expr:   teacher.Select(teacher.ALL),
+			Result: "SELECT `teacher`.*",
+		},
+		{
+			Expr:   teacher.Select(teacher.ALL.Count()),
+			Result: "SELECT COUNT(`teacher`.*)",
+		},
+		{
+			Expr:   teacher.Select(teacher.ALL.Distinct().Count()),
+			Result: "SELECT COUNT(DISTINCT `teacher`.*)",
+		},
+		{
 			Expr:   teacher.Select(teacher.ID.As("i"), teacher.Name.As("n")).Distinct(),
 			Result: "SELECT DISTINCT `teacher`.`id` AS `i`,`teacher`.`name` AS `n`",
 		},
