@@ -157,24 +157,6 @@ func (b *QueryStructMeta) ReviseDIYMethod() error {
 	return nil
 }
 
-// AddMethod generated model struct bind custom method, input a method of struct or a struct(bind all method of struct).
-// eg: g.GenerateModel("users").AddMethod(user.IsEmpty,user.GetName) or g.GenerateModel("users").AddMethod(model.User)
-func (b *QueryStructMeta) AddMethod(methods ...interface{}) *QueryStructMeta {
-	for _, method := range methods {
-		modelMethods, err := parser.GetModelMethod(method, 2)
-		if err != nil {
-			panic("add diy method err:" + err.Error())
-		}
-		b.ModelMethods = append(b.ModelMethods, modelMethods.Methods...)
-	}
-
-	err := b.ReviseDIYMethod()
-	if err != nil {
-		b.db.Logger.Warn(context.Background(), err.Error())
-	}
-	return b
-}
-
 func (b *QueryStructMeta) addMethodFromAddMethodOpt(methods ...interface{}) *QueryStructMeta {
 	for _, method := range methods {
 		modelMethods, err := parser.GetModelMethod(method, 4)
