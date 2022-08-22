@@ -1452,7 +1452,7 @@ u.Select(u.Account).Delete(&user)
 db.Select(u.Orders.Field(), u.CreditCards.Field()).Delete(&user)
 
 // delete user's has one/many/many2many relations when deleting user
-db.Select(field.AssociationsFields).Delete(&user)
+db.Select(field.AssociationFields).Delete(&user)
 ```
 
 ##### <span id="preloading">预加载</span>
