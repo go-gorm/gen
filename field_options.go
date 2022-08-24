@@ -82,12 +82,31 @@ var (
 			return m
 		}
 	}
-	// FieldTypeReg ignore some columns by RegExp
+	// FieldTypeReg specify field type in generated struct by RegExp
 	FieldTypeReg = func(columnNameReg string, newType string) model.ModifyFieldOpt {
 		reg := regexp.MustCompile(columnNameReg)
 		return func(m *model.Field) *model.Field {
 			if reg.MatchString(m.ColumnName) {
 				m.Type = newType
+			}
+			return m
+		}
+	}
+	// FieldGenType specify field gen type in generated dao
+	FieldGenType = func(columnName string, newType string) model.ModifyFieldOpt {
+		return func(m *model.Field) *model.Field {
+			if m.ColumnName == columnName {
+				m.CustomGenType = newType
+			}
+			return m
+		}
+	}
+	// FieldGenTypeReg specify field gen type in generated dao  by RegExp
+	FieldGenTypeReg = func(columnNameReg string, newType string) model.ModifyFieldOpt {
+		reg := regexp.MustCompile(columnNameReg)
+		return func(m *model.Field) *model.Field {
+			if reg.MatchString(m.ColumnName) {
+				m.CustomGenType = newType
 			}
 			return m
 		}

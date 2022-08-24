@@ -15,11 +15,11 @@ import (
 )
 
 type FiledParser interface {
-	GetFieldRealType(f *schema.Field) string
+	GetFieldGenType(f *schema.Field) string
 }
 type noopFiledParser byte
 
-func (fp noopFiledParser) GetFieldRealType(*schema.Field) string {
+func (fp noopFiledParser) GetFieldGenType(*schema.Field) string {
 	return ""
 }
 
@@ -57,9 +57,10 @@ func (b *QueryStructMeta) parseStruct(st interface{}) error {
 	}
 	for _, f := range stmt.Schema.Fields {
 		b.appendOrUpdateField(&model.Field{
-			Name:       f.Name,
-			Type:       b.getFieldRealTypeByParser(f, fp),
-			ColumnName: f.DBName,
+			Name:          f.Name,
+			Type:          b.getFieldRealType(f.FieldType),
+			ColumnName:    f.DBName,
+			CustomGenType: fp.GetFieldGenType(f),
 		})
 	}
 	for _, r := range ParseStructRelationShip(&stmt.Schema.Relationships) {
@@ -67,14 +68,6 @@ func (b *QueryStructMeta) parseStruct(st interface{}) error {
 		b.appendOrUpdateField(&model.Field{Relation: &r})
 	}
 	return nil
-}
-
-// getFieldRealTypeByParser  get basic type of field
-func (b *QueryStructMeta) getFieldRealTypeByParser(f *schema.Field, fp FiledParser) string {
-	if t := fp.GetFieldRealType(f); t != "" {
-		return t
-	}
-	return b.getFieldRealType(f.FieldType)
 }
 
 // getFieldRealType  get basic type of field
