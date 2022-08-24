@@ -14,6 +14,15 @@ import (
 	"gorm.io/gen/internal/parser"
 )
 
+type FiledParser interface {
+	GetFieldRealType(f *schema.Field) string
+}
+type noopFiledParser byte
+
+func (fp noopFiledParser) GetFieldRealType(*schema.Field) string {
+	return ""
+}
+
 // QueryStructMeta struct info in generated code
 type QueryStructMeta struct {
 	db *gorm.DB
@@ -42,11 +51,14 @@ func (b *QueryStructMeta) parseStruct(st interface{}) error {
 	}
 	b.TableName = stmt.Table
 	b.FileName = strings.ToLower(stmt.Table)
-
+	var fp FiledParser = noopFiledParser(0)
+	if fps, ok := st.(FiledParser); ok && fps != nil {
+		fp = fps
+	}
 	for _, f := range stmt.Schema.Fields {
 		b.appendOrUpdateField(&model.Field{
 			Name:       f.Name,
-			Type:       b.getFieldRealType(f.FieldType),
+			Type:       b.getFieldRealTypeByParser(f, fp),
 			ColumnName: f.DBName,
 		})
 	}
@@ -55,6 +67,14 @@ func (b *QueryStructMeta) parseStruct(st interface{}) error {
 		b.appendOrUpdateField(&model.Field{Relation: &r})
 	}
 	return nil
+}
+
+// getFieldRealTypeByParser  get basic type of field
+func (b *QueryStructMeta) getFieldRealTypeByParser(f *schema.Field, fp FiledParser) string {
+	if t := fp.GetFieldRealType(f); t != "" {
+		return t
+	}
+	return b.getFieldRealType(f.FieldType)
 }
 
 // getFieldRealType  get basic type of field
