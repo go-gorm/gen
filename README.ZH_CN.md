@@ -310,6 +310,33 @@ g.GenerateModel("people", gen.MethodAppend(user.IsEmpty))
 g.GenerateModel("people", gen.MethodAppend(user))
 ```
 
+指定生成的查询结构体字段类型
+```Go
+//package model
+type ITime struct {
+    time.Time
+}
+
+// 自定义数据结构体字段类型和查询结构体字段类型
+g.ApplyBasic(g.GenerateModel("people", gen.FieldType("create_time","model.ITime"), gen.FieldGenType("create_time","Time")))
+
+//package model
+type User struct {
+  ID int64
+  Name string
+  CreateTime ITime
+}
+
+func (u User) GetFieldGenType(f *schema.Field) string {
+  if f.Name == "CreateTime" {
+    return "Time"
+  }
+  return ""
+}
+// 自定义查询结构体类型
+g.ApplyBasic(model.User{})
+```
+
 #### <span id="data-mapping">类型映射</span>
 
 指定你期望的数据映射关系，如自定义数据库字段类型和 Go 类型的映射关系。

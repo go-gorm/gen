@@ -333,8 +333,8 @@ func (u User) GetFieldGenType(f *schema.Field) string {
 }
 // custom field gen type for struct
 g.ApplyBasic(model.User{})
-
 ```
+
 #### Data Mapping
 
 Specify data mapping relationship to be whatever you want.
