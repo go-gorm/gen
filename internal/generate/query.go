@@ -14,6 +14,14 @@ import (
 	"gorm.io/gen/internal/parser"
 )
 
+type FieldParser interface {
+	GetFieldGenType(f *schema.Field) string
+}
+
+type dummyFieldParser struct{}
+
+func (dummyFieldParser) GetFieldGenType(*schema.Field) string { return "" }
+
 // QueryStructMeta struct info in generated code
 type QueryStructMeta struct {
 	db *gorm.DB
@@ -36,6 +44,7 @@ type QueryStructMeta struct {
 // parseStruct get all elements of struct with gorm's Parse, ignore unexported elements
 func (b *QueryStructMeta) parseStruct(st interface{}) error {
 	stmt := gorm.Statement{DB: b.db}
+
 	err := stmt.Parse(st)
 	if err != nil {
 		return err
@@ -43,11 +52,16 @@ func (b *QueryStructMeta) parseStruct(st interface{}) error {
 	b.TableName = stmt.Table
 	b.FileName = strings.ToLower(stmt.Table)
 
+	var fp FieldParser = dummyFieldParser{}
+	if fps, ok := st.(FieldParser); ok && fps != nil {
+		fp = fps
+	}
 	for _, f := range stmt.Schema.Fields {
 		b.appendOrUpdateField(&model.Field{
-			Name:       f.Name,
-			Type:       b.getFieldRealType(f.FieldType),
-			ColumnName: f.DBName,
+			Name:          f.Name,
+			Type:          b.getFieldRealType(f.FieldType),
+			ColumnName:    f.DBName,
+			CustomGenType: fp.GetFieldGenType(f),
 		})
 	}
 	for _, r := range ParseStructRelationShip(&stmt.Schema.Relationships) {

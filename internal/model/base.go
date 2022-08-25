@@ -165,8 +165,8 @@ type Field struct {
 	GORMTag          string
 	NewTag           string
 	OverwriteTag     string
-
-	Relation *field.Relation
+	CustomGenType    string
+	Relation         *field.Relation
 }
 
 // Tags ...
@@ -196,7 +196,9 @@ func (m *Field) GenType() string {
 	if m.IsRelation() {
 		return m.Type
 	}
-
+	if m.CustomGenType != "" {
+		return m.CustomGenType
+	}
 	typ := strings.TrimLeft(m.Type, "*")
 	switch typ {
 	case "string", "bytes":

@@ -274,6 +274,8 @@ FieldRename        // rename field in struct
 FieldComment       // specify field comment in generated struct
 FieldType          // specify field type
 FieldTypeReg       // specify field type (match with regexp)
+FieldGenType       // specify field gen type
+FieldGenTypeReg    // specify field gen type (match with regexp)
 FieldTag           // specify gorm and json tag
 FieldJSONTag       // specify json tag
 FieldJSONTagWithNS // specify new tag with name strategy
@@ -304,6 +306,33 @@ user := User{}
 g.GenerateModel("people", gen.MethodAppend(user.IsEmpty))
 // also you can input a struct,will bind all method
 g.GenerateModel("people", gen.MethodAppend(user))
+```
+
+Generate model with custom gen type
+```Go
+//package model
+type ITime struct {
+    time.Time
+}
+
+// custom field type and gen type for table
+g.ApplyBasic(g.GenerateModel("people", gen.FieldType("create_time","model.ITime"), gen.FieldGenType("create_time","Time")))
+
+//package model
+type User struct {
+  ID int64
+  Name string
+  CreateTime ITime
+}
+
+func (u User) GetFieldGenType(f *schema.Field) string {
+  if f.Name == "CreateTime" {
+    return "Time"
+  }
+  return ""
+}
+// custom field gen type for struct
+g.ApplyBasic(model.User{})
 ```
 
 #### Data Mapping
