@@ -14,14 +14,13 @@ import (
 	"gorm.io/gen/internal/parser"
 )
 
-type FiledParser interface {
+type FieldParser interface {
 	GetFieldGenType(f *schema.Field) string
 }
-type noopFiledParser byte
 
-func (fp noopFiledParser) GetFieldGenType(*schema.Field) string {
-	return ""
-}
+type dummyFieldParser struct{}
+
+func (dummyFieldParser) GetFieldGenType(*schema.Field) string { return "" }
 
 // QueryStructMeta struct info in generated code
 type QueryStructMeta struct {
@@ -45,14 +44,16 @@ type QueryStructMeta struct {
 // parseStruct get all elements of struct with gorm's Parse, ignore unexported elements
 func (b *QueryStructMeta) parseStruct(st interface{}) error {
 	stmt := gorm.Statement{DB: b.db}
+
 	err := stmt.Parse(st)
 	if err != nil {
 		return err
 	}
 	b.TableName = stmt.Table
 	b.FileName = strings.ToLower(stmt.Table)
-	var fp FiledParser = noopFiledParser(0)
-	if fps, ok := st.(FiledParser); ok && fps != nil {
+
+	var fp FieldParser = dummyFieldParser{}
+	if fps, ok := st.(FieldParser); ok && fps != nil {
 		fp = fps
 	}
 	for _, f := range stmt.Schema.Fields {
