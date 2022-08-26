@@ -65,7 +65,7 @@ func (d *DO) UseModel(model interface{}) {
 
 	err := d.db.Statement.Parse(model)
 	if err != nil {
-		panic(fmt.Errorf("Cannot parse model: %+v", model))
+		panic(fmt.Errorf("Cannot parse model: %+v\n%w", model, err))
 	}
 	d.schema = d.db.Statement.Schema
 }
