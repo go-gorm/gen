@@ -59,11 +59,16 @@ const (
 	fields = `
 	ALL field.Asterisk
 	{{range .Fields -}}
-	{{if not .IsRelation -}}
-		{{- if .ColumnName -}}{{.Name}} field.{{.GenType}}{{- end -}}
-	{{- else -}}
-		{{.Relation.Name}} {{$.QueryStructName}}{{.Relation.RelationshipName}}{{.Relation.Name}}
-	{{end}}
+		{{if not .IsRelation -}}
+			{{if .MultilineComment -}}
+			/*
+				{{.ColumnComment}}
+    		*/
+			{{end -}}
+			{{- if .ColumnName -}}{{.Name}} field.{{.GenType}}{{if not .MultilineComment}}{{if .ColumnComment}}// {{.ColumnComment}}{{end}}{{end}}{{- end -}}
+		{{- else -}}
+			{{.Relation.Name}} {{$.QueryStructName}}{{.Relation.RelationshipName}}{{.Relation.Name}}
+		{{end}}
 	{{end}}
 
 	fieldMap  map[string]field.Expr

@@ -20,7 +20,7 @@ type {{.ModelStructName}} struct {
     {{range .Fields}}
 	{{if .MultilineComment -}}
 	/*
-{{.ColumnComment}}
+		{{.ColumnComment}}
     */
 	{{end -}}
     {{.Name}} {{.Type}} ` + "`{{.Tags}}` " +
