@@ -32,8 +32,6 @@ var tableMetas = [][2]string{
 			"KEY `idx_credit_cards_deleted_at` (`deleted_at`)," +
 			"KEY `fk_credit_cards_bank` (`bank_id`)," +
 			"KEY `fk_customers_credit_cards` (`customer_refer`)," +
-			"CONSTRAINT `fk_credit_cards_bank` FOREIGN KEY (`bank_id`) REFERENCES `banks` (`id`)," +
-			"CONSTRAINT `fk_customers_credit_cards` FOREIGN KEY (`customer_refer`) REFERENCES `customers` (`id`)" +
 			") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
 	},
 	{
@@ -47,9 +45,6 @@ var tableMetas = [][2]string{
 			"PRIMARY KEY (`id`)," +
 			"KEY `idx_customers_deleted_at` (`deleted_at`)," +
 			"KEY `fk_banks_c` (`bank_id`)," +
-			"CONSTRAINT `fk_banks_c` FOREIGN KEY (`bank_id`) REFERENCES `banks` (`id`)," +
-			"CONSTRAINT `fk_banks_credit_card` FOREIGN KEY (`bank_id`) REFERENCES `banks` (`id`)," +
-			"CONSTRAINT `fk_banks_customer` FOREIGN KEY (`bank_id`) REFERENCES `banks` (`id`)" +
 			") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
 	},
 	{
