@@ -72,14 +72,10 @@ func OpenTestConnection() (db *gorm.DB, err error) {
 	return
 }
 
-var tableMetas = [][2]string{
-	{"DROP TABLE IF EXISTS `demo`;", "CREATE TABLE `demo` ( `id` int(11) NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`) ) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4;"},
-}
-
 func RunMigrations() {
 	db := DB.Session(&gorm.Session{})
 
-	for _, meta := range tableMetas {
+	for _, meta := range GetDDL() {
 		dropTable, createTable := meta[0], meta[1]
 		if err := db.Exec(dropTable).Error; err != nil {
 			log.Printf("drop table fail: %s", err)
