@@ -28,10 +28,7 @@ var tableMetas = [][2]string{
 			"`number` longtext," +
 			"`customer_refer` bigint(20) unsigned DEFAULT NULL," +
 			"`bank_id` bigint(20) unsigned DEFAULT NULL," +
-			"PRIMARY KEY (`id`)," +
-			"KEY `idx_credit_cards_deleted_at` (`deleted_at`)," +
-			"KEY `fk_credit_cards_bank` (`bank_id`)," +
-			"KEY `fk_customers_credit_cards` (`customer_refer`)," +
+			"PRIMARY KEY (`id`)" +
 			") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
 	},
 	{
@@ -42,9 +39,7 @@ var tableMetas = [][2]string{
 			"`updated_at` datetime(3) DEFAULT NULL," +
 			"`deleted_at` datetime(3) DEFAULT NULL," +
 			"`bank_id` bigint(20) unsigned DEFAULT NULL," +
-			"PRIMARY KEY (`id`)," +
-			"KEY `idx_customers_deleted_at` (`deleted_at`)," +
-			"KEY `fk_banks_c` (`bank_id`)," +
+			"PRIMARY KEY (`id`)" +
 			") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
 	},
 	{
