@@ -30,7 +30,7 @@ func newPerson(db *gorm.DB) person {
 	_person.ID = field.NewInt64(tableName, "id")
 	_person.Name = field.NewString(tableName, "name")
 	_person.Age = field.NewInt32(tableName, "age")
-	_person.Flag = field.NewInt32(tableName, "flag")
+	_person.Flag = field.NewBool(tableName, "flag")
 	_person.AnotherFlag = field.NewInt32(tableName, "another_flag")
 	_person.Commit = field.NewString(tableName, "commit")
 	_person.First = field.NewBool(tableName, "First")
@@ -60,7 +60,7 @@ type person struct {
 	ID             field.Int64
 	Name           field.String
 	Age            field.Int32
-	Flag           field.Int32
+	Flag           field.Bool
 	AnotherFlag    field.Int32
 	Commit         field.String
 	First          field.Bool
@@ -96,7 +96,7 @@ func (p *person) updateTableName(table string) *person {
 	p.ID = field.NewInt64(table, "id")
 	p.Name = field.NewString(table, "name")
 	p.Age = field.NewInt32(table, "age")
-	p.Flag = field.NewInt32(table, "flag")
+	p.Flag = field.NewBool(table, "flag")
 	p.AnotherFlag = field.NewInt32(table, "another_flag")
 	p.Commit = field.NewString(table, "commit")
 	p.First = field.NewBool(table, "First")

@@ -17,7 +17,7 @@ type Person struct {
 	ID             int64          `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
 	Name           string         `gorm:"column:name" json:"name"`
 	Age            int32          `gorm:"column:age" json:"age"`
-	Flag           int32          `gorm:"column:flag" json:"flag"`
+	Flag           bool           `gorm:"column:flag" json:"flag"`
 	AnotherFlag    int32          `gorm:"column:another_flag" json:"another_flag"`
 	Commit         string         `gorm:"column:commit" json:"commit"`
 	First          bool           `gorm:"column:First" json:"First"`
