@@ -135,7 +135,7 @@ var (
 		"bit":        func(string) string { return "[]uint8" },
 		"boolean":    func(string) string { return "bool" },
 		"tinyint": func(detailType string) string {
-			if strings.HasPrefix(detailType, "tinyint(1)") {
+			if strings.HasPrefix(strings.TrimSpace(detailType), "tinyint(1)") {
 				return "bool"
 			}
 			return "int32"
