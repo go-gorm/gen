@@ -16,9 +16,7 @@ var (
 	Bank       *bank
 	CreditCard *creditCard
 	Customer   *customer
-	Language   *language
 	Person     *person
-	Player     *player
 	User       *user
 )
 
@@ -27,9 +25,7 @@ func SetDefault(db *gorm.DB) {
 	Bank = &Q.Bank
 	CreditCard = &Q.CreditCard
 	Customer = &Q.Customer
-	Language = &Q.Language
 	Person = &Q.Person
-	Player = &Q.Player
 	User = &Q.User
 }
 
@@ -39,9 +35,7 @@ func Use(db *gorm.DB) *Query {
 		Bank:       newBank(db),
 		CreditCard: newCreditCard(db),
 		Customer:   newCustomer(db),
-		Language:   newLanguage(db),
 		Person:     newPerson(db),
-		Player:     newPlayer(db),
 		User:       newUser(db),
 	}
 }
@@ -52,9 +46,7 @@ type Query struct {
 	Bank       bank
 	CreditCard creditCard
 	Customer   customer
-	Language   language
 	Person     person
-	Player     player
 	User       user
 }
 
@@ -66,9 +58,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		Bank:       q.Bank.clone(db),
 		CreditCard: q.CreditCard.clone(db),
 		Customer:   q.Customer.clone(db),
-		Language:   q.Language.clone(db),
 		Person:     q.Person.clone(db),
-		Player:     q.Player.clone(db),
 		User:       q.User.clone(db),
 	}
 }
@@ -77,9 +67,7 @@ type queryCtx struct {
 	Bank       *bankDo
 	CreditCard *creditCardDo
 	Customer   *customerDo
-	Language   *languageDo
 	Person     *personDo
-	Player     *playerDo
 	User       *userDo
 }
 
@@ -88,9 +76,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		Bank:       q.Bank.WithContext(ctx),
 		CreditCard: q.CreditCard.WithContext(ctx),
 		Customer:   q.Customer.WithContext(ctx),
-		Language:   q.Language.WithContext(ctx),
 		Person:     q.Person.WithContext(ctx),
-		Player:     q.Player.WithContext(ctx),
 		User:       q.User.WithContext(ctx),
 	}
 }

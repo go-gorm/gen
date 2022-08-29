@@ -16,7 +16,7 @@ import (
 
 	"gorm.io/plugin/dbresolver"
 
-	"gorm.io/gen/tests/.gen/dal_2/model"
+	"gorm.io/gen/tests/.gen/dal_1/model"
 )
 
 func newUser(db *gorm.DB) user {
@@ -28,18 +28,13 @@ func newUser(db *gorm.DB) user {
 	tableName := _user.userDo.TableName()
 	_user.ALL = field.NewAsterisk(tableName)
 	_user.ID = field.NewInt64(tableName, "id")
+	_user.CreatedAt = field.NewTime(tableName, "created_at")
 	_user.Name = field.NewString(tableName, "name")
 	_user.Address = field.NewString(tableName, "address")
 	_user.RegisterTime = field.NewTime(tableName, "register_time")
 	_user.Alive = field.NewBool(tableName, "alive")
-	_user.CreatedAt = field.NewTime(tableName, "created_at")
 	_user.CompanyID = field.NewInt64(tableName, "company_id")
 	_user.PrivateURL = field.NewString(tableName, "private_url")
-	_user.XMLHTTPRequest = field.NewString(tableName, "xmlHTTPRequest")
-	_user.JStr = field.NewString(tableName, "jStr")
-	_user.Geo = field.NewString(tableName, "geo")
-	_user.Mint = field.NewInt32(tableName, "mint")
-	_user.Blank = field.NewString(tableName, "blank")
 
 	_user.fillFieldMap()
 
@@ -49,20 +44,15 @@ func newUser(db *gorm.DB) user {
 type user struct {
 	userDo userDo
 
-	ALL            field.Asterisk
-	ID             field.Int64
-	Name           field.String
-	Address        field.String
-	RegisterTime   field.Time
-	Alive          field.Bool
-	CreatedAt      field.Time
-	CompanyID      field.Int64
-	PrivateURL     field.String
-	XMLHTTPRequest field.String
-	JStr           field.String
-	Geo            field.String
-	Mint           field.Int32
-	Blank          field.String
+	ALL          field.Asterisk
+	ID           field.Int64
+	CreatedAt    field.Time
+	Name         field.String
+	Address      field.String
+	RegisterTime field.Time
+	Alive        field.Bool
+	CompanyID    field.Int64
+	PrivateURL   field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -80,18 +70,13 @@ func (u user) As(alias string) *user {
 func (u *user) updateTableName(table string) *user {
 	u.ALL = field.NewAsterisk(table)
 	u.ID = field.NewInt64(table, "id")
+	u.CreatedAt = field.NewTime(table, "created_at")
 	u.Name = field.NewString(table, "name")
 	u.Address = field.NewString(table, "address")
 	u.RegisterTime = field.NewTime(table, "register_time")
 	u.Alive = field.NewBool(table, "alive")
-	u.CreatedAt = field.NewTime(table, "created_at")
 	u.CompanyID = field.NewInt64(table, "company_id")
 	u.PrivateURL = field.NewString(table, "private_url")
-	u.XMLHTTPRequest = field.NewString(table, "xmlHTTPRequest")
-	u.JStr = field.NewString(table, "jStr")
-	u.Geo = field.NewString(table, "geo")
-	u.Mint = field.NewInt32(table, "mint")
-	u.Blank = field.NewString(table, "blank")
 
 	u.fillFieldMap()
 
@@ -114,20 +99,15 @@ func (u *user) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (u *user) fillFieldMap() {
-	u.fieldMap = make(map[string]field.Expr, 13)
+	u.fieldMap = make(map[string]field.Expr, 8)
 	u.fieldMap["id"] = u.ID
+	u.fieldMap["created_at"] = u.CreatedAt
 	u.fieldMap["name"] = u.Name
 	u.fieldMap["address"] = u.Address
 	u.fieldMap["register_time"] = u.RegisterTime
 	u.fieldMap["alive"] = u.Alive
-	u.fieldMap["created_at"] = u.CreatedAt
 	u.fieldMap["company_id"] = u.CompanyID
 	u.fieldMap["private_url"] = u.PrivateURL
-	u.fieldMap["xmlHTTPRequest"] = u.XMLHTTPRequest
-	u.fieldMap["jStr"] = u.JStr
-	u.fieldMap["geo"] = u.Geo
-	u.fieldMap["mint"] = u.Mint
-	u.fieldMap["blank"] = u.Blank
 }
 
 func (u user) clone(db *gorm.DB) user {

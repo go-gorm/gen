@@ -31,7 +31,7 @@ func Test_userQuery(t *testing.T) {
 	primaryKey := field.NewString(user.TableName(), clause.PrimaryKey)
 	_, err := _do.Unscoped().Where(primaryKey.IsNotNull()).Delete()
 	if err != nil {
-		t.Error("clean table <user> fail:", err)
+		t.Error("clean table <users> fail:", err)
 		return
 	}
 
@@ -42,87 +42,87 @@ func Test_userQuery(t *testing.T) {
 
 	err = _do.Create(&model.User{})
 	if err != nil {
-		t.Error("create item in table <user> fail:", err)
+		t.Error("create item in table <users> fail:", err)
 	}
 
 	err = _do.Save(&model.User{})
 	if err != nil {
-		t.Error("create item in table <user> fail:", err)
+		t.Error("create item in table <users> fail:", err)
 	}
 
 	err = _do.CreateInBatches([]*model.User{{}, {}}, 10)
 	if err != nil {
-		t.Error("create item in table <user> fail:", err)
+		t.Error("create item in table <users> fail:", err)
 	}
 
 	_, err = _do.Select(user.ALL).Take()
 	if err != nil {
-		t.Error("Take() on table <user> fail:", err)
+		t.Error("Take() on table <users> fail:", err)
 	}
 
 	_, err = _do.First()
 	if err != nil {
-		t.Error("First() on table <user> fail:", err)
+		t.Error("First() on table <users> fail:", err)
 	}
 
 	_, err = _do.Last()
 	if err != nil {
-		t.Error("First() on table <user> fail:", err)
+		t.Error("First() on table <users> fail:", err)
 	}
 
 	_, err = _do.Where(primaryKey.IsNotNull()).FindInBatch(10, func(tx gen.Dao, batch int) error { return nil })
 	if err != nil {
-		t.Error("FindInBatch() on table <user> fail:", err)
+		t.Error("FindInBatch() on table <users> fail:", err)
 	}
 
 	err = _do.Where(primaryKey.IsNotNull()).FindInBatches(&[]*model.User{}, 10, func(tx gen.Dao, batch int) error { return nil })
 	if err != nil {
-		t.Error("FindInBatches() on table <user> fail:", err)
+		t.Error("FindInBatches() on table <users> fail:", err)
 	}
 
 	_, err = _do.Select(user.ALL).Where(primaryKey.IsNotNull()).Order(primaryKey.Desc()).Find()
 	if err != nil {
-		t.Error("Find() on table <user> fail:", err)
+		t.Error("Find() on table <users> fail:", err)
 	}
 
 	_, err = _do.Distinct(primaryKey).Take()
 	if err != nil {
-		t.Error("select Distinct() on table <user> fail:", err)
+		t.Error("select Distinct() on table <users> fail:", err)
 	}
 
 	_, err = _do.Select(user.ALL).Omit(primaryKey).Take()
 	if err != nil {
-		t.Error("Omit() on table <user> fail:", err)
+		t.Error("Omit() on table <users> fail:", err)
 	}
 
 	_, err = _do.Group(primaryKey).Find()
 	if err != nil {
-		t.Error("Group() on table <user> fail:", err)
+		t.Error("Group() on table <users> fail:", err)
 	}
 
 	_, err = _do.Scopes(func(dao gen.Dao) gen.Dao { return dao.Where(primaryKey.IsNotNull()) }).Find()
 	if err != nil {
-		t.Error("Scopes() on table <user> fail:", err)
+		t.Error("Scopes() on table <users> fail:", err)
 	}
 
 	_, _, err = _do.FindByPage(0, 1)
 	if err != nil {
-		t.Error("FindByPage() on table <user> fail:", err)
+		t.Error("FindByPage() on table <users> fail:", err)
 	}
 
 	_, err = _do.ScanByPage(&model.User{}, 0, 1)
 	if err != nil {
-		t.Error("ScanByPage() on table <user> fail:", err)
+		t.Error("ScanByPage() on table <users> fail:", err)
 	}
 
 	_, err = _do.Attrs(primaryKey).Assign(primaryKey).FirstOrInit()
 	if err != nil {
-		t.Error("FirstOrInit() on table <user> fail:", err)
+		t.Error("FirstOrInit() on table <users> fail:", err)
 	}
 
 	_, err = _do.Attrs(primaryKey).Assign(primaryKey).FirstOrCreate()
 	if err != nil {
-		t.Error("FirstOrCreate() on table <user> fail:", err)
+		t.Error("FirstOrCreate() on table <users> fail:", err)
 	}
 
 	var _a _another
@@ -130,16 +130,16 @@ func Test_userQuery(t *testing.T) {
 
 	err = _do.Join(&_a, primaryKey.EqCol(_aPK)).Scan(map[string]interface{}{})
 	if err != nil {
-		t.Error("Join() on table <user> fail:", err)
+		t.Error("Join() on table <users> fail:", err)
 	}
 
 	err = _do.LeftJoin(&_a, primaryKey.EqCol(_aPK)).Scan(map[string]interface{}{})
 	if err != nil {
-		t.Error("LeftJoin() on table <user> fail:", err)
+		t.Error("LeftJoin() on table <users> fail:", err)
 	}
 
 	_, err = _do.Not().Or().Clauses().Take()
 	if err != nil {
-		t.Error("Not/Or/Clauses on table <user> fail:", err)
+		t.Error("Not/Or/Clauses on table <users> fail:", err)
 	}
 }
