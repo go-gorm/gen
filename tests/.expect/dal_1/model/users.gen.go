@@ -6,23 +6,25 @@ package model
 
 import (
 	"time"
-
-	"gorm.io/gorm"
 )
 
 const TableNameUser = "users"
 
 // User mapped from table <users>
 type User struct {
-	ID        int64          `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
-	Name      string         `gorm:"column:name" json:"name"`
-	Age       string         `gorm:"column:age" json:"age"`
-	Address   string         `gorm:"column:address" json:"address"`
-	Role      string         `gorm:"column:role" json:"role"`
-	CreatedAt time.Time      `gorm:"column:created_at" json:"created_at"`
-	UpdatedAt time.Time      `gorm:"column:updated_at" json:"updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at" json:"deleted_at"`
-	Remark    string         `gorm:"column:remark" json:"remark"`
+	ID           int64     `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
+	CreatedAt    time.Time `gorm:"column:created_at" json:"created_at"`
+	Name         string    `gorm:"column:name" json:"name"` // oneline
+	Address      string    `gorm:"column:address" json:"address"`
+	RegisterTime time.Time `gorm:"column:register_time" json:"register_time"`
+	/*
+				multiline
+		line1
+		line2
+	*/
+	Alive      bool   `gorm:"column:alive" json:"alive"`
+	CompanyID  int64  `gorm:"column:company_id;default:666" json:"company_id"`
+	PrivateURL string `gorm:"column:private_url;default:https://a.b.c" json:"private_url"`
 }
 
 // TableName User's table name

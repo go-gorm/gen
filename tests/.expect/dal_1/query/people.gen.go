@@ -31,15 +31,22 @@ func newPerson(db *gorm.DB) person {
 	_person.Name = field.NewString(tableName, "name")
 	_person.Age = field.NewInt32(tableName, "age")
 	_person.Flag = field.NewInt32(tableName, "flag")
+	_person.AnotherFlag = field.NewInt32(tableName, "another_flag")
 	_person.Commit = field.NewString(tableName, "commit")
 	_person.First = field.NewBool(tableName, "First")
-	_person.FlagAnother = field.NewInt32(tableName, "flag_another")
 	_person.Bit = field.NewField(tableName, "bit")
 	_person.Small = field.NewInt32(tableName, "small")
 	_person.DeletedAt = field.NewField(tableName, "deleted_at")
 	_person.Score = field.NewFloat64(tableName, "score")
-	_person.Type = field.NewInt32(tableName, "type")
+	_person.Number = field.NewInt32(tableName, "number")
 	_person.Birth = field.NewTime(tableName, "birth")
+	_person.XMLHTTPRequest = field.NewString(tableName, "xmlHTTPRequest")
+	_person.JStr = field.NewString(tableName, "jStr")
+	_person.Geo = field.NewString(tableName, "geo")
+	_person.Mint = field.NewInt32(tableName, "mint")
+	_person.Blank = field.NewString(tableName, "blank")
+	_person.Remark = field.NewString(tableName, "remark")
+	_person.LongRemark = field.NewString(tableName, "long_remark")
 
 	_person.fillFieldMap()
 
@@ -49,20 +56,27 @@ func newPerson(db *gorm.DB) person {
 type person struct {
 	personDo personDo
 
-	ALL         field.Asterisk
-	ID          field.Int64
-	Name        field.String
-	Age         field.Int32
-	Flag        field.Int32
-	Commit      field.String
-	First       field.Bool
-	FlagAnother field.Int32
-	Bit         field.Field
-	Small       field.Int32
-	DeletedAt   field.Field
-	Score       field.Float64
-	Type        field.Int32
-	Birth       field.Time
+	ALL            field.Asterisk
+	ID             field.Int64
+	Name           field.String
+	Age            field.Int32
+	Flag           field.Int32
+	AnotherFlag    field.Int32
+	Commit         field.String
+	First          field.Bool
+	Bit            field.Field
+	Small          field.Int32
+	DeletedAt      field.Field
+	Score          field.Float64
+	Number         field.Int32
+	Birth          field.Time
+	XMLHTTPRequest field.String
+	JStr           field.String
+	Geo            field.String
+	Mint           field.Int32
+	Blank          field.String
+	Remark         field.String
+	LongRemark     field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -83,15 +97,22 @@ func (p *person) updateTableName(table string) *person {
 	p.Name = field.NewString(table, "name")
 	p.Age = field.NewInt32(table, "age")
 	p.Flag = field.NewInt32(table, "flag")
+	p.AnotherFlag = field.NewInt32(table, "another_flag")
 	p.Commit = field.NewString(table, "commit")
 	p.First = field.NewBool(table, "First")
-	p.FlagAnother = field.NewInt32(table, "flag_another")
 	p.Bit = field.NewField(table, "bit")
 	p.Small = field.NewInt32(table, "small")
 	p.DeletedAt = field.NewField(table, "deleted_at")
 	p.Score = field.NewFloat64(table, "score")
-	p.Type = field.NewInt32(table, "type")
+	p.Number = field.NewInt32(table, "number")
 	p.Birth = field.NewTime(table, "birth")
+	p.XMLHTTPRequest = field.NewString(table, "xmlHTTPRequest")
+	p.JStr = field.NewString(table, "jStr")
+	p.Geo = field.NewString(table, "geo")
+	p.Mint = field.NewInt32(table, "mint")
+	p.Blank = field.NewString(table, "blank")
+	p.Remark = field.NewString(table, "remark")
+	p.LongRemark = field.NewString(table, "long_remark")
 
 	p.fillFieldMap()
 
@@ -114,20 +135,27 @@ func (p *person) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (p *person) fillFieldMap() {
-	p.fieldMap = make(map[string]field.Expr, 13)
+	p.fieldMap = make(map[string]field.Expr, 20)
 	p.fieldMap["id"] = p.ID
 	p.fieldMap["name"] = p.Name
 	p.fieldMap["age"] = p.Age
 	p.fieldMap["flag"] = p.Flag
+	p.fieldMap["another_flag"] = p.AnotherFlag
 	p.fieldMap["commit"] = p.Commit
 	p.fieldMap["First"] = p.First
-	p.fieldMap["flag_another"] = p.FlagAnother
 	p.fieldMap["bit"] = p.Bit
 	p.fieldMap["small"] = p.Small
 	p.fieldMap["deleted_at"] = p.DeletedAt
 	p.fieldMap["score"] = p.Score
-	p.fieldMap["type"] = p.Type
+	p.fieldMap["number"] = p.Number
 	p.fieldMap["birth"] = p.Birth
+	p.fieldMap["xmlHTTPRequest"] = p.XMLHTTPRequest
+	p.fieldMap["jStr"] = p.JStr
+	p.fieldMap["geo"] = p.Geo
+	p.fieldMap["mint"] = p.Mint
+	p.fieldMap["blank"] = p.Blank
+	p.fieldMap["remark"] = p.Remark
+	p.fieldMap["long_remark"] = p.LongRemark
 }
 
 func (p person) clone(db *gorm.DB) person {
