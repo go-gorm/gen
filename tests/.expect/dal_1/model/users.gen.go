@@ -18,7 +18,7 @@ type User struct {
 	Address      string    `gorm:"column:address" json:"address"`
 	RegisterTime time.Time `gorm:"column:register_time" json:"register_time"`
 	/*
-				multiline
+		multiline
 		line1
 		line2
 	*/

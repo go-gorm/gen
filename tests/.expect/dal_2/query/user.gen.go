@@ -49,16 +49,11 @@ func newUser(db *gorm.DB) user {
 type user struct {
 	userDo userDo
 
-	ALL          field.Asterisk
-	ID           field.Int64
-	Name         field.String // oneline
-	Address      field.String
-	RegisterTime field.Time
-	/*
-						multiline
-		line1
-		line2
-	*/
+	ALL            field.Asterisk
+	ID             field.Int64
+	Name           field.String
+	Address        field.String
+	RegisterTime   field.Time
 	Alive          field.Bool
 	CreatedAt      field.Time
 	CompanyID      field.Int64
