@@ -47,12 +47,17 @@ type user struct {
 	ALL          field.Asterisk
 	ID           field.Int64
 	CreatedAt    field.Time
-	Name         field.String
+	Name         field.String // oneline
 	Address      field.String
 	RegisterTime field.Time
-	Alive        field.Bool
-	CompanyID    field.Int64
-	PrivateURL   field.String
+	/*
+		multiline
+		line1
+		line2
+	*/
+	Alive      field.Bool
+	CompanyID  field.Int64
+	PrivateURL field.String
 
 	fieldMap map[string]field.Expr
 }

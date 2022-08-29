@@ -62,7 +62,7 @@ const (
 		{{if not .IsRelation -}}
 			{{if .MultilineComment -}}
 			/*
-				{{.ColumnComment}}
+{{.ColumnComment}}
     		*/
 			{{end -}}
 			{{- if .ColumnName -}}{{.Name}} field.{{.GenType}}{{if not .MultilineComment}}{{if .ColumnComment}}// {{.ColumnComment}}{{end}}{{end}}{{- end -}}
