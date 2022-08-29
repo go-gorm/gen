@@ -53,7 +53,7 @@ CREATE TABLE `people` (
   `name` varchar(255) DEFAULT NULL,
   `age` int(11) unsigned DEFAULT NULL,
   `flag` tinyint(1) unsigned DEFAULT NULL,
-  `another_flag` tinyint(4) DEFAULT NULL,
+  `another_flag` tinyint(4) unsigned DEFAULT NULL,
   `commit` varchar(255) DEFAULT NULL,
   `First` tinyint(1) DEFAULT NULL,
   `bit` bit(1) DEFAULT NULL,

@@ -136,8 +136,10 @@ var (
 		"boolean":    func(string) string { return "bool" },
 		"tinyint": func(detailType string) string {
 			if strings.HasPrefix(strings.TrimSpace(detailType), "tinyint(1)") {
+				fmt.Println("regonize detailType", detailType, "bool")
 				return "bool"
 			}
+			fmt.Println("regonize detailType", detailType, "int32")
 			return "int32"
 		},
 	}
