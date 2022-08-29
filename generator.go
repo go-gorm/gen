@@ -287,7 +287,7 @@ func (g *Generator) generateQueryFile() (err error) {
 		pool.Wait()
 		go func(info *genInfo) {
 			defer pool.Done()
-			err = g.generateSingleQueryFile(info)
+			err := g.generateSingleQueryFile(info)
 			if err != nil {
 				errChan <- err
 			}
@@ -310,7 +310,7 @@ func (g *Generator) generateQueryFile() (err error) {
 	var buf bytes.Buffer
 	err = render(tmpl.Header, &buf, map[string]interface{}{
 		"Package":        g.queryPkgName,
-		"ImportPkgPaths": importList.Add(g.importPkgPaths...).Output(),
+		"ImportPkgPaths": importList.Add(g.importPkgPaths...).Paths(),
 	})
 	if err != nil {
 		return err
@@ -339,7 +339,7 @@ func (g *Generator) generateQueryFile() (err error) {
 
 		err = render(tmpl.Header, &buf, map[string]interface{}{
 			"Package":        g.queryPkgName,
-			"ImportPkgPaths": unitTestImportList.Add(g.importPkgPaths...).Output(),
+			"ImportPkgPaths": unitTestImportList.Add(g.importPkgPaths...).Paths(),
 		})
 		if err != nil {
 			g.db.Logger.Error(context.Background(), "generate query unit test fail: %s", err)
@@ -376,7 +376,7 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 	}
 	err = render(tmpl.Header, &buf, map[string]interface{}{
 		"Package":        g.queryPkgName,
-		"ImportPkgPaths": importList.Add(structPkgPath).Add(getImportPkgPaths(data)...).Output(),
+		"ImportPkgPaths": importList.Add(structPkgPath).Add(getImportPkgPaths(data)...).Paths(),
 	})
 	if err != nil {
 		return err
@@ -426,7 +426,7 @@ func (g *Generator) generateQueryUnitTestFile(data *genInfo) (err error) {
 	}
 	err = render(tmpl.Header, &buf, map[string]interface{}{
 		"Package":        g.queryPkgName,
-		"ImportPkgPaths": unitTestImportList.Add(structPkgPath).Add(data.ImportPkgPaths...).Output(),
+		"ImportPkgPaths": unitTestImportList.Add(structPkgPath).Add(data.ImportPkgPaths...).Paths(),
 	})
 	if err != nil {
 		return err
@@ -474,7 +474,7 @@ func (g *Generator) generateModelFile() error {
 			defer pool.Done()
 
 			var buf bytes.Buffer
-			err = render(tmpl.Model, &buf, data)
+			err := render(tmpl.Model, &buf, data)
 			if err != nil {
 				errChan <- err
 				return
