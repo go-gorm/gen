@@ -16,7 +16,7 @@ import (
 
 	"gorm.io/plugin/dbresolver"
 
-	"gorm.io/gen/tests/dal_2/model"
+	"gorm.io/gen/tests/.gen/dal_2/model"
 )
 
 func newLanguage(db *gorm.DB) language {

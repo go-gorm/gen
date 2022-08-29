@@ -80,7 +80,6 @@ func Test_WithContext(t *testing.T) {
 		qCtx.Bank.UnderlyingDB().Statement.Context,
 		qCtx.CreditCard.UnderlyingDB().Statement.Context,
 		qCtx.Customer.UnderlyingDB().Statement.Context,
-		qCtx.Demo.UnderlyingDB().Statement.Context,
 		qCtx.Language.UnderlyingDB().Statement.Context,
 		qCtx.Person.UnderlyingDB().Statement.Context,
 		qCtx.Player.UnderlyingDB().Statement.Context,

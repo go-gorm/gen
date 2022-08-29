@@ -74,7 +74,6 @@ func OpenTestConnection() (db *gorm.DB, err error) {
 
 func RunMigrations() {
 	db := DB.Session(&gorm.Session{})
-
 	for _, meta := range GetDDL() {
 		dropTable, createTable := meta[0], meta[1]
 		if err := db.Exec(dropTable).Error; err != nil {

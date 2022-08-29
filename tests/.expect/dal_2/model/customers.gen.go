@@ -18,7 +18,7 @@ type Customer struct {
 	CreatedAt *time.Time     `gorm:"column:created_at" json:"-"`
 	UpdatedAt *time.Time     `gorm:"column:updated_at" json:"-"`
 	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at;index:idx_customers_deleted_at,priority:1" json:"-"`
-	BankID    *int64         `gorm:"column:bank_id;index:fk_banks_c,priority:1" json:"-"`
+	BankID    *int64         `gorm:"column:bank_id" json:"-"`
 }
 
 // TableName Customer's table name
