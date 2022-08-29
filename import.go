@@ -3,7 +3,7 @@ package gen
 import "strings"
 
 var (
-	importList = importPkgS{}.Add(
+	importList = new(importPkgS).Add(
 		"context",
 		"database/sql",
 		"strings",
@@ -18,7 +18,7 @@ var (
 		"",
 		"gorm.io/plugin/dbresolver",
 	)
-	unitTestImportList = importPkgS{}.Add(
+	unitTestImportList = new(importPkgS).Add(
 		"context",
 		"fmt",
 		"strconv",
@@ -29,18 +29,23 @@ var (
 	)
 )
 
-type importPkgS struct{ paths []string }
+type importPkgS struct {
+	paths []string
+}
 
 func (ip importPkgS) Add(paths ...string) *importPkgS {
+	purePaths := make([]string, 0, len(paths)+1)
 	for _, p := range paths {
 		p = strings.TrimSpace(p)
 		if p == "" {
-			ip.paths = append(ip.paths, p)
+			purePaths = append(purePaths, p)
 			continue
 		}
+
 		if p[len(p)-1] != '"' {
 			p = `"` + p + `"`
 		}
+
 		var exists bool
 		for _, existsP := range ip.paths {
 			if p == existsP {
@@ -49,11 +54,14 @@ func (ip importPkgS) Add(paths ...string) *importPkgS {
 			}
 		}
 		if !exists {
-			ip.paths = append(ip.paths, p)
+			purePaths = append(purePaths, p)
 		}
 	}
-	ip.paths = append(ip.paths, "")
+	purePaths = append(purePaths, "")
+
+	ip.paths = append(ip.paths, purePaths...)
+
 	return &ip
 }
 
-func (ip *importPkgS) Output() []string { return ip.paths }
+func (ip importPkgS) Paths() []string { return ip.paths }
