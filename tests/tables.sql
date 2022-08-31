@@ -51,6 +51,7 @@ DROP TABLE IF EXISTS `people`;
 CREATE TABLE `people` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) DEFAULT NULL,
+  `alias` varchar(255) DEFAULT NULL,
   `age` int(11) unsigned DEFAULT NULL,
   `flag` tinyint(1) DEFAULT NULL,
   `another_flag` tinyint(4) DEFAULT NULL,

@@ -29,6 +29,7 @@ func newPerson(db *gorm.DB) person {
 	_person.ALL = field.NewAsterisk(tableName)
 	_person.ID = field.NewInt64(tableName, "id")
 	_person.Name = field.NewString(tableName, "name")
+	_person.Alias_ = field.NewString(tableName, "alias")
 	_person.Age = field.NewInt32(tableName, "age")
 	_person.Flag = field.NewBool(tableName, "flag")
 	_person.AnotherFlag = field.NewInt32(tableName, "another_flag")
@@ -59,6 +60,7 @@ type person struct {
 	ALL            field.Asterisk
 	ID             field.Int64
 	Name           field.String
+	Alias_         field.String
 	Age            field.Int32
 	Flag           field.Bool
 	AnotherFlag    field.Int32
@@ -95,6 +97,7 @@ func (p *person) updateTableName(table string) *person {
 	p.ALL = field.NewAsterisk(table)
 	p.ID = field.NewInt64(table, "id")
 	p.Name = field.NewString(table, "name")
+	p.Alias_ = field.NewString(table, "alias")
 	p.Age = field.NewInt32(table, "age")
 	p.Flag = field.NewBool(table, "flag")
 	p.AnotherFlag = field.NewInt32(table, "another_flag")
@@ -135,9 +138,10 @@ func (p *person) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (p *person) fillFieldMap() {
-	p.fieldMap = make(map[string]field.Expr, 20)
+	p.fieldMap = make(map[string]field.Expr, 21)
 	p.fieldMap["id"] = p.ID
 	p.fieldMap["name"] = p.Name
+	p.fieldMap["alias"] = p.Alias_
 	p.fieldMap["age"] = p.Age
 	p.fieldMap["flag"] = p.Flag
 	p.fieldMap["another_flag"] = p.AnotherFlag
