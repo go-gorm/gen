@@ -91,9 +91,14 @@ func (b *QueryStructMeta) getFieldRealType(f reflect.Type) string {
 }
 
 // ReviseFieldName revise field name
-func (b *QueryStructMeta) ReviseFieldName(keywords model.KeyWord) {
+func (b *QueryStructMeta) ReviseFieldName() {
+	b.ReviseFieldNameFor(model.GormKeywords)
+}
+
+// ReviseFieldNameFor revise field name for keywords
+func (b *QueryStructMeta) ReviseFieldNameFor(keywords model.KeyWord) {
 	for _, m := range b.Fields {
-		m.EscapeKeyword(keywords)
+		m.EscapeKeywordFor(keywords)
 	}
 }
 

@@ -226,7 +226,12 @@ func (m *Field) GenType() string {
 }
 
 // EscapeKeyword escape keyword
-func (m *Field) EscapeKeyword(keywords KeyWord) *Field {
+func (m *Field) EscapeKeyword() *Field {
+	return m.EscapeKeywordFor(GormKeywords)
+}
+
+// EscapeKeywordFor escape for specified keyword
+func (m *Field) EscapeKeywordFor(keywords KeyWord) *Field {
 	if keywords.FullMatch(m.Name) {
 		m.Name += "_"
 	}
