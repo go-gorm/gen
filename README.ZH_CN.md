@@ -305,9 +305,9 @@ func (u *User)IsEmpty()bool{
 }
 user := User{}
 // 可以直接添加一个绑定了结构体的方法
-g.GenerateModel("people", gen.MethodAppend(user.IsEmpty))
+g.GenerateModel("people", gen.WithMethod(user.IsEmpty))
 // 也可以传入一个结构体，会将这个结构体上绑定的所有方法绑定到新生成的结构体上
-g.GenerateModel("people", gen.MethodAppend(user))
+g.GenerateModel("people", gen.WithMethod(user))
 ```
 
 指定生成的查询结构体字段类型
