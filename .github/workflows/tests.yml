@@ -50,7 +50,7 @@ jobs:
           MYSQL_DATABASE: gen
           MYSQL_USER: gen
           MYSQL_PASSWORD: gen
-          MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+          MYSQL_ROOT_PASSWORD: 123456
         ports:
           - 9910:3306
         options: >-
@@ -59,8 +59,12 @@ jobs:
           --health-start-period 10s
           --health-timeout 5s
           --health-retries 10
+          --name mysql_server
 
     steps:
+    - name: Change MySQL sql_mode
+      run: docker exec mysql_server mysql -uroot -p123456 -e "SET GLOBAL sql_mode = 'NO_ENGINE_SUBSTITUTION';"
+
     - name: Set up Go 1.x
       uses: actions/setup-go@v3
       with:
