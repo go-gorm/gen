@@ -133,7 +133,7 @@ Gen: Friendly & Safer [GORM](https://github.com/go-gorm/gorm) powered by Code Ge
 
 To install Gen package, you need to install Go and set your Go workspace first.
 
-1.The first need Go installed(version 1.14,1.14+ is required), then you can use the below Go command to install Gen.
+1.The first need Go installed(version 1.14 or higher is required), then you can use the below Go command to install Gen.
 
 ```bash
 go get -u gorm.io/gen
