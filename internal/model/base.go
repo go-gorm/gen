@@ -68,6 +68,13 @@ var GormKeywords = KeyWord{
 	},
 }
 
+// DOKeywords ...
+var DOKeywords = KeyWord{
+	words: []string{
+		"Alias", "TableName", "WithContext",
+	},
+}
+
 // GenKeywords ...
 var GenKeywords = KeyWord{
 	words: []string{
@@ -220,7 +227,12 @@ func (m *Field) GenType() string {
 
 // EscapeKeyword escape keyword
 func (m *Field) EscapeKeyword() *Field {
-	if GormKeywords.FullMatch(m.Name) {
+	return m.EscapeKeywordFor(GormKeywords)
+}
+
+// EscapeKeywordFor escape for specified keyword
+func (m *Field) EscapeKeywordFor(keywords KeyWord) *Field {
+	if keywords.FullMatch(m.Name) {
 		m.Name += "_"
 	}
 	return m

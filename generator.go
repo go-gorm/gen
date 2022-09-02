@@ -227,8 +227,9 @@ func (g *Generator) apply(fc interface{}, structs []*generate.QueryStructMeta) {
 
 	for _, interfaceStructMeta := range structs {
 		if g.judgeMode(WithoutContext) {
-			interfaceStructMeta.ReviseFieldName()
+			interfaceStructMeta.ReviseFieldNameFor(model.GormKeywords)
 		}
+		interfaceStructMeta.ReviseFieldNameFor(model.DOKeywords)
 
 		genInfo, err := g.pushQueryStructMeta(interfaceStructMeta)
 		if err != nil {
