@@ -10,3 +10,4 @@ services:
       - MYSQL_USER=gen
       - MYSQL_PASSWORD=gen
       - MYSQL_RANDOM_ROOT_PASSWORD="yes"
+    command: mysqld --sql_mode="NO_ENGINE_SUBSTITUTION"

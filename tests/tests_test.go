@@ -7,16 +7,18 @@ import (
 
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
+	"gorm.io/gen"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
-var DB *gorm.DB
-var (
+const (
 	mysqlDSN     = "gen:gen@tcp(localhost:9910)/gen?charset=utf8&parseTime=True&loc=Local"
 	postgresDSN  = "user=gen password=gen dbname=gen host=localhost port=9920 sslmode=disable TimeZone=Asia/Shanghai"
 	sqlserverDSN = "sqlserver://gen:LoremIpsum86@localhost:9930?database=gen"
 )
+
+var DB *gorm.DB
 
 func init() {
 	log.Print("initing...")
@@ -43,6 +45,12 @@ func init() {
 		}
 	}
 	RunMigrations()
+
+	var generators []*gen.Generator
+	for dir, build := range generateCase {
+		generators = append(generators, build(dir))
+	}
+	RunGenerate(generators...)
 }
 
 func OpenTestConnection() (db *gorm.DB, err error) {
@@ -82,5 +90,11 @@ func RunMigrations() {
 		if err := db.Exec(createTable).Error; err != nil {
 			log.Printf("create table fail: %s", err)
 		}
+	}
+}
+
+func RunGenerate(gs ...*gen.Generator) {
+	for _, g := range gs {
+		g.Execute()
 	}
 }

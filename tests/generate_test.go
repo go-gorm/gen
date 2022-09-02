@@ -12,66 +12,57 @@ import (
 	"gorm.io/gen"
 )
 
-var _ = os.Setenv("GORM_DIALECT", "mysql")
-
 const (
 	generateDirPrefix = ".gen/"
 	expectDirPrefix   = ".expect/"
 )
 
-func TestGenerate_all(t *testing.T) {
-	dir := generateDirPrefix + "dal_1"
+var _ = os.Setenv("GORM_DIALECT", "mysql")
 
-	g := gen.NewGenerator(gen.Config{
-		OutPath: dir + "/query",
-		Mode:    gen.WithDefaultQuery,
-	})
+var generateCase = map[string]func(dir string) *gen.Generator{
+	generateDirPrefix + "dal_1": func(dir string) *gen.Generator {
+		g := gen.NewGenerator(gen.Config{
+			OutPath: dir + "/query",
+			Mode:    gen.WithDefaultQuery,
+		})
+		g.UseDB(DB)
+		g.ApplyBasic(g.GenerateAllTable()...)
+		return g
+	},
+	generateDirPrefix + "dal_2": func(dir string) *gen.Generator {
+		g := gen.NewGenerator(gen.Config{
+			OutPath: dir + "/query",
+			Mode:    gen.WithDefaultQuery,
 
-	g.UseDB(DB)
+			WithUnitTest: true,
 
-	g.ApplyBasic(g.GenerateAllTable()...)
-
-	g.Execute()
-
-	_ = os.Remove(dir + "/query/gen_test.db")
-
-	err := matchGeneratedFile(dir)
-	if err != nil {
-		t.Errorf("generated file is unexpected: %s", err)
-	}
+			FieldNullable:     true,
+			FieldCoverable:    true,
+			FieldWithIndexTag: true,
+		})
+		g.UseDB(DB)
+		g.WithJSONTagNameStrategy(func(c string) string { return "-" })
+		g.ApplyBasic(g.GenerateAllTable()...)
+		return g
+	},
 }
 
-func TestGenerate_ultimate(t *testing.T) {
-	dir := generateDirPrefix + "dal_2"
-
-	g := gen.NewGenerator(gen.Config{
-		OutPath: dir + "/query",
-		Mode:    gen.WithDefaultQuery,
-
-		WithUnitTest: true,
-
-		FieldNullable:     true,
-		FieldCoverable:    true,
-		FieldWithIndexTag: true,
-	})
-
-	g.UseDB(DB)
-
-	g.WithJSONTagNameStrategy(func(c string) string { return "-" })
-
-	g.ApplyBasic(g.GenerateAllTable()...)
-
-	g.Execute()
-
-	_ = os.Remove(dir + "/query/gen_test.db")
-
-	err := matchGeneratedFile(dir)
-	if err != nil {
-		t.Errorf("generated file is unexpected: %s", err)
+func TestGenerate(t *testing.T) {
+	for dir := range generateCase {
+		t.Run("TestGenerate_"+dir, func(dir string) func(t *testing.T) {
+			return func(t *testing.T) {
+				t.Parallel()
+				if err := matchGeneratedFile(dir); err != nil {
+					t.Errorf("generated file is unexpected: %s", err)
+				}
+			}
+		}(dir))
 	}
 }
 
 func matchGeneratedFile(dir string) error {
+	_ = os.Remove(dir + "/query/gen_test.db")
+
 	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Second)
 	defer cancel()
 
@@ -84,4 +75,17 @@ func matchGeneratedFile(dir string) error {
 		return fmt.Errorf("unexpected content: %s", diffResult)
 	}
 	return nil
+}
+
+func TestGenerate_expect(t *testing.T) {
+	if os.Getenv("GEN_EXPECT") == "" {
+		t.SkipNow()
+	}
+	g := gen.NewGenerator(gen.Config{
+		OutPath: expectDirPrefix + "dal_test" + "/query",
+		Mode:    gen.WithDefaultQuery,
+	})
+	g.UseDB(DB)
+	g.ApplyBasic(g.GenerateAllTable()...)
+	g.Execute()
 }

@@ -75,10 +75,10 @@ CREATE TABLE `people` (
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `created_at` time DEFAULT NULL,
+  `created_at` datetime(3) DEFAULT NULL,
   `name` varchar(255) DEFAULT NULL COMMENT 'oneline',
   `address` varchar(255) DEFAULT '',
-  `register_time` time DEFAULT NULL,
+  `register_time` datetime(3) DEFAULT NULL,
   `alive` tinyint(1) DEFAULT NULL COMMENT 'multiline\nline1\nline2',
   `company_id` bigint(20) unsigned DEFAULT '666',
   `private_url` varchar(255) DEFAULT 'https://a.b.c ',
