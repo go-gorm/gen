@@ -22,7 +22,7 @@ var _ = os.Setenv("GORM_DIALECT", "mysql")
 var generateCase = map[string]func(dir string) *gen.Generator{
 	generateDirPrefix + "dal_1": func(dir string) *gen.Generator {
 		g := gen.NewGenerator(gen.Config{
-			OutPath: dir + "query",
+			OutPath: dir + "/query",
 			Mode:    gen.WithDefaultQuery,
 		})
 		g.UseDB(DB)
@@ -31,7 +31,7 @@ var generateCase = map[string]func(dir string) *gen.Generator{
 	},
 	generateDirPrefix + "dal_2": func(dir string) *gen.Generator {
 		g := gen.NewGenerator(gen.Config{
-			OutPath: dir + "query",
+			OutPath: dir + "/query",
 			Mode:    gen.WithDefaultQuery,
 
 			WithUnitTest: true,
