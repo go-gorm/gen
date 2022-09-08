@@ -1,8 +1,9 @@
 ---
-name: 🐛  Report a bug
-about: Your issue may already be reported! please search on the https://github.com/go-gorm/gorm/issues before creating one 🥳
+name: 🐛 Report a bug
+about: Your issue may already be reported! please search on the https://github.com/go-gorm/gorm/issues before creating
+one 🥳
 labels: type:bug
-assignees: riverchu 
+assignees: riverchu
 
 ---
 

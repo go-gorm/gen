@@ -1,5 +1,5 @@
 ---
-name: 🍻  Feature request
+name: 🍻 Feature request
 about: Suggest an idea, Pull Request welcome 🚀
 labels: type:feature
 assignees: riverchu

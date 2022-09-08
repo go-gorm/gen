@@ -27,107 +27,107 @@
 ## <span id="contents">目录</span>
 
 - [GORM/GEN](#gormgen)
-  - [更多语言版本的 README](#multilingual-readme)
-  - [概览](#overview)
-  - [目录](#contents)
-  - [安装](#installation)
-  - [快速开始](#quick-start)
-    - [项目路径](#project-directory)
-  - [API 示例](#api-examples)
-    - [生成](#generate)
-      - [生成模式](#generate-mode)
-      - [模型生成](#generate-model)
-      - [类型映射](#data-mapping)
-    - [字段表达式](#field-expression)
-      - [创建字段](#create-field)
-    - [CRUD 接口](#crud-api)
-      - [创建](#create)
-        - [创建记录](#create-record)
-        - [选择字段创建](#create-record-with-selected-fields)
-        - [批量创建](#batch-insert)
-      - [查询](#query)
-        - [单条数据](#retrieving-a-single-object)
-        - [根据主键查询数据](#retrieving-objects-with-primary-key)
-        - [查询所有数据](#retrieving-all-objects)
-        - [条件查询](#conditions)
-          - [字符串和基础查询套件](#string-conditions)
-          - [内联条件查询](#inline-condition)
-          - [取反（not）查询](#not-conditions)
-          - [或（or）查询](#or-conditions)
-          - [组合查询](#group-conditions)
-          - [指定字段查询](#selecting-specific-fields)
-          - [元组查询](#tuple-query)
-          - [JSON 查询](#json-query)
-          - [Order 排序](#order)
-          - [分页查询(Limit & Offset)](#limit--offset)
-          - [分组查询（Group By & Having）](#group-by--having)
-          - [去重（Distinct）](#distinct)
-          - [联表查询（Joins）](#joins)
-        - [子查询](#subquery)
-          - [From 子查询](#from-subquery)
-          - [从子查询更新](#update-from-subquery)
-          - [从子查询更新多个字段](#update-multiple-columns-from-subquery)
-        - [事务](#transaction)
-          - [嵌套事务](#nested-transactions)
-          - [手动事务](#transactions-by-manual)
-          - [保存点/回滚](#savepointrollbackto)
-        - [高级查询](#advanced-query)
-          - [迭代](#iteration)
-          - [批量查询](#findinbatches)
-          - [Pluck 方法](#pluck)
-          - [Scopes 查询](#scopes)
-          - [Count 计数](#count)
-          - [首条匹配或指定查询实例初始化条件（FirstOrInit）](#firstorinit)
-          - [首条匹配或指定创建实例初始化条件（FirstOrCreate）](#firstorcreate)
-      - [关联关系（Association）](#association)
-        - [关联](#relation)
-          - [关联已存在的模型](#relate-to-exist-model)
-          - [和数据库表关联](#relate-to-table-in-database)
-          - [关联配置](#relate-config)
-        - [操作](#operation)
-          - [跳过自动创建关联](#skip-auto-createupdate)
-          - [查询关联](#find-associations)
-          - [添加关联](#append-associations)
-          - [替换关联](#replace-associations)
-          - [删除关联](#delete-associations)
-          - [清除关联](#clear-associations)
-          - [统计关联](#count-associations)
-          - [删除指定关联](#delete-with-select)
-        - [预加载](#preloading)
-          - [预加载（Preload）](#preload)
-          - [预加载全部数据（Preload All）](#preload-all)
-          - [预加载指定列](#preload-with-select)
-          - [根据条件预加载](#preload-with-conditions)
-          - [嵌套预加载](#nested-preloading)
-      - [更新](#update)
-        - [更新单个字段](#update-single-column)
-        - [更新多个字段](#updates-multiple-columns)
-        - [更新指定字段](#update-selected-fields)
-      - [删除](#delete)
-        - [删除记录](#delete-record)
-        - [根据主键删除](#delete-with-primary-key)
-        - [批量删除](#batch-delete)
-        - [软删除](#soft-delete)
-        - [查询包含软删除的记录](#find-soft-deleted-records)
-        - [永久删除](#delete-permanently)
-    - [自定义方法](#diy-method)
-      - [接口定义](#method-interface)
-        - [模板语法](#syntax-of-template)
-          - [占位符](#placeholder)
-          - [模板](#template)
-          - [`If` 子句](#if-clause)
-          - [`Where` 子句](#where-clause)
-          - [`Set` 子句](#set-clause)
-          - [`For` 子句](#for-clause)
-        - [方法接口示例](#method-interface-example)
-      - [单元测试](#unit-test)
-      - [智能选择字段](#smart-select-fields)
-    - [高级教程](#advanced-topics)
-      - [查询优化提示（Hints）](#hints)
-  - [二进制命令行工具安装](#binary)
-  - [维护者](#maintainers)
-  - [如何参与贡献](#contributing)
-  - [开源许可协议](#license)
+    - [更多语言版本的 README](#multilingual-readme)
+    - [概览](#overview)
+    - [目录](#contents)
+    - [安装](#installation)
+    - [快速开始](#quick-start)
+        - [项目路径](#project-directory)
+    - [API 示例](#api-examples)
+        - [生成](#generate)
+            - [生成模式](#generate-mode)
+            - [模型生成](#generate-model)
+            - [类型映射](#data-mapping)
+        - [字段表达式](#field-expression)
+            - [创建字段](#create-field)
+        - [CRUD 接口](#crud-api)
+            - [创建](#create)
+                - [创建记录](#create-record)
+                - [选择字段创建](#create-record-with-selected-fields)
+                - [批量创建](#batch-insert)
+            - [查询](#query)
+                - [单条数据](#retrieving-a-single-object)
+                - [根据主键查询数据](#retrieving-objects-with-primary-key)
+                - [查询所有数据](#retrieving-all-objects)
+                - [条件查询](#conditions)
+                    - [字符串和基础查询套件](#string-conditions)
+                    - [内联条件查询](#inline-condition)
+                    - [取反（not）查询](#not-conditions)
+                    - [或（or）查询](#or-conditions)
+                    - [组合查询](#group-conditions)
+                    - [指定字段查询](#selecting-specific-fields)
+                    - [元组查询](#tuple-query)
+                    - [JSON 查询](#json-query)
+                    - [Order 排序](#order)
+                    - [分页查询(Limit & Offset)](#limit--offset)
+                    - [分组查询（Group By & Having）](#group-by--having)
+                    - [去重（Distinct）](#distinct)
+                    - [联表查询（Joins）](#joins)
+                - [子查询](#subquery)
+                    - [From 子查询](#from-subquery)
+                    - [从子查询更新](#update-from-subquery)
+                    - [从子查询更新多个字段](#update-multiple-columns-from-subquery)
+                - [事务](#transaction)
+                    - [嵌套事务](#nested-transactions)
+                    - [手动事务](#transactions-by-manual)
+                    - [保存点/回滚](#savepointrollbackto)
+                - [高级查询](#advanced-query)
+                    - [迭代](#iteration)
+                    - [批量查询](#findinbatches)
+                    - [Pluck 方法](#pluck)
+                    - [Scopes 查询](#scopes)
+                    - [Count 计数](#count)
+                    - [首条匹配或指定查询实例初始化条件（FirstOrInit）](#firstorinit)
+                    - [首条匹配或指定创建实例初始化条件（FirstOrCreate）](#firstorcreate)
+            - [关联关系（Association）](#association)
+                - [关联](#relation)
+                    - [关联已存在的模型](#relate-to-exist-model)
+                    - [和数据库表关联](#relate-to-table-in-database)
+                    - [关联配置](#relate-config)
+                - [操作](#operation)
+                    - [跳过自动创建关联](#skip-auto-createupdate)
+                    - [查询关联](#find-associations)
+                    - [添加关联](#append-associations)
+                    - [替换关联](#replace-associations)
+                    - [删除关联](#delete-associations)
+                    - [清除关联](#clear-associations)
+                    - [统计关联](#count-associations)
+                    - [删除指定关联](#delete-with-select)
+                - [预加载](#preloading)
+                    - [预加载（Preload）](#preload)
+                    - [预加载全部数据（Preload All）](#preload-all)
+                    - [预加载指定列](#preload-with-select)
+                    - [根据条件预加载](#preload-with-conditions)
+                    - [嵌套预加载](#nested-preloading)
+            - [更新](#update)
+                - [更新单个字段](#update-single-column)
+                - [更新多个字段](#updates-multiple-columns)
+                - [更新指定字段](#update-selected-fields)
+            - [删除](#delete)
+                - [删除记录](#delete-record)
+                - [根据主键删除](#delete-with-primary-key)
+                - [批量删除](#batch-delete)
+                - [软删除](#soft-delete)
+                - [查询包含软删除的记录](#find-soft-deleted-records)
+                - [永久删除](#delete-permanently)
+        - [自定义方法](#diy-method)
+            - [接口定义](#method-interface)
+                - [模板语法](#syntax-of-template)
+                    - [占位符](#placeholder)
+                    - [模板](#template)
+                    - [`If` 子句](#if-clause)
+                    - [`Where` 子句](#where-clause)
+                    - [`Set` 子句](#set-clause)
+                    - [`For` 子句](#for-clause)
+                - [方法接口示例](#method-interface-example)
+            - [单元测试](#unit-test)
+            - [智能选择字段](#smart-select-fields)
+        - [高级教程](#advanced-topics)
+            - [查询优化提示（Hints）](#hints)
+    - [二进制命令行工具安装](#binary)
+    - [维护者](#maintainers)
+    - [如何参与贡献](#contributing)
+    - [开源许可协议](#license)
 
 ## <span id="installation">安装</span>
 
@@ -147,7 +147,8 @@ import "gorm.io/gen"
 
 ## <span id="quick-start">快速开始</span>
 
-**注意**：此处所有教程都是在 `WithContext` 模式下写的. 如果你使用的是 `WithoutContext` 模式,则可以删除所有的 `WithContext(ctx)` 代码，这样看起来会更简洁。
+**注意**：此处所有教程都是在 `WithContext` 模式下写的. 如果你使用的是 `WithoutContext`
+模式,则可以删除所有的 `WithContext(ctx)` 代码，这样看起来会更简洁。
 
 ```bash
 # assume the following code in generate.go file
@@ -293,6 +294,7 @@ FieldRelateModel   // specify relationship with exist models
 ```
 
 **生成结构体绑定自定义方法**
+
 ```Go
 type User struct{
 	ID int32
@@ -311,6 +313,7 @@ g.GenerateModel("people", gen.WithMethod(user))
 ```
 
 指定生成的查询结构体字段类型
+
 ```Go
 //package model
 type ITime struct {
@@ -453,7 +456,8 @@ u.WithContext(ctx).Omit(u.Name, u.Age).Create(&user)
 
 ##### <span id="batch-insert">批量创建</span>
 
-`Create` 方法支持批量创建记录，只需要将对应模型（Model）的切片（slice）类型数据作为参数传入即可。GORM 将生成单个 SQL 语句来插入所有数据并返回对应内容全部主键的值。
+`Create` 方法支持批量创建记录，只需要将对应模型（Model）的切片（slice）类型数据作为参数传入即可。GORM 将生成单个 SQL
+语句来插入所有数据并返回对应内容全部主键的值。
 
 ```go
 var users = []*model.User{{Name: "modi"}, {Name: "zhangqiang"}, {Name: "songyuan"}}
@@ -494,7 +498,8 @@ u.WithContext(ctx).Create(&users)
 
 ##### <span id="retrieving-a-single-object">单条数据查询</span>
 
-GROM 提供了 `First`、`Take`、`Last` 方法从数据库中查询单条数据，在查询数据库时会自动添加 `LIMIT 1` 条件，如果没有找到记录则返回错误 `ErrRecordNotFound`。
+GROM 提供了 `First`、`Take`、`Last` 方法从数据库中查询单条数据，在查询数据库时会自动添加 `LIMIT 1`
+条件，如果没有找到记录则返回错误 `ErrRecordNotFound`。
 
 ```go
 u := query.Use(db).User
@@ -711,6 +716,7 @@ users, err := u.WithContext(ctx).Order(orderCol.Desc()).Find()
 ###### <span id="limit--offset">分页查询（Limit & Offset）</span>
 
 分页查询方法，其中：
+
 * `Limit` 指定要检索的最大记录数
 * `Offset` 指定在开始返回记录之前要跳过的记录数（当前分页的位置）
 
@@ -1394,7 +1400,8 @@ u.WithContext(ctx).Omit(field.AssociationFields).Create(&user)
 // Skip all associations when creating a user
 ```
 
-方法 `Field` 会用 ''." 连接一个严谨的字段名，例如：`u.BillingAddress.Field("Address1", "Street")` 等于 `BillingAddress.Address1.Street`
+方法 `Field` 会用 ''." 连接一个严谨的字段名，例如：`u.BillingAddress.Field("Address1", "Street")`
+等于 `BillingAddress.Address1.Street`
 
 ###### <span id="find-associations">查询关联</span>
 
@@ -1660,7 +1667,8 @@ u.WithContext(ctx).Where(u.Activate.Is(true)).UpdateSimple(u.Age.Value(17), u.Nu
 // UPDATE users SET age=17, number=0, birthday=NULL, updated_at='2013-11-17 21:34:10' WHERE active=true;
 ```
 
-> **注意** 当通过 struct 更新的时候，GEN 将只会更新其非零值的字段，你可能需要用 `map` 去更新属性，或者用 `select` 去明确指定哪些字段是需要被更新的
+> **注意** 当通过 struct 更新的时候，GEN 将只会更新其非零值的字段，你可能需要用 `map` 去更新属性，或者用 `select`
+> 去明确指定哪些字段是需要被更新的
 
 ##### <span id="update-selected-fields">更新指定字段</span>
 
@@ -1728,7 +1736,8 @@ e.WithContext(ctx).Where(e.Name.Like("%modi%")).Delete()
 
 如果你的 model 中包含有 `gorm.DeletedAt` 字段，则会自动执行软删除。
 
-当使用软删除时，调用 `Delete` 不会将相关记录从数据库中删除，GORM 会将 `gorm.DeletedAt` 对应字段的值设置为当前时间，以表示删除状态和删除的时间。通过软删除的数据，无法使用普通的 Query 方法找到相应的记录。
+当使用软删除时，调用 `Delete` 不会将相关记录从数据库中删除，GORM 会将 `gorm.DeletedAt`
+对应字段的值设置为当前时间，以表示删除状态和删除的时间。通过软删除的数据，无法使用普通的 Query 方法找到相应的记录。
 
 ```go
 // Batch Delete
@@ -1772,7 +1781,8 @@ o.WithContext(ctx).Unscoped().Where(o.ID.Eq(10)).Delete()
 
 #### <span id="method-interface">接口定义</span>
 
-自定义方法，需要通过 interface 定义。在方法上通过注释的方式描述具体的 SQL 查询逻辑，简单的 WHERE 查询可以用 `where()` 包住，复杂的查询需要写完整 SQL 可以直接用 `sql()` 包住或者忽略直接写 SQL，太长的 SQL 支持换行，如果有对方法的注释，只需要在前面加一个空行。
+自定义方法，需要通过 interface 定义。在方法上通过注释的方式描述具体的 SQL 查询逻辑，简单的 WHERE 查询可以用 `where()`
+包住，复杂的查询需要写完整 SQL 可以直接用 `sql()` 包住或者忽略直接写 SQL，太长的 SQL 支持换行，如果有对方法的注释，只需要在前面加一个空行。
 
 ```go
 type Method interface {
@@ -1789,9 +1799,11 @@ type Method interface {
 }
 ```
 
-方法输入参数和返回值支持基础类型（int、string、bool等）、结构体和占位符（`gen.T`/`gen.M`/`gen.RowsAffected`）,类型支持指针和数组，返回值最多返回一个值和一个 error。
+方法输入参数和返回值支持基础类型（int、string、bool等）、结构体和占位符（`gen.T`/`gen.M`/`gen.RowsAffected`
+）,类型支持指针和数组，返回值最多返回一个值和一个 error。
 
 用法(完整case见[快速开始](#quick-start))：
+
 ```go
 // 在表user和company生成的结构体上实现model.Method中包含的方法
 g.ApplyInterface(func(method model.Method) {}, model.User{}, g.GenerateModel("company"))
@@ -1810,7 +1822,8 @@ g.ApplyInterface(func(method model.Method) {}, model.User{}, g.GenerateModel("co
 
 ###### <span id="template">模板</span>
 
-逻辑操作必须包裹在 `{{}}` 中，如 `{{if}}`，结束语句必须是 `{{end}}`，所有的语句都可以嵌套。`{{}}` 中的语法除了 `{{end}}` 其它的都是 Golang 语法。
+逻辑操作必须包裹在 `{{}}` 中，如 `{{if}}`，结束语句必须是 `{{end}}`，所有的语句都可以嵌套。`{{}}` 中的语法除了 `{{end}}`
+其它的都是 Golang 语法。
 
 - `if`/`else if`/`else` if 子句通过判断满足条件拼接字符串到SQL。
 - `where` where 子句只有在内容不为空时候插入 where，若子句的开头和结尾为 where 语句连接关键字 `AND` 或 `OR`，会将它们去除。
@@ -2001,7 +2014,8 @@ type Method interface {
 
 自定义方法的单元测试需要自定义对应的测试用例，它应该和测试文件放在同一个包里。
 
-一个测试用例包含输入和期望结果，输入应和对应的方法参数匹配，期望应和对应的方法返回值相匹配。这将在测试中被断言为 “**Equal（相等）**”。
+一个测试用例包含输入和期望结果，输入应和对应的方法参数匹配，期望应和对应的方法返回值相匹配。这将在测试中被断言为 “**
+Equal（相等）**”。
 
 ```go
 package query
@@ -2154,7 +2168,6 @@ gentool -c "./gen.yml"
 ```
 
 配置文件示例:
-
 
 config example:
 

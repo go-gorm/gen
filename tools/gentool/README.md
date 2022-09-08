@@ -41,12 +41,13 @@ Install GEN as a binary tool
         detect integer field's unsigned type, adjust generated data type
 
 ```
+
 #### c
+
 default ""
 Is path for gen.yml
 Replace the command line with a configuration file
 The command line is the highest priority
-
 
 #### db
 
@@ -60,7 +61,7 @@ consult : https://gorm.io/docs/connecting_to_the_database.html
 
 You can use all gorm's dsn.
 
- consult : https://gorm.io/docs/connecting_to_the_database.html
+consult : https://gorm.io/docs/connecting_to_the_database.html
 
 #### fieldNullable
 
@@ -78,11 +79,11 @@ generate field with gorm column type tag
 
 defalut table name.
 
- generated model code's package name.
+generated model code's package name.
 
 #### outFile
 
- query code file name, default: gen.go
+query code file name, default: gen.go
 
 #### outPath
 
@@ -94,11 +95,11 @@ Value : enter the required data table or leave it blank.
 
 eg :
 
-​       --tables="orders" #orders table
+​ --tables="orders" #orders table
 
-​       --tables="orders,users" #orders table and users table
+​ --tables="orders,users" #orders table and users table
 
-​       --tables=""          # All data tables in the database.
+​ --tables=""          # All data tables in the database.
 
 Generate some tables code.
 
@@ -113,8 +114,6 @@ Generate unit test.
 Value : False / True
 
 detect integer field's unsigned type, adjust generated data type
-
-
 
 ### example
 

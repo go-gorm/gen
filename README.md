@@ -30,107 +30,107 @@ Gen: Friendly & Safer [GORM](https://github.com/go-gorm/gorm) powered by Code Ge
 ## Contents
 
 - [GORM/GEN](#gormgen)
-  - [Multilingual README](#multilingual-readme)
-  - [Overview](#overview)
-  - [Contents](#contents)
-  - [Installation](#installation)
-  - [Quick start](#quick-start)
-    - [Project Directory](#project-directory)
-  - [API Examples](#api-examples)
-    - [Generate](#generate)
-      - [Generate Mode](#generate-mode)
-      - [Generate Model](#generate-model)
-      - [Data Mapping](#data-mapping)
-    - [Field Expression](#field-expression)
-      - [Create Field](#create-field)
-    - [CRUD API](#crud-api)
-      - [Create](#create)
-        - [Create record](#create-record)
-        - [Create record with selected fields](#create-record-with-selected-fields)
-        - [Batch Insert](#batch-insert)
-      - [Query](#query)
-        - [Retrieving a single object](#retrieving-a-single-object)
-        - [Retrieving objects with primary key](#retrieving-objects-with-primary-key)
-        - [Retrieving all objects](#retrieving-all-objects)
-        - [Conditions](#conditions)
-          - [String Conditions](#string-conditions)
-          - [Inline Condition](#inline-condition)
-          - [Not Conditions](#not-conditions)
-          - [Or Conditions](#or-conditions)
-          - [Group Conditions](#group-conditions)
-          - [Selecting Specific Fields](#selecting-specific-fields)
-          - [Tuple Query](#tuple-query)
-          - [JSON Query](#json-query)
-          - [Order](#order)
-          - [Limit & Offset](#limit--offset)
-          - [Group By & Having](#group-by--having)
-          - [Distinct](#distinct)
-          - [Joins](#joins)
-        - [SubQuery](#subquery)
-          - [From SubQuery](#from-subquery)
-          - [Update from SubQuery](#update-from-subquery)
-          - [Update multiple columns from SubQuery](#update-multiple-columns-from-subquery)
-        - [Transaction](#transaction)
-          - [Nested Transactions](#nested-transactions)
-          - [Transactions by manual](#transactions-by-manual)
-          - [SavePoint/RollbackTo](#savepointrollbackto)
-        - [Advanced Query](#advanced-query)
-          - [Iteration](#iteration)
-          - [FindInBatches](#findinbatches)
-          - [Pluck](#pluck)
-          - [Scopes](#scopes)
-          - [Count](#count)
-          - [FirstOrInit](#firstorinit)
-          - [FirstOrCreate](#firstorcreate)
-      - [Association](#association)
-        - [Relation](#relation)
-          - [Relate to exist model](#relate-to-exist-model)
-          - [Relate to table in database](#relate-to-table-in-database)
-          - [Relate Config](#relate-config)
-        - [Operation](#operation)
-          - [Skip Auto Create/Update](#skip-auto-createupdate)
-          - [Find Associations](#find-associations)
-          - [Append Associations](#append-associations)
-          - [Replace Associations](#replace-associations)
-          - [Delete Associations](#delete-associations)
-          - [Clear Associations](#clear-associations)
-          - [Count Associations](#count-associations)
-          - [Delete with Select](#delete-with-select)
-        - [Preloading](#preloading)
-          - [Preload](#preload)
-          - [Preload All](#preload-all)
-          - [Preload with select](#preload-with-select)
-          - [Preload with conditions](#preload-with-conditions)
-          - [Nested Preloading](#nested-preloading)
-      - [Update](#update)
-        - [Update single column](#update-single-column)
-        - [Updates multiple columns](#updates-multiple-columns)
-        - [Update selected fields](#update-selected-fields)
-      - [Delete](#delete)
-        - [Delete record](#delete-record)
-        - [Delete with primary key](#delete-with-primary-key)
-        - [Batch Delete](#batch-delete)
-        - [Soft Delete](#soft-delete)
-        - [Find soft deleted records](#find-soft-deleted-records)
-        - [Delete permanently](#delete-permanently)
-    - [DIY method](#diy-method)
-      - [Method interface](#method-interface)
-        - [Syntax of template](#syntax-of-template)
-          - [placeholder](#placeholder)
-          - [template](#template)
-          - [`If` clause](#if-clause)
-          - [`Where` clause](#where-clause)
-          - [`Set` clause](#set-clause)
-          - [`For` clause](#for-clause)
-        - [Method interface example](#method-interface-example)
-      - [Unit Test](#unit-test)
-      - [Smart select fields](#smart-select-fields)
-    - [Advanced Topics](#advanced-topics)
-      - [Hints](#hints)
-  - [Binary](#binary)
-  - [Maintainers](#maintainers)
-  - [Contributing](#contributing)
-  - [License](#license)
+    - [Multilingual README](#multilingual-readme)
+    - [Overview](#overview)
+    - [Contents](#contents)
+    - [Installation](#installation)
+    - [Quick start](#quick-start)
+        - [Project Directory](#project-directory)
+    - [API Examples](#api-examples)
+        - [Generate](#generate)
+            - [Generate Mode](#generate-mode)
+            - [Generate Model](#generate-model)
+            - [Data Mapping](#data-mapping)
+        - [Field Expression](#field-expression)
+            - [Create Field](#create-field)
+        - [CRUD API](#crud-api)
+            - [Create](#create)
+                - [Create record](#create-record)
+                - [Create record with selected fields](#create-record-with-selected-fields)
+                - [Batch Insert](#batch-insert)
+            - [Query](#query)
+                - [Retrieving a single object](#retrieving-a-single-object)
+                - [Retrieving objects with primary key](#retrieving-objects-with-primary-key)
+                - [Retrieving all objects](#retrieving-all-objects)
+                - [Conditions](#conditions)
+                    - [String Conditions](#string-conditions)
+                    - [Inline Condition](#inline-condition)
+                    - [Not Conditions](#not-conditions)
+                    - [Or Conditions](#or-conditions)
+                    - [Group Conditions](#group-conditions)
+                    - [Selecting Specific Fields](#selecting-specific-fields)
+                    - [Tuple Query](#tuple-query)
+                    - [JSON Query](#json-query)
+                    - [Order](#order)
+                    - [Limit & Offset](#limit--offset)
+                    - [Group By & Having](#group-by--having)
+                    - [Distinct](#distinct)
+                    - [Joins](#joins)
+                - [SubQuery](#subquery)
+                    - [From SubQuery](#from-subquery)
+                    - [Update from SubQuery](#update-from-subquery)
+                    - [Update multiple columns from SubQuery](#update-multiple-columns-from-subquery)
+                - [Transaction](#transaction)
+                    - [Nested Transactions](#nested-transactions)
+                    - [Transactions by manual](#transactions-by-manual)
+                    - [SavePoint/RollbackTo](#savepointrollbackto)
+                - [Advanced Query](#advanced-query)
+                    - [Iteration](#iteration)
+                    - [FindInBatches](#findinbatches)
+                    - [Pluck](#pluck)
+                    - [Scopes](#scopes)
+                    - [Count](#count)
+                    - [FirstOrInit](#firstorinit)
+                    - [FirstOrCreate](#firstorcreate)
+            - [Association](#association)
+                - [Relation](#relation)
+                    - [Relate to exist model](#relate-to-exist-model)
+                    - [Relate to table in database](#relate-to-table-in-database)
+                    - [Relate Config](#relate-config)
+                - [Operation](#operation)
+                    - [Skip Auto Create/Update](#skip-auto-createupdate)
+                    - [Find Associations](#find-associations)
+                    - [Append Associations](#append-associations)
+                    - [Replace Associations](#replace-associations)
+                    - [Delete Associations](#delete-associations)
+                    - [Clear Associations](#clear-associations)
+                    - [Count Associations](#count-associations)
+                    - [Delete with Select](#delete-with-select)
+                - [Preloading](#preloading)
+                    - [Preload](#preload)
+                    - [Preload All](#preload-all)
+                    - [Preload with select](#preload-with-select)
+                    - [Preload with conditions](#preload-with-conditions)
+                    - [Nested Preloading](#nested-preloading)
+            - [Update](#update)
+                - [Update single column](#update-single-column)
+                - [Updates multiple columns](#updates-multiple-columns)
+                - [Update selected fields](#update-selected-fields)
+            - [Delete](#delete)
+                - [Delete record](#delete-record)
+                - [Delete with primary key](#delete-with-primary-key)
+                - [Batch Delete](#batch-delete)
+                - [Soft Delete](#soft-delete)
+                - [Find soft deleted records](#find-soft-deleted-records)
+                - [Delete permanently](#delete-permanently)
+        - [DIY method](#diy-method)
+            - [Method interface](#method-interface)
+                - [Syntax of template](#syntax-of-template)
+                    - [placeholder](#placeholder)
+                    - [template](#template)
+                    - [`If` clause](#if-clause)
+                    - [`Where` clause](#where-clause)
+                    - [`Set` clause](#set-clause)
+                    - [`For` clause](#for-clause)
+                - [Method interface example](#method-interface-example)
+            - [Unit Test](#unit-test)
+            - [Smart select fields](#smart-select-fields)
+        - [Advanced Topics](#advanced-topics)
+            - [Hints](#hints)
+    - [Binary](#binary)
+    - [Maintainers](#maintainers)
+    - [Contributing](#contributing)
+    - [License](#license)
 
 ## Installation
 
@@ -150,7 +150,9 @@ import "gorm.io/gen"
 
 ## Quick start
 
-**Emphasis**: All use cases in this doc are generated under `WithContext` mode. And if you generate code under `WithoutContext` mode, please remove `WithContext(ctx)` before you call any query method, it helps you make code more concise.
+**Emphasis**: All use cases in this doc are generated under `WithContext` mode. And if you generate code
+under `WithoutContext` mode, please remove `WithContext(ctx)` before you call any query method, it helps you make code
+more concise.
 
 ```bash
 # assume the following code in generate.go file
@@ -241,10 +243,10 @@ demo
 
 ```go
  g := gen.NewGenerator(gen.Config{
-        ...
-        Mode: gen.WithoutContext|gen.WithDefaultQuery|gen.WithQueryInterface,
-        ...
- })
+...
+Mode: gen.WithoutContext|gen.WithDefaultQuery|gen.WithQueryInterface,
+...
+})
 ```
 
 - `WithDefaultQuery` generate default query struct
@@ -290,19 +292,20 @@ FieldTrimSuffix    // trim column suffix
 FieldAddPrefix     // add prefix to struct field's name
 FieldAddSuffix     // add suffix to struct field's name
 FieldRelate        // specify relationship with other tables
-FieldRelateModel   // specify relationship with exist models
+FieldRelateModel // specify relationship with exist models
 ```
 
 Generate model bind custom method
+
 ```Go
 type User struct{
-	ID int32
+ID int32
 }
 func (u *User)IsEmpty()bool{
-    if u == nil {
-    return true
-    }
-    return u.ID == 0
+if u == nil {
+return true
+}
+return u.ID == 0
 }
 user := User{}
 // add custom method to generated model struct
@@ -312,27 +315,28 @@ g.GenerateModel("people", gen.WithMethod(user))
 ```
 
 Generate model with custom gen type
+
 ```Go
 //package model
 type ITime struct {
-    time.Time
+time.Time
 }
 
 // custom field type and gen type for table
-g.ApplyBasic(g.GenerateModel("people", gen.FieldType("create_time","model.ITime"), gen.FieldGenType("create_time","Time")))
+g.ApplyBasic(g.GenerateModel("people", gen.FieldType("create_time", "model.ITime"), gen.FieldGenType("create_time", "Time")))
 
 //package model
 type User struct {
-  ID int64
-  Name string
-  CreateTime ITime
+ID int64
+Name string
+CreateTime ITime
 }
 
 func (u User) GetFieldGenType(f *schema.Field) string {
-  if f.Name == "CreateTime" {
-    return "Time"
-  }
-  return ""
+if f.Name == "CreateTime" {
+return "Time"
+}
+return ""
 }
 // custom field gen type for struct
 g.ApplyBasic(model.User{})
@@ -343,15 +347,15 @@ g.ApplyBasic(model.User{})
 Specify data mapping relationship to be whatever you want.
 
 ```go
-dataMap := map[string]func(detailType string) (dataType string){
-  "int": func(detailType string) (dataType string) { return "int64" },
-  // bool mapping
-  "tinyint": func(detailType string) (dataType string) {
-    if strings.HasPrefix(detailType, "tinyint(1)") {
-      return "bool"
-    }
-    return "int8"
-  },
+dataMap := map[string]func (detailType string) (dataType string){
+"int": func (detailType string) (dataType string) { return "int64" },
+// bool mapping
+"tinyint": func (detailType string) (dataType string) {
+if strings.HasPrefix(detailType, "tinyint(1)") {
+return "bool"
+}
+return "int8"
+},
 }
 
 g.WithDataTypeMap(dataMap)
@@ -454,14 +458,15 @@ u.WithContext(ctx).Omit(u.Name, u.Age).Create(&user)
 
 ##### Batch Insert
 
-To efficiently insert large number of records, pass a slice to the `Create` method. GORM will generate a single SQL statement to insert all the data and backfill primary key values.
+To efficiently insert large number of records, pass a slice to the `Create` method. GORM will generate a single SQL
+statement to insert all the data and backfill primary key values.
 
 ```go
 var users = []*model.User{{Name: "modi"}, {Name: "zhangqiang"}, {Name: "songyuan"}}
 query.Use(db).User.WithContext(ctx).Create(users...)
 
 for _, user := range users {
-    user.ID // 1,2,3
+user.ID // 1,2,3
 }
 ```
 
@@ -478,7 +483,7 @@ It will works if you set `CreateBatchSize` in `gorm.Config` / `gorm.Session`
 
 ```go
 db, err := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{
-    CreateBatchSize: 1000,
+CreateBatchSize: 1000,
 })
 // OR
 db = db.Session(&gorm.Session{CreateBatchSize: 1000})
@@ -495,7 +500,8 @@ u.WithContext(ctx).Create(&users)
 
 ##### Retrieving a single object
 
-Generated code provides `First`, `Take`, `Last` methods to retrieve a single object from the database, it adds `LIMIT 1` condition when querying the database, and it will return the error `ErrRecordNotFound` if no record is found.
+Generated code provides `First`, `Take`, `Last` methods to retrieve a single object from the database, it adds `LIMIT 1`
+condition when querying the database, and it will return the error `ErrRecordNotFound` if no record is found.
 
 ```go
 u := query.Use(db).User
@@ -524,7 +530,7 @@ u := query.Use(db).User
 user, err := u.WithContext(ctx).Where(u.ID.Eq(10)).First()
 // SELECT * FROM users WHERE id = 10;
 
-users, err := u.WithContext(ctx).Where(u.ID.In(1,2,3)).Find()
+users, err := u.WithContext(ctx).Where(u.ID.In(1, 2,3)).Find()
 // SELECT * FROM users WHERE id IN (1,2,3);
 ```
 
@@ -613,7 +619,7 @@ users, err := u.WithContext(ctx).Not(u.Name.In("modi", "zhangqiang")).Find()
 // SELECT * FROM users WHERE name NOT IN ("modi", "zhangqiang");
 
 // Not In slice of primary keys
-user, err := u.WithContext(ctx).Not(u.ID.In(1,2,3)).First()
+user, err := u.WithContext(ctx).Not(u.ID.In(1, 2, 3)).First()
 // SELECT * FROM users WHERE id NOT IN (1,2,3) ORDER BY id LIMIT 1;
 ```
 
@@ -635,10 +641,10 @@ p := query.Use(db).Pizza
 pd := p.WithContext(ctx)
 
 pizzas, err := pd.Where(
-    pd.Where(p.Pizza.Eq("pepperoni")).
-        Where(pd.Where(p.Size.Eq("small")).Or(p.Size.Eq("medium"))),
+pd.Where(p.Pizza.Eq("pepperoni")).
+Where(pd.Where(p.Size.Eq("small")).Or(p.Size.Eq("medium"))),
 ).Or(
-    pd.Where(p.Pizza.Eq("hawaiian")).Where(p.Size.Eq("xlarge")),
+pd.Where(p.Pizza.Eq("hawaiian")).Where(p.Size.Eq("xlarge")),
 ).Find()
 
 // SELECT * FROM `pizzas` WHERE (pizza = "pepperoni" AND (size = "small" OR size = "medium")) OR (pizza = "hawaiian" AND size = "xlarge")
@@ -646,7 +652,8 @@ pizzas, err := pd.Where(
 
 ###### Selecting Specific Fields
 
-`Select` allows you to specify the fields that you want to retrieve from database. Otherwise, GORM will select all fields by default.
+`Select` allows you to specify the fields that you want to retrieve from database. Otherwise, GORM will select all
+fields by default.
 
 ```go
 u := query.Use(db).User
@@ -698,7 +705,7 @@ u := query.Use(db).User
 
 orderCol, ok := u.GetFieldByName(orderColStr) // maybe orderColStr == "id"
 if !ok {
-  // User doesn't contains orderColStr
+// User doesn't contains orderColStr
 }
 
 users, err := u.WithContext(ctx).Order(orderCol).Find()
@@ -741,8 +748,8 @@ users, err := u.WithContext(ctx).Offset(10).Offset(-1).Find()
 u := query.Use(db).User
 
 var users []struct {
-    Name  string
-    Total int
+Name  string
+Total int
 }
 err := u.WithContext(ctx).Select(u.Name, u.ID.Count().As("total")).Group(u.Name).Scan(&users)
 // SELECT name, count(id) as total FROM `users` GROUP BY `name`
@@ -755,19 +762,19 @@ err := u.WithContext(ctx).Select(u.Name, u.Age.Sum().As("total")).Group(u.Name).
 
 rows, err := u.WithContext(ctx).Select(u.Birthday.As("date"), u.Age.Sum().As("total")).Group(u.Birthday).Rows()
 for rows.Next() {
-  ...
+...
 }
 
 o := query.Use(db).Order
 
 rows, err := o.WithContext(ctx).Select(o.CreateAt.Date().As("date"), o.Amount.Sum().As("total")).Group(o.CreateAt.Date()).Having(u.Amount.Sum().Gt(100)).Rows()
 for rows.Next() {
-  ...
+...
 }
 
 var results []struct {
-    Date  time.Time
-    Total int
+Date  time.Time
+Total int
 }
 
 o.WithContext(ctx).Select(o.CreateAt.Date().As("date"), o.WithContext(ctx).Amount.Sum().As("total")).Group(o.CreateAt.Date()).Having(u.Amount.Sum().Gt(100)).Scan(&results)
@@ -796,9 +803,9 @@ e := q.Email
 c := q.CreditCard
 
 type Result struct {
-    Name  string
-    Email string
-    ID    int64
+Name  string
+Email string
+ID    int64
 }
 
 var result Result
@@ -820,7 +827,7 @@ err := u.WithContext(ctx).Select(u.Name, e2.Email).LeftJoin(e.WithContext(ctx).S
 
 rows, err := u.WithContext(ctx).Select(u.Name, e.Email).LeftJoin(e, e.UserID.EqCol(u.ID)).Rows()
 for rows.Next() {
-  ...
+...
 }
 
 var results []Result
@@ -917,38 +924,39 @@ To perform a set of operations within a transaction, the general flow is as belo
 ```go
 q := query.Use(db)
 
-q.Transaction(func(tx *query.Query) error {
-  if _, err := tx.User.WithContext(ctx).Where(tx.User.ID.Eq(100)).Delete(); err != nil {
-    return err
-  }
-  if _, err := tx.Article.WithContext(ctx).Create(&model.User{Name:"modi"}); err != nil {
-    return err
-  }
-  return nil
+q.Transaction(func (tx *query.Query) error {
+if _, err := tx.User.WithContext(ctx).Where(tx.User.ID.Eq(100)).Delete(); err != nil {
+return err
+}
+if _, err := tx.Article.WithContext(ctx).Create(&model.User{Name:"modi"}); err != nil {
+return err
+}
+return nil
 })
 ```
 
 ###### Nested Transactions
 
-GEN supports nested transactions, you can rollback a subset of operations performed within the scope of a larger transaction, for example:
+GEN supports nested transactions, you can rollback a subset of operations performed within the scope of a larger
+transaction, for example:
 
 ```go
 q := query.Use(db)
 
-q.Transaction(func(tx *query.Query) error {
-  tx.User.WithContext(ctx).Create(&user1)
+q.Transaction(func (tx *query.Query) error {
+tx.User.WithContext(ctx).Create(&user1)
 
-  tx.Transaction(func(tx2 *query.Query) error {
-    tx2.User.WithContext(ctx).Create(&user2)
-    return errors.New("rollback user2") // Rollback user2
-  })
+tx.Transaction(func(tx2 *query.Query) error {
+tx2.User.WithContext(ctx).Create(&user2)
+return errors.New("rollback user2") // Rollback user2
+})
 
-  tx.Transaction(func(tx2 *query.Query) error {
-    tx2.User.WithContext(ctx).Create(&user3)
-    return nil
-  })
+tx.Transaction(func (tx2 *query.Query) error {
+tx2.User.WithContext(ctx).Create(&user3)
+return nil
+})
 
-  return nil
+return nil
 })
 
 // Commit user1, user3
@@ -980,18 +988,18 @@ For example:
 q := query.Use(db)
 
 func doSomething(ctx context.Context, users ...*model.User) (err error) {
-    tx := q.Begin()
-    defer func() {
-        if recover() != nil || err != nil {
-            _ = tx.Rollback()
-        }
-    }()
+tx := q.Begin()
+defer func() {
+if recover() != nil || err != nil {
+_ = tx.Rollback()
+}
+}()
 
-    err = tx.User.WithContext(ctx).Create(users...)
-    if err != nil {
-        return
-    }
-    return tx.Commit()
+err = tx.User.WithContext(ctx).Create(users...)
+if err != nil {
+return
+}
+return tx.Commit()
 }
 ```
 
@@ -1025,11 +1033,11 @@ rows, err := do.Where(u.Name.Eq("modi")).Rows()
 defer rows.Close()
 
 for rows.Next() {
-    var user User
-    // ScanRows is a method of `gorm.DB`, it can be used to scan a row into a struct
-    do.ScanRows(rows, &user)
+var user User
+// ScanRows is a method of `gorm.DB`, it can be used to scan a row into a struct
+do.ScanRows(rows, &user)
 
-    // do something
+// do something
 }
 ```
 
@@ -1060,7 +1068,8 @@ err := u.WithContext(ctx).Where(u.ID.Gt(9)).FindInBatches(&results, 100, func(tx
 
 ###### Pluck
 
-Query single column from database and scan into a slice, if you want to query multiple columns, use `Select` with `Scan` instead
+Query single column from database and scan into a slice, if you want to query multiple columns, use `Select` with `Scan`
+instead
 
 ```go
 u := query.Use(db).User
@@ -1088,21 +1097,21 @@ users, err := db.Select(u.Name, u.Age).Find()
 o := query.Use(db).Order
 
 func AmountGreaterThan1000(tx gen.Dao) gen.Dao {
-    return tx.Where(o.Amount.Gt(1000))
+return tx.Where(o.Amount.Gt(1000))
 }
 
 func PaidWithCreditCard(tx gen.Dao) gen.Dao {
-    return tx.Where(o.PayModeSign.Eq("C"))
+return tx.Where(o.PayModeSign.Eq("C"))
 }
 
 func PaidWithCod(tx gen.Dao) gen.Dao {
-    return tx.Where(o.PayModeSign.Eq("C"))
+return tx.Where(o.PayModeSign.Eq("C"))
 }
 
 func OrderStatus(status []string) func (tx gen.Dao) gen.Dao {
-    return func (tx gen.Dao) gen.Dao {
-      return tx.Where(o.Status.In(status...))
-    }
+return func (tx gen.Dao) gen.Dao {
+return tx.Where(o.Status.In(status...))
+}
 }
 
 orders, err := o.WithContext(ctx).Scopes(AmountGreaterThan1000, PaidWithCreditCard).Find()
@@ -1170,7 +1179,8 @@ user, err := u.WithContext(ctx).Where(u.Name.Eq("modi")).Attrs(u.Age.Value(20)).
 // user -> User{ID: 1, Name: "modi", Age: 17}
 ```
 
-`Assign` attributes to struct regardless it is found or not, those attributes won’t be used to build SQL query and the final data won’t be saved into database
+`Assign` attributes to struct regardless it is found or not, those attributes won’t be used to build SQL query and the
+final data won’t be saved into database
 
 ```go
 // User not found, initialize it with give conditions and Assign attributes
@@ -1246,10 +1256,10 @@ There are 4 kind of relationship.
 
 ```go
 const (
-    HasOne    RelationshipType = RelationshipType(schema.HasOne)    // HasOneRel has one relationship
-    HasMany   RelationshipType = RelationshipType(schema.HasMany)   // HasManyRel has many relationships
-    BelongsTo RelationshipType = RelationshipType(schema.BelongsTo) // BelongsToRel belongs to relationship
-    Many2Many RelationshipType = RelationshipType(schema.Many2Many) // Many2ManyRel many to many relationship
+HasOne    RelationshipType = RelationshipType(schema.HasOne)    // HasOneRel has one relationship
+HasMany   RelationshipType = RelationshipType(schema.HasMany)   // HasManyRel has many relationships
+BelongsTo RelationshipType = RelationshipType(schema.BelongsTo) // BelongsToRel belongs to relationship
+Many2Many RelationshipType = RelationshipType(schema.Many2Many) // Many2ManyRel many to many relationship
 )
 ```
 
@@ -1281,12 +1291,12 @@ g.ApplyBasic(model.Customer{}, model.CreditCard{})
 package query
 
 type customer struct {
-    ...
-    CreditCards customerHasManyCreditCards
+...
+CreditCards customerHasManyCreditCards
 }
 
 type creditCard struct{
-    ...
+...
 }
 ```
 
@@ -1296,11 +1306,11 @@ The association have to be speified by `gen.FieldRelate`
 
 ```go
 card := g.GenerateModel("credit_cards")
-customer := g.GenerateModel("customers", gen.FieldRelate(field.HasMany, "CreditCards", b, 
-    &field.RelateConfig{
-        // RelateSlice: true,
-        GORMTag: "foreignKey:CustomerRefer",
-    }),
+customer := g.GenerateModel("customers", gen.FieldRelate(field.HasMany, "CreditCards", b,
+&field.RelateConfig{
+// RelateSlice: true,
+GORMTag: "foreignKey:CustomerRefer",
+}),
 )
 
 g.ApplyBasic(card, custormer)
@@ -1311,32 +1321,32 @@ GEN will generate models with associated field:
 ```go
 // customers
 type Customer struct {
-    ID          int64          `gorm:"column:id;type:bigint(20) unsigned;primaryKey" json:"id"`
-    CreatedAt   time.Time      `gorm:"column:created_at;type:datetime(3)" json:"created_at"`
-    UpdatedAt   time.Time      `gorm:"column:updated_at;type:datetime(3)" json:"updated_at"`
-    DeletedAt   gorm.DeletedAt `gorm:"column:deleted_at;type:datetime(3)" json:"deleted_at"`
-    CreditCards []CreditCard   `gorm:"foreignKey:CustomerRefer" json:"credit_cards"`
+ID          int64          `gorm:"column:id;type:bigint(20) unsigned;primaryKey" json:"id"`
+CreatedAt   time.Time      `gorm:"column:created_at;type:datetime(3)" json:"created_at"`
+UpdatedAt   time.Time      `gorm:"column:updated_at;type:datetime(3)" json:"updated_at"`
+DeletedAt   gorm.DeletedAt `gorm:"column:deleted_at;type:datetime(3)" json:"deleted_at"`
+CreditCards []CreditCard   `gorm:"foreignKey:CustomerRefer" json:"credit_cards"`
 }
 
 
 // credit_cards
 type CreditCard struct {
-    ID            int64          `gorm:"column:id;type:bigint(20) unsigned;primaryKey" json:"id"`
-    CreatedAt     time.Time      `gorm:"column:created_at;type:datetime(3)" json:"created_at"`
-    UpdatedAt     time.Time      `gorm:"column:updated_at;type:datetime(3)" json:"updated_at"`
-    DeletedAt     gorm.DeletedAt `gorm:"column:deleted_at;type:datetime(3)" json:"deleted_at"`
-    CustomerRefer int64          `gorm:"column:customer_refer;type:bigint(20) unsigned" json:"customer_refer"`
+ID            int64          `gorm:"column:id;type:bigint(20) unsigned;primaryKey" json:"id"`
+CreatedAt     time.Time      `gorm:"column:created_at;type:datetime(3)" json:"created_at"`
+UpdatedAt     time.Time      `gorm:"column:updated_at;type:datetime(3)" json:"updated_at"`
+DeletedAt     gorm.DeletedAt `gorm:"column:deleted_at;type:datetime(3)" json:"deleted_at"`
+CustomerRefer int64          `gorm:"column:customer_refer;type:bigint(20) unsigned" json:"customer_refer"`
 }
 ```
 
 If associated model already exists, `gen.FieldRelateModel` can help you build associations between them.
 
 ```go
-customer := g.GenerateModel("customers", gen.FieldRelateModel(field.HasMany, "CreditCards", model.CreditCard{}, 
-    &field.RelateConfig{
-        // RelateSlice: true,
-        GORMTag: "foreignKey:CustomerRefer",
-    }),
+customer := g.GenerateModel("customers", gen.FieldRelateModel(field.HasMany, "CreditCards", model.CreditCard{},
+&field.RelateConfig{
+// RelateSlice: true,
+GORMTag: "foreignKey:CustomerRefer",
+}),
 )
 
 g.ApplyBasic(custormer)
@@ -1346,15 +1356,15 @@ g.ApplyBasic(custormer)
 
 ```go
 type RelateConfig struct {
-    // specify field's type
-    RelatePointer      bool // ex: CreditCard  *CreditCard
-    RelateSlice        bool // ex: CreditCards []CreditCard
-    RelateSlicePointer bool // ex: CreditCards []*CreditCard
+// specify field's type
+RelatePointer      bool // ex: CreditCard  *CreditCard
+RelateSlice        bool // ex: CreditCards []CreditCard
+RelateSlicePointer bool // ex: CreditCards []*CreditCard
 
-    JSONTag      string // related field's JSON tag
-    GORMTag      string // related field's GORM tag
-    NewTag       string // related field's new tag
-    OverwriteTag string // related field's tag
+JSONTag      string // related field's JSON tag
+GORMTag      string // related field's GORM tag
+NewTag       string // related field's new tag
+OverwriteTag string // related field's tag
 }
 ```
 
@@ -1364,17 +1374,17 @@ type RelateConfig struct {
 
 ```go
 user := model.User{
-  Name:            "modi",
-  BillingAddress:  Address{Address1: "Billing Address - Address 1"},
-  ShippingAddress: Address{Address1: "Shipping Address - Address 1"},
-  Emails:          []Email{
-    {Email: "modi@example.com"},
-    {Email: "modi-2@example.com"},
-  },
-  Languages:       []Language{
-    {Name: "ZH"},
-    {Name: "EN"},
-  },
+Name:            "modi",
+BillingAddress:  Address{Address1: "Billing Address - Address 1"},
+ShippingAddress: Address{Address1: "Shipping Address - Address 1"},
+Emails:          []Email{
+{Email: "modi@example.com"},
+{Email: "modi-2@example.com"},
+},
+Languages:       []Language{
+{Name: "ZH"},
+{Name: "EN"},
+},
 }
 
 u := query.Use(db).User
@@ -1392,7 +1402,8 @@ u.WithContext(ctx).Omit(field.AssociationFields).Create(&user)
 // Skip all associations when creating a user
 ```
 
-Method `Field` will join a serious field name with ''.", for example: `u.BillingAddress.Field("Address1", "Street")` equals to `BillingAddress.Address1.Street`
+Method `Field` will join a serious field name with ''.", for example: `u.BillingAddress.Field("Address1", "Street")`
+equals to `BillingAddress.Address1.Street`
 
 ###### Find Associations
 
@@ -1410,7 +1421,7 @@ Find associations with conditions
 q := query.Use(db)
 u := q.User
 
-languages, err = u.Languages.Where(q.Language.Name.In([]string{"ZH","EN"})).Model(&user).Find()
+languages, err = u.Languages.Where(q.Language.Name.In([]string{"ZH", "EN"})).Model(&user).Find()
 ```
 
 ###### Append Associations
@@ -1437,7 +1448,8 @@ u.Languages.Model(&user).Replace(&languageZH, &languageEN)
 
 ###### Delete Associations
 
-Remove the relationship between source & arguments if exists, only delete the reference, won’t delete those objects from DB.
+Remove the relationship between source & arguments if exists, only delete the reference, won’t delete those objects from
+DB.
 
 ```go
 u := query.Use(db).User
@@ -1465,7 +1477,8 @@ u.Languages.Model(&user).Count()
 
 ###### Delete with Select
 
-You are allowed to delete selected has one/has many/many2many relations with `Select` when deleting records, for example:
+You are allowed to delete selected has one/has many/many2many relations with `Select` when deleting records, for
+example:
 
 ```go
 u := query.Use(db).User
@@ -1519,22 +1532,24 @@ users, err := u.WithContext(ctx).Preload(u.Orders).Preload(u.Profile).Preload(u.
 
 ###### Preload All
 
-`clause.Associations` can work with `Preload` similar like `Select` when creating/updating, you can use it to `Preload` all associations, for example:
+`clause.Associations` can work with `Preload` similar like `Select` when creating/updating, you can use it to `Preload`
+all associations, for example:
 
 ```go
 type User struct {
-  gorm.Model
-  Name       string
-  CompanyID  uint
-  Company    Company
-  Role       Role
-  Orders     []Order
+gorm.Model
+Name       string
+CompanyID  uint
+Company    Company
+Role       Role
+Orders     []Order
 }
 
 users, err := u.WithContext(ctx).Preload(field.Associations).Find()
 ```
 
-`clause.Associations` won’t preload nested associations, but you can use it with [Nested Preloading](#nested-preloading) together, e.g:
+`clause.Associations` won’t preload nested associations, but you can use it with [Nested Preloading](#nested-preloading)
+together, e.g:
 
 ```go
 users, err := u.WithContext(ctx).Preload(u.Orders.OrderItems.Product).Find()
@@ -1616,7 +1631,8 @@ db.Preload(u.Orders.On(o.State.Eq("paid"))).Preload(u.Orders.OrderItems).Find(&u
 
 ##### Update single column
 
-When updating a single column with `Update`, it needs to have any conditions or it will raise error `ErrMissingWhereClause`, for example:
+When updating a single column with `Update`, it needs to have any conditions or it will raise
+error `ErrMissingWhereClause`, for example:
 
 ```go
 u := query.Use(db).User
@@ -1637,7 +1653,8 @@ u.WithContext(ctx).Where(u.Activate.Is(true)).UpdateSimple(u.Age.Zero())
 
 ##### Updates multiple columns
 
-`Updates` supports update with `struct` or `map[string]interface{}`, when updating with `struct` it will only update non-zero fields by default
+`Updates` supports update with `struct` or `map[string]interface{}`, when updating with `struct` it will only update
+non-zero fields by default
 
 ```go
 u := query.Use(db).User
@@ -1658,7 +1675,8 @@ u.WithContext(ctx).Where(u.Activate.Is(true)).UpdateSimple(u.Age.Value(17), u.Nu
 // UPDATE users SET age=17, number=0, birthday=NULL, updated_at='2013-11-17 21:34:10' WHERE active=true;
 ```
 
-> **NOTE** When update with struct, GEN will only update non-zero fields, you might want to use `map` to update attributes or use `Select` to specify fields to update
+> **NOTE** When update with struct, GEN will only update non-zero fields, you might want to use `map` to update
+> attributes or use `Select` to specify fields to update
 
 ##### Update selected fields
 
@@ -1707,7 +1725,7 @@ err                 // error
 GEN allows to delete objects using primary key(s) with inline condition, it works with numbers.
 
 ```go
-u.WithContext(ctx).Where(u.ID.In(1,2,3)).Delete()
+u.WithContext(ctx).Where(u.ID.In(1, 2, 3)).Delete()
 // DELETE FROM users WHERE id IN (1,2,3);
 ```
 
@@ -1724,9 +1742,11 @@ e.WithContext(ctx).Where(e.Name.Like("%modi%")).Delete()
 
 ##### Soft Delete
 
-If your model includes a `gorm.DeletedAt` field (which is included in `gorm.Model`), it will get soft delete ability automatically!
+If your model includes a `gorm.DeletedAt` field (which is included in `gorm.Model`), it will get soft delete ability
+automatically!
 
-When calling `Delete`, the record WON’T be removed from the database, but GORM will set the `DeletedAt`‘s value to the current time, and the data is not findable with normal Query methods anymore.
+When calling `Delete`, the record WON’T be removed from the database, but GORM will set the `DeletedAt`‘s value to the
+current time, and the data is not findable with normal Query methods anymore.
 
 ```go
 // Batch Delete
@@ -1742,9 +1762,9 @@ If you don’t want to include `gorm.Model`, you can enable the soft delete feat
 
 ```go
 type User struct {
-    ID      int
-    Deleted gorm.DeletedAt
-    Name    string
+ID      int
+Deleted gorm.DeletedAt
+Name    string
 }
 ```
 
@@ -1770,7 +1790,10 @@ o.WithContext(ctx).Unscoped().Where(o.ID.Eq(10)).Delete()
 
 #### Method interface
 
-The DIY method needs to be defined through the interface. In the method, the specific SQL query logic is described in the way of comments. Simple WHERE queries can be wrapped in `where()`. When using complex queries, you need to write complete SQL. You can directly wrap them in `sql()` or write SQL directly. If there are some comments on the method, just add a blank line comment in the middle.
+The DIY method needs to be defined through the interface. In the method, the specific SQL query logic is described in
+the way of comments. Simple WHERE queries can be wrapped in `where()`. When using complex queries, you need to write
+complete SQL. You can directly wrap them in `sql()` or write SQL directly. If there are some comments on the method,
+just add a blank line comment in the middle.
 
 ```go
 type Method interface {
@@ -1788,12 +1811,16 @@ type Method interface {
     InsertValue(age int, name string) error
 }
 ```
-Method input parameters and return values support basic types (`int`, `string`, `bool`...), struct and placeholders (`gen.T`/`gen.M`/`gen.RowsAffected`), and types support pointers and arrays. The return value is at most a value and an error.
+
+Method input parameters and return values support basic types (`int`, `string`, `bool`...), struct and
+placeholders (`gen.T`/`gen.M`/`gen.RowsAffected`), and types support pointers and arrays. The return value is at most a
+value and an error.
 
 Usage(complete case on [Quick start](#quick-start)):
+
 ```go
 // implement model.Method on table "user" and "comany"
-g.ApplyInterface(func(method model.Method) {}, model.User{}, g.GenerateModel("company"))
+g.ApplyInterface(func (method model.Method) {}, model.User{}, g.GenerateModel("company"))
 ```
 
 ##### Syntax of template
@@ -1803,7 +1830,8 @@ g.ApplyInterface(func(method model.Method) {}, model.User{}, g.GenerateModel("co
 - `gen.T` represents specified `struct` or `table`
 - `gen.M` represents `map[string]interface`
 - `gen.RowsAffected` represents SQL executed `rowsAffected` (type:int64)
-- `@@table`  represents table's name (if method's parameter doesn't contains variable `table`, GEN will generate `table` from model struct)
+- `@@table`  represents table's name (if method's parameter doesn't contains variable `table`, GEN will generate `table`
+  from model struct)
 - `@@<columnName>` represents column's name or table's name
 - `@<name>` represents normal query variable
 
@@ -1811,11 +1839,15 @@ g.ApplyInterface(func(method model.Method) {}, model.User{}, g.GenerateModel("co
 
 Dynamic template logical operations must be wrapped in `{{}}`,and end must used `{{end}}`, All templates support nesting
 
-- `if` clause
-- `where` clause
-- `set` clause
-- `for` clause
-- `...` coming soon
+- `if`/`else if`/`else` the condition accept a bool parameter or operation expression which conforms to Golang syntax.
+- `where` The `where` clause will be inserted only if the child elements return something. The key word  `and` or `or`
+  in front of clause will be removed. And `and` will be added automatically when there is no junction keyword between
+  query condition clause.
+- `Set` The  `set` clause will be inserted only if the child elements return something. The `,` in front of columns
+  array will be removed.And `,` will be added automatically when there is no junction keyword between query coulmns.
+- `for` The  `for` clause traverses an array according to golang syntax and inserts its contents into SQL,supports array
+  of struct.
+- `...` Coming soon
 
 ###### `If` clause
 
@@ -1926,6 +1958,7 @@ Use case in SQL with complex logic:
 method(user gen.T,id int) (gen.RowsAffected, error)
 
 ```
+
 ###### `For` clause
 
 The  `for` clause traverses an array according to golang syntax and inserts its contents into SQL,supports array of struct.
@@ -2016,7 +2049,8 @@ Unit test file will be generated if `WithUnitTest` is set, which will generate u
 
 Unit test for DIY method need diy testcase, which should place in the same package with test file.
 
-A testcase contains input and expectation result, input should match the method arguments, expectation should match method return values, which will be asserted **Equal** in test.
+A testcase contains input and expectation result, input should match the method arguments, expectation should match
+method return values, which will be asserted **Equal** in test.
 
 ```go
 package query
@@ -2049,44 +2083,45 @@ Corresponding test
 ```go
 //FindById select * from @@table where id = @id
 func (s studentDo) FindById(id int64) (result *model.Student, err error) {
-    ///
+///
 }
 
 func Test_student_FindById(t *testing.T) {
-    student := newStudent(db)
-    do := student.WithContext(context.Background()).Debug()
+student := newStudent(db)
+do := student.WithContext(context.Background()).Debug()
 
-    for i, tt := range StudentFindByIdTestCase {
-        t.Run("FindById_"+strconv.Itoa(i), func(t *testing.T) {
-            res1, res2 := do.FindById(tt.Input.Args[0].(int64))
-            assert(t, "FindById", res1, tt.Expectation.Ret[0])
-            assert(t, "FindById", res2, tt.Expectation.Ret[1])
-        })
-    }
+for i, tt := range StudentFindByIdTestCase {
+t.Run("FindById_"+strconv.Itoa(i), func (t *testing.T) {
+res1, res2 := do.FindById(tt.Input.Args[0].(int64))
+assert(t, "FindById", res1, tt.Expectation.Ret[0])
+assert(t, "FindById", res2, tt.Expectation.Ret[1])
+})
+}
 }
 ```
 
 #### Smart select fields
 
-GEN allows select specific fields with `Select`, if you often use this in your application, maybe you want to define a smaller struct for API usage which can select specific fields automatically, for example:
+GEN allows select specific fields with `Select`, if you often use this in your application, maybe you want to define a
+smaller struct for API usage which can select specific fields automatically, for example:
 
 ```go
 type User struct {
-  ID     uint
-  Name   string
-  Age    int
-  Gender string
-  // hundreds of fields
+ID     uint
+Name   string
+Age    int
+Gender string
+// hundreds of fields
 }
 
 type APIUser struct {
-  ID   uint
-  Name string
+ID   uint
+Name string
 }
 
 type Method interface{
-    // select * from user
-    FindSome() ([]APIUser, error)
+// select * from user
+FindSome() ([]APIUser, error)
 }
 
 apiusers, err := u.WithContext(ctx).Limit(10).FindSome()
@@ -2097,7 +2132,8 @@ apiusers, err := u.WithContext(ctx).Limit(10).FindSome()
 
 #### Hints
 
-Optimizer hints allow to control the query optimizer to choose a certain query execution plan, GORM supports it with `gorm.io/hints`, e.g:
+Optimizer hints allow to control the query optimizer to choose a certain query execution plan, GORM supports it
+with `gorm.io/hints`, e.g:
 
 ```go
 import "gorm.io/hints"
