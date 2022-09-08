@@ -25,6 +25,7 @@ import (
 	"gorm.io/gen/internal/parser"
 	tmpl "gorm.io/gen/internal/template"
 	"gorm.io/gen/internal/utils/pools"
+	"regexp"
 )
 
 // T generic type
@@ -463,14 +464,30 @@ func (g *Generator) generateModelFile() error {
 	if err = os.MkdirAll(modelOutPath, os.ModePerm); err != nil {
 		return fmt.Errorf("create model pkg path(%s) fail: %s", modelOutPath, err)
 	}
+	tableName2Structs := make(map[string][]*generate.QueryStructMeta)
+	for _, data := range g.models {
+		regex := regexp.MustCompile("[a-zA-Z]+")
+		data.FileName = regex.FindString(data.FileName)
+		data.ModelStructName = regex.FindString(data.ModelStructName)
+		data.QueryStructName = regex.FindString(data.QueryStructName)
+		data.TableName = regex.FindString(data.TableName)
 
+		tableName2Structs[data.TableName] = append(tableName2Structs[data.TableName], data)
+	}
+	tableName2Struct := make(map[string]*generate.QueryStructMeta)
+	for tableName, data := range tableName2Structs {
+		tempData := data[0]
+		tempData.TableCount = len(data)
+		tableName2Struct[tableName] = tempData
+	}
 	errChan := make(chan error)
 	pool := pools.NewPool(concurrent)
-	for _, data := range g.models {
+	for _, data := range tableName2Struct {
 		if data == nil || !data.Generated {
 			continue
 		}
 		pool.Wait()
+		fmt.Printf("1, TableName: %s, TableCount: %d\n", data.TableName, data.TableCount)
 		go func(data *generate.QueryStructMeta) {
 			defer pool.Done()
 

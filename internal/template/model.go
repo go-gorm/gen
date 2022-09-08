@@ -34,6 +34,13 @@ func (*{{.ModelStructName}}) TableName() string {
     return TableName{{.ModelStructName}}
 }
 {{- end}}
+
+{{if gt .TableCount 1}}
+// TableCount {{.ModelStructName}}'s table Count
+func (*{{.ModelStructName}}) TableCount() int {
+    return {{.TableCount}}
+}
+{{end}}
 `
 
 // ModelMethod model struct DIY method
