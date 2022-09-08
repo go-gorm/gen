@@ -465,14 +465,14 @@ func (g *Generator) generateModelFile() error {
 		return fmt.Errorf("create model pkg path(%s) fail: %s", modelOutPath, err)
 	}
 	tableName2Structs := make(map[string][]*generate.QueryStructMeta)
-	for _, data := range g.models {
-		regex := regexp.MustCompile("[a-zA-Z]+")
-		data.FileName = regex.FindString(data.FileName)
-		data.ModelStructName = regex.FindString(data.ModelStructName)
-		data.QueryStructName = regex.FindString(data.QueryStructName)
-		data.TableName = regex.FindString(data.TableName)
+	for tableName, _ := range g.models {
+		regex := regexp.MustCompile("\\D+")
+		g.models[tableName].FileName = regex.FindString(g.models[tableName].FileName)
+		g.models[tableName].ModelStructName = regex.FindString(g.models[tableName].ModelStructName)
+		g.models[tableName].QueryStructName = regex.FindString(g.models[tableName].QueryStructName)
+		g.models[tableName].TableName = regex.FindString(g.models[tableName].TableName)
 
-		tableName2Structs[data.TableName] = append(tableName2Structs[data.TableName], data)
+		tableName2Structs[g.models[tableName].TableName] = append(tableName2Structs[g.models[tableName].TableName], g.models[tableName])
 	}
 	tableName2Struct := make(map[string]*generate.QueryStructMeta)
 	for tableName, data := range tableName2Structs {
@@ -487,10 +487,10 @@ func (g *Generator) generateModelFile() error {
 			continue
 		}
 		pool.Wait()
-		fmt.Printf("1, TableName: %s, TableCount: %d\n", data.TableName, data.TableCount)
 		go func(data *generate.QueryStructMeta) {
 			defer pool.Done()
 
+			fmt.Printf("zhangpeng-111-tableName2Struct: %+v\n", data)
 			var buf bytes.Buffer
 			err := render(tmpl.Model, &buf, data)
 			if err != nil {
