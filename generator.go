@@ -490,7 +490,6 @@ func (g *Generator) generateModelFile() error {
 		go func(data *generate.QueryStructMeta) {
 			defer pool.Done()
 
-			fmt.Printf("zhangpeng-111-tableName2Struct: %+v\n", data)
 			var buf bytes.Buffer
 			err := render(tmpl.Model, &buf, data)
 			if err != nil {
