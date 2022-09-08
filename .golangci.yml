@@ -15,7 +15,7 @@ linters-settings:
   unused:
     check-exported: false
   revive:
-      min-confidence: 0.8
+    min-confidence: 0.8
 
 linters:
   presets:

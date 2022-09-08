@@ -2,8 +2,6 @@
 
 将Gen作为二进制的方式进行安装
 
-
-
 ## 安装
 
 ```shell
@@ -45,6 +43,7 @@
 ```
 
 #### c
+
 default ""
 可以指定配置文件gen.yml的路径。
 用配置文件来代替命令行。
@@ -62,7 +61,7 @@ default ""
 
 你可以使用GORM所有的连接。
 
- 参考：https://gorm.io/docs/connecting_to_the_database.html
+参考：https://gorm.io/docs/connecting_to_the_database.html
 
 #### fieldNullable
 
@@ -80,7 +79,7 @@ default ""
 
 默认值是数据表名称。
 
- 生成的model代码的包名称。
+生成的model代码的包名称。
 
 #### outFile
 
@@ -100,11 +99,11 @@ default ""
 
 eg :
 
-​       --tables="orders" #orders 数据表
+​ --tables="orders" #orders 数据表
 
-​       --tables="orders,users" #orders 数据表和 users数据表
+​ --tables="orders,users" #orders 数据表和 users数据表
 
-​       --tables=""          # 数据库中所有的数据表
+​ --tables=""          # 数据库中所有的数据表
 
 基于数据表生成对应的代码。
 
@@ -119,7 +118,6 @@ eg :
 Value : False / True
 
 基于数据表定义的数据类型，生成对应的数据类型
-
 
 ### 使用示例
 

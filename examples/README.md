@@ -9,13 +9,13 @@ A simple best practice of `GEN`. You can configure `TARGET_DIR` value in `genera
 ## TARGET_DIR
 
 - `gen`
-a slim quick start.
+  a slim quick start.
 
 - `ultimate`
-a ultimate quick start
+  a ultimate quick start
 
 - `sync_table`
-a quick start to show how to sync table from database.
+  a quick start to show how to sync table from database.
 
 - `without_db`
-a quick start to show how to generate code without database connection.
+  a quick start to show how to generate code without database connection.
