@@ -1837,7 +1837,7 @@ g.ApplyInterface(func(method model.Method) {}, model.User{}, g.GenerateModel("co
 //  {{if name !=""}} 
 //      name=@name
 //  {{end}}
-methond(name string) (gen.T,error) 
+method(name string) (gen.T,error) 
 ```
 
 SQL模板使用案例:
@@ -1874,7 +1874,7 @@ select * from @@table where
 //  {{where}}
 //      id=@id
 //  {{end}}
-methond(id int) error
+method(id int) error
 ```
 
 SQL模板使用案例:
@@ -1903,7 +1903,7 @@ select * from @@table
 //      name=@name
 //  {{end}}
 // where id=@id
-methond(name string,id int) error
+method(name string,id int) error
 ```
 
 SQL模板使用案例:
@@ -1932,7 +1932,7 @@ where id=@id
 //  {{for _,name:=range names}} 
 //      and name=@name
 //  {{end}}
-methond(names []string) (gen.T,error) 
+method(names []string) (gen.T,error) 
 ```
 
 SQL 模板使用案例:
