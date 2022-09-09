@@ -1831,7 +1831,7 @@ Use case in raw SQL:
 //  {{if name !=""}} 
 //      name=@name
 //  {{end}}
-methond(name string) (gen.T,error)
+method(name string) (gen.T,error)
 ```
 
 Use case in raw SQL template:
@@ -1868,7 +1868,7 @@ Use case in raw SQL
 //  {{where}}
 //      id=@id
 //  {{end}}
-methond(id int) error
+method(id int) error
 ```
 
 Use case in raw SQL template
@@ -1897,7 +1897,7 @@ Use case in raw SQL
 //      name=@name
 //  {{end}}
 // where id=@id
-methond(name string,id int) error
+method(name string,id int) error
 ```
 
 Use case in raw SQL template
@@ -1925,7 +1925,7 @@ Use case in raw SQL:
 //  {{for _,name:=range names}} 
 //      and name=@name
 //  {{end}}
-methond(names []string) (gen.T,error) 
+method(names []string) (gen.T,error) 
 ```
 
 Use case in raw SQL template:
