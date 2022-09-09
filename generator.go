@@ -25,7 +25,6 @@ import (
 	"gorm.io/gen/internal/parser"
 	tmpl "gorm.io/gen/internal/template"
 	"gorm.io/gen/internal/utils/pools"
-	"regexp"
 )
 
 // T generic type
@@ -114,14 +113,19 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, opts ...
 		g.info(fmt.Sprintf("ignore table <%s>", tableName))
 		return nil
 	}
-	g.models[meta.ModelStructName] = meta
 
+	if oldModel, ok := g.models[meta.ModelStructName]; !ok {
+		meta.TableCount = 1
+		g.models[meta.ModelStructName] = meta
+	} else {
+		oldModel.TableCount += 1
+	}
 	g.info(fmt.Sprintf("got %d columns from table <%s>", len(meta.Fields), meta.TableName))
 	return meta
 }
 
 // GenerateAllTable generate all tables in db
-func (g *Generator) GenerateAllTable(opts ...ModelOpt) (tableModels []interface{}) {
+func (g *Generator) GenerateAllTable(opts ...ModelOpt) []interface{} {
 	tableList, err := g.db.Migrator().GetTables()
 	if err != nil {
 		panic(fmt.Errorf("get all tables fail: %w", err))
@@ -129,9 +133,12 @@ func (g *Generator) GenerateAllTable(opts ...ModelOpt) (tableModels []interface{
 
 	g.info(fmt.Sprintf("find %d table from db: %s", len(tableList), tableList))
 
-	tableModels = make([]interface{}, len(tableList))
-	for i, tableName := range tableList {
-		tableModels[i] = g.GenerateModel(tableName, opts...)
+	for _, tableName := range tableList {
+		g.GenerateModel(tableName, opts...)
+	}
+	tableModels := make([]interface{}, len(g.models))
+	for _, model := range g.models {
+		tableModels = append(tableModels, model)
 	}
 	return tableModels
 }
@@ -464,25 +471,9 @@ func (g *Generator) generateModelFile() error {
 	if err = os.MkdirAll(modelOutPath, os.ModePerm); err != nil {
 		return fmt.Errorf("create model pkg path(%s) fail: %s", modelOutPath, err)
 	}
-	tableName2Structs := make(map[string][]*generate.QueryStructMeta)
-	for tableName, _ := range g.models {
-		regex := regexp.MustCompile("\\D+")
-		g.models[tableName].FileName = regex.FindString(g.models[tableName].FileName)
-		g.models[tableName].ModelStructName = regex.FindString(g.models[tableName].ModelStructName)
-		g.models[tableName].QueryStructName = regex.FindString(g.models[tableName].QueryStructName)
-		g.models[tableName].TableName = regex.FindString(g.models[tableName].TableName)
-
-		tableName2Structs[g.models[tableName].TableName] = append(tableName2Structs[g.models[tableName].TableName], g.models[tableName])
-	}
-	tableName2Struct := make(map[string]*generate.QueryStructMeta)
-	for tableName, data := range tableName2Structs {
-		tempData := data[0]
-		tempData.TableCount = len(data)
-		tableName2Struct[tableName] = tempData
-	}
 	errChan := make(chan error)
 	pool := pools.NewPool(concurrent)
-	for _, data := range tableName2Struct {
+	for _, data := range g.models {
 		if data == nil || !data.Generated {
 			continue
 		}
