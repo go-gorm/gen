@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"gorm.io/gorm"
@@ -35,6 +36,12 @@ func GetQueryStructMeta(db *gorm.DB, conf *model.Config) (*QueryStructMeta, erro
 	if err != nil {
 		return nil, err
 	}
+
+	regex := regexp.MustCompile("\\D+")
+	fileName = regex.FindString(fileName)
+	structName = regex.FindString(structName)
+	//meta.QueryStructName = regex.FindString(meta.QueryStructName)
+	tableName = regex.FindString(tableName)
 
 	return (&QueryStructMeta{
 		db:              db,
@@ -96,6 +103,12 @@ func GetQueryStructMetaFromObject(obj helper.Object, conf *model.Config) (*Query
 			MultilineComment: strings.Contains(field.Comment(), "\n"),
 		})
 	}
+
+	regex := regexp.MustCompile("\\D+")
+	fileName = regex.FindString(fileName)
+	structName = regex.FindString(structName)
+	//meta.QueryStructName = regex.FindString(meta.QueryStructName)
+	tableName = regex.FindString(tableName)
 
 	return &QueryStructMeta{
 		Source:          model.Object,
