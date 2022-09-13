@@ -141,6 +141,7 @@ type I{{.ModelStructName}}Do interface {
 	Debug() I{{.ModelStructName}}Do
 	WithContext(ctx context.Context) I{{.ModelStructName}}Do
 	WithResult(fc func(tx gen.Dao)) gen.ResultInfo
+	ReplaceDB(db *gorm.DB)
 	As(alias string) gen.Dao
 	Columns(cols ...field.Expr) gen.Columns
 	Clauses(conds ...clause.Expression) I{{.ModelStructName}}Do
