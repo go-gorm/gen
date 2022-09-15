@@ -1831,7 +1831,7 @@ The `if` clause support `if`/`else if`/`else`,the condition accept a bool parame
 Use case in raw SQL:
 
 ```go
-// select * from users  where
+// select * from users where
 //  {{if name !=""}} 
 //      username=@name and
 //  {{end}}
@@ -1882,7 +1882,7 @@ Use case in SQL with complex logic:
 //          created_time > start
 //      {{end}}
 //      {{if !end.IsZero()}}
-//         and created_time < start
+//         and created_time < end
 //      {{end}} 
 //  {{end}}
 Method(start,end time.Time) ([]gen.T, error)
@@ -1915,9 +1915,9 @@ Use case in SQL with complex logic:
 ```go
 // update @@table 
 //  {{set}}
-//      {{if user.Name != ""}} username = @user.Name, {{end}}
-//      {{if user.Age > 0}} age = @user.Age, {{end}}
-//      {{if user.Age >= 18}} is_adult = 1 {{else}} is_adult = 0 {{end}}
+//      {{if user.Name != ""}} username=@user.Name, {{end}}
+//      {{if user.Age > 0}} age=@user.Age, {{end}}
+//      {{if user.Age >= 18}} is_adult=1 {{else}} is_adult=0 {{end}}
 //  {{end}}
 // where id=@id
 method(user gen.T,id int) (gen.RowsAffected, error)
@@ -1936,10 +1936,12 @@ The  `for` clause traverses an array according to golang syntax and inserts its 
 Use case in raw SQL:
 
 ```go
-// select * from users where id>0 
-//  {{for _,name:=range names}} 
-//      or name=@name
-//  {{end}}
+//select * from @@table
+//{{where}}
+//	{{for _,name:=range names}}
+//		name like concat("%",@name,"%") or
+//	{{end}}
+//{{end}}
 method(names []string) ([]gen.T, error) 
 ```
 
