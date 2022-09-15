@@ -1779,7 +1779,9 @@ type Method interface {
     // sql(select * from users where id=@id)
     FindUserToMap(id int) (gen.M, error)
     
-    // InsertValue insert into users (name,age) values (@name,@age)
+    // InsertValue create user
+	//
+	//insert into users (name,age) values (@name,@age)
     InsertValue(age int, name string) error
 }
 ```
@@ -1829,10 +1831,11 @@ The `if` clause support `if`/`else if`/`else`,the condition accept a bool parame
 Use case in raw SQL:
 
 ```go
-// select * from users  
+// select * from users  where
 //  {{if name !=""}} 
-//      where username=@name
+//      username=@name and
 //  {{end}}
+//  role="admin"
 Method(name string) (gen.T,error)
 ```
 
