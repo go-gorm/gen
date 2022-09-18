@@ -24,6 +24,9 @@ Gen: Friendly & Safer [GORM](https://github.com/go-gorm/gorm) powered by Code Ge
 - Developer Friendly
 - Multiple Generate modes
 
+## Getting Started
+- GEN Guides [https://gorm.io/gen/](https://gorm.io/gen/)
+
 ## Contents
 
 - [GORM/GEN](#gormgen)
