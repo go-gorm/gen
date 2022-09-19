@@ -8,7 +8,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/datatypes v1.0.7
 	gorm.io/driver/mysql v1.3.6
-	gorm.io/driver/postgres v1.3.8
+	gorm.io/driver/postgres v1.3.10
 	gorm.io/driver/sqlite v1.3.5
 	gorm.io/driver/sqlserver v1.3.1
 	gorm.io/gorm v1.23.9-0.20220713102635-3262daf8d468
