@@ -1650,7 +1650,7 @@ u.WithContext(ctx).Where(u.ID.Eq(111)).Updates(map[string]interface{}{"name": "h
 
 // Update attributes with `struct`
 u.WithContext(ctx).Where(u.ID.Eq(111)).Updates(model.User{Name: "hello", Age: 18, Active: false})
-// UPDATE users SET name='hello', age=18, active=false, updated_at='2013-11-17 21:34:10' WHERE id=111;
+// UPDATE users SET name='hello', age=18, updated_at='2013-11-17 21:34:10' WHERE id=111;
 
 // Update with expression
 u.WithContext(ctx).Where(u.ID.Eq(111)).UpdateSimple(u.Age.Add(1), u.Number.Add(1))
