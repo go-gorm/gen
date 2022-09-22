@@ -30,7 +30,7 @@ type DO struct {
 	db        *gorm.DB
 	alias     string // for subquery
 	modelType reflect.Type
-	schema    *schema.Schema
+	tableName string
 
 	backfillData interface{}
 }
@@ -67,7 +67,7 @@ func (d *DO) UseModel(model interface{}) {
 	if err != nil {
 		panic(fmt.Errorf("Cannot parse model: %+v\n%w", model, err))
 	}
-	d.schema = d.db.Statement.Schema
+	d.tableName = d.db.Statement.Schema.Table
 }
 
 func (d *DO) indirect(value interface{}) reflect.Type {
@@ -81,15 +81,12 @@ func (d *DO) indirect(value interface{}) reflect.Type {
 // UseTable specify table name
 func (d *DO) UseTable(tableName string) {
 	d.db = d.db.Table(tableName).Session(new(gorm.Session))
-	d.schema.Table = tableName
+	d.tableName = tableName
 }
 
 // TableName return table name
 func (d DO) TableName() string {
-	if d.schema == nil {
-		return ""
-	}
-	return d.schema.Table
+	return d.tableName
 }
 
 // Returning backfill data
