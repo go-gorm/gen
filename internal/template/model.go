@@ -14,6 +14,7 @@ import (
 )
 
 {{if .TableName -}}const TableName{{.ModelStructName}} = "{{.TableName}}"{{- end}}
+{{if .TableName -}}const TableCount{{.ModelStructName}} = {{.TableCount}}{{- end}}
 
 // {{.ModelStructName}} {{.StructComment}}
 type {{.ModelStructName}} struct {
@@ -36,14 +37,9 @@ func (*{{.ModelStructName}}) TableName() string {
 {{- end}}
 
 {{if gt .TableCount 1}}
-// TableCountOf{{.ModelStructName}} {{.ModelStructName}}'s table Count
-func TableCountOf{{.ModelStructName}}() int {
-	return {{.TableCount}}
-}
-
 // TableNameOf{{.ModelStructName}} {{.ModelStructName}}'s actual table name
 func TableNameOf{{.ModelStructName}}(shardKey int64) string {
-	return TableName{{.ModelStructName}} + strconv.FormatInt(shardKey%{{.TableCount}}, 10)
+	return TableName{{.ModelStructName}} + strconv.FormatInt(shardKey%TableCount{{.ModelStructName}}, 10)
 }
 {{end}}
 `
