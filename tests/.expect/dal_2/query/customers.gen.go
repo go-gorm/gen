@@ -19,10 +19,10 @@ import (
 	"gorm.io/gen/tests/.gen/dal_2/model"
 )
 
-func newCustomer(db *gorm.DB) customer {
+func newCustomer(db *gorm.DB, opts ...gen.DOOption) customer {
 	_customer := customer{}
 
-	_customer.customerDo.UseDB(db)
+	_customer.customerDo.UseDB(db, opts...)
 	_customer.customerDo.UseModel(&model.Customer{})
 
 	tableName := _customer.customerDo.TableName()
@@ -99,6 +99,11 @@ func (c *customer) fillFieldMap() {
 }
 
 func (c customer) clone(db *gorm.DB) customer {
+	c.customerDo.ReplaceConnPool(db.Statement.ConnPool)
+	return c
+}
+
+func (c customer) replaceDB(db *gorm.DB) customer {
 	c.customerDo.ReplaceDB(db)
 	return c
 }

@@ -19,10 +19,10 @@ import (
 	"gorm.io/gen/tests/.gen/dal_1/model"
 )
 
-func newBank(db *gorm.DB) bank {
+func newBank(db *gorm.DB, opts ...gen.DOOption) bank {
 	_bank := bank{}
 
-	_bank.bankDo.UseDB(db)
+	_bank.bankDo.UseDB(db, opts...)
 	_bank.bankDo.UseModel(&model.Bank{})
 
 	tableName := _bank.bankDo.TableName()
@@ -95,8 +95,13 @@ func (b *bank) fillFieldMap() {
 }
 
 func (b bank) clone(db *gorm.DB) bank {
-	b.bankDo.ReplaceDB(db)
+	b.bankDo.ReplaceConnPool(db.Statement.ConnPool)
 	return b
+}
+
+func (f bank) replaceDB(db *gorm.DB) bank {
+	f.bankDo.ReplaceDB(db)
+	return f
 }
 
 type bankDo struct{ gen.DO }

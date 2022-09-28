@@ -19,10 +19,10 @@ import (
 	"gorm.io/gen/tests/.gen/dal_1/model"
 )
 
-func newCreditCard(db *gorm.DB) creditCard {
+func newCreditCard(db *gorm.DB, opts ...gen.DOOption) creditCard {
 	_creditCard := creditCard{}
 
-	_creditCard.creditCardDo.UseDB(db)
+	_creditCard.creditCardDo.UseDB(db, opts...)
 	_creditCard.creditCardDo.UseModel(&model.CreditCard{})
 
 	tableName := _creditCard.creditCardDo.TableName()
@@ -109,6 +109,11 @@ func (c *creditCard) fillFieldMap() {
 }
 
 func (c creditCard) clone(db *gorm.DB) creditCard {
+	c.creditCardDo.ReplaceConnPool(db.Statement.ConnPool)
+	return c
+}
+
+func (c creditCard) replaceDB(db *gorm.DB) creditCard {
 	c.creditCardDo.ReplaceDB(db)
 	return c
 }
