@@ -1657,7 +1657,7 @@ u.WithContext(ctx).Where(u.ID.Eq(111)).Updates(map[string]interface{}{"name": "h
 
 // Update attributes with `struct`
 u.WithContext(ctx).Where(u.ID.Eq(111)).Updates(model.User{Name: "hello", Age: 18, Active: false})
-// UPDATE users SET name='hello', age=18, active=false, updated_at='2013-11-17 21:34:10' WHERE id=111;
+// UPDATE users SET name='hello', age=18, updated_at='2013-11-17 21:34:10' WHERE id=111;
 
 // Update with expression
 u.WithContext(ctx).Where(u.ID.Eq(111)).UpdateSimple(u.Age.Add(1), u.Number.Add(1))
@@ -1850,7 +1850,7 @@ g.ApplyInterface(func(method model.Method) {}, model.User{}, g.GenerateModel("co
 //  {{if name !=""}} 
 //      name=@name
 //  {{end}}
-methond(name string) (gen.T,error) 
+method(name string) (gen.T,error) 
 ```
 
 SQL模板使用案例:
@@ -1887,7 +1887,7 @@ select * from @@table where
 //  {{where}}
 //      id=@id
 //  {{end}}
-methond(id int) error
+method(id int) error
 ```
 
 SQL模板使用案例:
@@ -1916,7 +1916,7 @@ select * from @@table
 //      name=@name
 //  {{end}}
 // where id=@id
-methond(name string,id int) error
+method(name string,id int) error
 ```
 
 SQL模板使用案例:
@@ -1945,7 +1945,7 @@ where id=@id
 //  {{for _,name:=range names}} 
 //      and name=@name
 //  {{end}}
-methond(names []string) (gen.T,error) 
+method(names []string) (gen.T,error) 
 ```
 
 SQL 模板使用案例:

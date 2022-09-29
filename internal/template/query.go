@@ -48,6 +48,18 @@ func (q *Query) clone(db *gorm.DB) *Query {
 	}
 }
 
+func (q *Query) ReadDB() *Query {
+	return q.clone(q.db.Clauses(dbresolver.Read))
+}
+
+func (q *Query) WriteDB() *Query {
+	return q.clone(q.db.Clauses(dbresolver.Write))
+}
+
+func (q *Query) ReplaceDB(db *gorm.DB) *Query {
+	return q.clone(db)
+}
+
 type queryCtx struct{ 
 	{{range $name,$d :=.Data -}}
 	{{$d.ModelStructName}} {{$d.ReturnObject}}

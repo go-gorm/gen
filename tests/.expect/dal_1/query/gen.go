@@ -9,6 +9,8 @@ import (
 	"database/sql"
 
 	"gorm.io/gorm"
+
+	"gorm.io/plugin/dbresolver"
 )
 
 var (
@@ -61,6 +63,18 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		Person:     q.Person.clone(db),
 		User:       q.User.clone(db),
 	}
+}
+
+func (q *Query) ReadDB() *Query {
+	return q.clone(q.db.Clauses(dbresolver.Read))
+}
+
+func (q *Query) WriteDB() *Query {
+	return q.clone(q.db.Clauses(dbresolver.Write))
+}
+
+func (q *Query) ReplaceDB(db *gorm.DB) *Query {
+	return q.clone(db)
 }
 
 type queryCtx struct {
