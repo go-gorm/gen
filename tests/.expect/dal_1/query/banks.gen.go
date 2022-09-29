@@ -99,9 +99,9 @@ func (b bank) clone(db *gorm.DB) bank {
 	return b
 }
 
-func (f bank) replaceDB(db *gorm.DB) bank {
-	f.bankDo.ReplaceDB(db)
-	return f
+func (b bank) replaceDB(db *gorm.DB) bank {
+	b.bankDo.ReplaceDB(db)
+	return b
 }
 
 type bankDo struct{ gen.DO }

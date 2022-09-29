@@ -167,7 +167,6 @@ func (p person) clone(db *gorm.DB) person {
 	return p
 }
 
-
 func (p person) replaceDB(db *gorm.DB) person {
 	p.personDo.ReplaceDB(db)
 	return p
