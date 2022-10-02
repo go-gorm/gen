@@ -2177,8 +2177,13 @@ database:
   dsn : "username:password@tcp(address:port)/db?charset=utf8mb4&parseTime=true&loc=Local"
   # input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]
   db  : "mysql"
-  # enter the required data table or leave it blank.You can input : orders,users,goods
-  tables  : "user"
+  # enter the required data table or leave it blank.You can input :
+  # tables  :
+  #   - orders
+  #   - users
+  #   - goods
+  tables  :
+    - "users"
   # specify a directory for output
   outPath :  "./dao/query"
   # query code file name, default: gen.go
