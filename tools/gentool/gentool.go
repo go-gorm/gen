@@ -109,7 +109,7 @@ func loadConfigFile(path string) (*CmdParams, error) {
 }
 
 // argParse is parser for cmd
-func argParse() *CmdParams {
+func argParse() (*CmdParams, error) {
 	// choose is file or flag
 	genPath := flag.String("c", "", "is path for gen.yml")
 	dsn := flag.String("dsn", "", "consult[https://gorm.io/docs/connecting_to_the_database.html]")
@@ -127,7 +127,11 @@ func argParse() *CmdParams {
 	flag.Parse()
 	var cmdParse CmdParams
 	if *genPath != "" {
-		if configFileParams, err := loadConfigFile(*genPath); err == nil && configFileParams != nil {
+		configFileParams, err := loadConfigFile(*genPath)
+		if err != nil {
+			return nil, err
+		}
+		if configFileParams != nil {
 			cmdParse = *configFileParams
 		}
 	}
@@ -168,14 +172,14 @@ func argParse() *CmdParams {
 	if *fieldSignable {
 		cmdParse.FieldSignable = *fieldSignable
 	}
-	return &cmdParse
+	return &cmdParse, nil
 }
 
 func main() {
 	// cmdParse
-	config := argParse()
-	if config == nil {
-		log.Fatalln("parse config fail")
+	config, err := argParse()
+	if err != nil {
+		log.Fatalln("parse config fail\n", err)
 	}
 	db, err := connectDB(DBType(config.DB), config.DSN)
 	if err != nil {
