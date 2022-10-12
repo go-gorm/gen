@@ -7,6 +7,7 @@ package query
 import (
 	"context"
 	"database/sql"
+	"sync"
 
 	"gorm.io/gorm"
 
@@ -31,15 +32,20 @@ func SetDefault(db *gorm.DB) {
 	User = &Q.User
 }
 
+var (
+	useMap = sync.Map{}
+)
+
 func Use(db *gorm.DB) *Query {
-	return &Query{
+	q, _ := useMap.LoadOrStore(db, &Query{
 		db:         db,
 		Bank:       newBank(db),
 		CreditCard: newCreditCard(db),
 		Customer:   newCustomer(db),
 		Person:     newPerson(db),
 		User:       newUser(db),
-	}
+	})
+	return q.(*Query)
 }
 
 type Query struct {

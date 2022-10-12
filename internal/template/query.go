@@ -20,13 +20,18 @@ func SetDefault(db *gorm.DB) {
 
 // QueryMethod query method template
 const QueryMethod = `
+var (
+	useMap = sync.Map{}
+)
+
 func Use(db *gorm.DB) *Query {
-	return &Query{
+	q, _ := useMap.LoadOrStore(db, &Query{
 		db: db,
 		{{range $name,$d :=.Data -}}
 		{{$d.ModelStructName}}: new{{$d.ModelStructName}}(db),
 		{{end -}}
-	}
+	})
+	return q.(*Query)
 }
 
 type Query struct{
