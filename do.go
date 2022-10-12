@@ -67,7 +67,10 @@ func (d *DO) UseDB(db *gorm.DB, opts ...DOOption) {
 func (d *DO) ReplaceDB(db *gorm.DB) { d.db = db }
 
 // ReplaceConnPool replace db connection pool
-func (d *DO) ReplaceConnPool(pool gorm.ConnPool) { d.db.Statement.ConnPool = pool }
+func (d *DO) ReplaceConnPool(pool gorm.ConnPool) {
+	d.db = d.db.Session(&gorm.Session{Initialized: true})
+	d.db.Statement.ConnPool = pool
+}
 
 // UseModel specify a data model structure as a source for table name
 func (d *DO) UseModel(model interface{}) {
