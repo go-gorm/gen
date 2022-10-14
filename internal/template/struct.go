@@ -7,7 +7,7 @@ const (
 		{{.QueryStructName}}Do
 		` + fields + `
 	}
-	` + tableMethod + asMethond + updateFieldMethod + getFieldMethod + fillFieldMapMethod + cloneMethod + relationship + defineMethodStruct
+	` + tableMethod + asMethond + updateFieldMethod + getFieldMethod + fillFieldMapMethod + cloneMethod+ replaceMethod + relationship + defineMethodStruct
 
 	// TableQueryStructWithContext table query struct with context
 	TableQueryStructWithContext = createMethod + `
@@ -23,7 +23,7 @@ const (
 
 	func ({{.S}} {{.QueryStructName}}) Alias() string { return {{.S}}.{{.QueryStructName}}Do.Alias() }
 
-	` + getFieldMethod + fillFieldMapMethod + cloneMethod + relationship + defineMethodStruct
+	` + getFieldMethod + fillFieldMapMethod + cloneMethod + replaceMethod + relationship + defineMethodStruct
 
 	// TableQueryIface table query interface
 	TableQueryIface = defineDoInterface
@@ -31,10 +31,10 @@ const (
 
 const (
 	createMethod = `
-	func new{{.ModelStructName}}(db *gorm.DB) {{.QueryStructName}} {
+	func new{{.ModelStructName}}(db *gorm.DB, opts ...gen.DOOption) {{.QueryStructName}} {
 		_{{.QueryStructName}} := {{.QueryStructName}}{}
 	
-		_{{.QueryStructName}}.{{.QueryStructName}}Do.UseDB(db)
+		_{{.QueryStructName}}.{{.QueryStructName}}Do.UseDB(db,opts...)
 		_{{.QueryStructName}}.{{.QueryStructName}}Do.UseModel(&{{.StructInfo.Package}}.{{.StructInfo.Type}}{})
 	
 		tableName := _{{.QueryStructName}}.{{.QueryStructName}}Do.TableName()
@@ -103,6 +103,12 @@ func ({{.S}} *{{.QueryStructName}}) updateTableName(table string) *{{.QueryStruc
 
 	cloneMethod = `
 func ({{.S}} {{.QueryStructName}}) clone(db *gorm.DB) {{.QueryStructName}} {
+	{{.S}}.{{.QueryStructName}}Do.ReplaceConnPool(db.Statement.ConnPool)
+	return {{.S}}
+}
+`
+	replaceMethod = `
+func ({{.S}} {{.QueryStructName}}) replaceDB(db *gorm.DB) {{.QueryStructName}} {
 	{{.S}}.{{.QueryStructName}}Do.ReplaceDB(db)
 	return {{.S}}
 }
