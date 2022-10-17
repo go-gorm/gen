@@ -65,14 +65,19 @@ func checkOnConflict(c clause.OnConflict) error {
 	return nil
 }
 
+var (
+	strengthAllowList = [...]string{"UPDATE", "SHARE", "LOCK IN SHARE MODE"}
+	optionsAllowList  = [...]string{"NOWAIT", "SKIP LOCKED"}
+)
+
 func checkLocking(c clause.Locking) error {
-	if strength := strings.ToUpper(strings.TrimSpace(c.Strength)); strength != "UPDATE" && strength != "SHARE" {
+	if strength := strings.ToUpper(strings.TrimSpace(c.Strength)); !in(strength, strengthAllowList[:]...) {
 		return errors.New("Locking clause's Strength only allow assignments of UPDATE/SHARE")
 	}
 	if c.Table.Raw {
 		return errors.New("Locking clause's Table cannot be set Raw==true")
 	}
-	if options := strings.ToUpper(strings.TrimSpace(c.Options)); options != "" && options != "NOWAIT" && options != "SKIP LOCKED" {
+	if options := strings.ToUpper(strings.TrimSpace(c.Options)); options != "" && !in(options, optionsAllowList[:]...) {
 		return errors.New("Locking clause's Options only allow assignments of NOWAIT/SKIP LOCKED for now")
 	}
 	return nil
