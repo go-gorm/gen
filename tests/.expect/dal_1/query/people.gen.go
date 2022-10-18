@@ -190,6 +190,10 @@ func (p personDo) WriteDB() *personDo {
 	return p.Clauses(dbresolver.Write)
 }
 
+func (p personDo) Session(config *gorm.Session) *personDo {
+	return p.withDO(p.DO.Session(config))
+}
+
 func (p personDo) Clauses(conds ...clause.Expression) *personDo {
 	return p.withDO(p.DO.Clauses(conds...))
 }

@@ -16,7 +16,7 @@ import (
 
 	"gorm.io/plugin/dbresolver"
 
-	"gorm.io/gen/tests/.gen/dal_1/model"
+	"gorm.io/gen/tests/.gen/dal_3/model"
 )
 
 func newBank(db *gorm.DB, opts ...gen.DOOption) bank {
@@ -71,7 +71,7 @@ func (b *bank) updateTableName(table string) *bank {
 	return b
 }
 
-func (b *bank) WithContext(ctx context.Context) *bankDo { return b.bankDo.WithContext(ctx) }
+func (b *bank) WithContext(ctx context.Context) IBankDo { return b.bankDo.WithContext(ctx) }
 
 func (b bank) TableName() string { return b.bankDo.TableName() }
 
@@ -106,99 +106,160 @@ func (b bank) replaceDB(db *gorm.DB) bank {
 
 type bankDo struct{ gen.DO }
 
-func (b bankDo) Debug() *bankDo {
+type IBankDo interface {
+	gen.SubQuery
+	Debug() IBankDo
+	WithContext(ctx context.Context) IBankDo
+	WithResult(fc func(tx gen.Dao)) gen.ResultInfo
+	ReplaceDB(db *gorm.DB)
+	ReadDB() IBankDo
+	WriteDB() IBankDo
+	As(alias string) gen.Dao
+	Session(config *gorm.Session) IBankDo
+	Columns(cols ...field.Expr) gen.Columns
+	Clauses(conds ...clause.Expression) IBankDo
+	Not(conds ...gen.Condition) IBankDo
+	Or(conds ...gen.Condition) IBankDo
+	Select(conds ...field.Expr) IBankDo
+	Where(conds ...gen.Condition) IBankDo
+	Order(conds ...field.Expr) IBankDo
+	Distinct(cols ...field.Expr) IBankDo
+	Omit(cols ...field.Expr) IBankDo
+	Join(table schema.Tabler, on ...field.Expr) IBankDo
+	LeftJoin(table schema.Tabler, on ...field.Expr) IBankDo
+	RightJoin(table schema.Tabler, on ...field.Expr) IBankDo
+	Group(cols ...field.Expr) IBankDo
+	Having(conds ...gen.Condition) IBankDo
+	Limit(limit int) IBankDo
+	Offset(offset int) IBankDo
+	Count() (count int64, err error)
+	Scopes(funcs ...func(gen.Dao) gen.Dao) IBankDo
+	Unscoped() IBankDo
+	Create(values ...*model.Bank) error
+	CreateInBatches(values []*model.Bank, batchSize int) error
+	Save(values ...*model.Bank) error
+	First() (*model.Bank, error)
+	Take() (*model.Bank, error)
+	Last() (*model.Bank, error)
+	Find() ([]*model.Bank, error)
+	FindInBatch(batchSize int, fc func(tx gen.Dao, batch int) error) (results []*model.Bank, err error)
+	FindInBatches(result *[]*model.Bank, batchSize int, fc func(tx gen.Dao, batch int) error) error
+	Pluck(column field.Expr, dest interface{}) error
+	Delete(...*model.Bank) (info gen.ResultInfo, err error)
+	Update(column field.Expr, value interface{}) (info gen.ResultInfo, err error)
+	UpdateSimple(columns ...field.AssignExpr) (info gen.ResultInfo, err error)
+	Updates(value interface{}) (info gen.ResultInfo, err error)
+	UpdateColumn(column field.Expr, value interface{}) (info gen.ResultInfo, err error)
+	UpdateColumnSimple(columns ...field.AssignExpr) (info gen.ResultInfo, err error)
+	UpdateColumns(value interface{}) (info gen.ResultInfo, err error)
+	UpdateFrom(q gen.SubQuery) gen.Dao
+	Attrs(attrs ...field.AssignExpr) IBankDo
+	Assign(attrs ...field.AssignExpr) IBankDo
+	Joins(fields ...field.RelationField) IBankDo
+	Preload(fields ...field.RelationField) IBankDo
+	FirstOrInit() (*model.Bank, error)
+	FirstOrCreate() (*model.Bank, error)
+	FindByPage(offset int, limit int) (result []*model.Bank, count int64, err error)
+	ScanByPage(result interface{}, offset int, limit int) (count int64, err error)
+	Scan(result interface{}) (err error)
+	Returning(value interface{}, columns ...string) IBankDo
+	UnderlyingDB() *gorm.DB
+	schema.Tabler
+}
+
+func (b bankDo) Debug() IBankDo {
 	return b.withDO(b.DO.Debug())
 }
 
-func (b bankDo) WithContext(ctx context.Context) *bankDo {
+func (b bankDo) WithContext(ctx context.Context) IBankDo {
 	return b.withDO(b.DO.WithContext(ctx))
 }
 
-func (b bankDo) ReadDB() *bankDo {
+func (b bankDo) ReadDB() IBankDo {
 	return b.Clauses(dbresolver.Read)
 }
 
-func (b bankDo) WriteDB() *bankDo {
+func (b bankDo) WriteDB() IBankDo {
 	return b.Clauses(dbresolver.Write)
 }
 
-func (b bankDo) Session(config *gorm.Session) *bankDo {
+func (b bankDo) Session(config *gorm.Session) IBankDo {
 	return b.withDO(b.DO.Session(config))
 }
 
-func (b bankDo) Clauses(conds ...clause.Expression) *bankDo {
+func (b bankDo) Clauses(conds ...clause.Expression) IBankDo {
 	return b.withDO(b.DO.Clauses(conds...))
 }
 
-func (b bankDo) Returning(value interface{}, columns ...string) *bankDo {
+func (b bankDo) Returning(value interface{}, columns ...string) IBankDo {
 	return b.withDO(b.DO.Returning(value, columns...))
 }
 
-func (b bankDo) Not(conds ...gen.Condition) *bankDo {
+func (b bankDo) Not(conds ...gen.Condition) IBankDo {
 	return b.withDO(b.DO.Not(conds...))
 }
 
-func (b bankDo) Or(conds ...gen.Condition) *bankDo {
+func (b bankDo) Or(conds ...gen.Condition) IBankDo {
 	return b.withDO(b.DO.Or(conds...))
 }
 
-func (b bankDo) Select(conds ...field.Expr) *bankDo {
+func (b bankDo) Select(conds ...field.Expr) IBankDo {
 	return b.withDO(b.DO.Select(conds...))
 }
 
-func (b bankDo) Where(conds ...gen.Condition) *bankDo {
+func (b bankDo) Where(conds ...gen.Condition) IBankDo {
 	return b.withDO(b.DO.Where(conds...))
 }
 
-func (b bankDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) *bankDo {
+func (b bankDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) IBankDo {
 	return b.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
-func (b bankDo) Order(conds ...field.Expr) *bankDo {
+func (b bankDo) Order(conds ...field.Expr) IBankDo {
 	return b.withDO(b.DO.Order(conds...))
 }
 
-func (b bankDo) Distinct(cols ...field.Expr) *bankDo {
+func (b bankDo) Distinct(cols ...field.Expr) IBankDo {
 	return b.withDO(b.DO.Distinct(cols...))
 }
 
-func (b bankDo) Omit(cols ...field.Expr) *bankDo {
+func (b bankDo) Omit(cols ...field.Expr) IBankDo {
 	return b.withDO(b.DO.Omit(cols...))
 }
 
-func (b bankDo) Join(table schema.Tabler, on ...field.Expr) *bankDo {
+func (b bankDo) Join(table schema.Tabler, on ...field.Expr) IBankDo {
 	return b.withDO(b.DO.Join(table, on...))
 }
 
-func (b bankDo) LeftJoin(table schema.Tabler, on ...field.Expr) *bankDo {
+func (b bankDo) LeftJoin(table schema.Tabler, on ...field.Expr) IBankDo {
 	return b.withDO(b.DO.LeftJoin(table, on...))
 }
 
-func (b bankDo) RightJoin(table schema.Tabler, on ...field.Expr) *bankDo {
+func (b bankDo) RightJoin(table schema.Tabler, on ...field.Expr) IBankDo {
 	return b.withDO(b.DO.RightJoin(table, on...))
 }
 
-func (b bankDo) Group(cols ...field.Expr) *bankDo {
+func (b bankDo) Group(cols ...field.Expr) IBankDo {
 	return b.withDO(b.DO.Group(cols...))
 }
 
-func (b bankDo) Having(conds ...gen.Condition) *bankDo {
+func (b bankDo) Having(conds ...gen.Condition) IBankDo {
 	return b.withDO(b.DO.Having(conds...))
 }
 
-func (b bankDo) Limit(limit int) *bankDo {
+func (b bankDo) Limit(limit int) IBankDo {
 	return b.withDO(b.DO.Limit(limit))
 }
 
-func (b bankDo) Offset(offset int) *bankDo {
+func (b bankDo) Offset(offset int) IBankDo {
 	return b.withDO(b.DO.Offset(offset))
 }
 
-func (b bankDo) Scopes(funcs ...func(gen.Dao) gen.Dao) *bankDo {
+func (b bankDo) Scopes(funcs ...func(gen.Dao) gen.Dao) IBankDo {
 	return b.withDO(b.DO.Scopes(funcs...))
 }
 
-func (b bankDo) Unscoped() *bankDo {
+func (b bankDo) Unscoped() IBankDo {
 	return b.withDO(b.DO.Unscoped())
 }
 
@@ -264,22 +325,22 @@ func (b bankDo) FindInBatches(result *[]*model.Bank, batchSize int, fc func(tx g
 	return b.DO.FindInBatches(result, batchSize, fc)
 }
 
-func (b bankDo) Attrs(attrs ...field.AssignExpr) *bankDo {
+func (b bankDo) Attrs(attrs ...field.AssignExpr) IBankDo {
 	return b.withDO(b.DO.Attrs(attrs...))
 }
 
-func (b bankDo) Assign(attrs ...field.AssignExpr) *bankDo {
+func (b bankDo) Assign(attrs ...field.AssignExpr) IBankDo {
 	return b.withDO(b.DO.Assign(attrs...))
 }
 
-func (b bankDo) Joins(fields ...field.RelationField) *bankDo {
+func (b bankDo) Joins(fields ...field.RelationField) IBankDo {
 	for _, _f := range fields {
 		b = *b.withDO(b.DO.Joins(_f))
 	}
 	return &b
 }
 
-func (b bankDo) Preload(fields ...field.RelationField) *bankDo {
+func (b bankDo) Preload(fields ...field.RelationField) IBankDo {
 	for _, _f := range fields {
 		b = *b.withDO(b.DO.Preload(_f))
 	}

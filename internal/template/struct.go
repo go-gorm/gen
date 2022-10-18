@@ -7,7 +7,7 @@ const (
 		{{.QueryStructName}}Do
 		` + fields + `
 	}
-	` + tableMethod + asMethond + updateFieldMethod + getFieldMethod + fillFieldMapMethod + cloneMethod+ replaceMethod + relationship + defineMethodStruct
+	` + tableMethod + asMethond + updateFieldMethod + getFieldMethod + fillFieldMapMethod + cloneMethod + replaceMethod + relationship + defineMethodStruct
 
 	// TableQueryStructWithContext table query struct with context
 	TableQueryStructWithContext = createMethod + `
@@ -151,6 +151,7 @@ type I{{.ModelStructName}}Do interface {
 	ReadDB() I{{.ModelStructName}}Do
 	WriteDB() I{{.ModelStructName}}Do
 	As(alias string) gen.Dao
+	Session(config *gorm.Session) I{{.ModelStructName}}Do
 	Columns(cols ...field.Expr) gen.Columns
 	Clauses(conds ...clause.Expression) I{{.ModelStructName}}Do
 	Not(conds ...gen.Condition) I{{.ModelStructName}}Do
