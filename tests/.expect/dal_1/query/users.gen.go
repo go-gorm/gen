@@ -143,6 +143,10 @@ func (u userDo) WriteDB() *userDo {
 	return u.Clauses(dbresolver.Write)
 }
 
+func (u userDo) Session(config *gorm.Session) *userDo {
+	return u.withDO(u.DO.Session(config))
+}
+
 func (u userDo) Clauses(conds ...clause.Expression) *userDo {
 	return u.withDO(u.DO.Clauses(conds...))
 }

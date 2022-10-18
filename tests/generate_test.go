@@ -45,6 +45,22 @@ var generateCase = map[string]func(dir string) *gen.Generator{
 		g.ApplyBasic(g.GenerateAllTable()...)
 		return g
 	},
+	generateDirPrefix + "dal_3": func(dir string) *gen.Generator {
+		g := gen.NewGenerator(gen.Config{
+			OutPath: dir + "/query",
+			Mode:    gen.WithDefaultQuery | gen.WithQueryInterface,
+
+			WithUnitTest: true,
+
+			FieldNullable:     true,
+			FieldCoverable:    true,
+			FieldWithIndexTag: true,
+		})
+		g.UseDB(DB)
+		g.WithJSONTagNameStrategy(func(c string) string { return "-" })
+		g.ApplyBasic(g.GenerateAllTable()...)
+		return g
+	},
 }
 
 func TestGenerate(t *testing.T) {

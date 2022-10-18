@@ -122,6 +122,10 @@ func (b bankDo) WriteDB() *bankDo {
 	return b.Clauses(dbresolver.Write)
 }
 
+func (b bankDo) Session(config *gorm.Session) *bankDo {
+	return b.withDO(b.DO.Session(config))
+}
+
 func (b bankDo) Clauses(conds ...clause.Expression) *bankDo {
 	return b.withDO(b.DO.Clauses(conds...))
 }
