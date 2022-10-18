@@ -11,9 +11,9 @@ require (
 	gorm.io/datatypes v1.0.7
 	gorm.io/driver/mysql v1.4.0
 	gorm.io/driver/postgres v1.4.1
-	gorm.io/driver/sqlite v1.4.1
+	gorm.io/driver/sqlite v1.4.2
 	gorm.io/driver/sqlserver v1.4.0
 	gorm.io/gorm v1.24.0
-	gorm.io/hints v1.1.0
+	gorm.io/hints v1.1.1
 	gorm.io/plugin/dbresolver v1.3.0
 )
