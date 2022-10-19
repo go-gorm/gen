@@ -145,8 +145,11 @@ func (m *InterfaceMethod) checkParams(params []parser.Param) (err error) {
 		switch {
 		case param.Package == "UNDEFINED":
 			param.Package = m.Package
-		case param.IsMap() || param.IsGenM() || param.IsError() || param.IsNull():
+		case param.IsError() || param.IsNull():
 			return fmt.Errorf("type error on interface [%s] param: [%s]", m.InterfaceName, param.Name)
+		case param.IsGenM():
+			param.Type = "map[string]interface{}"
+			param.Package = ""
 		case param.IsGenT():
 			param.Type = m.OriginStruct.Type
 			param.Package = m.OriginStruct.Package
@@ -185,7 +188,6 @@ func (m *InterfaceMethod) checkResult(result []parser.Param) (err error) {
 			param.SetName("result")
 			param.Type = m.OriginStruct.Type
 			param.Package = m.OriginStruct.Package
-			param.IsPointer = true
 			m.ResultData = param
 		case param.IsInterface():
 			return fmt.Errorf("query method can not return interface in [%s.%s]", m.InterfaceName, m.MethodName)

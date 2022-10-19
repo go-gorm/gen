@@ -5,7 +5,7 @@ const DIYMethod = `
 
 //{{.DocComment }}
 func ({{.S}} {{.TargetStruct}}Do){{.FuncSign}}{
-	{{if .HasSQLData}}params :=make(map[string]interface{},0)
+	{{if .HasSQLData}}var params []interface{}
 
 	{{end}}var generateSQL strings.Builder
 	{{range $line:=.Section.Tmpls}}{{$line}}
@@ -13,11 +13,8 @@ func ({{.S}} {{.TargetStruct}}Do){{.FuncSign}}{
 
 	{{if .HasNeedNewResult}}result ={{if .ResultData.IsMap}}make{{else}}new{{end}}({{if ne .ResultData.Package ""}}{{.ResultData.Package}}.{{end}}{{.ResultData.Type}}){{end}}
 	{{if or .ReturnRowsAffected .ReturnError}}var executeSQL *gorm.DB
-	{{end}}{{if .HasSQLData}}if len(params)>0{
-		{{if or .ReturnRowsAffected .ReturnError}}executeSQL{{else}}_{{end}}= {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL.String(){{if .HasSQLData}},params{{end}}){{if not .ResultData.IsNull}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}
-	}else{
-		{{if or .ReturnRowsAffected .ReturnError}}executeSQL{{else}}_{{end}}= {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL.String()){{if not .ResultData.IsNull}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}
-	}{{else}}{{if or .ReturnRowsAffected .ReturnError}}executeSQL{{else}}_{{end}}= {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL.String()){{if not .ResultData.IsNull}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}{{end}}
+	{{end}}
+	{{if or .ReturnRowsAffected .ReturnError}}executeSQL{{else}}_{{end}} = {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL.String(){{if .HasSQLData}},params...{{end}}){{if not .ResultData.IsNull}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}
 	{{if .ReturnRowsAffected}}rowsAffected = executeSQL.RowsAffected
 	{{end}}{{if .ReturnError}}err = executeSQL.Error
 	{{end}}return
