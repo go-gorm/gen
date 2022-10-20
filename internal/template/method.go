@@ -40,6 +40,10 @@ func ({{.S}} {{.QueryStructName}}Do) WriteDB() {{.ReturnObject}} {
 	return {{.S}}.Clauses(dbresolver.Write)
 }
 
+func ({{.S}} {{.QueryStructName}}Do) Session(config *gorm.Session) {{.ReturnObject}} {
+	return {{.S}}.withDO({{.S}}.DO.Session(config))
+}
+
 func ({{.S}} {{.QueryStructName}}Do) Clauses(conds ...clause.Expression) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Clauses(conds...))
 }

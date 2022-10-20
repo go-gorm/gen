@@ -126,6 +126,10 @@ func (c customerDo) WriteDB() *customerDo {
 	return c.Clauses(dbresolver.Write)
 }
 
+func (c customerDo) Session(config *gorm.Session) *customerDo {
+	return c.withDO(c.DO.Session(config))
+}
+
 func (c customerDo) Clauses(conds ...clause.Expression) *customerDo {
 	return c.withDO(c.DO.Clauses(conds...))
 }

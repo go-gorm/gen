@@ -136,6 +136,10 @@ func (c creditCardDo) WriteDB() *creditCardDo {
 	return c.Clauses(dbresolver.Write)
 }
 
+func (c creditCardDo) Session(config *gorm.Session) *creditCardDo {
+	return c.withDO(c.DO.Session(config))
+}
+
 func (c creditCardDo) Clauses(conds ...clause.Expression) *creditCardDo {
 	return c.withDO(c.DO.Clauses(conds...))
 }
