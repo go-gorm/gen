@@ -36,18 +36,16 @@ func GetInterfacePath(v interface{}) (paths []*InterfacePath, err error) {
 			path.Name = n
 		}
 
-		if strings.Split(arg.String(), ".")[0] == "main" {
-			_, file, _, ok := runtime.Caller(3)
-			if ok {
-				path.Files = append(path.Files, file)
-			}
-			paths = append(paths, &path)
-			continue
-		}
-
 		ctx := build.Default
 		var p *build.Package
-		p, err = ctx.Import(arg.PkgPath(), "", build.ImportComment)
+
+		if strings.Split(arg.String(), ".")[0] == "main" {
+			_, file, _, _ := runtime.Caller(3)
+			p, err = ctx.ImportDir(filepath.Dir(file), build.ImportComment)
+		} else {
+			p, err = ctx.Import(arg.PkgPath(), "", build.ImportComment)
+		}
+
 		if err != nil {
 			return
 		}
