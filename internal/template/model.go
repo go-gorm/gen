@@ -10,7 +10,7 @@ import (
 
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
-    "gorm.io/gorm/schema"
+	"gorm.io/gorm/schema"
 	{{range .ImportPkgPaths}}{{.}} ` + "\n" + `{{end}}
 )
 

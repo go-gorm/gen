@@ -60,8 +60,8 @@ type Config struct {
 	modelOpts []ModelOpt
 }
 
-// WithModelOpts set global  model options
-func (cfg *Config) WithModelOpts(opts ...ModelOpt) {
+// WithOpts set global  model options
+func (cfg *Config) WithOpts(opts ...ModelOpt) {
 	if cfg.modelOpts == nil {
 		cfg.modelOpts = opts
 	} else {
