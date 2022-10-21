@@ -251,3 +251,17 @@ var (
 		return func() []interface{} { return methods }
 	}
 )
+
+var (
+	DefaultMethodTableWithNamer = (&defaultModel{}).TableName
+)
+
+type defaultModel struct {
+}
+
+func (*defaultModel) TableName(namer schema.Namer) string {
+	if namer == nil {
+		return "@@table"
+	}
+	return namer.TableName("@@table")
+}

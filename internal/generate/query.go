@@ -156,17 +156,29 @@ func (b *QueryStructMeta) StructComment() string {
 // ReviseDIYMethod check diy method duplication name
 func (b *QueryStructMeta) ReviseDIYMethod() error {
 	var duplicateMethodName []string
+	var tableName *parser.Method
 	methods := make([]*parser.Method, 0, len(b.ModelMethods))
 	methodMap := make(map[string]bool, len(b.ModelMethods))
 	for _, method := range b.ModelMethods {
-		if methodMap[method.MethodName] || method.MethodName == "TableName" {
+		if methodMap[method.MethodName] {
 			duplicateMethodName = append(duplicateMethodName, method.MethodName)
 			continue
+		}
+		if method.MethodName == "TableName" {
+			tableName = method
 		}
 		method.Receiver.Package = ""
 		method.Receiver.Type = b.ModelStructName
 		methods = append(methods, method)
 		methodMap[method.MethodName] = true
+	}
+	if tableName == nil {
+		methods = append(methods, parser.DefaultMethodTableName(b.ModelStructName))
+	} else {
+		//e.g. return "@@table" => return TableNameUser
+		tableName.Body = strings.ReplaceAll(tableName.Body, "\"@@table\"", "TableName"+b.ModelStructName)
+		//e.g. return "t_@@table" => return "t_user"
+		tableName.Body = strings.ReplaceAll(tableName.Body, "@@table", b.TableName)
 	}
 	b.ModelMethods = methods
 

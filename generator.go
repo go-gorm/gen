@@ -148,6 +148,11 @@ func (g *Generator) GenerateModelFrom(obj helper.Object) *generate.QueryStructMe
 }
 
 func (g *Generator) genModelConfig(tableName string, modelName string, modelOpts []ModelOpt) *model.Config {
+	if modelOpts == nil {
+		modelOpts = g.modelOpts
+	} else {
+		modelOpts = append(modelOpts, g.modelOpts...)
+	}
 	return &model.Config{
 		ModelPkg:       g.Config.ModelPkgPath,
 		TablePrefix:    g.getTablePrefix(),
