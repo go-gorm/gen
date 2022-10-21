@@ -56,6 +56,17 @@ type Config struct {
 	dataTypeMap    map[string]func(detailType string) (dataType string)
 	fieldJSONTagNS func(columnName string) (tagContent string)
 	fieldNewTagNS  func(columnName string) (tagContent string)
+
+	modelOpts []ModelOpt
+}
+
+// WithOpts set global  model options
+func (cfg *Config) WithOpts(opts ...ModelOpt) {
+	if cfg.modelOpts == nil {
+		cfg.modelOpts = opts
+	} else {
+		cfg.modelOpts = append(cfg.modelOpts, opts...)
+	}
 }
 
 // WithDbNameOpts set get database name function

@@ -10,6 +10,7 @@ import (
 
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 	{{range .ImportPkgPaths}}{{.}} ` + "\n" + `{{end}}
 )
 
@@ -28,12 +29,6 @@ type {{.ModelStructName}} struct {
 	`{{end}}
 }
 
-{{if .TableName -}}
-// TableName {{.ModelStructName}}'s table name
-func (*{{.ModelStructName}}) TableName() string {
-    return TableName{{.ModelStructName}}
-}
-{{- end}}
 `
 
 // ModelMethod model struct DIY method
