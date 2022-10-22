@@ -171,6 +171,7 @@ func (g *Generator) genModelConfig(tableName string, modelName string, modelOpts
 
 			FieldSignable:     g.FieldSignable,
 			FieldNullable:     g.FieldNullable,
+			FieldNullableList: g.FieldNullableList,
 			FieldCoverable:    g.FieldCoverable,
 			FieldWithIndexTag: g.FieldWithIndexTag,
 			FieldWithTypeTag:  g.FieldWithTypeTag,

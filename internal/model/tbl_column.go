@@ -47,8 +47,17 @@ func (c *Column) WithNS(jsonTagNS, newTagNS func(columnName string) string) {
 	}
 }
 
+func inArr(dataType string, nullableList []string) bool {
+	for _, s := range nullableList {
+		if s == dataType {
+			return true
+		}
+	}
+	return false
+}
+
 // ToField convert to field
-func (c *Column) ToField(nullable, coverable, signable bool) *Field {
+func (c *Column) ToField(nullable, coverable, signable bool, nullableList []string) *Field {
 	fieldType := c.GetDataType()
 	if signable && strings.Contains(c.columnType(), "unsigned") && strings.HasPrefix(fieldType, "int") {
 		fieldType = "u" + fieldType
@@ -58,7 +67,7 @@ func (c *Column) ToField(nullable, coverable, signable bool) *Field {
 		fieldType = "gorm.DeletedAt"
 	case coverable && c.needDefaultTag(c.defaultTagValue()):
 		fieldType = "*" + fieldType
-	case nullable:
+	case nullable || inArr(c.columnType(), nullableList):
 		if n, ok := c.Nullable(); ok && n {
 			fieldType = "*" + fieldType
 		}
