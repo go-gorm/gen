@@ -115,6 +115,11 @@ func (field Float64) IfNull(value float64) Expr {
 	return field.ifNull(value)
 }
 
+// Filed ...
+func (field Float64) Filed(values ...float64) Float64 {
+	return Float64{field.field(values)}
+}
+
 func (field Float64) toSlice(values ...float64) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
@@ -234,6 +239,11 @@ func (field Float32) Sum() Float32 {
 // IfNull ...
 func (field Float32) IfNull(value float32) Expr {
 	return field.ifNull(value)
+}
+
+// Filed ...
+func (field Float32) Filed(values ...float32) Float32 {
+	return Float32{field.field(values)}
 }
 
 func (field Float32) toSlice(values ...float32) []interface{} {

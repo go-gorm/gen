@@ -121,6 +121,11 @@ func (field String) Concat(before, after string) String {
 	}
 }
 
+// Filed ...
+func (field String) Filed(values ...string) String {
+	return String{field.field(values)}
+}
+
 func (field String) toSlice(values []string) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
@@ -225,6 +230,11 @@ func (field Bytes) FindInSet(targetList string) Expr {
 // FindInSetWith FIND_IN_SET(input_string, field_name)
 func (field Bytes) FindInSetWith(target string) Expr {
 	return expr{e: clause.Expr{SQL: "FIND_IN_SET(?,?)", Vars: []interface{}{target, field.RawExpr()}}}
+}
+
+// Filed ...
+func (field Bytes) Filed(values ...[]byte) Bytes {
+	return Bytes{field.field(values)}
 }
 
 func (field Bytes) toSlice(values [][]byte) []interface{} {
