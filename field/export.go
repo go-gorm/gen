@@ -205,6 +205,14 @@ func AssignSubQuery(columns []Expr, subQuery *gorm.DB) AssignExpr {
 	}}}
 }
 
+//Pure use of subquery
+func PureSubQuery(subQuery *gorm.DB) Expr {
+	return expr{e: clause.Expr{
+		SQL:  "(?)",
+		Vars: []interface{}{subQuery},
+	}}
+}
+
 // CompareOperator compare operator
 type CompareOperator string
 
