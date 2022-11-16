@@ -514,15 +514,15 @@ func (g *Generator) generateModelFile() error {
 }
 
 func (g *Generator) getModelOutputPath() (outPath string, err error) {
-	if strings.Contains(g.ModelPkgPath, "/") {
+	if strings.Contains(g.ModelPkgPath, string(os.PathSeparator)) {
 		outPath, err = filepath.Abs(g.ModelPkgPath)
 		if err != nil {
 			return "", fmt.Errorf("cannot parse model pkg path: %w", err)
 		}
 	} else {
-		outPath = filepath.Dir(g.OutPath) + "/" + g.ModelPkgPath
+		outPath = filepath.Join(filepath.Dir(g.OutPath), g.ModelPkgPath)
 	}
-	return outPath + "/", nil
+	return outPath + string(os.PathSeparator), nil
 }
 
 func (g *Generator) fillModelPkgPath(filePath string) {
