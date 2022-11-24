@@ -49,6 +49,15 @@ func getPureName(s string) string {
 // not need capitalize
 func getStructName(t string) string {
 	list := strings.Split(t, ".")
+
+	// when generating DAOs from generic structs, we only want to take what is before the [
+	// Dummy[T any] => Dummy
+	list = strings.Split(list[len(list)-1], "[")
+	return list[0]
+}
+
+func getType(t string) string {
+	list := strings.Split(t, ".")
 	return list[len(list)-1]
 }
 

@@ -127,6 +127,7 @@ func ConvertStructs(db *gorm.DB, structs ...interface{}) (metas []*QueryStructMe
 
 		structType := reflect.TypeOf(st)
 		name := getStructName(structType.String())
+		typeName := getType(structType.String())
 		newStructName := name
 		if st, ok := st.(interface{ GenInternalDoName() string }); ok {
 			newStructName = st.GenInternalDoName()
@@ -136,7 +137,7 @@ func ConvertStructs(db *gorm.DB, structs ...interface{}) (metas []*QueryStructMe
 			S:               getPureName(name),
 			ModelStructName: name,
 			QueryStructName: uncaptialize(newStructName),
-			StructInfo:      parser.Param{PkgPath: structType.PkgPath(), Type: name, Package: getPackageName(structType.String())},
+			StructInfo:      parser.Param{PkgPath: structType.PkgPath(), Type: typeName, Package: getPackageName(structType.String())},
 			Source:          model.Struct,
 			db:              db,
 		}
