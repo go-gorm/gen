@@ -101,6 +101,12 @@ func (c *Column) buildGormTag() string {
 		buf.WriteString(";not null")
 	}
 
+	if c, ok := c.Comment(); ok {
+		if c != "" {
+			buf.WriteString(fmt.Sprintf(";comment:%s", c))
+		}
+	}
+
 	for _, idx := range c.Indexes {
 		if idx == nil {
 			continue
