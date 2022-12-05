@@ -9,7 +9,7 @@ require (
 	gorm.io/gen v0.3.16
 	gorm.io/gorm v1.24.0
 	gorm.io/hints v1.1.1 // indirect
-	gorm.io/plugin/dbresolver v1.3.0
+	gorm.io/plugin/dbresolver v1.4.0
 )
 
 replace gorm.io/gen => ../
