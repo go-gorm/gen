@@ -136,6 +136,26 @@ func (s SetClause) Finish(name string) string {
 	return fmt.Sprintf("helper.JoinSetBuilder(&%s,%s)", name, s.VarName)
 }
 
+// TrimClause set clause
+type TrimClause struct {
+	clause
+	Value []Clause
+}
+
+func (s TrimClause) String() string {
+	return fmt.Sprintf("helper.TrimALL(%s.String())", s.VarName)
+}
+
+// Create create trim clause
+func (s TrimClause) Create() string {
+	return fmt.Sprintf("var %s strings.Builder", s.VarName)
+}
+
+// Finish finish trim clause
+func (s TrimClause) Finish(name string) string {
+	return fmt.Sprintf("helper.JoinTrimAllBuilder(&%s,%s)", name, s.VarName)
+}
+
 // ForClause set clause
 type ForClause struct {
 	clause
