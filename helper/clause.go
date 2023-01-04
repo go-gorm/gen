@@ -130,6 +130,12 @@ func JoinSetBuilder(src *strings.Builder, setValue strings.Builder) {
 	}
 }
 
+// JoinTrimAllBuilder join trim builder， will trim and,or,xor, `,`
+func JoinTrimAllBuilder(src *strings.Builder, setValue strings.Builder) {
+	src.WriteString(trimAll(setValue.String()))
+	src.WriteString(" ")
+}
+
 // JoinTblExpr join clause with table expression(sub query...)
 type JoinTblExpr struct {
 	clause.Join

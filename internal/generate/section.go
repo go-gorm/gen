@@ -104,6 +104,13 @@ func (s *Section) BuildSQL() ([]Clause, error) {
 			}
 			res = append(res, setClause)
 			s.appendTmpl(setClause.Finish(name))
+		case model.TRIM:
+			trimClause, err := s.parseTrim()
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, trimClause)
+			s.appendTmpl(trimClause.Finish(name))
 		case model.FOR:
 			forClause, err := s.parseFor(name)
 			_, _ = forClause, err
@@ -179,6 +186,14 @@ func (s *Section) parseIF(name string) (res IfClause, err error) {
 			}
 			res.Value = append(res.Value, forClause)
 			s.appendTmpl(res.Finish())
+		case model.TRIM:
+			var trimClause TrimClause
+			trimClause, err = s.parseTrim()
+			if err != nil {
+				return
+			}
+			res.Value = append(res.Value, trimClause)
+			s.appendTmpl(trimClause.Finish(name))
 		case model.END:
 			return
 		default:
@@ -250,6 +265,14 @@ func (s *Section) parseElSE(name string) (res ElseClause, err error) {
 			}
 			res.Value = append(res.Value, forClause)
 			s.appendTmpl(forClause.Finish())
+		case model.TRIM:
+			var trimClause TrimClause
+			trimClause, err = s.parseTrim()
+			if err != nil {
+				return
+			}
+			res.Value = append(res.Value, trimClause)
+			s.appendTmpl(trimClause.Finish(name))
 		default:
 			s.SubIndex()
 			return
@@ -295,6 +318,14 @@ func (s *Section) parseWhere() (res WhereClause, err error) {
 			}
 			res.Value = append(res.Value, forClause)
 			s.appendTmpl(forClause.Finish())
+		case model.TRIM:
+			var trimClause TrimClause
+			trimClause, err = s.parseTrim()
+			if err != nil {
+				return
+			}
+			res.Value = append(res.Value, trimClause)
+			s.appendTmpl(trimClause.Finish(res.VarName))
 		case model.END:
 			return
 		default:
@@ -315,6 +346,64 @@ func (s *Section) parseWhere() (res WhereClause, err error) {
 
 // parseSet parse set clause, the clause' type must be one of if, SQL condition
 func (s *Section) parseSet() (res SetClause, err error) {
+	c := s.current()
+	res.VarName = s.GetName(c.Type)
+	s.appendTmpl(res.Create())
+	if !s.HasMore() {
+		return
+	}
+	c = s.next()
+
+	res.Type = c.Type
+	for {
+		switch c.Type {
+		case model.SQL, model.DATA, model.VARIABLE:
+			sqlClause := s.parseSQL(res.VarName)
+			res.Value = append(res.Value, sqlClause)
+			s.appendTmpl(sqlClause.Finish())
+		case model.IF:
+			var ifClause IfClause
+			ifClause, err = s.parseIF(res.VarName)
+			if err != nil {
+				return
+			}
+			res.Value = append(res.Value, ifClause)
+			s.appendTmpl(ifClause.Finish())
+		case model.FOR:
+			var forClause ForClause
+			forClause, err = s.parseFor(res.VarName)
+			if err != nil {
+				return
+			}
+			res.Value = append(res.Value, forClause)
+			s.appendTmpl(forClause.Finish())
+		case model.TRIM:
+			var trimClause TrimClause
+			trimClause, err = s.parseTrim()
+			if err != nil {
+				return
+			}
+			res.Value = append(res.Value, trimClause)
+			s.appendTmpl(trimClause.Finish(res.VarName))
+		case model.END:
+			return
+		default:
+			err = fmt.Errorf("unknow clause : %s", c.Value)
+			return
+		}
+		if !s.HasMore() {
+			break
+		}
+		c = s.next()
+	}
+	if c.isEnd() {
+		err = fmt.Errorf("incomplete SQL,set not end")
+	}
+	return
+}
+
+// parseTrim parse set clause, the clause' type must be one of if, SQL condition
+func (s *Section) parseTrim() (res TrimClause, err error) {
 	c := s.current()
 	res.VarName = s.GetName(c.Type)
 	s.appendTmpl(res.Create())
@@ -395,6 +484,14 @@ func (s *Section) parseFor(name string) (res ForClause, err error) {
 			}
 			res.Value = append(res.Value, forClause)
 			s.appendTmpl(forClause.Finish())
+		case model.TRIM:
+			var trimClause TrimClause
+			trimClause, err = s.parseTrim()
+			if err != nil {
+				return
+			}
+			res.Value = append(res.Value, trimClause)
+			s.appendTmpl(trimClause.Finish(name))
 		case model.END:
 			s.forValue = s.forValue[:len(s.forValue)-1]
 			return
@@ -469,6 +566,9 @@ func (s *Section) GetName(status model.Status) string {
 	case model.SET:
 		defer func() { s.ClauseTotal[model.SET]++ }()
 		return fmt.Sprintf("setSQL%d", s.ClauseTotal[model.SET])
+	case model.TRIM:
+		defer func() { s.ClauseTotal[model.TRIM]++ }()
+		return fmt.Sprintf("trimSQL%d", s.ClauseTotal[model.TRIM])
 	default:
 		return "generateSQL"
 	}
@@ -551,6 +651,8 @@ func (s *section) sectionType(str string) error {
 		s.Type = model.SET
 	case "end":
 		s.Type = model.END
+	case "trim":
+		s.Type = model.TRIM
 	default:
 		return fmt.Errorf("unknown syntax: %s", str)
 	}
