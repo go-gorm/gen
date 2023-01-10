@@ -33,7 +33,8 @@ type DO struct {
 	modelType reflect.Type
 	tableName string
 
-	backfillData interface{}
+	backfillData     interface{}
+	secCheckDisabled bool
 }
 
 func (d DO) getInstance(db *gorm.DB) *DO {
@@ -168,10 +169,12 @@ func (d *DO) WithContext(ctx context.Context) Dao { return d.getInstance(d.db.Wi
 
 // Clauses specify Clauses
 func (d *DO) Clauses(conds ...clause.Expression) Dao {
-	if err := checkConds(conds); err != nil {
-		newDB := d.db.Session(new(gorm.Session))
-		_ = newDB.AddError(err)
-		return d.getInstance(newDB)
+	if !d.secCheckDisabled {
+		if err := checkConds(conds); err != nil {
+			newDB := d.db.Session(new(gorm.Session))
+			_ = newDB.AddError(err)
+			return d.getInstance(newDB)
+		}
 	}
 	return d.getInstance(d.db.Clauses(conds...))
 }
@@ -833,6 +836,11 @@ func (d *DO) newResultPointer() interface{} {
 
 func (d *DO) newResultSlicePointer() interface{} {
 	return reflect.New(reflect.SliceOf(reflect.PtrTo(d.modelType))).Interface()
+}
+
+func (d DO) WithSecCheckDisabled(disabled bool) Dao {
+	d.secCheckDisabled = disabled
+	return d.getInstance(d.db)
 }
 
 func toColExprFullName(stmt *gorm.Statement, columns ...field.Expr) []string {
