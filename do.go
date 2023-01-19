@@ -70,7 +70,7 @@ func (d *DO) ReplaceDB(db *gorm.DB) {
 
 // ReplaceConnPool replace db connection pool
 func (d *DO) ReplaceConnPool(pool gorm.ConnPool) {
-	d.db = d.db.Session(&gorm.Session{})
+	d.db = d.db.Session(&gorm.Session{Initialized: true}).Session(&gorm.Session{})
 	d.db.Statement.ConnPool = pool
 }
 
