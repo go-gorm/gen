@@ -37,6 +37,8 @@ const (
 	FOR
 	// END ...
 	END
+	// TRIM ...
+	TRIM
 )
 
 // SourceCode source code
