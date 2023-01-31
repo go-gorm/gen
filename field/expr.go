@@ -18,10 +18,12 @@ type AssignExpr interface {
 
 // Expr a query expression about field
 type Expr interface {
+	// Clause Expression interface
+	Build(clause.Builder)
+
 	As(alias string) Expr
 	ColumnName() sql
 	BuildColumn(*gorm.Statement, ...BuildOpt) sql
-	Build(*gorm.Statement) sql
 	BuildWithArgs(*gorm.Statement) (query sql, args []interface{})
 	RawExpr() expression
 
@@ -110,13 +112,15 @@ func (e expr) BuildColumn(stmt *gorm.Statement, opts ...BuildOpt) sql {
 	return sql(stmt.Quote(col))
 }
 
-func (e expr) Build(stmt *gorm.Statement) sql {
+func (e expr) Build(builder clause.Builder) {
 	if e.e == nil {
-		return sql(e.BuildColumn(stmt, WithAll))
+		if stmt, ok := builder.(*gorm.Statement); ok {
+			builder.WriteString(string(e.BuildColumn(stmt, WithAll)))
+			return
+		}
 	}
-	newStmt := &gorm.Statement{DB: stmt.DB, Table: stmt.Table, Schema: stmt.Schema}
-	e.e.Build(newStmt)
-	return sql(newStmt.SQL.String())
+
+	e.e.Build(builder)
 }
 
 func (e expr) BuildWithArgs(stmt *gorm.Statement) (sql, []interface{}) {
