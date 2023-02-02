@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"gorm.io/gen"
+
+	"gorm.io/gen/tests/diy_method"
 )
 
 const (
@@ -59,6 +61,24 @@ var generateCase = map[string]func(dir string) *gen.Generator{
 		g.UseDB(DB)
 		g.WithJSONTagNameStrategy(func(c string) string { return "-" })
 		g.ApplyBasic(g.GenerateAllTable()...)
+		return g
+	},
+	generateDirPrefix + "dal_4": func(dir string) *gen.Generator {
+		g := gen.NewGenerator(gen.Config{
+			OutPath: dir + "/query",
+			Mode:    gen.WithDefaultQuery | gen.WithQueryInterface,
+
+			WithUnitTest: true,
+
+			FieldNullable:     true,
+			FieldCoverable:    true,
+			FieldWithIndexTag: true,
+		})
+		g.UseDB(DB)
+		g.WithJSONTagNameStrategy(func(c string) string { return "-" })
+		g.ApplyBasic(g.GenerateAllTable()...)
+		g.ApplyInterface(func(testIF diy_method.TestIF, testFor diy_method.TestFor, method diy_method.InsertMethod, selectMethod diy_method.SelectMethod) {
+		}, g.GenerateModel("users"))
 		return g
 	},
 }

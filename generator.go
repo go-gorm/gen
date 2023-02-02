@@ -34,14 +34,14 @@ type T interface{}
 // M map[string]interface{}
 type M map[string]interface{}
 
-// SqlResult sql.result
-type SqlResult sql.Result
+// SQLResult sql.result
+type SQLResult sql.Result
 
-// SqlRow sql.Row
-type SqlRow sql.Row
+// SQLRow sql.Row
+type SQLRow sql.Row
 
-// SqlRows sql.Rows
-type SqlRows sql.Rows
+// SQLRows sql.Rows
+type SQLRows sql.Rows
 
 // RowsAffected execute affected raws
 type RowsAffected int64
@@ -210,12 +210,12 @@ func (g *Generator) genModelObjConfig() *model.Config {
 	}
 }
 
-// ApplyBasic specify models which will implement basic method
+// ApplyBasic specify models which will implement basic .diy_method
 func (g *Generator) ApplyBasic(models ...interface{}) {
 	g.ApplyInterface(func() {}, models...)
 }
 
-// ApplyInterface specifies method interfaces on structures, implment codes will be generated after calling g.Execute()
+// ApplyInterface specifies .diy_method interfaces on structures, implment codes will be generated after calling g.Execute()
 // eg: g.ApplyInterface(func(model.Method){}, model.User{}, model.Company{})
 func (g *Generator) ApplyInterface(fc interface{}, models ...interface{}) {
 	structs, err := generate.ConvertStructs(g.db, models...)
