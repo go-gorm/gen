@@ -343,7 +343,7 @@ func (p personDo) CreateInBatches(values []*model.Person, batchSize int) error {
 }
 
 // Save : !!! underlying implementation is different with GORM
-// The .diy_method is equivalent to executing the statement: db.Clauses(clause.OnConflict{UpdateAll: true}).Create(values)
+// The method is equivalent to executing the statement: db.Clauses(clause.OnConflict{UpdateAll: true}).Create(values)
 func (p personDo) Save(values ...*model.Person) error {
 	if len(values) == 0 {
 		return nil

@@ -57,30 +57,30 @@ func (m *InterfaceMethod) GormRunMethodName() string {
 	return "Take"
 }
 
-// ReturnSqlResult return sql result
-func (m *InterfaceMethod) ReturnSqlResult() bool {
+// ReturnSQLResult return sql result
+func (m *InterfaceMethod) ReturnSQLResult() bool {
 	for _, res := range m.Result {
-		if res.IsSqlResult() {
+		if res.IsSQLResult() {
 			return true
 		}
 	}
 	return false
 }
 
-// ReturnSqlRow return sql result
-func (m *InterfaceMethod) ReturnSqlRow() bool {
+// ReturnSQLRow return sql result
+func (m *InterfaceMethod) ReturnSQLRow() bool {
 	for _, res := range m.Result {
-		if res.IsSqlRow() {
+		if res.IsSQLRow() {
 			return true
 		}
 	}
 	return false
 }
 
-// ReturnSqlRows return sql result
-func (m *InterfaceMethod) ReturnSqlRows() bool {
+// ReturnSQLRows return sql result
+func (m *InterfaceMethod) ReturnSQLRows() bool {
 	for _, res := range m.Result {
-		if res.IsSqlRows() {
+		if res.IsSQLRows() {
 			return true
 		}
 	}
@@ -236,18 +236,18 @@ func (m *InterfaceMethod) checkResult(result []parser.Param) (err error) {
 			param.Package = ""
 			param.SetName("rowsAffected")
 			m.GormOption = "Exec"
-		case param.IsSqlResult():
+		case param.IsSQLResult():
 			param.Type = "Result"
 			param.Package = "sql"
 			param.SetName("result")
 			m.GormOption = "Statement.ConnPool.ExecContext"
-		case param.IsSqlRow():
+		case param.IsSQLRow():
 			param.Type = "Row"
 			param.Package = "sql"
 			param.SetName("row")
 			m.GormOption = "Raw"
 			param.IsPointer = true
-		case param.IsSqlRows():
+		case param.IsSQLRows():
 			param.Type = "Rows"
 			param.Package = "sql"
 			param.SetName("rows")
