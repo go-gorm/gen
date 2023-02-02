@@ -226,11 +226,11 @@ type IUserDo interface {
 // FindByUsers
 //
 // select * from @@table
-// 	{{where}}
-// 		{{if user.Name !=""}}
-// 			name=@user.Name
-// 		{{end}}
-// 	{{end}}
+//   {{where}}
+//       {{if user.Name !=""}}
+//           name=@user.Name
+//       {{end}}
+//   {{end}}
 func (u userDo) FindByUsers(user model.User) (result []model.User) {
 	var params []interface{}
 
@@ -521,7 +521,7 @@ func (u userDo) TestForMap(param map[string]string, name string) (result model.U
 //
 // select * from users
 // {{where}}
-//  {{if name !="xx"}}
+// {{if name !="xx"}}
 // 		{{if name !="xx"}}
 // 			name=@name
 // 		{{end}}

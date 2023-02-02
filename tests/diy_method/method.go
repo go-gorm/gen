@@ -105,11 +105,11 @@ type TestIF interface {
 	// FindByUsers
 	//
 	// select * from @@table
-	//	{{where}}
-	//		{{if user.Name !=""}}
-	//			name=@user.Name
-	//		{{end}}
-	//	{{end}}
+	//    {{where}}
+	//        {{if user.Name !=""}}
+	//            name=@user.Name
+	//        {{end}}
+	//    {{end}}
 	FindByUsers(user gen.T) []gen.T
 
 	// FindByComplexIf
