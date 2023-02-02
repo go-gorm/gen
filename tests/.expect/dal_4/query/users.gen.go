@@ -223,7 +223,7 @@ type IUserDo interface {
 	ColumnSearch(name string, names []string) (result []*model.User)
 }
 
-//FindByUsers
+// FindByUsers
 //
 //select * from @@table
 //	{{where}}
@@ -250,7 +250,7 @@ func (u userDo) FindByUsers(user model.User) (result []model.User) {
 	return
 }
 
-//FindByComplexIf
+// FindByComplexIf
 //
 //select * from @@table
 //	{{where}}
@@ -277,7 +277,7 @@ func (u userDo) FindByComplexIf(user *model.User) (result []model.User) {
 	return
 }
 
-//FindByIfTime
+// FindByIfTime
 //
 //select * from @@table
 //	{{if !start.IsZero()}}
@@ -297,7 +297,7 @@ func (u userDo) FindByIfTime(start time.Time) (result []model.User) {
 	return
 }
 
-//TestFor
+// TestFor
 //
 //select * from @@table where
 //	{{for _,name:=range names}}
@@ -322,7 +322,7 @@ func (u userDo) TestFor(names []string) (result model.User, err error) {
 	return
 }
 
-//TestForKey
+// TestForKey
 //
 //select * from @@table where
 //	{{for _,name:=range names}}
@@ -347,7 +347,7 @@ func (u userDo) TestForKey(names []string, name string, value string) (result mo
 	return
 }
 
-//TestForOr
+// TestForOr
 //
 //select * from @@table
 //{{where}}
@@ -378,7 +378,7 @@ func (u userDo) TestForOr(names []string) (result model.User, err error) {
 	return
 }
 
-//TestIfInFor
+// TestIfInFor
 //
 //select * from @@table where
 //	{{for _,name:=range names}}
@@ -407,7 +407,7 @@ func (u userDo) TestIfInFor(names []string, name string) (result model.User, err
 	return
 }
 
-//TestForInIf
+// TestForInIf
 //
 //select * from @@table where
 //	{{if name !="" }}
@@ -436,7 +436,7 @@ func (u userDo) TestForInIf(names []string, name string) (result model.User, err
 	return
 }
 
-//TestForInWhere
+// TestForInWhere
 //
 //select * from @@table
 //	{{where}}
@@ -463,7 +463,7 @@ func (u userDo) TestForInWhere(names []string, name string, forName string) (res
 	return
 }
 
-//TestForUserList
+// TestForUserList
 //
 //select * from users
 //{{where}}
@@ -490,7 +490,7 @@ func (u userDo) TestForUserList(users []*model.User, name string) (result model.
 	return
 }
 
-//TestForMap
+// TestForMap
 //
 //select * from users
 //{{where}}
@@ -517,7 +517,7 @@ func (u userDo) TestForMap(param map[string]string, name string) (result model.U
 	return
 }
 
-//TestIfInIf
+// TestIfInIf
 //
 //select * from users
 //{{where}}
@@ -548,7 +548,7 @@ func (u userDo) TestIfInIf(name string) (result model.User) {
 	return
 }
 
-//TestMoreFor
+// TestMoreFor
 //
 //select * from @@table
 //	{{where}}
@@ -582,7 +582,7 @@ func (u userDo) TestMoreFor(names []string, ids []int) (result []model.User) {
 	return
 }
 
-//TestMoreFor2
+// TestMoreFor2
 //
 //select * from @@table
 //	{{where}}
@@ -619,7 +619,7 @@ func (u userDo) TestMoreFor2(names []string, ids []int) (result []model.User) {
 	return
 }
 
-//TestForInSet
+// TestForInSet
 //
 //update @@table
 //	{{set}}
@@ -647,7 +647,7 @@ func (u userDo) TestForInSet(users []model.User) (err error) {
 	return
 }
 
-//TestInsertMoreInfo
+// TestInsertMoreInfo
 //
 //insert into @@table(name,age)values
 //		{{for index ,user:=range users}}
@@ -677,7 +677,7 @@ func (u userDo) TestInsertMoreInfo(users []model.User) (err error) {
 	return
 }
 
-//TestIfElseFor
+// TestIfElseFor
 //
 //select * from @@table
 //{{where}}
@@ -743,7 +743,7 @@ func (u userDo) TestIfElseFor(name string, users []model.User) (err error) {
 	return
 }
 
-//TestForLike
+// TestForLike
 //
 //select * from @@table
 //{{where}}
@@ -770,7 +770,7 @@ func (u userDo) TestForLike(names []string) (result []model.User) {
 	return
 }
 
-//AddUser
+// AddUser
 //
 //INSERT INTO users (name,age) VALUES (@name,@age) ON DUPLICATE KEY UPDATE age=VALUES(age)
 func (u userDo) AddUser(name string, age int) (result sql.Result, err error) {
@@ -787,7 +787,7 @@ func (u userDo) AddUser(name string, age int) (result sql.Result, err error) {
 	return
 }
 
-//AddUser1
+// AddUser1
 //
 //INSERT INTO users (name,age) VALUES (@name,@age) ON DUPLICATE KEY UPDATE age=VALUES(age)
 func (u userDo) AddUser1(name string, age int) (rowsAffected int64, err error) {
@@ -806,7 +806,7 @@ func (u userDo) AddUser1(name string, age int) (rowsAffected int64, err error) {
 	return
 }
 
-//AddUser2
+// AddUser2
 //
 //INSERT INTO users (name,age) VALUES (@name,@age) ON DUPLICATE KEY UPDATE age=VALUES(age)
 func (u userDo) AddUser2(name string, age int) (rowsAffected int64) {
@@ -824,7 +824,7 @@ func (u userDo) AddUser2(name string, age int) (rowsAffected int64) {
 	return
 }
 
-//AddUser3
+// AddUser3
 //
 //INSERT INTO users (name,age) VALUES (@name,@age) ON DUPLICATE KEY UPDATE age=VALUES(age)
 func (u userDo) AddUser3(name string, age int) (result sql.Result) {
@@ -841,7 +841,7 @@ func (u userDo) AddUser3(name string, age int) (result sql.Result) {
 	return
 }
 
-//AddUser4
+// AddUser4
 //
 //INSERT INTO users (name,age) VALUES (@name,@age) ON DUPLICATE KEY UPDATE age=VALUES(age)
 func (u userDo) AddUser4(name string, age int) (row *sql.Row) {
@@ -857,7 +857,7 @@ func (u userDo) AddUser4(name string, age int) (row *sql.Row) {
 	return
 }
 
-//AddUser5
+// AddUser5
 //
 //INSERT INTO users (name,age) VALUES (@name,@age) ON DUPLICATE KEY UPDATE age=VALUES(age)
 func (u userDo) AddUser5(name string, age int) (rows *sql.Rows) {
@@ -873,7 +873,7 @@ func (u userDo) AddUser5(name string, age int) (rows *sql.Rows) {
 	return
 }
 
-//AddUser6
+// AddUser6
 //
 //INSERT INTO users (name,age) VALUES (@name,@age) ON DUPLICATE KEY UPDATE age=VALUES(age)
 func (u userDo) AddUser6(name string, age int) (rows *sql.Rows, err error) {
@@ -889,7 +889,7 @@ func (u userDo) AddUser6(name string, age int) (rows *sql.Rows, err error) {
 	return
 }
 
-//FindByID
+// FindByID
 //
 //select * from users where id=@id
 func (u userDo) FindByID(id int) (result model.User) {
@@ -906,7 +906,7 @@ func (u userDo) FindByID(id int) (result model.User) {
 	return
 }
 
-//LikeSearch
+// LikeSearch
 //
 //SELECT * FROM @@table where name LIKE concat('%',@name,'%')
 func (u userDo) LikeSearch(name string) (result *model.User) {
@@ -923,7 +923,7 @@ func (u userDo) LikeSearch(name string) (result *model.User) {
 	return
 }
 
-//InSearch
+// InSearch
 //
 //select * from @@table where name in @names
 func (u userDo) InSearch(names []string) (result []*model.User) {
@@ -940,7 +940,7 @@ func (u userDo) InSearch(names []string) (result []*model.User) {
 	return
 }
 
-//ColumnSearch
+// ColumnSearch
 //
 //select * from @@table where @@name in @names
 func (u userDo) ColumnSearch(name string, names []string) (result []*model.User) {

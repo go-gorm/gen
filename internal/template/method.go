@@ -3,7 +3,7 @@ package template
 // DIYMethod DIY method
 const DIYMethod = `
 
-//{{.DocComment }}
+// {{.DocComment }}
 func ({{.S}} {{.TargetStruct}}Do){{.FuncSign}}{
 	{{if .HasSQLData}}var params []interface{}
 
