@@ -12,12 +12,17 @@ func ({{.S}} {{.TargetStruct}}Do){{.FuncSign}}{
 	{{end}}
 
 	{{if .HasNeedNewResult}}result ={{if .ResultData.IsMap}}make{{else}}new{{end}}({{if ne .ResultData.Package ""}}{{.ResultData.Package}}.{{end}}{{.ResultData.Type}}){{end}}
-	{{if or .ReturnRowsAffected .ReturnError}}var executeSQL *gorm.DB
-	{{end}}
-	{{if or .ReturnRowsAffected .ReturnError}}executeSQL{{else}}_{{end}} = {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL.String(){{if .HasSQLData}},params...{{end}}){{if not .ResultData.IsNull}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}
+	{{if .ReturnSqlResult}}stmt := {{.S}}.UnderlyingDB().Statement
+	result,{{if .ReturnError}}err{{else}}_{{end}} = stmt.ConnPool.ExecContext(stmt.Context,generateSQL.String(){{if .HasSQLData}},params...{{end}}) // ignore_security_alert
+	{{else if .ReturnSqlRow}}row = {{.S}}.UnderlyingDB().Raw(generateSQL.String(){{if .HasSQLData}},params...{{end}}).Row() // ignore_security_alert
+	{{else if .ReturnSqlRows}}rows,{{if .ReturnError}}err{{else}}_{{end}} = {{.S}}.UnderlyingDB().Raw(generateSQL.String(){{if .HasSQLData}},params...{{end}}).Rows() // ignore_security_alert
+	{{else}}var executeSQL *gorm.DB
+	executeSQL = {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL.String(){{if .HasSQLData}},params...{{end}}){{if not .ResultData.IsNull}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}  // ignore_security_alert
 	{{if .ReturnRowsAffected}}rowsAffected = executeSQL.RowsAffected
 	{{end}}{{if .ReturnError}}err = executeSQL.Error
-	{{end}}return
+	{{end}}{{if .ReturnNothing}}_ = executeSQL
+	{{end}}{{end}}
+	return
 }
 
 `

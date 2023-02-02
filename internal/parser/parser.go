@@ -181,6 +181,21 @@ func (p *Param) IsTime() bool {
 	return p.Package == "time" && p.Type == "Time"
 }
 
+// IsSqlResult ...
+func (p *Param) IsSqlResult() bool {
+	return (p.Package == "sql" && p.Type == "Result") || (p.Package == "gen" && p.Type == "SqlResult")
+}
+
+// IsSqlRow ...
+func (p *Param) IsSqlRow() bool {
+	return (p.Package == "sql" && p.Type == "Row") || (p.Package == "gen" && p.Type == "SqlRow")
+}
+
+// IsSqlRows ...
+func (p *Param) IsSqlRows() bool {
+	return (p.Package == "sql" && p.Type == "Rows") || (p.Package == "gen" && p.Type == "SqlRows")
+}
+
 // SetName ...
 func (p *Param) SetName(name string) {
 	p.Name = name

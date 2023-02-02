@@ -3,6 +3,7 @@ package gen
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -32,6 +33,15 @@ type T interface{}
 
 // M map[string]interface{}
 type M map[string]interface{}
+
+// SqlResult sql.result
+type SqlResult sql.Result
+
+// SqlRow sql.Row
+type SqlRow sql.Row
+
+// SqlRows sql.Rows
+type SqlRows sql.Rows
 
 // RowsAffected execute affected raws
 type RowsAffected int64

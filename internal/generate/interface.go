@@ -57,6 +57,46 @@ func (m *InterfaceMethod) GormRunMethodName() string {
 	return "Take"
 }
 
+// ReturnSqlResult return sql result
+func (m *InterfaceMethod) ReturnSqlResult() bool {
+	for _, res := range m.Result {
+		if res.IsSqlResult() {
+			return true
+		}
+	}
+	return false
+}
+
+// ReturnSqlRow return sql result
+func (m *InterfaceMethod) ReturnSqlRow() bool {
+	for _, res := range m.Result {
+		if res.IsSqlRow() {
+			return true
+		}
+	}
+	return false
+}
+
+// ReturnSqlRows return sql result
+func (m *InterfaceMethod) ReturnSqlRows() bool {
+	for _, res := range m.Result {
+		if res.IsSqlRows() {
+			return true
+		}
+	}
+	return false
+}
+
+// ReturnNothing not return error and rowAffected
+func (m *InterfaceMethod) ReturnNothing() bool {
+	for _, res := range m.Result {
+		if res.IsError() || res.Name == "rowsAffected" {
+			return false
+		}
+	}
+	return true
+}
+
 // ReturnRowsAffected return rows affected
 func (m *InterfaceMethod) ReturnRowsAffected() bool {
 	for _, res := range m.Result {
@@ -196,6 +236,23 @@ func (m *InterfaceMethod) checkResult(result []parser.Param) (err error) {
 			param.Package = ""
 			param.SetName("rowsAffected")
 			m.GormOption = "Exec"
+		case param.IsSqlResult():
+			param.Type = "Result"
+			param.Package = "sql"
+			param.SetName("result")
+			m.GormOption = "Statement.ConnPool.ExecContext"
+		case param.IsSqlRow():
+			param.Type = "Row"
+			param.Package = "sql"
+			param.SetName("row")
+			m.GormOption = "Raw"
+			param.IsPointer = true
+		case param.IsSqlRows():
+			param.Type = "Rows"
+			param.Package = "sql"
+			param.SetName("rows")
+			m.GormOption = "Raw"
+			param.IsPointer = true
 		default:
 			if !m.ResultData.IsNull() {
 				return fmt.Errorf("query method cannot return more than 1 data value in [%s.%s]", m.InterfaceName, m.MethodName)
