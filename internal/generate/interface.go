@@ -153,7 +153,7 @@ func paramToString(params []parser.Param) string {
 
 // DocComment return comment sql add "//" every line
 func (m *InterfaceMethod) DocComment() string {
-	return strings.Replace(strings.TrimSpace(m.Doc), "\n", "\n//", -1)
+	return strings.Replace(strings.TrimSpace(m.Doc), "\n", "\n// ", -1)
 }
 
 // checkParams check all parameters

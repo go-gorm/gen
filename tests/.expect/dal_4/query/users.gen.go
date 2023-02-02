@@ -225,12 +225,12 @@ type IUserDo interface {
 
 // FindByUsers
 //
-//select * from @@table
-//	{{where}}
-//		{{if user.Name !=""}}
-//			name=@user.Name
-//		{{end}}
-//	{{end}}
+// select * from @@table
+// 	{{where}}
+// 		{{if user.Name !=""}}
+// 			name=@user.Name
+// 		{{end}}
+// 	{{end}}
 func (u userDo) FindByUsers(user model.User) (result []model.User) {
 	var params []interface{}
 
@@ -252,12 +252,12 @@ func (u userDo) FindByUsers(user model.User) (result []model.User) {
 
 // FindByComplexIf
 //
-//select * from @@table
-//	{{where}}
-//		{{if user != nil && user.Name !=""}}
-//			name=@user.Name
-//		{{end}}
-//	{{end}}
+// select * from @@table
+// 	{{where}}
+// 		{{if user != nil && user.Name !=""}}
+// 			name=@user.Name
+// 		{{end}}
+// 	{{end}}
 func (u userDo) FindByComplexIf(user *model.User) (result []model.User) {
 	var params []interface{}
 
@@ -279,10 +279,10 @@ func (u userDo) FindByComplexIf(user *model.User) (result []model.User) {
 
 // FindByIfTime
 //
-//select * from @@table
-//	{{if !start.IsZero()}}
-//		created_at > start
-//{{end}}
+// select * from @@table
+// 	{{if !start.IsZero()}}
+// 		created_at > start
+// {{end}}
 func (u userDo) FindByIfTime(start time.Time) (result []model.User) {
 	var generateSQL strings.Builder
 	generateSQL.WriteString("select * from users ")
@@ -299,11 +299,11 @@ func (u userDo) FindByIfTime(start time.Time) (result []model.User) {
 
 // TestFor
 //
-//select * from @@table where
-//	{{for _,name:=range names}}
-//		name = @name and
-//{{end}}
-//1=1
+// select * from @@table where
+// 	{{for _,name:=range names}}
+// 		name = @name and
+// {{end}}
+// 1=1
 func (u userDo) TestFor(names []string) (result model.User, err error) {
 	var params []interface{}
 
@@ -324,11 +324,11 @@ func (u userDo) TestFor(names []string) (result model.User, err error) {
 
 // TestForKey
 //
-//select * from @@table where
-//	{{for _,name:=range names}}
-//		or @@name = @value
-//{{end}}
-//and 1=1
+// select * from @@table where
+// 	{{for _,name:=range names}}
+// 		or @@name = @value
+// {{end}}
+// and 1=1
 func (u userDo) TestForKey(names []string, name string, value string) (result model.User, err error) {
 	var params []interface{}
 
@@ -349,14 +349,14 @@ func (u userDo) TestForKey(names []string, name string, value string) (result mo
 
 // TestForOr
 //
-//select * from @@table
-//{{where}}
-//(
-//	{{for _,name:=range names}}
-//		name = @name or
-//{{end}}
-//{{end}}
-//)
+// select * from @@table
+// {{where}}
+// (
+// 	{{for _,name:=range names}}
+// 		name = @name or
+// {{end}}
+// {{end}}
+// )
 func (u userDo) TestForOr(names []string) (result model.User, err error) {
 	var params []interface{}
 
@@ -380,13 +380,13 @@ func (u userDo) TestForOr(names []string) (result model.User, err error) {
 
 // TestIfInFor
 //
-//select * from @@table where
-//	{{for _,name:=range names}}
-//		{{if name !=""}}
-//			name = @name or
-//		{{end}}
-//{{end}}
-//1=2
+// select * from @@table where
+// 	{{for _,name:=range names}}
+// 		{{if name !=""}}
+// 			name = @name or
+// 		{{end}}
+// {{end}}
+// 1=2
 func (u userDo) TestIfInFor(names []string, name string) (result model.User, err error) {
 	var params []interface{}
 
@@ -409,13 +409,13 @@ func (u userDo) TestIfInFor(names []string, name string) (result model.User, err
 
 // TestForInIf
 //
-//select * from @@table where
-//	{{if name !="" }}
-//		{{for _,forName:=range names}}
-//			name = @forName or
-//		{{end}}
-//{{end}}
-//1=2
+// select * from @@table where
+// 	{{if name !="" }}
+// 		{{for _,forName:=range names}}
+// 			name = @forName or
+// 		{{end}}
+// {{end}}
+// 1=2
 func (u userDo) TestForInIf(names []string, name string) (result model.User, err error) {
 	var params []interface{}
 
@@ -438,12 +438,12 @@ func (u userDo) TestForInIf(names []string, name string) (result model.User, err
 
 // TestForInWhere
 //
-//select * from @@table
-//	{{where}}
-//		{{for _,forName:=range names}}
-//			or name = @forName
-//		{{end}}
-//{{end}}
+// select * from @@table
+// 	{{where}}
+// 		{{for _,forName:=range names}}
+// 			or name = @forName
+// 		{{end}}
+// {{end}}
 func (u userDo) TestForInWhere(names []string, name string, forName string) (result model.User, err error) {
 	var params []interface{}
 
@@ -465,12 +465,12 @@ func (u userDo) TestForInWhere(names []string, name string, forName string) (res
 
 // TestForUserList
 //
-//select * from users
-//{{where}}
-//	{{for _,user :=range users}}
-//		name=@user.Name
-//	{{end}}
-//{{end}}
+// select * from users
+// {{where}}
+// 	{{for _,user :=range users}}
+// 		name=@user.Name
+// 	{{end}}
+// {{end}}
 func (u userDo) TestForUserList(users []*model.User, name string) (result model.User, err error) {
 	var params []interface{}
 
@@ -492,12 +492,12 @@ func (u userDo) TestForUserList(users []*model.User, name string) (result model.
 
 // TestForMap
 //
-//select * from users
-//{{where}}
-//	{{for key,value :=range param}}
-//		@@key=@value
-//	{{end}}
-//{{end}}
+// select * from users
+// {{where}}
+// 	{{for key,value :=range param}}
+// 		@@key=@value
+// 	{{end}}
+// {{end}}
 func (u userDo) TestForMap(param map[string]string, name string) (result model.User, err error) {
 	var params []interface{}
 
@@ -519,14 +519,14 @@ func (u userDo) TestForMap(param map[string]string, name string) (result model.U
 
 // TestIfInIf
 //
-//select * from users
-//{{where}}
-// {{if name !="xx"}}
-//		{{if name !="xx"}}
-//			name=@name
-//		{{end}}
-//{{end}}
-//{{end}}
+// select * from users
+// {{where}}
+//  {{if name !="xx"}}
+// 		{{if name !="xx"}}
+// 			name=@name
+// 		{{end}}
+// {{end}}
+// {{end}}
 func (u userDo) TestIfInIf(name string) (result model.User) {
 	var params []interface{}
 
@@ -550,15 +550,15 @@ func (u userDo) TestIfInIf(name string) (result model.User) {
 
 // TestMoreFor
 //
-//select * from @@table
-//	{{where}}
-//		{{for _,name := range names}}
-//			and name=@name
-//		{{end}}
-//		{{for _,id:=range ids}}
-//			and id=@id
-//		{{end}}
-//{{end}}
+// select * from @@table
+// 	{{where}}
+// 		{{for _,name := range names}}
+// 			and name=@name
+// 		{{end}}
+// 		{{for _,id:=range ids}}
+// 			and id=@id
+// 		{{end}}
+// {{end}}
 func (u userDo) TestMoreFor(names []string, ids []int) (result []model.User) {
 	var params []interface{}
 
@@ -584,16 +584,16 @@ func (u userDo) TestMoreFor(names []string, ids []int) (result []model.User) {
 
 // TestMoreFor2
 //
-//select * from @@table
-//	{{where}}
-//		{{for _,name := range names}}
-//			OR (name=@name
-//			{{for _,id:=range ids}}
-//				and id=@id
-//			{{end}}
-//			 and title !=@name)
-//		{{end}}
-//{{end}}
+// select * from @@table
+// 	{{where}}
+// 		{{for _,name := range names}}
+// 			OR (name=@name
+// 			{{for _,id:=range ids}}
+// 				and id=@id
+// 			{{end}}
+// 			 and title !=@name)
+// 		{{end}}
+// {{end}}
 func (u userDo) TestMoreFor2(names []string, ids []int) (result []model.User) {
 	var params []interface{}
 
@@ -621,12 +621,12 @@ func (u userDo) TestMoreFor2(names []string, ids []int) (result []model.User) {
 
 // TestForInSet
 //
-//update @@table
-//	{{set}}
-//		{{for _,user:=range users}}
-//			name=@user.Name,
-//		{{end}}
-//{{end}} where
+// update @@table
+// 	{{set}}
+// 		{{for _,user:=range users}}
+// 			name=@user.Name,
+// 		{{end}}
+// {{end}} where
 func (u userDo) TestForInSet(users []model.User) (err error) {
 	var params []interface{}
 
@@ -649,13 +649,13 @@ func (u userDo) TestForInSet(users []model.User) (err error) {
 
 // TestInsertMoreInfo
 //
-//insert into @@table(name,age)values
-//		{{for index ,user:=range users}}
-//			{{if index >0}}
-//				,
-//			{{end}}
-//			(@user.Name,@user.Age)
-//		{{end}}
+// insert into @@table(name,age)values
+// 		{{for index ,user:=range users}}
+// 			{{if index >0}}
+// 				,
+// 			{{end}}
+// 			(@user.Name,@user.Age)
+// 		{{end}}
 func (u userDo) TestInsertMoreInfo(users []model.User) (err error) {
 	var params []interface{}
 
@@ -679,31 +679,31 @@ func (u userDo) TestInsertMoreInfo(users []model.User) (err error) {
 
 // TestIfElseFor
 //
-//select * from @@table
-//{{where}}
-//	{{if name =="admin"}}
-//		(
-//		{{for index,user:=range users}}
-//			{{if index !=0}}
-//				and
-//			{{end}}
-//			name like @user.Name
-//		{{end}}
-//		)
-//	{{else if name !="guest"}}
-//		{{for index,guser:=range users}}
-//			{{if index ==0}}
-//				(
-//			{{else}}
-//				and
-//			{{end}}
-//			name = @guser.Name
-//		{{end}}
-//		)
-//	{{else}}
-//		name ="guest"
-//	{{end}}
-//{{end}}
+// select * from @@table
+// {{where}}
+// 	{{if name =="admin"}}
+// 		(
+// 		{{for index,user:=range users}}
+// 			{{if index !=0}}
+// 				and
+// 			{{end}}
+// 			name like @user.Name
+// 		{{end}}
+// 		)
+// 	{{else if name !="guest"}}
+// 		{{for index,guser:=range users}}
+// 			{{if index ==0}}
+// 				(
+// 			{{else}}
+// 				and
+// 			{{end}}
+// 			name = @guser.Name
+// 		{{end}}
+// 		)
+// 	{{else}}
+// 		name ="guest"
+// 	{{end}}
+// {{end}}
 func (u userDo) TestIfElseFor(name string, users []model.User) (err error) {
 	var params []interface{}
 
@@ -745,12 +745,12 @@ func (u userDo) TestIfElseFor(name string, users []model.User) (err error) {
 
 // TestForLike
 //
-//select * from @@table
-//{{where}}
-//	{{for _,name:=range names}}
-//		name like concat("%",@name,"%") or
-//	{{end}}
-//{{end}}
+// select * from @@table
+// {{where}}
+// 	{{for _,name:=range names}}
+// 		name like concat("%",@name,"%") or
+// 	{{end}}
+// {{end}}
 func (u userDo) TestForLike(names []string) (result []model.User) {
 	var params []interface{}
 
@@ -772,7 +772,7 @@ func (u userDo) TestForLike(names []string) (result []model.User) {
 
 // AddUser
 //
-//INSERT INTO users (name,age) VALUES (@name,@age) ON DUPLICATE KEY UPDATE age=VALUES(age)
+// INSERT INTO users (name,age) VALUES (@name,@age) ON DUPLICATE KEY UPDATE age=VALUES(age)
 func (u userDo) AddUser(name string, age int) (result sql.Result, err error) {
 	var params []interface{}
 
@@ -789,7 +789,7 @@ func (u userDo) AddUser(name string, age int) (result sql.Result, err error) {
 
 // AddUser1
 //
-//INSERT INTO users (name,age) VALUES (@name,@age) ON DUPLICATE KEY UPDATE age=VALUES(age)
+// INSERT INTO users (name,age) VALUES (@name,@age) ON DUPLICATE KEY UPDATE age=VALUES(age)
 func (u userDo) AddUser1(name string, age int) (rowsAffected int64, err error) {
 	var params []interface{}
 
@@ -808,7 +808,7 @@ func (u userDo) AddUser1(name string, age int) (rowsAffected int64, err error) {
 
 // AddUser2
 //
-//INSERT INTO users (name,age) VALUES (@name,@age) ON DUPLICATE KEY UPDATE age=VALUES(age)
+// INSERT INTO users (name,age) VALUES (@name,@age) ON DUPLICATE KEY UPDATE age=VALUES(age)
 func (u userDo) AddUser2(name string, age int) (rowsAffected int64) {
 	var params []interface{}
 
@@ -826,7 +826,7 @@ func (u userDo) AddUser2(name string, age int) (rowsAffected int64) {
 
 // AddUser3
 //
-//INSERT INTO users (name,age) VALUES (@name,@age) ON DUPLICATE KEY UPDATE age=VALUES(age)
+// INSERT INTO users (name,age) VALUES (@name,@age) ON DUPLICATE KEY UPDATE age=VALUES(age)
 func (u userDo) AddUser3(name string, age int) (result sql.Result) {
 	var params []interface{}
 
@@ -843,7 +843,7 @@ func (u userDo) AddUser3(name string, age int) (result sql.Result) {
 
 // AddUser4
 //
-//INSERT INTO users (name,age) VALUES (@name,@age) ON DUPLICATE KEY UPDATE age=VALUES(age)
+// INSERT INTO users (name,age) VALUES (@name,@age) ON DUPLICATE KEY UPDATE age=VALUES(age)
 func (u userDo) AddUser4(name string, age int) (row *sql.Row) {
 	var params []interface{}
 
@@ -859,7 +859,7 @@ func (u userDo) AddUser4(name string, age int) (row *sql.Row) {
 
 // AddUser5
 //
-//INSERT INTO users (name,age) VALUES (@name,@age) ON DUPLICATE KEY UPDATE age=VALUES(age)
+// INSERT INTO users (name,age) VALUES (@name,@age) ON DUPLICATE KEY UPDATE age=VALUES(age)
 func (u userDo) AddUser5(name string, age int) (rows *sql.Rows) {
 	var params []interface{}
 
@@ -875,7 +875,7 @@ func (u userDo) AddUser5(name string, age int) (rows *sql.Rows) {
 
 // AddUser6
 //
-//INSERT INTO users (name,age) VALUES (@name,@age) ON DUPLICATE KEY UPDATE age=VALUES(age)
+// INSERT INTO users (name,age) VALUES (@name,@age) ON DUPLICATE KEY UPDATE age=VALUES(age)
 func (u userDo) AddUser6(name string, age int) (rows *sql.Rows, err error) {
 	var params []interface{}
 
@@ -891,7 +891,7 @@ func (u userDo) AddUser6(name string, age int) (rows *sql.Rows, err error) {
 
 // FindByID
 //
-//select * from users where id=@id
+// select * from users where id=@id
 func (u userDo) FindByID(id int) (result model.User) {
 	var params []interface{}
 
@@ -908,7 +908,7 @@ func (u userDo) FindByID(id int) (result model.User) {
 
 // LikeSearch
 //
-//SELECT * FROM @@table where name LIKE concat('%',@name,'%')
+// SELECT * FROM @@table where name LIKE concat('%',@name,'%')
 func (u userDo) LikeSearch(name string) (result *model.User) {
 	var params []interface{}
 
@@ -925,7 +925,7 @@ func (u userDo) LikeSearch(name string) (result *model.User) {
 
 // InSearch
 //
-//select * from @@table where name in @names
+// select * from @@table where name in @names
 func (u userDo) InSearch(names []string) (result []*model.User) {
 	var params []interface{}
 
@@ -942,7 +942,7 @@ func (u userDo) InSearch(names []string) (result []*model.User) {
 
 // ColumnSearch
 //
-//select * from @@table where @@name in @names
+// select * from @@table where @@name in @names
 func (u userDo) ColumnSearch(name string, names []string) (result []*model.User) {
 	var params []interface{}
 

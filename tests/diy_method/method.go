@@ -104,7 +104,7 @@ type TrimTest interface {
 type TestIF interface {
 	// FindByUsers
 	//
-	//select * from @@table
+	// select * from @@table
 	//	{{where}}
 	//		{{if user.Name !=""}}
 	//			name=@user.Name
@@ -114,7 +114,7 @@ type TestIF interface {
 
 	// FindByComplexIf
 	//
-	//select * from @@table
+	// select * from @@table
 	//	{{where}}
 	//		{{if user != nil && user.Name !=""}}
 	//			name=@user.Name
@@ -137,29 +137,29 @@ type TestFor interface {
 	// select * from @@table where
 	//	{{for _,name:=range names}}
 	//		name = @name and
-	//{{end}}
-	//1=1
+	// {{end}}
+	// 1=1
 	TestFor(names []string) (gen.T, error)
 
 	// TestForKey
 	//
-	//select * from @@table where
+	// select * from @@table where
 	//	{{for _,name:=range names}}
 	//		or @@name = @value
-	//{{end}}
-	//and 1=1
+	// {{end}}
+	// and 1=1
 	TestForKey(names []string, name, value string) (gen.T, error)
 
 	// TestForOr
 	//
-	//select * from @@table
-	//{{where}}
-	//(
+	// select * from @@table
+	// {{where}}
+	// (
 	//	{{for _,name:=range names}}
 	//		name = @name or
-	//{{end}}
-	//{{end}}
-	//)
+	// {{end}}
+	// {{end}}
+	// )
 	TestForOr(names []string) (gen.T, error)
 
 	// TestIfInFor
@@ -169,8 +169,8 @@ type TestFor interface {
 	//		{{if name !=""}}
 	//			name = @name or
 	//		{{end}}
-	//{{end}}
-	//1=2
+	// {{end}}
+	// 1=2
 	TestIfInFor(names []string, name string) (gen.T, error)
 
 	// TestForInIf
@@ -180,50 +180,50 @@ type TestFor interface {
 	//		{{for _,forName:=range names}}
 	//			name = @forName or
 	//		{{end}}
-	//{{end}}
-	//1=2
+	// {{end}}
+	// 1=2
 	TestForInIf(names []string, name string) (gen.T, error)
 
-	//TestForInWhere
+	// TestForInWhere
 	//
 	// select * from @@table
 	//	{{where}}
 	//		{{for _,forName:=range names}}
 	//			or name = @forName
 	//		{{end}}
-	//{{end}}
+	// {{end}}
 	TestForInWhere(names []string, name, forName string) (gen.T, error)
 
 	// TestForUserList
 	//
-	//select * from users
-	//{{where}}
+	// select * from users
+	// {{where}}
 	//	{{for _,user :=range users}}
 	//		name=@user.Name
 	//	{{end}}
-	//{{end}}
+	// {{end}}
 	TestForUserList(users []*gen.T, name string) (gen.T, error)
 
 	// TestForMap
 	//
-	//select * from users
-	//{{where}}
+	// select * from users
+	// {{where}}
 	//	{{for key,value :=range param}}
 	//		@@key=@value
 	//	{{end}}
-	//{{end}}
+	// {{end}}
 	TestForMap(param map[string]string, name string) (gen.T, error)
 
 	// TestIfInIf
 	//
-	//select * from users
-	//{{where}}
+	// select * from users
+	// {{where}}
 	//  {{if name !="xx"}}
 	//		{{if name !="xx"}}
 	//			name=@name
 	//		{{end}}
 	// {{end}}
-	//{{end}}
+	// {{end}}
 	TestIfInIf(name string) gen.T
 
 	// TestMoreFor
@@ -236,7 +236,7 @@ type TestFor interface {
 	//		{{for _,id:=range ids}}
 	//			and id=@id
 	//		{{end}}
-	//{{end}}
+	// {{end}}
 	TestMoreFor(names []string, ids []int) []gen.T
 
 	// TestMoreFor2
@@ -250,7 +250,7 @@ type TestFor interface {
 	//			{{end}}
 	//			 and title !=@name)
 	//		{{end}}
-	//{{end}}
+	// {{end}}
 	TestMoreFor2(names []string, ids []int) []gen.T
 
 	// TestForInSet
@@ -260,7 +260,7 @@ type TestFor interface {
 	//		{{for _,user:=range users}}
 	//			name=@user.Name,
 	//		{{end}}
-	//{{end}} where
+	// {{end}} where
 	TestForInSet(users []gen.T) error
 
 	// TestInsertMoreInfo
@@ -276,8 +276,8 @@ type TestFor interface {
 
 	// TestIfElseFor
 	//
-	//select * from @@table
-	//{{where}}
+	// select * from @@table
+	// {{where}}
 	//	{{if name =="admin"}}
 	//		(
 	//		{{for index,user:=range users}}
@@ -300,16 +300,16 @@ type TestFor interface {
 	//	{{else}}
 	//		name ="guest"
 	//	{{end}}
-	//{{end}}
+	// {{end}}
 	TestIfElseFor(name string, users []gen.T) error
 
 	// TestForLike
 	//
-	//select * from @@table
-	//{{where}}
+	// select * from @@table
+	// {{where}}
 	//	{{for _,name:=range names}}
 	//		name like concat("%",@name,"%") or
 	//	{{end}}
-	//{{end}}
+	// {{end}}
 	TestForLike(names []string) []gen.T
 }
