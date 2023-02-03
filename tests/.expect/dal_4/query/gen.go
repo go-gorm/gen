@@ -20,6 +20,7 @@ var (
 	Bank       *bank
 	CreditCard *creditCard
 	Customer   *customer
+	Event      *event
 	Person     *person
 	User       *user
 )
@@ -29,6 +30,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	Bank = &Q.Bank
 	CreditCard = &Q.CreditCard
 	Customer = &Q.Customer
+	Event = &Q.Event
 	Person = &Q.Person
 	User = &Q.User
 }
@@ -39,6 +41,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		Bank:       newBank(db, opts...),
 		CreditCard: newCreditCard(db, opts...),
 		Customer:   newCustomer(db, opts...),
+		Event:      newEvent(db, opts...),
 		Person:     newPerson(db, opts...),
 		User:       newUser(db, opts...),
 	}
@@ -50,6 +53,7 @@ type Query struct {
 	Bank       bank
 	CreditCard creditCard
 	Customer   customer
+	Event      event
 	Person     person
 	User       user
 }
@@ -62,6 +66,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		Bank:       q.Bank.clone(db),
 		CreditCard: q.CreditCard.clone(db),
 		Customer:   q.Customer.clone(db),
+		Event:      q.Event.clone(db),
 		Person:     q.Person.clone(db),
 		User:       q.User.clone(db),
 	}
@@ -81,6 +86,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		Bank:       q.Bank.replaceDB(db),
 		CreditCard: q.CreditCard.replaceDB(db),
 		Customer:   q.Customer.replaceDB(db),
+		Event:      q.Event.replaceDB(db),
 		Person:     q.Person.replaceDB(db),
 		User:       q.User.replaceDB(db),
 	}
@@ -90,6 +96,7 @@ type queryCtx struct {
 	Bank       IBankDo
 	CreditCard ICreditCardDo
 	Customer   ICustomerDo
+	Event      IEventDo
 	Person     IPersonDo
 	User       IUserDo
 }
@@ -99,6 +106,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		Bank:       q.Bank.WithContext(ctx),
 		CreditCard: q.CreditCard.WithContext(ctx),
 		Customer:   q.Customer.WithContext(ctx),
+		Event:      q.Event.WithContext(ctx),
 		Person:     q.Person.WithContext(ctx),
 		User:       q.User.WithContext(ctx),
 	}

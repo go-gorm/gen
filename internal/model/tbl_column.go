@@ -115,7 +115,7 @@ func (c *Column) buildGormTag() string {
 		}
 	}
 
-	if dtValue := c.defaultTagValue(); !isValidPriKey && c.needDefaultTag(dtValue) { // cannot set default tag for primary key
+	if dtValue := c.defaultTagValue(); c.needDefaultTag(dtValue) {
 		buf.WriteString(fmt.Sprintf(`;default:%s`, dtValue))
 	}
 	return buf.String()

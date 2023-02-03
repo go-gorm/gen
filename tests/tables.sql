@@ -87,6 +87,12 @@ CREATE TABLE `users` (
   KEY `idx_name` (`name`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+DROP TABLE IF EXISTS `events`;
+CREATE TABLE `events` (
+  `id` char(36) DEFAULT (UUID()),
+  `payload` text,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
