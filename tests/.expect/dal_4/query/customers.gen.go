@@ -171,12 +171,17 @@ type ICustomerDo interface {
 	schema.Tabler
 }
 
-func (c customerDo) Debug() ICustomerDo {
-	return c.withDO(c.DO.Debug())
-}
-
 func (c customerDo) WithContext(ctx context.Context) ICustomerDo {
 	return c.withDO(c.DO.WithContext(ctx))
+}
+
+func (c *customerDo) withDO(do gen.Dao) *customerDo {
+	c.DO = *do.(*gen.DO)
+	return c
+}
+
+func (c customerDo) Debug() ICustomerDo {
+	return c.withDO(c.DO.Debug())
 }
 
 func (c customerDo) ReadDB() ICustomerDo {
@@ -398,9 +403,4 @@ func (c customerDo) Scan(result interface{}) (err error) {
 
 func (c customerDo) Delete(models ...*model.Customer) (result gen.ResultInfo, err error) {
 	return c.DO.Delete(models)
-}
-
-func (c *customerDo) withDO(do gen.Dao) *customerDo {
-	c.DO = *do.(*gen.DO)
-	return c
 }

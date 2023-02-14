@@ -110,12 +110,17 @@ func (c customer) replaceDB(db *gorm.DB) customer {
 
 type customerDo struct{ gen.DO }
 
-func (c customerDo) Debug() *customerDo {
-	return c.withDO(c.DO.Debug())
-}
-
 func (c customerDo) WithContext(ctx context.Context) *customerDo {
 	return c.withDO(c.DO.WithContext(ctx))
+}
+
+func (c *customerDo) withDO(do gen.Dao) *customerDo {
+	c.DO = *do.(*gen.DO)
+	return c
+}
+
+func (c customerDo) Debug() *customerDo {
+	return c.withDO(c.DO.Debug())
 }
 
 func (c customerDo) ReadDB() *customerDo {
@@ -337,9 +342,4 @@ func (c customerDo) Scan(result interface{}) (err error) {
 
 func (c customerDo) Delete(models ...*model.Customer) (result gen.ResultInfo, err error) {
 	return c.DO.Delete(models)
-}
-
-func (c *customerDo) withDO(do gen.Dao) *customerDo {
-	c.DO = *do.(*gen.DO)
-	return c
 }

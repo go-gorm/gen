@@ -29,12 +29,17 @@ func ({{.S}} {{.TargetStruct}}Do){{.FuncSign}}{
 
 // CRUDMethod CRUD method
 const CRUDMethod = `
-func ({{.S}} {{.QueryStructName}}Do) Debug() {{.ReturnObject}} {
-	return {{.S}}.withDO({{.S}}.DO.Debug())
-}
-
 func ({{.S}} {{.QueryStructName}}Do) WithContext(ctx context.Context) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.WithContext(ctx))
+}
+
+func ({{.S}} *{{.QueryStructName}}Do) withDO(do gen.Dao) (*{{.QueryStructName}}Do) {
+	{{.S}}.DO = *do.(*gen.DO)
+	return {{.S}}
+}
+{{if not .WithoutCRUDMethods}}
+func ({{.S}} {{.QueryStructName}}Do) Debug() {{.ReturnObject}} {
+	return {{.S}}.withDO({{.S}}.DO.Debug())
 }
 
 func ({{.S}} {{.QueryStructName}}Do) ReadDB() {{.ReturnObject}} {
@@ -257,12 +262,7 @@ func ({{.S}} {{.QueryStructName}}Do) Scan(result interface{}) (err error) {
 func ({{.S}} {{.QueryStructName}}Do) Delete(models ...*{{.StructInfo.Package}}.{{.StructInfo.Type}}) (result gen.ResultInfo, err error) {
 	return {{.S}}.DO.Delete(models)
 }
-
-func ({{.S}} *{{.QueryStructName}}Do) withDO(do gen.Dao) (*{{.QueryStructName}}Do) {
-	{{.S}}.DO = *do.(*gen.DO)
-	return {{.S}}
-}
-
+{{end}}
 `
 
 // CRUDMethodTest CRUD method test

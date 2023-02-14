@@ -27,6 +27,8 @@ const (
 
 	// TableQueryIface table query interface
 	TableQueryIface = defineDoInterface
+
+	TableQueryIfaceWithoutCURDMethods = defineDoInterfaceWithoutCURDMethods
 )
 
 const (
@@ -137,6 +139,17 @@ func ({{.S}} *{{.QueryStructName}}) fillFieldMap() {
 		{{- if .ColumnName -}}{{$.S}}.fieldMap["{{.ColumnName}}"] = {{$.S}}.{{.Name}}{{- end -}}
 	{{end}}
 	{{end -}}
+}
+`
+
+	defineDoInterfaceWithoutCURDMethods = `
+
+type I{{.ModelStructName}}Do interface {
+	WithContext(ctx context.Context) I{{.ModelStructName}}Do
+
+	{{range .Interfaces -}}
+	{{.FuncSign}}
+	{{end}}
 }
 `
 

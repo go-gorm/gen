@@ -181,12 +181,17 @@ type ICreditCardDo interface {
 	schema.Tabler
 }
 
-func (c creditCardDo) Debug() ICreditCardDo {
-	return c.withDO(c.DO.Debug())
-}
-
 func (c creditCardDo) WithContext(ctx context.Context) ICreditCardDo {
 	return c.withDO(c.DO.WithContext(ctx))
+}
+
+func (c *creditCardDo) withDO(do gen.Dao) *creditCardDo {
+	c.DO = *do.(*gen.DO)
+	return c
+}
+
+func (c creditCardDo) Debug() ICreditCardDo {
+	return c.withDO(c.DO.Debug())
 }
 
 func (c creditCardDo) ReadDB() ICreditCardDo {
@@ -408,9 +413,4 @@ func (c creditCardDo) Scan(result interface{}) (err error) {
 
 func (c creditCardDo) Delete(models ...*model.CreditCard) (result gen.ResultInfo, err error) {
 	return c.DO.Delete(models)
-}
-
-func (c *creditCardDo) withDO(do gen.Dao) *creditCardDo {
-	c.DO = *do.(*gen.DO)
-	return c
 }

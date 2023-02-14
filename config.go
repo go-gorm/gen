@@ -23,6 +23,9 @@ const (
 
 	// WithQueryInterface generate code with exported interface object
 	WithQueryInterface
+
+	// WithoutCRUDMethods generate code without CRUD methods
+	WithoutCRUDMethods
 )
 
 // Config generator's basic configuration

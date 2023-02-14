@@ -167,12 +167,17 @@ type IBankDo interface {
 	schema.Tabler
 }
 
-func (b bankDo) Debug() IBankDo {
-	return b.withDO(b.DO.Debug())
-}
-
 func (b bankDo) WithContext(ctx context.Context) IBankDo {
 	return b.withDO(b.DO.WithContext(ctx))
+}
+
+func (b *bankDo) withDO(do gen.Dao) *bankDo {
+	b.DO = *do.(*gen.DO)
+	return b
+}
+
+func (b bankDo) Debug() IBankDo {
+	return b.withDO(b.DO.Debug())
 }
 
 func (b bankDo) ReadDB() IBankDo {
@@ -394,9 +399,4 @@ func (b bankDo) Scan(result interface{}) (err error) {
 
 func (b bankDo) Delete(models ...*model.Bank) (result gen.ResultInfo, err error) {
 	return b.DO.Delete(models)
-}
-
-func (b *bankDo) withDO(do gen.Dao) *bankDo {
-	b.DO = *do.(*gen.DO)
-	return b
 }

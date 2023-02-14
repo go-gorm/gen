@@ -235,12 +235,17 @@ type IPersonDo interface {
 	schema.Tabler
 }
 
-func (p personDo) Debug() IPersonDo {
-	return p.withDO(p.DO.Debug())
-}
-
 func (p personDo) WithContext(ctx context.Context) IPersonDo {
 	return p.withDO(p.DO.WithContext(ctx))
+}
+
+func (p *personDo) withDO(do gen.Dao) *personDo {
+	p.DO = *do.(*gen.DO)
+	return p
+}
+
+func (p personDo) Debug() IPersonDo {
+	return p.withDO(p.DO.Debug())
 }
 
 func (p personDo) ReadDB() IPersonDo {
@@ -462,9 +467,4 @@ func (p personDo) Scan(result interface{}) (err error) {
 
 func (p personDo) Delete(models ...*model.Person) (result gen.ResultInfo, err error) {
 	return p.DO.Delete(models)
-}
-
-func (p *personDo) withDO(do gen.Dao) *personDo {
-	p.DO = *do.(*gen.DO)
-	return p
 }

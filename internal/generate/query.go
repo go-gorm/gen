@@ -26,17 +26,18 @@ func (dummyFieldParser) GetFieldGenType(*schema.Field) string { return "" }
 type QueryStructMeta struct {
 	db *gorm.DB
 
-	Generated       bool   // whether to generate db model
-	FileName        string // generated file name
-	S               string // the first letter(lower case)of simple Name (receiver)
-	QueryStructName string // internal query struct name
-	ModelStructName string // origin/model struct name
-	TableName       string // table name in db server
-	StructInfo      parser.Param
-	Fields          []*model.Field
-	Source          model.SourceCode
-	ImportPkgPaths  []string
-	ModelMethods    []*parser.Method // user custom method bind to db base struct
+	Generated          bool   // whether to generate db model
+	FileName           string // generated file name
+	S                  string // the first letter(lower case)of simple Name (receiver)
+	QueryStructName    string // internal query struct name
+	ModelStructName    string // origin/model struct name
+	TableName          string // table name in db server
+	StructInfo         parser.Param
+	Fields             []*model.Field
+	Source             model.SourceCode
+	ImportPkgPaths     []string
+	ModelMethods       []*parser.Method // user custom method bind to db base struct
+	WithoutCRUDMethods bool
 
 	interfaceMode bool
 }
@@ -207,6 +208,11 @@ func (b *QueryStructMeta) addMethodFromAddMethodOpt(methods ...interface{}) *Que
 // IfaceMode object mode
 func (b QueryStructMeta) IfaceMode(on bool) *QueryStructMeta {
 	b.interfaceMode = on
+	return &b
+}
+
+func (b QueryStructMeta) WithoutCRUDMethodsMode(on bool) *QueryStructMeta {
+	b.WithoutCRUDMethods = on
 	return &b
 }
 
