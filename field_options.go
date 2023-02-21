@@ -147,6 +147,22 @@ var (
 			return m
 		}
 	}
+	// FieldLevelPermission specify GORM tag with level permission
+	// e.g. FieldLevelPermission("->", "created_at", "updated_at") will generate `gorm:"->;column:created_at"` and `gorm:"->;column:updated_at"`
+	FieldLevelPermission = func(level string, columnName ...string) model.ModifyFieldOpt {
+		return func(m *model.Field) *model.Field {
+			for _, name := range columnName {
+				if m.ColumnName == name {
+					if !strings.HasSuffix(level, ";") {
+						level += ";"
+					}
+
+					m.GORMTag = strings.ToLower(level) + m.GORMTag
+				}
+			}
+			return m
+		}
+	}
 	// FieldNewTag add new tag
 	FieldNewTag = func(columnName string, newTag string) model.ModifyFieldOpt {
 		return func(m *model.Field) *model.Field {
