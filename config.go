@@ -172,8 +172,7 @@ func (cfg *Config) formatFileName(t, fileName string) string {
 	defaultBehavior := cfg.notAddGenFileSuffix == nil || !cfg.notAddGenFileSuffix[t]
 
 	switch t {
-	case "model":
-	case "query":
+	case "model", "query":
 		if defaultBehavior {
 			s = ".gen.go"
 		}
