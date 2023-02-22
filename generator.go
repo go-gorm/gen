@@ -428,8 +428,10 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 		return err
 	}
 
-	defer g.info(fmt.Sprintf("generate query file: %s/%s.gen.go", g.OutPath, data.FileName))
-	return g.output(fmt.Sprintf("%s/%s.gen.go", g.OutPath, data.FileName), buf.Bytes())
+	filePath := fmt.Sprintf("%s/%s", g.OutPath, g.formatFileName("query", data.FileName))
+
+	defer g.info(fmt.Sprintf("generate query file: %s", filePath))
+	return g.output(filePath, buf.Bytes())
 }
 
 // generateQueryUnitTestFile generate unit test file for query
@@ -460,8 +462,10 @@ func (g *Generator) generateQueryUnitTestFile(data *genInfo) (err error) {
 		}
 	}
 
-	defer g.info(fmt.Sprintf("generate unit test file: %s/%s.gen_test.go", g.OutPath, data.FileName))
-	return g.output(fmt.Sprintf("%s/%s.gen_test.go", g.OutPath, data.FileName), buf.Bytes())
+	filePath := fmt.Sprintf("%s/%s", g.OutPath, g.formatFileName("test", data.FileName))
+
+	defer g.info(fmt.Sprintf("generate unit test file: %s", filePath))
+	return g.output(filePath, buf.Bytes())
 }
 
 // generateModelFile generate model structures and save to file
@@ -504,7 +508,7 @@ func (g *Generator) generateModelFile() error {
 				}
 			}
 
-			modelFile := modelOutPath + data.FileName + ".gen.go"
+			modelFile := modelOutPath + g.formatFileName("model", data.FileName)
 			err = g.output(modelFile, buf.Bytes())
 			if err != nil {
 				errChan <- err

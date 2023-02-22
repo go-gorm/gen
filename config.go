@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"golang.org/x/exp/slices"
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils/tests"
 
@@ -56,6 +57,8 @@ type Config struct {
 	dataTypeMap    map[string]func(detailType string) (dataType string)
 	fieldJSONTagNS func(columnName string) (tagContent string)
 	fieldNewTagNS  func(columnName string) (tagContent string)
+
+	notAddGenFileSuffix map[string]bool
 
 	modelOpts []ModelOpt
 }
@@ -148,3 +151,43 @@ func (cfg *Config) Revise() (err error) {
 }
 
 func (cfg *Config) judgeMode(mode GenerateMode) bool { return cfg.Mode&mode != 0 }
+
+// NotAddGenSuffix NotAddGenFileSuffix specify not add gen file suffix for model or query
+// default: add gen file suffix for model and query
+// @param t: model, query, test
+func (cfg *Config) NotAddGenSuffix(t ...string) {
+	if cfg.notAddGenFileSuffix == nil {
+		cfg.notAddGenFileSuffix = make(map[string]bool, 3)
+	}
+
+	if slices.Contains(t, "model") {
+		cfg.notAddGenFileSuffix["model"] = true
+	}
+
+	if slices.Contains(t, "query") {
+		cfg.notAddGenFileSuffix["query"] = true
+	}
+
+	if slices.Contains(t, "test") {
+		cfg.notAddGenFileSuffix["test"] = true
+	}
+}
+
+func (cfg *Config) formatFileName(t, fileName string) string {
+	var s = ".go"
+	defaultBehavior := cfg.notAddGenFileSuffix == nil || !cfg.notAddGenFileSuffix[t]
+
+	switch t {
+	case "model":
+	case "query":
+		if defaultBehavior {
+			s = ".gen.go"
+		}
+	case "test":
+		if defaultBehavior {
+			s = ".gen_test.go"
+		}
+	}
+
+	return fmt.Sprintf("%s%s", fileName, s)
+}
