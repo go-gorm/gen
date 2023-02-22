@@ -5,10 +5,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"golang.org/x/exp/slices"
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils/tests"
 
+	"gorm.io/gen/helper"
 	"gorm.io/gen/internal/model"
 )
 
@@ -160,16 +160,10 @@ func (cfg *Config) NotAddGenSuffix(t ...string) {
 		cfg.notAddGenFileSuffix = make(map[string]bool, 3)
 	}
 
-	if slices.Contains(t, "model") {
-		cfg.notAddGenFileSuffix["model"] = true
-	}
-
-	if slices.Contains(t, "query") {
-		cfg.notAddGenFileSuffix["query"] = true
-	}
-
-	if slices.Contains(t, "test") {
-		cfg.notAddGenFileSuffix["test"] = true
+	for _, val := range t {
+		if helper.ArrayContainsSome(t, "model", "query", "test") {
+			cfg.notAddGenFileSuffix[val] = true
+		}
 	}
 }
 
