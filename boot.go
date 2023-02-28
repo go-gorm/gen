@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"github.com/gogf/gf/v2/encoding/gyaml"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/util/gconv"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"gorm.io/gorm/schema"
 	"log"
 	"os"
 	"time"
@@ -51,7 +53,7 @@ const (
 )
 
 type Conf struct {
-	g             *Generator
+	*Generator    `yaml:"-"`
 	Reset         bool     `yaml:"reset"`         //是否重置数据库
 	DSN           string   `yaml:"dsn"`           // consult[https://gorm.io/docs/connecting_to_the_database.html]"
 	DB            string   `yaml:"db"`            // input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]
@@ -67,32 +69,44 @@ type Conf struct {
 	FieldSignable bool `yaml:"fieldSignable"` // detect integer field's unsigned type, adjust generated data type
 }
 
-func (r *Conf) Connect() (*gorm.DB, error) {
+func (r *Conf) Connect() (err error) {
 	if r.DSN == "" {
-		return nil, fmt.Errorf("dsn cannot be empty")
+		return fmt.Errorf("dsn cannot be empty")
 	}
 	switch r.DB {
 	case DbMySQL:
-		return gorm.Open(mysql.Open(r.DSN), &gorm.Config{Logger: newLogger})
+		if r.db, err = gorm.Open(mysql.Open(r.DSN), &gorm.Config{Logger: newLogger}); err != nil {
+			return
+		}
+		return nil
 	case DbPostgres:
-		return gorm.Open(postgres.Open(r.DSN), &gorm.Config{Logger: newLogger})
+		if r.db, err = gorm.Open(postgres.Open(r.DSN), &gorm.Config{Logger: newLogger}); err != nil {
+			return
+		}
+		return nil
 	case DbSQLite:
-		return gorm.Open(sqlite.Open(r.DSN), &gorm.Config{Logger: newLogger})
+		if r.db, err = gorm.Open(sqlite.Open(r.DSN), &gorm.Config{Logger: newLogger}); err != nil {
+			return
+		}
+		return nil
 	case DbSQLServer:
-		return gorm.Open(sqlserver.Open(r.DSN), &gorm.Config{Logger: newLogger})
+		if r.db, err = gorm.Open(sqlserver.Open(r.DSN), &gorm.Config{Logger: newLogger}); err != nil {
+			return
+		}
+		return nil
 	default:
-		return nil, fmt.Errorf("unknow db %q (support mysql || postgres || sqlite || sqlserver for now)", r.DB)
+		return fmt.Errorf("unknow db %q (support mysql || postgres || sqlite || sqlserver for now)", r.DB)
 	}
 }
 func (r *Conf) Delete() {
 	if r.Reset {
 		var (
 			err    error
-			db     = r.g.db
+			db     = r.db
 			tables = make([]string, 0)
 		)
 		if tables, err = db.Migrator().GetTables(); err == nil {
-			if err = db.Migrator().DropTable(tables); err != nil {
+			if err = db.Migrator().DropTable(gconv.SliceAny(tables)...); err != nil {
 				log.Println("删除失败", err)
 			}
 		}
@@ -101,32 +115,17 @@ func (r *Conf) Delete() {
 
 func (r *Conf) GenModels() (models []interface{}, err error) {
 	var (
-		g = NewGenerator(Config{
-			Mode:              WithDefaultQuery | WithoutContext,
-			OutPath:           r.OutPath,
-			OutFile:           r.OutFile,
-			ModelPkgPath:      r.ModelPkgName,
-			WithUnitTest:      r.WithUnitTest,
-			FieldNullable:     r.FieldNullable,
-			FieldWithIndexTag: true,
-			FieldWithTypeTag:  true,
-			FieldSignable:     r.FieldSignable,
-		})
 		tablesList []string
 	)
-	if g.db, err = r.Connect(); err != nil {
-		return nil, fmt.Errorf("connect to database fail: %w", err)
-	}
-	r.Delete()
-	if tablesList, err = r.g.db.Migrator().GetTables(); err != nil {
+	if tablesList, err = r.db.Migrator().GetTables(); err != nil {
 		return nil, fmt.Errorf("GORM migrator get all tables fail: %w", err)
 	}
 	models = make([]interface{}, len(tablesList))
 	for i, tableName := range tablesList {
-		if opt := g.GetModel(tableName); opt != nil {
-			models[i] = g.GenerateModel(tableName, WithMethod(opt))
+		if opt := r.GetModel(tableName); opt != nil {
+			models[i] = r.GenerateModel(tableName, WithMethod(opt))
 		} else {
-			models[i] = g.GenerateModel(tableName)
+			models[i] = r.GenerateModel(tableName)
 		}
 	}
 	return models, nil
@@ -150,5 +149,21 @@ func Parse() {
 				log.Fatalf("decode fail: %v", err)
 			}
 		}
+	}
+	App.Generator = NewGenerator(Config{
+		Mode:              WithDefaultQuery | WithoutContext,
+		OutPath:           App.OutPath,
+		OutFile:           App.OutFile,
+		ModelPkgPath:      App.ModelPkgName,
+		WithUnitTest:      App.WithUnitTest,
+		FieldNullable:     App.FieldNullable,
+		FieldWithIndexTag: true,
+		FieldWithTypeTag:  true,
+		FieldSignable:     App.FieldSignable,
+	})
+	App.Generator.Schema = Schema{
+		Schema:    make(map[string]*schema.Schema),
+		Model:     make(map[string]any),
+		Generator: App.Generator,
 	}
 }

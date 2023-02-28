@@ -203,7 +203,7 @@ var (
 			config.JSONTag = ns.ColumnName("", fieldName)
 		}
 		return func(*model.Field) *model.Field {
-			return &model.Field{
+			data := &model.Field{
 				Name:         fieldName,
 				Type:         config.RelateFieldPrefix(relationship) + table.StructInfo.Type,
 				JSONTag:      config.JSONTag,
@@ -215,6 +215,8 @@ var (
 					relationship, fieldName, table.StructInfo.Package+"."+table.StructInfo.Type,
 					table.Relations()...),
 			}
+
+			return data
 		}
 	}
 	// FieldRelateModel relate to exist table model
