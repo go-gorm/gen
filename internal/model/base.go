@@ -202,13 +202,15 @@ func (m *Field) IsRelation() bool { return m.Relation != nil }
 
 // GenType ...
 func (m *Field) GenType() string {
+	var (
+		typ = strings.TrimLeft(m.Type, "*")
+	)
 	if m.IsRelation() {
 		return m.Type
 	}
 	if m.CustomGenType != "" {
 		return m.CustomGenType
 	}
-	typ := strings.TrimLeft(m.Type, "*")
 	switch typ {
 	case "string", "bytes":
 		return strings.Title(typ)

@@ -3,6 +3,7 @@ package model
 import (
 	"bytes"
 	"fmt"
+	"gorm.io/gorm/schema"
 	"reflect"
 	"strings"
 
@@ -18,6 +19,7 @@ type Column struct {
 	dataTypeMap map[string]func(detailType string) (dataType string) `gorm:"-"`
 	jsonTagNS   func(columnName string) string                       `gorm:"-"`
 	newTagNS    func(columnName string) string                       `gorm:"-"`
+	Field       *schema.Field                                        // edit by hinego
 }
 
 // SetDataTypeMap set data type map
@@ -47,36 +49,50 @@ func (c *Column) WithNS(jsonTagNS, newTagNS func(columnName string) string) {
 	}
 }
 
-// ToField convert to field
+// ToField convert to field // edit by hinego
 func (c *Column) ToField(nullable, coverable, signable bool) *Field {
-	fieldType := c.GetDataType()
-	if signable && strings.Contains(c.columnType(), "unsigned") && strings.HasPrefix(fieldType, "int") {
-		fieldType = "u" + fieldType
+	var (
+		FieldType  string
+		DataType   = c.GetDataType()
+		comment, _ = c.Comment()
+		newTag     = c.newTagNS(c.Name()) + " "
+		jsonTag    = c.jsonTagNS(c.Name())
+	)
+	if signable && strings.Contains(c.columnType(), "unsigned") && strings.HasPrefix(DataType, "int") {
+		DataType = "u" + DataType
 	}
 	switch {
-	case c.Name() == "deleted_at" && fieldType == "time.Time":
-		fieldType = "gorm.DeletedAt"
+	case c.Name() == "deleted_at" && DataType == "time.Time":
+		DataType = "gorm.DeletedAt"
 	case coverable && c.needDefaultTag(c.defaultTagValue()):
-		fieldType = "*" + fieldType
+		DataType = "*" + DataType
 	case nullable:
 		if n, ok := c.Nullable(); ok && n {
-			fieldType = "*" + fieldType
+			DataType = "*" + DataType
 		}
 	}
-
-	var comment string
-	if c, ok := c.Comment(); ok {
-		comment = c
+	if c.Field != nil {
+		DataType = c.Field.FieldType.String()
+		FieldType = c.Field.Tag.Get("type")
+		for k, v := range Parse(c.Field.Tag) {
+			if k == "json" || k == "gorm" {
+				continue
+			}
+			newTag += fmt.Sprintf(`%v:"%v" `, k, v)
+		}
+		if c.Field.Tag.Get("json") != "" {
+			jsonTag = c.Field.Tag.Get("json")
+		}
 	}
-
 	return &Field{
 		Name:             c.Name(),
-		Type:             fieldType,
+		CustomGenType:    FieldType,
+		Type:             DataType,
 		ColumnName:       c.Name(),
 		MultilineComment: c.multilineComment(),
 		GORMTag:          c.buildGormTag(),
-		JSONTag:          c.jsonTagNS(c.Name()),
-		NewTag:           c.newTagNS(c.Name()),
+		JSONTag:          jsonTag,
+		NewTag:           newTag,
 		ColumnComment:    comment,
 	}
 }
@@ -88,19 +104,29 @@ func (c *Column) multilineComment() bool {
 
 func (c *Column) buildGormTag() string {
 	var buf bytes.Buffer
-	buf.WriteString(fmt.Sprintf("column:%s;type:%s", c.Name(), c.columnType()))
-
+	buf.WriteString(fmt.Sprintf("column:%s", c.Name()))
+	if c.Field != nil && c.Field.FieldType.String() == "decimal.Decimal" {
+		buf.WriteString(fmt.Sprintf(";type:numeric"))
+	} else {
+		buf.WriteString(fmt.Sprintf(";type:%s", c.columnType()))
+	}
 	isPriKey, ok := c.PrimaryKey()
 	isValidPriKey := ok && isPriKey
 	if isValidPriKey {
 		buf.WriteString(";primaryKey")
 		if at, ok := c.AutoIncrement(); ok {
 			buf.WriteString(fmt.Sprintf(";autoIncrement:%t", at))
+		} else {
+			buf.WriteString(fmt.Sprintf(";autoIncrement:false"))
 		}
 	} else if n, ok := c.Nullable(); ok && !n {
 		buf.WriteString(";not null")
 	}
-
+	if c.Field != nil {
+		if serializer, ok := c.Field.TagSettings["SERIALIZER"]; ok {
+			buf.WriteString(";serializer:" + serializer)
+		}
+	}
 	for _, idx := range c.Indexes {
 		if idx == nil {
 			continue

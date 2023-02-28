@@ -90,7 +90,7 @@ func (i *genInfo) methodInGenInfo(m *generate.InterfaceMethod) bool {
 // Generator code generator
 type Generator struct {
 	Config
-
+	Schema                                      // edit by hinego
 	Data   map[string]*genInfo                  //gen query data
 	models map[string]*generate.QueryStructMeta //gen model data
 }
@@ -163,7 +163,9 @@ func (g *Generator) genModelConfig(tableName string, modelName string, modelOpts
 	} else {
 		modelOpts = append(modelOpts, g.modelOpts...)
 	}
+	modelOpts = append(modelOpts, g.GetModelOpt(tableName)...) // edit by hinego
 	return &model.Config{
+		Schema:         g.GetSchema(tableName), // edit by hinego
 		ModelPkg:       g.Config.ModelPkgPath,
 		TablePrefix:    g.getTablePrefix(),
 		TableName:      tableName,
@@ -505,7 +507,10 @@ func (g *Generator) generateModelFile() error {
 			}
 
 			modelFile := modelOutPath + data.FileName + ".gen.go"
-			err = g.output(modelFile, buf.Bytes())
+			var bt = buf.Bytes()
+			bt = bytes.ReplaceAll(bt, []byte(`"github.com/gogf/gf/v2`), []byte(`"github.com/gogf/gf`))
+			bt = bytes.ReplaceAll(bt, []byte(`"github.com/gogf/gf`), []byte(`"github.com/gogf/gf/v2`))
+			err = g.output(modelFile, bt)
 			if err != nil {
 				errChan <- err
 				return

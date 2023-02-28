@@ -1,6 +1,7 @@
 package model
 
 import (
+	"gorm.io/gorm/schema"
 	"path/filepath"
 	"strings"
 
@@ -9,6 +10,7 @@ import (
 
 // Config model configuration
 type Config struct {
+	Schema      *schema.Schema // edit by hinego
 	ModelPkg    string
 	TablePrefix string
 	TableName   string
