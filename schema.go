@@ -3,7 +3,6 @@ package gen
 import (
 	"gorm.io/gen/field"
 	"gorm.io/gorm/schema"
-	"log"
 	"sync"
 )
 
@@ -53,7 +52,6 @@ func (r *Schema) GetModelOpt(table string) (opt []ModelOpt) {
 		return
 	}
 	for _, item := range schema1.Relationships.Relations {
-		log.Println(field.RelationshipType(item.Type))
 		if schema2 = r.GetSchema(item.FieldSchema.Table); schema2 != nil {
 			opt = append(opt, FieldRelate(field.RelationshipType(item.Type), item.Name, r.GenerateModel(schema2.Table), &field.RelateConfig{
 				OverwriteTag: string(item.Field.Tag),
