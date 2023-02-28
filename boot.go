@@ -33,7 +33,7 @@ const (
 )
 
 var (
-	cfg = &Conf{
+	App = &Conf{
 		DSN:           "host=192.168.32.130 user=postgres password=postgres dbname=status port=5432 sslmode=disable TimeZone=Asia/Shanghai",
 		DB:            DbPostgres,
 		OutPath:       "./app/dao",
@@ -99,7 +99,7 @@ func (r *Conf) Delete() {
 	}
 }
 
-func (r *Conf) genModels() (models []interface{}, err error) {
+func (r *Conf) GenModels() (models []interface{}, err error) {
 	var (
 		g = NewGenerator(Config{
 			Mode:              WithDefaultQuery | WithoutContext,
@@ -134,7 +134,7 @@ func (r *Conf) genModels() (models []interface{}, err error) {
 
 func Parse() {
 	if !gfile.Exists("database.yml") {
-		if encode, err := gyaml.Encode(cfg); err != nil {
+		if encode, err := gyaml.Encode(App); err != nil {
 			log.Fatalf("encode fail: %v", err)
 		} else {
 			if err = gfile.PutBytes("database.yml", encode); err != nil {
@@ -146,10 +146,9 @@ func Parse() {
 		if decode := gfile.GetBytes("database.yml"); decode == nil {
 			log.Fatalf("read fail")
 		} else {
-			if err := gyaml.DecodeTo(decode, cfg); err != nil {
+			if err := gyaml.DecodeTo(decode, App); err != nil {
 				log.Fatalf("decode fail: %v", err)
 			}
 		}
 	}
-	cfg.genModels()
 }
