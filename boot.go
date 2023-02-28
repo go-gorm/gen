@@ -122,11 +122,7 @@ func (r *Conf) GenModels() (models []interface{}, err error) {
 	}
 	models = make([]interface{}, len(tablesList))
 	for i, tableName := range tablesList {
-		if opt := r.GetModel(tableName); opt != nil {
-			models[i] = r.GenerateModel(tableName, WithMethod(opt))
-		} else {
-			models[i] = r.GenerateModel(tableName)
-		}
+		models[i] = r.GenerateModel(tableName)
 	}
 	return models, nil
 }

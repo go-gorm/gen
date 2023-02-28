@@ -109,6 +109,9 @@ func (g *Generator) UseDB(db *gorm.DB) {
 
 // GenerateModel catch table info from db, return a BaseStruct
 func (g *Generator) GenerateModel(tableName string, opts ...ModelOpt) *generate.QueryStructMeta {
+	if opt := g.GetModel(tableName); opt != nil {
+		opts = append(opts, WithMethod(opt))
+	}
 	return g.GenerateModelAs(tableName, g.db.Config.NamingStrategy.SchemaName(tableName), opts...)
 }
 
