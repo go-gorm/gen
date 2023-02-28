@@ -15,6 +15,26 @@ type ScanValuer interface {
 // Field a standard field struct
 type Field struct{ expr }
 
+// Add ...
+func (field Field) Add(value driver.Valuer) Expr {
+	return field.add(value)
+}
+
+// Sub ...
+func (field Field) Sub(value driver.Valuer) Expr {
+	return field.sub(value)
+}
+
+// Mul ...
+func (field Field) Mul(value driver.Valuer) Expr {
+	return field.mul(value)
+}
+
+// Div ...
+func (field Field) Div(value driver.Valuer) Expr {
+	return field.div(value)
+}
+
 // Eq judge equal
 func (field Field) Eq(value driver.Valuer) Expr {
 	return expr{e: clause.Eq{Column: field.RawExpr(), Value: value}}
