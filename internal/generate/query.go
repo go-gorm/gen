@@ -175,9 +175,9 @@ func (b *QueryStructMeta) ReviseDIYMethod() error {
 	if tableName == nil {
 		methods = append(methods, parser.DefaultMethodTableName(b.ModelStructName))
 	} else {
-		// e.g. return "@@table" => return TableNameUser
+		//e.g. return "@@table" => return TableNameUser
 		tableName.Body = strings.ReplaceAll(tableName.Body, "\"@@table\"", "TableName"+b.ModelStructName)
-		// e.g. return "t_@@table" => return "t_user"
+		//e.g. return "t_@@table" => return "t_user"
 		tableName.Body = strings.ReplaceAll(tableName.Body, "@@table", b.TableName)
 	}
 	b.ModelMethods = methods
