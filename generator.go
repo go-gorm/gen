@@ -186,7 +186,6 @@ func (g *Generator) genModelConfig(tableName string, modelName string, modelOpts
 			FieldWithTypeTag:  g.FieldWithTypeTag,
 
 			FieldJSONTagNS: g.fieldJSONTagNS,
-			FieldNewTagNS:  g.fieldNewTagNS,
 		},
 	}
 }

@@ -55,7 +55,6 @@ type Config struct {
 
 	dataTypeMap    map[string]func(detailType string) (dataType string)
 	fieldJSONTagNS func(columnName string) (tagContent string)
-	fieldNewTagNS  func(columnName string) (tagContent string)
 
 	modelOpts []ModelOpt
 }
@@ -101,11 +100,6 @@ func (cfg *Config) WithDataTypeMap(newMap map[string]func(detailType string) (da
 // WithJSONTagNameStrategy specify json tag naming strategy
 func (cfg *Config) WithJSONTagNameStrategy(ns func(columnName string) (tagContent string)) {
 	cfg.fieldJSONTagNS = ns
-}
-
-// WithNewTagNameStrategy specify new tag naming strategy
-func (cfg *Config) WithNewTagNameStrategy(ns func(columnName string) (tagContent string)) {
-	cfg.fieldNewTagNS = ns
 }
 
 // WithImportPkgPath specify import package path

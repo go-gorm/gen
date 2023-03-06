@@ -17,7 +17,6 @@ type Column struct {
 	UseScanType bool                                                 `gorm:"-"`
 	dataTypeMap map[string]func(detailType string) (dataType string) `gorm:"-"`
 	jsonTagNS   func(columnName string) string                       `gorm:"-"`
-	newTagNS    func(columnName string) string                       `gorm:"-"`
 }
 
 // SetDataTypeMap set data type map
@@ -37,13 +36,10 @@ func (c *Column) GetDataType() (fieldtype string) {
 }
 
 // WithNS with name strategy
-func (c *Column) WithNS(jsonTagNS, newTagNS func(columnName string) string) {
-	c.jsonTagNS, c.newTagNS = jsonTagNS, newTagNS
+func (c *Column) WithNS(jsonTagNS func(columnName string) string) {
+	c.jsonTagNS= jsonTagNS
 	if c.jsonTagNS == nil {
 		c.jsonTagNS = func(n string) string { return n }
-	}
-	if c.newTagNS == nil {
-		c.newTagNS = func(string) string { return "" }
 	}
 }
 
@@ -76,7 +72,6 @@ func (c *Column) ToField(nullable, coverable, signable bool) *Field {
 		MultilineComment: c.multilineComment(),
 		GORMTag:          c.buildGormTag(),
 		Tag:              map[string]string{field.TagKeyJson: c.jsonTagNS(c.Name())},
-		NewTag:           c.newTagNS(c.Name()),
 		ColumnComment:    comment,
 	}
 }
