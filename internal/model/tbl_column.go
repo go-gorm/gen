@@ -37,7 +37,7 @@ func (c *Column) GetDataType() (fieldtype string) {
 
 // WithNS with name strategy
 func (c *Column) WithNS(jsonTagNS func(columnName string) string) {
-	c.jsonTagNS= jsonTagNS
+	c.jsonTagNS = jsonTagNS
 	if c.jsonTagNS == nil {
 		c.jsonTagNS = func(n string) string { return n }
 	}
@@ -83,18 +83,18 @@ func (c *Column) multilineComment() bool {
 
 func (c *Column) buildGormTag() field.GormTag {
 	tag := field.NewGormTag()
-	tag.Set("column", c.Name())
-	tag.Set("type", c.columnType())
+	tag.Set(field.TagKeyGormColumn, c.Name())
+	tag.Set(field.TagKeyGormType, c.columnType())
 
 	isPriKey, ok := c.PrimaryKey()
 	isValidPriKey := ok && isPriKey
 	if isValidPriKey {
-		tag.Set("primaryKey", "")
+		tag.Set(field.TagKeyGormPrimaryKey, "")
 		if at, ok := c.AutoIncrement(); ok {
-			tag.Set("autoIncrement", fmt.Sprintf("%t", at))
+			tag.Set(field.TagKeyGormAutoIncrement, fmt.Sprintf("%t", at))
 		}
 	} else if n, ok := c.Nullable(); ok && !n {
-		tag.Set("not null", "")
+		tag.Set(field.TagKeyGormNotNull, "")
 	}
 
 	for _, idx := range c.Indexes {
@@ -105,14 +105,14 @@ func (c *Column) buildGormTag() field.GormTag {
 			continue
 		}
 		if uniq, _ := idx.Unique(); uniq {
-			tag.Set("uniqueIndex", fmt.Sprintf("%s,priority:%d", idx.Name(), idx.Priority))
+			tag.Set(field.TagKeyGormUniqueIndex, fmt.Sprintf("%s,priority:%d", idx.Name(), idx.Priority))
 		} else {
-			tag.Set("index", fmt.Sprintf("%s,priority:%d", idx.Name(), idx.Priority))
+			tag.Set(field.TagKeyGormIndex, fmt.Sprintf("%s,priority:%d", idx.Name(), idx.Priority))
 		}
 	}
 
 	if dtValue := c.defaultTagValue(); !isValidPriKey && c.needDefaultTag(dtValue) { // cannot set default tag for primary key
-		tag.Set("default", dtValue)
+		tag.Set(field.TagKeyGormDefault, dtValue)
 
 	}
 	return tag

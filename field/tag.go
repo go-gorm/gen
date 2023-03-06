@@ -1,9 +1,40 @@
 package field
 
-import "strings"
+import (
+	"sort"
+	"strings"
+)
 
-const TagKeyGorm = "gorm"
-const TagKeyJson = "json"
+const (
+	TagKeyGorm = "gorm"
+	TagKeyJson = "json"
+
+	//gorm tag
+	TagKeyGormColumn        = "column"
+	TagKeyGormType          = "type"
+	TagKeyGormPrimaryKey    = "primaryKey"
+	TagKeyGormAutoIncrement = "autoIncrement"
+	TagKeyGormNotNull       = "not null"
+	TagKeyGormUniqueIndex   = "uniqueIndex"
+	TagKeyGormIndex         = "index"
+	TagKeyGormDefault       = "default"
+)
+
+var (
+	tagKeyPriorities = map[string]int16{
+		TagKeyGorm: 100,
+		TagKeyJson: 99,
+
+		TagKeyGormColumn:        10,
+		TagKeyGormType:          9,
+		TagKeyGormPrimaryKey:    8,
+		TagKeyGormAutoIncrement: 7,
+		TagKeyGormNotNull:       6,
+		TagKeyGormUniqueIndex:   5,
+		TagKeyGormIndex:         4,
+		TagKeyGormDefault:       3,
+	}
+)
 
 type TagBuilder interface {
 	Build() string
@@ -27,18 +58,15 @@ func (tag Tag) Build() string {
 	if tag == nil || len(tag) == 0 {
 		return ""
 	}
-	gormTag := tag[TagKeyGorm]
-	delete(tag, TagKeyGorm)
 
 	tags := make([]string, 0, len(tag))
-	for k, v := range tag {
+	keys := tagKeySort(tag)
+	for _, k := range keys {
+		v := tag[k]
 		if k == "" || v == "" {
 			continue
 		}
 		tags = append(tags, k+":\""+v+"\"")
-	}
-	if gormTag != "" { //first tag gorm
-		tags = append([]string{TagKeyGorm + ":\"" + gormTag + "\""}, tags...)
 	}
 	return strings.Join(tags, " ")
 }
@@ -62,7 +90,9 @@ func (tag GormTag) Build() string {
 		return ""
 	}
 	tags := make([]string, 0, len(tag))
-	for k, v := range tag {
+	keys := tagKeySort(Tag(tag))
+	for _, k := range keys {
+		v := tag[k]
 		if k == "" && v == "" {
 			continue
 		}
@@ -75,5 +105,23 @@ func (tag GormTag) Build() string {
 		}
 		tags = append(tags, strings.Join(tv, ":"))
 	}
+
 	return strings.Join(tags, ";")
+}
+
+func tagKeySort(tag Tag) []string {
+	keys := make([]string, 0, len(tag))
+	if len(tag) == 0 {
+		return keys
+	}
+	for k, _ := range tag {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		if tagKeyPriorities[keys[i]] == tagKeyPriorities[keys[j]] {
+			return keys[i] <= keys[j]
+		}
+		return tagKeyPriorities[keys[i]] > tagKeyPriorities[keys[j]]
+	})
+	return keys
 }
