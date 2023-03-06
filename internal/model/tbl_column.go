@@ -1,11 +1,11 @@
 package model
 
 import (
-	"bytes"
 	"fmt"
 	"reflect"
 	"strings"
 
+	"gorm.io/gen/field"
 	"gorm.io/gorm"
 )
 
@@ -75,7 +75,7 @@ func (c *Column) ToField(nullable, coverable, signable bool) *Field {
 		ColumnName:       c.Name(),
 		MultilineComment: c.multilineComment(),
 		GORMTag:          c.buildGormTag(),
-		JSONTag:          c.jsonTagNS(c.Name()),
+		Tag:              map[string]string{field.TagKeyJson: c.jsonTagNS(c.Name())},
 		NewTag:           c.newTagNS(c.Name()),
 		ColumnComment:    comment,
 	}
@@ -86,19 +86,20 @@ func (c *Column) multilineComment() bool {
 	return ok && strings.Contains(cm, "\n")
 }
 
-func (c *Column) buildGormTag() string {
-	var buf bytes.Buffer
-	buf.WriteString(fmt.Sprintf("column:%s;type:%s", c.Name(), c.columnType()))
+func (c *Column) buildGormTag() field.GormTag {
+	tag := field.NewGormTag()
+	tag.Set("column", c.Name())
+	tag.Set("type", c.columnType())
 
 	isPriKey, ok := c.PrimaryKey()
 	isValidPriKey := ok && isPriKey
 	if isValidPriKey {
-		buf.WriteString(";primaryKey")
+		tag.Set("primaryKey", "")
 		if at, ok := c.AutoIncrement(); ok {
-			buf.WriteString(fmt.Sprintf(";autoIncrement:%t", at))
+			tag.Set("autoIncrement", fmt.Sprintf("%t", at))
 		}
 	} else if n, ok := c.Nullable(); ok && !n {
-		buf.WriteString(";not null")
+		tag.Set("not null", "")
 	}
 
 	for _, idx := range c.Indexes {
@@ -109,16 +110,17 @@ func (c *Column) buildGormTag() string {
 			continue
 		}
 		if uniq, _ := idx.Unique(); uniq {
-			buf.WriteString(fmt.Sprintf(";uniqueIndex:%s,priority:%d", idx.Name(), idx.Priority))
+			tag.Set("uniqueIndex", fmt.Sprintf("%s,priority:%d", idx.Name(), idx.Priority))
 		} else {
-			buf.WriteString(fmt.Sprintf(";index:%s,priority:%d", idx.Name(), idx.Priority))
+			tag.Set("index", fmt.Sprintf("%s,priority:%d", idx.Name(), idx.Priority))
 		}
 	}
 
 	if dtValue := c.defaultTagValue(); !isValidPriKey && c.needDefaultTag(dtValue) { // cannot set default tag for primary key
-		buf.WriteString(fmt.Sprintf(`;default:%s`, dtValue))
+		tag.Set("default", dtValue)
+
 	}
-	return buf.String()
+	return tag
 }
 
 // needDefaultTag check if default tag needed

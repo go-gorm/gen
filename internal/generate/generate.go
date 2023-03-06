@@ -26,8 +26,8 @@ func getFields(db *gorm.DB, conf *model.Config, columns []*model.Column) (fields
 		if filterField(m, conf.FilterOpts) == nil {
 			continue
 		}
-		if t, ok := col.ColumnType.ColumnType(); ok && !conf.FieldWithTypeTag { // remove type tag if FieldWithTypeTag == false
-			m.GORMTag = strings.ReplaceAll(m.GORMTag, ";type:"+t, "")
+		if _, ok := col.ColumnType.ColumnType(); ok && !conf.FieldWithTypeTag { // remove type tag if FieldWithTypeTag == false
+			m.GORMTag.Remove("type")
 		}
 
 		m = modifyField(m, conf.ModifyOpts)
