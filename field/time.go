@@ -181,7 +181,7 @@ func (field Time) Sum() Time {
 }
 
 // IfNull ...
-func (field Time) IfNull(value Time) Expr {
+func (field Time) IfNull(value time.Time) Expr {
 	return field.ifNull(value)
 }
 
