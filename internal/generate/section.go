@@ -318,6 +318,14 @@ func (s *Section) parseWhere() (res WhereClause, err error) {
 			}
 			res.Value = append(res.Value, forClause)
 			s.appendTmpl(forClause.Finish())
+		case model.WHERE:
+			var whereClause WhereClause
+			whereClause, err = s.parseWhere()
+			if err != nil {
+				return
+			}
+			res.Value = append(res.Value, whereClause)
+			s.appendTmpl(whereClause.Finish(res.VarName))
 		case model.TRIM:
 			var trimClause TrimClause
 			trimClause, err = s.parseTrim()
@@ -377,6 +385,14 @@ func (s *Section) parseSet() (res SetClause, err error) {
 			}
 			res.Value = append(res.Value, forClause)
 			s.appendTmpl(forClause.Finish())
+		case model.WHERE:
+			var whereClause WhereClause
+			whereClause, err = s.parseWhere()
+			if err != nil {
+				return
+			}
+			res.Value = append(res.Value, whereClause)
+			s.appendTmpl(whereClause.Finish(res.VarName))
 		case model.TRIM:
 			var trimClause TrimClause
 			trimClause, err = s.parseTrim()
@@ -435,6 +451,14 @@ func (s *Section) parseTrim() (res TrimClause, err error) {
 			}
 			res.Value = append(res.Value, forClause)
 			s.appendTmpl(forClause.Finish())
+		case model.WHERE:
+			var whereClause WhereClause
+			whereClause, err = s.parseWhere()
+			if err != nil {
+				return
+			}
+			res.Value = append(res.Value, whereClause)
+			s.appendTmpl(whereClause.Finish(res.VarName))
 		case model.END:
 			return
 		default:
