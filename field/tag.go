@@ -18,6 +18,7 @@ const (
 	TagKeyGormUniqueIndex   = "uniqueIndex"
 	TagKeyGormIndex         = "index"
 	TagKeyGormDefault       = "default"
+	TagKeyGormComment       = "comment"
 )
 
 var (
@@ -33,6 +34,7 @@ var (
 		TagKeyGormUniqueIndex:   5,
 		TagKeyGormIndex:         4,
 		TagKeyGormDefault:       3,
+		TagKeyGormComment:       0,
 	}
 )
 
