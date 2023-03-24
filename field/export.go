@@ -32,9 +32,9 @@ func NewField(table, column string, opts ...Option) Field {
 	return Field{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
-// NewField2 create new field2
-func NewField2(table, column string, opts ...Option) Field2 {
-	return Field2{expr: expr{col: toColumn(table, column, opts...)}}
+// NewSerializer create new field2
+func NewSerializer(table, column string, opts ...Option) Serializer {
+	return Serializer{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
 // NewAsterisk create new * field
