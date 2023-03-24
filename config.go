@@ -135,9 +135,9 @@ func (cfg *Config) Revise() (err error) {
 		cfg.OutPath = fmt.Sprintf(".%squery%s", string(os.PathSeparator), string(os.PathSeparator))
 	}
 	if cfg.OutFile == "" {
-		cfg.OutFile = cfg.OutPath + string(os.PathSeparator) + "gen.go"
+		cfg.OutFile = filepath.Join(cfg.OutPath, "gen.go")
 	} else if !strings.Contains(cfg.OutFile, string(os.PathSeparator)) {
-		cfg.OutFile = cfg.OutPath + string(os.PathSeparator) + cfg.OutFile
+		cfg.OutFile = filepath.Join(cfg.OutPath, cfg.OutFile)
 	}
 	cfg.queryPkgName = filepath.Base(cfg.OutPath)
 
