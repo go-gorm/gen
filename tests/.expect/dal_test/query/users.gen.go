@@ -19,11 +19,17 @@ import (
 	"gorm.io/gen/tests/.expect/dal_test/model"
 )
 
-func newUser(db *gorm.DB) user {
+func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 	_user := user{}
 
-	_user.userDo.UseDB(db)
+	_user.userDo.UseDB(db, opts...)
 	_user.userDo.UseModel(&model.User{})
+
+	return _user
+}
+
+func _newUser() *user {
+	_user := user{}
 
 	tableName := _user.userDo.TableName()
 	_user.ALL = field.NewAsterisk(tableName)
@@ -38,7 +44,7 @@ func newUser(db *gorm.DB) user {
 
 	_user.fillFieldMap()
 
-	return _user
+	return &_user
 }
 
 type user struct {

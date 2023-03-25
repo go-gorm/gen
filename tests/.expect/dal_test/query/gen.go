@@ -22,6 +22,14 @@ var (
 	User       *user
 )
 
+func init() {
+	Bank = _newBank()
+	CreditCard = _newCreditCard()
+	Customer = _newCustomer()
+	Person = _newPerson()
+	User = _newUser()
+}
+
 func SetDefault(db *gorm.DB) {
 	*Q = *Use(db)
 	Bank = &Q.Bank

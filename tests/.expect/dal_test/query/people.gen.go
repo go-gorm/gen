@@ -19,16 +19,23 @@ import (
 	"gorm.io/gen/tests/.expect/dal_test/model"
 )
 
-func newPerson(db *gorm.DB) person {
-	_person := person{}
+func newPerson(db *gorm.DB, opts ...gen.DOOption) person {
+	_person := _newPerson()
 
-	_person.personDo.UseDB(db)
+	_person.personDo.UseDB(db, opts...)
 	_person.personDo.UseModel(&model.Person{})
+
+	return *_person
+}
+
+func _newPerson() *person {
+	_person := person{}
 
 	tableName := _person.personDo.TableName()
 	_person.ALL = field.NewAsterisk(tableName)
 	_person.ID = field.NewInt64(tableName, "id")
 	_person.Name = field.NewString(tableName, "name")
+	_person.Alias_ = field.NewString(tableName, "alias")
 	_person.Age = field.NewInt32(tableName, "age")
 	_person.Flag = field.NewBool(tableName, "flag")
 	_person.AnotherFlag = field.NewInt32(tableName, "another_flag")
@@ -50,7 +57,7 @@ func newPerson(db *gorm.DB) person {
 
 	_person.fillFieldMap()
 
-	return _person
+	return &_person
 }
 
 type person struct {

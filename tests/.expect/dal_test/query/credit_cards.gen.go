@@ -19,11 +19,17 @@ import (
 	"gorm.io/gen/tests/.expect/dal_test/model"
 )
 
-func newCreditCard(db *gorm.DB) creditCard {
-	_creditCard := creditCard{}
+func newCreditCard(db *gorm.DB, opts ...gen.DOOption) creditCard {
+	_creditCard := _newCreditCard()
 
-	_creditCard.creditCardDo.UseDB(db)
+	_creditCard.creditCardDo.UseDB(db, opts...)
 	_creditCard.creditCardDo.UseModel(&model.CreditCard{})
+
+	return *_creditCard
+}
+
+func _newCreditCard() *creditCard {
+	_creditCard := creditCard{}
 
 	tableName := _creditCard.creditCardDo.TableName()
 	_creditCard.ALL = field.NewAsterisk(tableName)
@@ -37,7 +43,7 @@ func newCreditCard(db *gorm.DB) creditCard {
 
 	_creditCard.fillFieldMap()
 
-	return _creditCard
+	return &_creditCard
 }
 
 type creditCard struct {

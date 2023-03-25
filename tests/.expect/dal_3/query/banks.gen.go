@@ -20,10 +20,16 @@ import (
 )
 
 func newBank(db *gorm.DB, opts ...gen.DOOption) bank {
-	_bank := bank{}
+	_bank := _newBank()
 
 	_bank.bankDo.UseDB(db, opts...)
 	_bank.bankDo.UseModel(&model.Bank{})
+
+	return *_bank
+}
+
+func _newBank() *bank {
+	_bank := bank{}
 
 	tableName := _bank.bankDo.TableName()
 	_bank.ALL = field.NewAsterisk(tableName)
@@ -34,7 +40,7 @@ func newBank(db *gorm.DB, opts ...gen.DOOption) bank {
 
 	_bank.fillFieldMap()
 
-	return _bank
+	return &_bank
 }
 
 type bank struct {

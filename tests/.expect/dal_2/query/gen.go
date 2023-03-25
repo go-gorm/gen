@@ -24,6 +24,14 @@ var (
 	User       *user
 )
 
+func init() {
+	Bank = _newBank()
+	CreditCard = _newCreditCard()
+	Customer = _newCustomer()
+	Person = _newPerson()
+	User = _newUser()
+}
+
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	*Q = *Use(db, opts...)
 	Bank = &Q.Bank

@@ -30,6 +30,12 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 	_user.userDo.UseDB(db, opts...)
 	_user.userDo.UseModel(&model.User{})
 
+	return _user
+}
+
+func _newUser() *user {
+	_user := user{}
+
 	tableName := _user.userDo.TableName()
 	_user.ALL = field.NewAsterisk(tableName)
 	_user.ID = field.NewInt64(tableName, "id")
@@ -43,7 +49,7 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 
 	_user.fillFieldMap()
 
-	return _user
+	return &_user
 }
 
 type user struct {

@@ -20,10 +20,16 @@ import (
 )
 
 func newCustomer(db *gorm.DB, opts ...gen.DOOption) customer {
-	_customer := customer{}
+	_customer := _newCustomer()
 
 	_customer.customerDo.UseDB(db, opts...)
 	_customer.customerDo.UseModel(&model.Customer{})
+
+	return *_customer
+}
+
+func _newCustomer() *customer {
+	_customer := customer{}
 
 	tableName := _customer.customerDo.TableName()
 	_customer.ALL = field.NewAsterisk(tableName)
@@ -35,7 +41,7 @@ func newCustomer(db *gorm.DB, opts ...gen.DOOption) customer {
 
 	_customer.fillFieldMap()
 
-	return _customer
+	return &_customer
 }
 
 type customer struct {

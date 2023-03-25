@@ -20,10 +20,16 @@ import (
 )
 
 func newPerson(db *gorm.DB, opts ...gen.DOOption) person {
-	_person := person{}
+	_person := _newPerson()
 
 	_person.personDo.UseDB(db, opts...)
 	_person.personDo.UseModel(&model.Person{})
+
+	return *_person
+}
+
+func _newPerson() *person {
+	_person := person{}
 
 	tableName := _person.personDo.TableName()
 	_person.ALL = field.NewAsterisk(tableName)
@@ -51,7 +57,7 @@ func newPerson(db *gorm.DB, opts ...gen.DOOption) person {
 
 	_person.fillFieldMap()
 
-	return _person
+	return &_person
 }
 
 type person struct {
