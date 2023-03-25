@@ -32,10 +32,24 @@ const (
 const (
 	createMethod = `
 	func new{{.ModelStructName}}(db *gorm.DB, opts ...gen.DOOption) {{.QueryStructName}} {
-		_{{.QueryStructName}} := {{.QueryStructName}}{}
+		_{{.QueryStructName}} := _new{{.ModelStructName}}()
+	    _{{.QueryStructName}}.{{.QueryStructName}}Do.UseDB(db,opts...)
+	    _{{.QueryStructName}}.{{.QueryStructName}}Do.UseModel(&{{.StructInfo.Package}}.{{.StructInfo.Type}}{})
+		
+		{{range .Fields -}}
+		{{if .IsRelation -}}
+			_{{$.QueryStructName}}.{{.Relation.Name}} = {{$.QueryStructName}}{{.Relation.RelationshipName}}{{.Relation.Name}}{
+				db: db.Session(&gorm.Session{}),
+			}
+		{{end}}
+		{{end}}
+		
+		return *_{{.QueryStructName}}
+	}
 	
-		_{{.QueryStructName}}.{{.QueryStructName}}Do.UseDB(db,opts...)
-		_{{.QueryStructName}}.{{.QueryStructName}}Do.UseModel(&{{.StructInfo.Package}}.{{.StructInfo.Type}}{})
+	func _new{{.ModelStructName}}() *{{.QueryStructName}} {
+		_{{.QueryStructName}} := {{.QueryStructName}}{}
+		
 	
 		tableName := _{{.QueryStructName}}.{{.QueryStructName}}Do.TableName()
 		_{{$.QueryStructName}}.ALL = field.NewAsterisk(tableName)
@@ -44,8 +58,6 @@ const (
 			{{- if .ColumnName -}}_{{$.QueryStructName}}.{{.Name}} = field.New{{.GenType}}(tableName, "{{.ColumnName}}"){{- end -}}
 		{{- else -}}
 			_{{$.QueryStructName}}.{{.Relation.Name}} = {{$.QueryStructName}}{{.Relation.RelationshipName}}{{.Relation.Name}}{
-				db: db.Session(&gorm.Session{}),
-
 				{{.Relation.StructFieldInit}}
 			}
 		{{end}}
@@ -53,7 +65,7 @@ const (
 
 		_{{$.QueryStructName}}.fillFieldMap()
 		
-		return _{{.QueryStructName}}
+		return &_{{.QueryStructName}}
 	}
 	`
 	fields = `

@@ -9,6 +9,13 @@ var (
 	{{end -}}
 )
 
+
+func init() {
+	{{range $name,$d :=.Data -}}
+	{{$d.ModelStructName}} = _new{{$d.ModelStructName}}()
+	{{end -}}
+}
+
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	*Q = *Use(db,opts...)
 	{{range $name,$d :=.Data -}}
