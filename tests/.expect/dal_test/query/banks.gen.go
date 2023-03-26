@@ -19,7 +19,6 @@ import (
 	"gorm.io/gen/tests/.expect/dal_test/model"
 )
 
-f
 func newBank(db *gorm.DB, opts ...gen.DOOption) bank {
 	_bank := _newBank()
 
