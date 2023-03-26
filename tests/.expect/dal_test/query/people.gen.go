@@ -35,7 +35,6 @@ func _newPerson() *person {
 	_person.ALL = field.NewAsterisk(tableName)
 	_person.ID = field.NewInt64(tableName, "id")
 	_person.Name = field.NewString(tableName, "name")
-	_person.Alias_ = field.NewString(tableName, "alias")
 	_person.Age = field.NewInt32(tableName, "age")
 	_person.Flag = field.NewBool(tableName, "flag")
 	_person.AnotherFlag = field.NewInt32(tableName, "another_flag")
