@@ -26,7 +26,6 @@ import (
 
 func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 	_user := _newUser()
-
 	_user.userDo.UseDB(db, opts...)
 	_user.userDo.UseModel(&model.User{})
 

@@ -21,7 +21,6 @@ import (
 
 func newCreditCard(db *gorm.DB, opts ...gen.DOOption) creditCard {
 	_creditCard := _newCreditCard()
-
 	_creditCard.creditCardDo.UseDB(db, opts...)
 	_creditCard.creditCardDo.UseModel(&model.CreditCard{})
 

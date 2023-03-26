@@ -21,7 +21,6 @@ import (
 
 func newBank(db *gorm.DB, opts ...gen.DOOption) bank {
 	_bank := _newBank()
-
 	_bank.bankDo.UseDB(db, opts...)
 	_bank.bankDo.UseModel(&model.Bank{})
 

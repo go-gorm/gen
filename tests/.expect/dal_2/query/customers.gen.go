@@ -21,7 +21,6 @@ import (
 
 func newCustomer(db *gorm.DB, opts ...gen.DOOption) customer {
 	_customer := _newCustomer()
-
 	_customer.customerDo.UseDB(db, opts...)
 	_customer.customerDo.UseModel(&model.Customer{})
 
