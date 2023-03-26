@@ -38,9 +38,7 @@ const (
 		
 		{{range .Fields -}}
 		{{if .IsRelation -}}
-			_{{$.QueryStructName}}.{{.Relation.Name}} = {{$.QueryStructName}}{{.Relation.RelationshipName}}{{.Relation.Name}}{
-				db: db.Session(&gorm.Session{}),
-			}
+			_{{$.QueryStructName}}.{{.Relation.Name}}.db = db.Session(&gorm.Session{})
 		{{end}}
 		{{end}}
 		
