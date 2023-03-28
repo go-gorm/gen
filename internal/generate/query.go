@@ -194,6 +194,10 @@ func (b *QueryStructMeta) ReviseDIYMethod() error {
 
 func (b *QueryStructMeta) addMethodFromAddMethodOpt(methods ...interface{}) *QueryStructMeta {
 	for _, method := range methods {
+		if m, ok := method.(*parser.Method); ok && m != nil {
+			b.ModelMethods = append(b.ModelMethods, m)
+			continue
+		}
 		modelMethods, err := parser.GetModelMethod(method, 5)
 		if err != nil {
 			panic("add diy method err:" + err.Error())
