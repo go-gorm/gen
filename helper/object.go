@@ -3,6 +3,8 @@ package helper
 import (
 	"errors"
 	"fmt"
+
+	"gorm.io/gen/field"
 )
 
 // Object an object interface
@@ -34,7 +36,7 @@ type Field interface {
 	// JSONTag return json tag
 	JSONTag() string
 	// Tag return field tag
-	Tag() string
+	Tag() field.Tag
 
 	// Comment return comment
 	Comment() string
