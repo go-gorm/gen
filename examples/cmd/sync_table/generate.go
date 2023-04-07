@@ -6,6 +6,7 @@ import (
 	"gorm.io/gen"
 	"gorm.io/gen/examples/conf"
 	"gorm.io/gen/examples/dal"
+	"gorm.io/gorm"
 )
 
 func init() {
@@ -15,13 +16,14 @@ func init() {
 }
 
 // dataMap mapping relationship
-var dataMap = map[string]func(detailType string) (dataType string){
+var dataMap = map[string]func(gorm.ColumnType) (dataType string){
 	// int mapping
-	"int": func(detailType string) (dataType string) { return "int32" },
+	"int": func(columnType gorm.ColumnType) (dataType string) { return "int32" },
 
 	// bool mapping
-	"tinyint": func(detailType string) (dataType string) {
-		if strings.HasPrefix(detailType, "tinyint(1)") {
+	"tinyint": func(columnType gorm.ColumnType) (dataType string) {
+		ct, _ := columnType.ColumnType()
+		if strings.HasPrefix(ct, "tinyint(1)") {
 			return "bool"
 		}
 		return "byte"

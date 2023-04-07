@@ -5,6 +5,7 @@ import (
 	"gorm.io/gen/examples/conf"
 	"gorm.io/gen/examples/dal"
 	"gorm.io/gen/examples/dal/model"
+	"gorm.io/gorm"
 )
 
 func init() {
@@ -13,9 +14,9 @@ func init() {
 	prepare(dal.DB) // prepare table for generate
 }
 
-var dataMap = map[string]func(detailType string) (dataType string){
-	"int":  func(detailType string) (dataType string) { return "int64" },
-	"json": func(string) string { return "json.RawMessage" },
+var dataMap = map[string]func(gorm.ColumnType) (dataType string){
+	"int":  func(columnType gorm.ColumnType) (dataType string) { return "int64" },
+	"json": func(columnType gorm.ColumnType) string { return "json.RawMessage" },
 }
 
 func main() {

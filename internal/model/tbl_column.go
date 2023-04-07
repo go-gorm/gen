@@ -15,20 +15,20 @@ type Column struct {
 	TableName   string                                               `gorm:"column:TABLE_NAME"`
 	Indexes     []*Index                                             `gorm:"-"`
 	UseScanType bool                                                 `gorm:"-"`
-	dataTypeMap map[string]func(detailType string) (dataType string) `gorm:"-"`
+	dataTypeMap map[string]func(columnType gorm.ColumnType) (dataType string) `gorm:"-"`
 	jsonTagNS   func(columnName string) string                       `gorm:"-"`
 	newTagNS    func(columnName string) string                       `gorm:"-"`
 }
 
 // SetDataTypeMap set data type map
-func (c *Column) SetDataTypeMap(m map[string]func(detailType string) (dataType string)) {
+func (c *Column) SetDataTypeMap(m map[string]func(columnType gorm.ColumnType) (dataType string)) {
 	c.dataTypeMap = m
 }
 
 // GetDataType get data type
 func (c *Column) GetDataType() (fieldtype string) {
 	if mapping, ok := c.dataTypeMap[c.DatabaseTypeName()]; ok {
-		return mapping(c.columnType())
+		return mapping(c.ColumnType)
 	}
 	if c.UseScanType && c.ScanType() != nil {
 		return c.ScanType().String()
