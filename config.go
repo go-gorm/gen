@@ -2,6 +2,7 @@ package gen
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -131,12 +132,12 @@ func (cfg *Config) Revise() (err error) {
 		return fmt.Errorf("outpath is invalid: %w", err)
 	}
 	if cfg.OutPath == "" {
-		cfg.OutPath = "./query/"
+		cfg.OutPath = fmt.Sprintf(".%squery%s", string(os.PathSeparator), string(os.PathSeparator))
 	}
 	if cfg.OutFile == "" {
-		cfg.OutFile = cfg.OutPath + "/gen.go"
-	} else if !strings.Contains(cfg.OutFile, "/") {
-		cfg.OutFile = cfg.OutPath + "/" + cfg.OutFile
+		cfg.OutFile = filepath.Join(cfg.OutPath, "gen.go")
+	} else if !strings.Contains(cfg.OutFile, string(os.PathSeparator)) {
+		cfg.OutFile = filepath.Join(cfg.OutPath, cfg.OutFile)
 	}
 	cfg.queryPkgName = filepath.Base(cfg.OutPath)
 
