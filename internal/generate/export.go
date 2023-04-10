@@ -36,12 +36,18 @@ func GetQueryStructMeta(db *gorm.DB, conf *model.Config) (*QueryStructMeta, erro
 		return nil, err
 	}
 
+	tableComment, err := getTableInfo(db).GetTableComment(conf.GetSchemaName(db), tableName)
+	if err != nil {
+		db.Logger.Warn(context.Background(), "GetTableComment for %s,err=%s", tableName, err.Error())
+	}
+
 	return (&QueryStructMeta{
 		db:              db,
 		Source:          model.Table,
 		Generated:       true,
 		FileName:        fileName,
 		TableName:       tableName,
+		TableComment:    tableComment,
 		ModelStructName: structName,
 		QueryStructName: uncaptialize(structName),
 		S:               strings.ToLower(structName[0:1]),

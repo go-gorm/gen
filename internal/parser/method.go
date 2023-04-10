@@ -9,11 +9,17 @@ import (
 	"strings"
 )
 
-func DefaultMethodTableName(structName string) *Method {
+func DefaultMethodTableName(structName string, tableComment string) *Method {
+
+	doc := fmt.Sprint("TableName ", structName, "'s table name")
+	if tableComment != "" {
+		doc = fmt.Sprintf("%s, comment: %s", doc, tableComment)
+	}
+
 	return &Method{
 		Receiver:   Param{IsPointer: true, Type: structName},
 		MethodName: "TableName",
-		Doc:        fmt.Sprint("TableName ", structName, "'s table name "),
+		Doc:        doc,
 		Result:     []Param{{Type: "string"}},
 		Body:       fmt.Sprintf("{\n\treturn TableName%s\n} ", structName),
 	}

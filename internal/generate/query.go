@@ -32,6 +32,7 @@ type QueryStructMeta struct {
 	QueryStructName string // internal query struct name
 	ModelStructName string // origin/model struct name
 	TableName       string // table name in db server
+	TableComment    string // table comment in db server
 	StructInfo      parser.Param
 	Fields          []*model.Field
 	Source          model.SourceCode
@@ -177,7 +178,7 @@ func (b *QueryStructMeta) ReviseDIYMethod() error {
 		methodMap[method.MethodName] = true
 	}
 	if tableName == nil {
-		methods = append(methods, parser.DefaultMethodTableName(b.ModelStructName))
+		methods = append(methods, parser.DefaultMethodTableName(b.ModelStructName, b.TableComment))
 	} else {
 		//e.g. return "@@table" => return TableNameUser
 		tableName.Body = strings.ReplaceAll(tableName.Body, "\"@@table\"", "TableName"+b.ModelStructName)

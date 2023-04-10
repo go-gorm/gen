@@ -14,6 +14,8 @@ type ITableInfo interface {
 	GetTableColumns(schemaName string, tableName string) (result []*model.Column, err error)
 
 	GetTableIndex(schemaName string, tableName string) (indexes []gorm.Index, err error)
+
+	GetTableComment(schemaName string, tableName string) (comment string, err error)
 }
 
 func getTableInfo(db *gorm.DB) ITableInfo {
@@ -67,4 +69,9 @@ func (t *tableInfo) GetTableColumns(schemaName string, tableName string) (result
 // GetTableIndex  index
 func (t *tableInfo) GetTableIndex(schemaName string, tableName string) (indexes []gorm.Index, err error) {
 	return t.Migrator().GetIndexes(tableName)
+}
+
+// GetTableComment table comment
+func (t *tableInfo) GetTableComment(schemaName string, tableName string) (comment string, err error) {
+	return t.Migrator().GetTableComment(tableName)
 }
