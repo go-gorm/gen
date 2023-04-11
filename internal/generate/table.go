@@ -3,7 +3,6 @@ package generate
 import (
 	"context"
 	"errors"
-
 	"gorm.io/gorm"
 
 	"gorm.io/gen/internal/model"
@@ -15,7 +14,7 @@ type ITableInfo interface {
 
 	GetTableIndex(schemaName string, tableName string) (indexes []gorm.Index, err error)
 
-	GetTableComment(schemaName string, tableName string) (comment string, err error)
+	GetTableType(schemaName string, tableName string) (tableType gorm.TableType, err error)
 }
 
 func getTableInfo(db *gorm.DB) ITableInfo {
@@ -71,7 +70,25 @@ func (t *tableInfo) GetTableIndex(schemaName string, tableName string) (indexes 
 	return t.Migrator().GetIndexes(tableName)
 }
 
-// GetTableComment table comment
-func (t *tableInfo) GetTableComment(schemaName string, tableName string) (comment string, err error) {
-	return t.Migrator().GetTableComment(tableName)
+// GetTableType table type
+func (t *tableInfo) GetTableType(schemaName string, tableName string) (tableType gorm.TableType, err error) {
+	return t.Migrator().TableType(tableName)
+}
+
+// getTableComment get table comment
+func getTableComment(db *gorm.DB, schemaName string, tableName string) (comment string, err error) {
+	if db == nil {
+		return "", errors.New("gorm db is nil")
+	}
+	mt := getTableInfo(db)
+
+	tableType, err := mt.GetTableType(schemaName, tableName)
+	if err != nil {
+		db.Logger.Warn(context.Background(), "GetTableType for %s,err=%s", tableName, err.Error())
+		return "", nil
+	}
+
+	comment, _ = tableType.Comment()
+
+	return
 }

@@ -36,9 +36,9 @@ func GetQueryStructMeta(db *gorm.DB, conf *model.Config) (*QueryStructMeta, erro
 		return nil, err
 	}
 
-	tableComment, err := getTableInfo(db).GetTableComment(conf.GetSchemaName(db), tableName)
+	tableComment, err := getTableComment(db, conf.GetSchemaName(db), tableName)
 	if err != nil {
-		db.Logger.Warn(context.Background(), "GetTableComment for %s,err=%s", tableName, err.Error())
+		return nil, err
 	}
 
 	return (&QueryStructMeta{
