@@ -33,7 +33,7 @@ type NameStrategy struct {
 
 // FieldConfig field configuration
 type FieldConfig struct {
-	DataTypeMap map[string]func(detailType string) (dataType string)
+	DataTypeMap map[string]func(columnType gorm.ColumnType) (dataType string)
 
 	FieldNullable     bool // generate pointer when field is nullable
 	FieldCoverable    bool // generate pointer when field has default value
@@ -42,7 +42,6 @@ type FieldConfig struct {
 	FieldWithTypeTag  bool // generate with gorm column type tag
 
 	FieldJSONTagNS func(columnName string) string
-	FieldNewTagNS  func(columnName string) string
 
 	ModifyOpts []FieldOption
 	FilterOpts []FieldOption

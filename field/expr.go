@@ -1,6 +1,8 @@
 package field
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -32,6 +34,7 @@ type Expr interface {
 	SubCol(col Expr) Expr
 	MulCol(col Expr) Expr
 	DivCol(col Expr) Expr
+	ConcatCol(cols ...Expr) Expr
 
 	// implement Condition
 	BeCond() interface{}
@@ -239,6 +242,19 @@ func (e expr) MulCol(col Expr) Expr {
 
 func (e expr) DivCol(col Expr) Expr {
 	return Field{e.setE(clause.Expr{SQL: "(?) / (?)", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})}
+}
+
+func (e expr) ConcatCol(cols ...Expr) Expr {
+	placeholders := []string{"?"}
+	vars := []interface{}{e.RawExpr()}
+	for _, col := range cols {
+		placeholders = append(placeholders, "?")
+		vars = append(vars, col.RawExpr())
+	}
+	return Field{e.setE(clause.Expr{
+		SQL:  fmt.Sprintf("Concat(%s)", strings.Join(placeholders, ",")),
+		Vars: vars,
+	})}
 }
 
 // ======================== keyword ========================

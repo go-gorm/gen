@@ -16,7 +16,7 @@ Install GEN as a binary tool
  
  Usage of gentool:
   -db string
-        input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html] (default "mysql")
+        input mysql|postgres|sqlite|sqlserver|clickhouse. consult[https://gorm.io/docs/connecting_to_the_database.html] (default "mysql")
   -dsn string
         consult[https://gorm.io/docs/connecting_to_the_database.html]
   -fieldNullable

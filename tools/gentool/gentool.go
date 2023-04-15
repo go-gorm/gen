@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"gopkg.in/yaml.v3"
+	"gorm.io/driver/clickhouse"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -21,10 +22,11 @@ type DBType string
 
 const (
 	// dbMySQL Gorm Drivers mysql || postgres || sqlite || sqlserver
-	dbMySQL     DBType = "mysql"
-	dbPostgres  DBType = "postgres"
-	dbSQLite    DBType = "sqlite"
-	dbSQLServer DBType = "sqlserver"
+	dbMySQL      DBType = "mysql"
+	dbPostgres   DBType = "postgres"
+	dbSQLite     DBType = "sqlite"
+	dbSQLServer  DBType = "sqlserver"
+	dbClickHouse DBType = "clickhouse"
 )
 const (
 	// DefaultOutPath default path
@@ -68,6 +70,8 @@ func connectDB(t DBType, dsn string) (*gorm.DB, error) {
 		return gorm.Open(sqlite.Open(dsn))
 	case dbSQLServer:
 		return gorm.Open(sqlserver.Open(dsn))
+	case dbClickHouse:
+		return gorm.Open(clickhouse.Open(dsn))
 	default:
 		return nil, fmt.Errorf("unknow db %q (support mysql || postgres || sqlite || sqlserver for now)", t)
 	}
@@ -113,7 +117,7 @@ func argParse() *CmdParams {
 	// choose is file or flag
 	genPath := flag.String("c", "", "is path for gen.yml")
 	dsn := flag.String("dsn", "", "consult[https://gorm.io/docs/connecting_to_the_database.html]")
-	db := flag.String("db", "mysql", "input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]")
+	db := flag.String("db", "mysql", "input mysql|postgres|sqlite|sqlserver|clickhouse. consult[https://gorm.io/docs/connecting_to_the_database.html]")
 	tableList := flag.String("tables", "", "enter the required data table or leave it blank")
 	onlyModel := flag.Bool("onlyModel", false, "only generate models (without query file)")
 	outPath := flag.String("outPath", "./dao/query", "specify a directory for output")

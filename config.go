@@ -2,6 +2,7 @@ package gen
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -53,9 +54,8 @@ type Config struct {
 	modelNameNS func(tableName string) (modelName string)
 	fileNameNS  func(tableName string) (fileName string)
 
-	dataTypeMap    map[string]func(detailType string) (dataType string)
+	dataTypeMap    map[string]func(columnType gorm.ColumnType) (dataType string)
 	fieldJSONTagNS func(columnName string) (tagContent string)
-	fieldNewTagNS  func(columnName string) (tagContent string)
 
 	modelOpts []ModelOpt
 }
@@ -94,18 +94,13 @@ func (cfg *Config) WithFileNameStrategy(ns func(tableName string) (fileName stri
 }
 
 // WithDataTypeMap specify data type mapping relationship, only work when syncing table from db
-func (cfg *Config) WithDataTypeMap(newMap map[string]func(detailType string) (dataType string)) {
+func (cfg *Config) WithDataTypeMap(newMap map[string]func(columnType gorm.ColumnType) (dataType string)) {
 	cfg.dataTypeMap = newMap
 }
 
 // WithJSONTagNameStrategy specify json tag naming strategy
 func (cfg *Config) WithJSONTagNameStrategy(ns func(columnName string) (tagContent string)) {
 	cfg.fieldJSONTagNS = ns
-}
-
-// WithNewTagNameStrategy specify new tag naming strategy
-func (cfg *Config) WithNewTagNameStrategy(ns func(columnName string) (tagContent string)) {
-	cfg.fieldNewTagNS = ns
 }
 
 // WithImportPkgPath specify import package path
@@ -131,12 +126,12 @@ func (cfg *Config) Revise() (err error) {
 		return fmt.Errorf("outpath is invalid: %w", err)
 	}
 	if cfg.OutPath == "" {
-		cfg.OutPath = "./query/"
+		cfg.OutPath = fmt.Sprintf(".%squery%s", string(os.PathSeparator), string(os.PathSeparator))
 	}
 	if cfg.OutFile == "" {
-		cfg.OutFile = cfg.OutPath + "/gen.go"
-	} else if !strings.Contains(cfg.OutFile, "/") {
-		cfg.OutFile = cfg.OutPath + "/" + cfg.OutFile
+		cfg.OutFile = filepath.Join(cfg.OutPath, "gen.go")
+	} else if !strings.Contains(cfg.OutFile, string(os.PathSeparator)) {
+		cfg.OutFile = filepath.Join(cfg.OutPath, cfg.OutFile)
 	}
 	cfg.queryPkgName = filepath.Base(cfg.OutPath)
 

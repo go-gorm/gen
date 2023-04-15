@@ -84,16 +84,25 @@ func GetQueryStructMetaFromObject(obj helper.Object, conf *model.Config) (*Query
 	}
 
 	fields := make([]*model.Field, 0, 16)
-	for _, field := range obj.Fields() {
+	for _, fl := range obj.Fields() {
+		tag := fl.Tag()
+		if tag == nil {
+			tag = field.NewTag()
+		}
+		if gt := fl.GORMTag(); gt != "" {
+			tag.Set(field.TagKeyGorm, gt)
+		}
+		if jt := fl.GORMTag(); jt != "" {
+			tag.Set(field.TagKeyJson, jt)
+		}
+
 		fields = append(fields, &model.Field{
-			Name:             field.Name(),
-			Type:             field.Type(),
-			ColumnName:       field.ColumnName(),
-			GORMTag:          field.GORMTag(),
-			JSONTag:          field.JSONTag(),
-			NewTag:           field.Tag(),
-			ColumnComment:    field.Comment(),
-			MultilineComment: strings.Contains(field.Comment(), "\n"),
+			Name:             fl.Name(),
+			Type:             fl.Type(),
+			ColumnName:       fl.ColumnName(),
+			Tag:              tag,
+			ColumnComment:    fl.Comment(),
+			MultilineComment: strings.Contains(fl.Comment(), "\n"),
 		})
 	}
 

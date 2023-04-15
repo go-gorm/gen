@@ -186,7 +186,6 @@ func (g *Generator) genModelConfig(tableName string, modelName string, modelOpts
 			FieldWithTypeTag:  g.FieldWithTypeTag,
 
 			FieldJSONTagNS: g.fieldJSONTagNS,
-			FieldNewTagNS:  g.fieldNewTagNS,
 		},
 	}
 }
@@ -428,8 +427,8 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 		return err
 	}
 
-	defer g.info(fmt.Sprintf("generate query file: %s/%s.gen.go", g.OutPath, data.FileName))
-	return g.output(fmt.Sprintf("%s/%s.gen.go", g.OutPath, data.FileName), buf.Bytes())
+	defer g.info(fmt.Sprintf("generate query file: %s%s%s.gen.go", g.OutPath, string(os.PathSeparator), data.FileName))
+	return g.output(fmt.Sprintf("%s%s%s.gen.go", g.OutPath, string(os.PathSeparator), data.FileName), buf.Bytes())
 }
 
 // generateQueryUnitTestFile generate unit test file for query
@@ -460,8 +459,8 @@ func (g *Generator) generateQueryUnitTestFile(data *genInfo) (err error) {
 		}
 	}
 
-	defer g.info(fmt.Sprintf("generate unit test file: %s/%s.gen_test.go", g.OutPath, data.FileName))
-	return g.output(fmt.Sprintf("%s/%s.gen_test.go", g.OutPath, data.FileName), buf.Bytes())
+	defer g.info(fmt.Sprintf("generate unit test file: %s%s%s.gen_test.go", g.OutPath, string(os.PathSeparator), data.FileName))
+	return g.output(fmt.Sprintf("%s%s%s.gen_test.go", g.OutPath, string(os.PathSeparator), data.FileName), buf.Bytes())
 }
 
 // generateModelFile generate model structures and save to file

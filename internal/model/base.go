@@ -2,7 +2,6 @@ package model
 
 import (
 	"bytes"
-	"fmt"
 	"strings"
 
 	"gorm.io/gen/field"
@@ -170,31 +169,22 @@ type Field struct {
 	ColumnName       string
 	ColumnComment    string
 	MultilineComment bool
-	JSONTag          string
-	GORMTag          string
-	NewTag           string
-	OverwriteTag     string
+	Tag              field.Tag
+	GORMTag          field.GormTag
 	CustomGenType    string
 	Relation         *field.Relation
 }
 
 // Tags ...
 func (m *Field) Tags() string {
-	if m.OverwriteTag != "" {
-		return strings.TrimSpace(m.OverwriteTag)
+	if _, ok := m.Tag[field.TagKeyGorm]; ok {
+		return m.Tag.Build()
 	}
 
-	var tags strings.Builder
-	if gormTag := strings.TrimSpace(m.GORMTag); gormTag != "" {
-		tags.WriteString(fmt.Sprintf(`gorm:"%s" `, gormTag))
+	if gormTag := strings.TrimSpace(m.GORMTag.Build()); gormTag != "" {
+		m.Tag.Set(field.TagKeyGorm, gormTag)
 	}
-	if jsonTag := strings.TrimSpace(m.JSONTag); jsonTag != "" {
-		tags.WriteString(fmt.Sprintf(`json:"%s" `, jsonTag))
-	}
-	if newTag := strings.TrimSpace(m.NewTag); newTag != "" {
-		tags.WriteString(newTag)
-	}
-	return strings.TrimSpace(tags.String())
+	return m.Tag.Build()
 }
 
 // IsRelation ...
@@ -222,6 +212,8 @@ func (m *Field) GenType() string {
 		return "Time"
 	case "json.RawMessage", "[]byte":
 		return "Bytes"
+	case "serializer":
+		return "Serializer"
 	default:
 		return "Field"
 	}
