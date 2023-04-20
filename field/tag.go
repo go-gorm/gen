@@ -44,16 +44,14 @@ type TagBuilder interface {
 
 type Tag map[string]string
 
-func NewTag() Tag {
-	return Tag{}
-}
-
-func (tag Tag) Set(key, value string) {
+func (tag Tag) Set(key, value string) Tag {
 	tag[key] = value
+	return tag
 }
 
-func (tag Tag) Remove(key string) {
+func (tag Tag) Remove(key string) Tag {
 	delete(tag, key)
+	return tag
 }
 
 func (tag Tag) Build() string {
@@ -75,16 +73,14 @@ func (tag Tag) Build() string {
 
 type GormTag Tag
 
-func NewGormTag() GormTag {
-	return GormTag{}
-}
-
-func (tag GormTag) Set(key, value string) {
+func (tag GormTag) Set(key, value string) GormTag {
 	tag[key] = value
+	return tag
 }
 
-func (tag GormTag) Remove(key string) {
+func (tag GormTag) Remove(key string) GormTag {
 	delete(tag, key)
+	return tag
 }
 
 func (tag GormTag) Build() string {

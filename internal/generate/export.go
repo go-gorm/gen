@@ -87,12 +87,12 @@ func GetQueryStructMetaFromObject(obj helper.Object, conf *model.Config) (*Query
 	for _, fl := range obj.Fields() {
 		tag := fl.Tag()
 		if tag == nil {
-			tag = field.NewTag()
+			tag = field.Tag{}
 		}
 		if gt := fl.GORMTag(); gt != "" {
 			tag.Set(field.TagKeyGorm, gt)
 		}
-		if jt := fl.GORMTag(); jt != "" {
+		if jt := fl.JSONTag(); jt != "" {
 			tag.Set(field.TagKeyJson, jt)
 		}
 
