@@ -12,11 +12,11 @@ import (
 // Column table column's info
 type Column struct {
 	gorm.ColumnType
-	TableName   string                                               `gorm:"column:TABLE_NAME"`
-	Indexes     []*Index                                             `gorm:"-"`
-	UseScanType bool                                                 `gorm:"-"`
+	TableName   string                                                        `gorm:"column:TABLE_NAME"`
+	Indexes     []*Index                                                      `gorm:"-"`
+	UseScanType bool                                                          `gorm:"-"`
 	dataTypeMap map[string]func(columnType gorm.ColumnType) (dataType string) `gorm:"-"`
-	jsonTagNS   func(columnName string) string                       `gorm:"-"`
+	jsonTagNS   func(columnName string) string                                `gorm:"-"`
 }
 
 // SetDataTypeMap set data type map
@@ -82,10 +82,10 @@ func (c *Column) multilineComment() bool {
 }
 
 func (c *Column) buildGormTag() field.GormTag {
-	tag := field.NewGormTag()
-	tag.Set(field.TagKeyGormColumn, c.Name())
-	tag.Set(field.TagKeyGormType, c.columnType())
-
+	tag := field.GormTag{
+		field.TagKeyGormColumn: c.Name(),
+		field.TagKeyGormType:   c.columnType(),
+	}
 	isPriKey, ok := c.PrimaryKey()
 	isValidPriKey := ok && isPriKey
 	if isValidPriKey {

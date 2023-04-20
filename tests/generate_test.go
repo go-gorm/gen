@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"gorm.io/gen"
+	"gorm.io/gen/field"
 
 	"gorm.io/gen/tests/diy_method"
 )
@@ -60,7 +61,11 @@ var generateCase = map[string]func(dir string) *gen.Generator{
 		})
 		g.UseDB(DB)
 		g.WithJSONTagNameStrategy(func(c string) string { return "-" })
-		g.ApplyBasic(g.GenerateAllTable()...)
+		g.ApplyBasic(g.GenerateAllTable(gen.FieldGORMTagReg(".", func(tag field.GormTag) field.GormTag {
+			//tag.Set("serialize","json")
+			tag.Remove("comment")
+			return tag
+		}))...)
 		return g
 	},
 	generateDirPrefix + "dal_4": func(dir string) *gen.Generator {
