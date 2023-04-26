@@ -29,11 +29,6 @@ const (
 	dbClickHouse DBType = "clickhouse"
 )
 
-const (
-	// DefaultOutPath default path
-	DefaultOutPath = "./dao/query"
-)
-
 // CmdParams is command line parameters
 type CmdParams struct {
 	DSN               string   `yaml:"dsn"`               // consult[https://gorm.io/docs/connecting_to_the_database.html]"
@@ -151,7 +146,7 @@ func argParse() *CmdParams {
 	if *onlyModel {
 		cmdParse.OnlyModel = true
 	}
-	if flag.Lookup("outPath") != nil {
+	if *outPath != "" {
 		cmdParse.OutPath = *outPath
 	}
 	if *outFile != "" {
