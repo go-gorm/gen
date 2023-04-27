@@ -113,10 +113,10 @@ func argParse() *CmdParams {
 	// choose is file or flag
 	genPath := flag.String("c", "", "is path for gen.yml")
 	dsn := flag.String("dsn", "", "consult[https://gorm.io/docs/connecting_to_the_database.html]")
-	db := flag.String("db", "mysql", "input mysql|postgres|sqlite|sqlserver|clickhouse. consult[https://gorm.io/docs/connecting_to_the_database.html]")
+	db := flag.String("db", "", "input mysql|postgres|sqlite|sqlserver|clickhouse. consult[https://gorm.io/docs/connecting_to_the_database.html]")
 	tableList := flag.String("tables", "", "enter the required data table or leave it blank")
 	onlyModel := flag.Bool("onlyModel", false, "only generate models (without query file)")
-	outPath := flag.String("outPath", "./dao/query", "specify a directory for output")
+	outPath := flag.String("outPath", "", "specify a directory for output")
 	outFile := flag.String("outFile", "", "query code file name, default: gen.go")
 	withUnitTest := flag.Bool("withUnitTest", false, "generate unit test for query code")
 	modelPkgName := flag.String("modelPkgName", "", "generated model code's package name")
@@ -140,6 +140,9 @@ func argParse() *CmdParams {
 	if *db != "" {
 		cmdParse.DB = *db
 	}
+	if cmdParse.DB == "" {
+		cmdParse.DB = "mysql"
+	}
 	if *tableList != "" {
 		cmdParse.Tables = strings.Split(*tableList, ",")
 	}
@@ -148,6 +151,9 @@ func argParse() *CmdParams {
 	}
 	if *outPath != "" {
 		cmdParse.OutPath = *outPath
+	}
+	if cmdParse.OutPath == "" {
+		cmdParse.OutPath = "./dao/query"
 	}
 	if *outFile != "" {
 		cmdParse.OutFile = *outFile
