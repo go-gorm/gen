@@ -153,7 +153,13 @@ func (b *QueryStructMeta) Relations() (result []field.Relation) {
 // StructComment struct comment
 func (b *QueryStructMeta) StructComment() string {
 	if b.TableName != "" {
-		return fmt.Sprintf(`mapped from table <%s>`, b.TableName)
+		comment := fmt.Sprintf(`mapped from table <%s>`, b.TableName)
+
+		if b.TableComment != "" {
+			comment = fmt.Sprintf(`%s, comment <%s>`, comment, b.TableComment)
+		}
+
+		return comment
 	}
 	return `mapped from object`
 }
@@ -178,13 +184,18 @@ func (b *QueryStructMeta) ReviseDIYMethod() error {
 		methodMap[method.MethodName] = true
 	}
 	if tableName == nil {
-		methods = append(methods, parser.DefaultMethodTableName(b.ModelStructName, b.TableComment))
+		methods = append(methods, parser.DefaultMethodTableName(b.ModelStructName))
 	} else {
 		//e.g. return "@@table" => return TableNameUser
 		tableName.Body = strings.ReplaceAll(tableName.Body, "\"@@table\"", "TableName"+b.ModelStructName)
 		//e.g. return "t_@@table" => return "t_user"
 		tableName.Body = strings.ReplaceAll(tableName.Body, "@@table", b.TableName)
 	}
+
+	if b.TableComment != "" {
+		methods = append(methods, parser.DefaultMethodTableComment(b.ModelStructName, b.TableComment))
+	}
+
 	b.ModelMethods = methods
 
 	if len(duplicateMethodName) > 0 {
