@@ -193,7 +193,7 @@ func (b *QueryStructMeta) ReviseDIYMethod() error {
 	}
 
 	if b.TableComment != "" {
-		methods = append(methods, parser.DefaultMethodTableComment(b.ModelStructName, b.TableComment))
+		methods = append(methods, parser.DefaultMethodTableComment(b.ModelStructName))
 	}
 
 	b.ModelMethods = methods
