@@ -83,8 +83,8 @@ func (c *Column) multilineComment() bool {
 
 func (c *Column) buildGormTag() field.GormTag {
 	tag := field.GormTag{
-		field.TagKeyGormColumn: c.Name(),
-		field.TagKeyGormType:   c.columnType(),
+		field.TagKeyGormColumn: []string{c.Name()},
+		field.TagKeyGormType:   []string{c.columnType()},
 	}
 	isPriKey, ok := c.PrimaryKey()
 	isValidPriKey := ok && isPriKey
@@ -105,9 +105,9 @@ func (c *Column) buildGormTag() field.GormTag {
 			continue
 		}
 		if uniq, _ := idx.Unique(); uniq {
-			tag.Set(field.TagKeyGormUniqueIndex, fmt.Sprintf("%s,priority:%d", idx.Name(), idx.Priority))
+			tag.Append(field.TagKeyGormUniqueIndex, fmt.Sprintf("%s,priority:%d", idx.Name(), idx.Priority))
 		} else {
-			tag.Set(field.TagKeyGormIndex, fmt.Sprintf("%s,priority:%d", idx.Name(), idx.Priority))
+			tag.Append(field.TagKeyGormIndex, fmt.Sprintf("%s,priority:%d", idx.Name(), idx.Priority))
 		}
 	}
 
