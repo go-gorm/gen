@@ -48,8 +48,6 @@ type RowsAffected int64
 
 var concurrent = runtime.NumCPU()
 
-func init() { runtime.GOMAXPROCS(runtime.NumCPU()) }
-
 // NewGenerator create a new generator
 func NewGenerator(cfg Config) *Generator {
 	if err := cfg.Revise(); err != nil {
