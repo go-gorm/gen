@@ -293,6 +293,9 @@ func (p *Param) astGetEltType(expr ast.Expr) {
 		p.astGetEltType(v.X)
 	case *ast.InterfaceType:
 		p.Type = "interface{}"
+	case *ast.ArrayType:
+		p.astGetEltType(v.Elt)
+		p.Type = "[]" + p.Type
 	default:
 		log.Fatalf("unknow param type: %+v", v)
 	}

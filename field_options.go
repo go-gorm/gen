@@ -147,6 +147,16 @@ var (
 			return m
 		}
 	}
+	// FieldGORMTagReg specify GORM tag by RegExp
+	FieldGORMTagReg = func(columnNameReg string, gormTag func(tag field.GormTag) field.GormTag) model.ModifyFieldOpt {
+		reg := regexp.MustCompile(columnNameReg)
+		return func(m *model.Field) *model.Field {
+			if reg.MatchString(m.ColumnName) {
+				m.GORMTag = gormTag(m.GORMTag)
+			}
+			return m
+		}
+	}
 	// FieldNewTag add new tag
 	FieldNewTag = func(columnName string, newTag field.Tag) model.ModifyFieldOpt {
 		return func(m *model.Field) *model.Field {

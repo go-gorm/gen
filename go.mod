@@ -7,7 +7,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/datatypes v1.1.1-0.20230130040222-c43177d3cf8c
 	gorm.io/driver/clickhouse v0.5.0
-	gorm.io/driver/mysql v1.5.1-0.20230505133308-2b3cf215b805
+	gorm.io/driver/mysql v1.5.1-0.20230509030346-3715c134c25b
 	gorm.io/driver/postgres v1.4.5
 	gorm.io/driver/sqlite v1.4.3
 	gorm.io/driver/sqlserver v1.4.1

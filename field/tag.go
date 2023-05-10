@@ -44,16 +44,14 @@ type TagBuilder interface {
 
 type Tag map[string]string
 
-func NewTag() Tag {
-	return Tag{}
-}
-
-func (tag Tag) Set(key, value string) {
+func (tag Tag) Set(key, value string) Tag {
 	tag[key] = value
+	return tag
 }
 
-func (tag Tag) Remove(key string) {
+func (tag Tag) Remove(key string) Tag {
 	delete(tag, key)
+	return tag
 }
 
 func (tag Tag) Build() string {
@@ -62,8 +60,7 @@ func (tag Tag) Build() string {
 	}
 
 	tags := make([]string, 0, len(tag))
-	keys := tagKeySort(tag)
-	for _, k := range keys {
+	for _, k := range tagKeys(tag) {
 		v := tag[k]
 		if k == "" || v == "" {
 			continue
@@ -73,18 +70,25 @@ func (tag Tag) Build() string {
 	return strings.Join(tags, " ")
 }
 
-type GormTag Tag
+type GormTag map[string][]string
 
-func NewGormTag() GormTag {
-	return GormTag{}
+func (tag GormTag) Append(key string, values ...string) GormTag {
+	if _, ok := tag[key]; ok {
+		tag[key] = append(tag[key], values...)
+	} else {
+		tag[key] = values
+	}
+	return tag
 }
 
-func (tag GormTag) Set(key, value string) {
-	tag[key] = value
+func (tag GormTag) Set(key string, values ...string) GormTag {
+	tag[key] = values
+	return tag
 }
 
-func (tag GormTag) Remove(key string) {
+func (tag GormTag) Remove(key string) GormTag {
 	delete(tag, key)
+	return tag
 }
 
 func (tag GormTag) Build() string {
@@ -92,32 +96,58 @@ func (tag GormTag) Build() string {
 		return ""
 	}
 	tags := make([]string, 0, len(tag))
-	keys := tagKeySort(Tag(tag))
-	for _, k := range keys {
-		v := tag[k]
-		if k == "" && v == "" {
+	for _, k := range gormKeys(tag) {
+		vs := tag[k]
+		if len(vs) == 0 && k == "" {
 			continue
 		}
-		tv := make([]string, 0, 2)
-		if k != "" {
-			tv = append(tv, k)
+		if len(vs) == 0 {
+			tags = append(tags, k)
+			continue
 		}
-		if v != "" {
-			tv = append(tv, v)
+		for _, v := range vs {
+			if k == "" && v == "" {
+				continue
+			}
+			tv := make([]string, 0, 2)
+			if k != "" {
+				tv = append(tv, k)
+			}
+			if v != "" {
+				tv = append(tv, v)
+			}
+			tags = append(tags, strings.Join(tv, ":"))
 		}
-		tags = append(tags, strings.Join(tv, ":"))
 	}
 
 	return strings.Join(tags, ";")
 }
 
-func tagKeySort(tag Tag) []string {
+func tagKeys(tag Tag) []string {
 	keys := make([]string, 0, len(tag))
 	if len(tag) == 0 {
 		return keys
 	}
 	for k, _ := range tag {
 		keys = append(keys, k)
+	}
+	return keySort(keys)
+}
+
+func gormKeys(tag GormTag) []string {
+	keys := make([]string, 0, len(tag))
+	if len(tag) == 0 {
+		return keys
+	}
+	for k, _ := range tag {
+		keys = append(keys, k)
+	}
+	return keySort(keys)
+}
+
+func keySort(keys []string) []string {
+	if len(keys) == 0 {
+		return keys
 	}
 	sort.Slice(keys, func(i, j int) bool {
 		if tagKeyPriorities[keys[i]] == tagKeyPriorities[keys[j]] {

@@ -237,6 +237,11 @@ func (a {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}) WithContext(ct
 	return &a
 }
 
+func (a {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}) Session(session *gorm.Session) *{{$.QueryStructName}}{{$relationship}}{{$relation.Name}} {
+	a.db = a.db.Session(session)
+	return &a
+}
+
 func (a {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}) Model(m *{{$.StructInfo.Package}}.{{$.StructInfo.Type}}) *{{$.QueryStructName}}{{$relationship}}{{$relation.Name}}Tx {
 	return &{{$.QueryStructName}}{{$relationship}}{{$relation.Name}}Tx{a.db.Model(m).Association(a.Name())}
 }
