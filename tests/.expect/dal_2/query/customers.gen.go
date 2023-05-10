@@ -80,6 +80,8 @@ func (c customer) TableName() string { return c.customerDo.TableName() }
 
 func (c customer) Alias() string { return c.customerDo.Alias() }
 
+func (c customer) Columns(cols ...field.Expr) gen.Columns { return c.customerDo.Columns(cols...) }
+
 func (c *customer) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := c.fieldMap[fieldName]
 	if !ok || _f == nil {
