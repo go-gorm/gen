@@ -12,11 +12,11 @@ import (
 // Column table column's info
 type Column struct {
 	gorm.ColumnType
-	TableName   string                                               `gorm:"column:TABLE_NAME"`
-	Indexes     []*Index                                             `gorm:"-"`
-	UseScanType bool                                                 `gorm:"-"`
+	TableName   string                                                        `gorm:"column:TABLE_NAME"`
+	Indexes     []*Index                                                      `gorm:"-"`
+	UseScanType bool                                                          `gorm:"-"`
 	dataTypeMap map[string]func(columnType gorm.ColumnType) (dataType string) `gorm:"-"`
-	jsonTagNS   func(columnName string) string                       `gorm:"-"`
+	jsonTagNS   func(columnName string) string                                `gorm:"-"`
 }
 
 // SetDataTypeMap set data type map
@@ -82,10 +82,10 @@ func (c *Column) multilineComment() bool {
 }
 
 func (c *Column) buildGormTag() field.GormTag {
-	tag := field.NewGormTag()
-	tag.Set(field.TagKeyGormColumn, c.Name())
-	tag.Set(field.TagKeyGormType, c.columnType())
-
+	tag := field.GormTag{
+		field.TagKeyGormColumn: []string{c.Name()},
+		field.TagKeyGormType:   []string{c.columnType()},
+	}
 	isPriKey, ok := c.PrimaryKey()
 	isValidPriKey := ok && isPriKey
 	if isValidPriKey {
@@ -105,9 +105,9 @@ func (c *Column) buildGormTag() field.GormTag {
 			continue
 		}
 		if uniq, _ := idx.Unique(); uniq {
-			tag.Set(field.TagKeyGormUniqueIndex, fmt.Sprintf("%s,priority:%d", idx.Name(), idx.Priority))
+			tag.Append(field.TagKeyGormUniqueIndex, fmt.Sprintf("%s,priority:%d", idx.Name(), idx.Priority))
 		} else {
-			tag.Set(field.TagKeyGormIndex, fmt.Sprintf("%s,priority:%d", idx.Name(), idx.Priority))
+			tag.Append(field.TagKeyGormIndex, fmt.Sprintf("%s,priority:%d", idx.Name(), idx.Priority))
 		}
 	}
 

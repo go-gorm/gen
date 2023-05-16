@@ -99,6 +99,8 @@ func (u user) TableName() string { return u.userDo.TableName() }
 
 func (u user) Alias() string { return u.userDo.Alias() }
 
+func (u user) Columns(cols ...field.Expr) gen.Columns { return u.userDo.Columns(cols...) }
+
 func (u *user) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := u.fieldMap[fieldName]
 	if !ok || _f == nil {

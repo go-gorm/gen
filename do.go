@@ -265,7 +265,7 @@ func (d *DO) toOrderValue(columns ...field.Expr) string {
 		c.Build(stmt)
 	}
 
-	return stmt.SQL.String()
+	return d.db.Dialector.Explain(stmt.SQL.String(), stmt.Vars...)
 }
 
 // Distinct ...

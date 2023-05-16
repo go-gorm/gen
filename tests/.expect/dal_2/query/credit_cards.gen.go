@@ -88,6 +88,8 @@ func (c creditCard) TableName() string { return c.creditCardDo.TableName() }
 
 func (c creditCard) Alias() string { return c.creditCardDo.Alias() }
 
+func (c creditCard) Columns(cols ...field.Expr) gen.Columns { return c.creditCardDo.Columns(cols...) }
+
 func (c *creditCard) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := c.fieldMap[fieldName]
 	if !ok || _f == nil {
