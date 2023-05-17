@@ -160,6 +160,7 @@ type I{{.ModelStructName}}Do interface {
 	Or(conds ...gen.Condition) I{{.ModelStructName}}Do
 	Select(conds ...field.Expr) I{{.ModelStructName}}Do
 	Where(conds ...gen.Condition) I{{.ModelStructName}}Do
+	Exists(subquery interface{UnderlyingDB() *gorm.DB}) I{{.ModelStructName}}Do
 	Order(conds ...field.Expr) I{{.ModelStructName}}Do
 	Distinct(cols ...field.Expr) I{{.ModelStructName}}Do
 	Omit(cols ...field.Expr) I{{.ModelStructName}}Do
