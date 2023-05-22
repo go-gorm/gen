@@ -10,8 +10,8 @@ require (
 	gorm.io/driver/mysql v1.5.1-0.20230509030346-3715c134c25b
 	gorm.io/driver/postgres v1.4.5
 	gorm.io/driver/sqlite v1.4.3
-	gorm.io/driver/sqlserver v1.4.1
-	gorm.io/gorm v1.25.1-0.20230505075827-e61b98d69677
+	gorm.io/driver/sqlserver v1.5.0
+	gorm.io/gorm v1.25.1
 	gorm.io/hints v1.1.0
 	gorm.io/plugin/dbresolver v1.3.0
 )
@@ -39,7 +39,7 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/klauspost/compress v1.15.11 // indirect
 	github.com/mattn/go-sqlite3 v1.14.15 // indirect
-	github.com/microsoft/go-mssqldb v0.17.0 // indirect
+	github.com/microsoft/go-mssqldb v0.21.0 // indirect
 	github.com/paulmach/orb v0.7.1 // indirect
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
