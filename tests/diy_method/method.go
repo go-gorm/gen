@@ -1,12 +1,12 @@
 package diy_method
 
 import (
-	"gorm.io/gen"
 	"time"
+
+	"gorm.io/gen"
 )
 
 type InsertMethod interface {
-
 	// AddUser
 	//
 	// INSERT INTO users (name,age) VALUES (@name,@age) ON DUPLICATE KEY UPDATE age=VALUES(age)
@@ -44,7 +44,6 @@ type InsertMethod interface {
 }
 
 type SelectMethod interface {
-
 	// FindByID
 	//
 	// select * from users where id=@id
@@ -67,7 +66,6 @@ type SelectMethod interface {
 }
 
 type TrimTest interface {
-
 	// TestTrim
 	//
 	// select * from @@table where
@@ -312,4 +310,19 @@ type TestFor interface {
 	//{{end}}
 	// {{end}}
 	TestForLike(names []string) []gen.T
+}
+
+type TestForWithMethod struct {
+	ID int32
+}
+
+func (m *TestForWithMethod) IsEmpty() bool {
+	if m == nil {
+		return true
+	}
+	return m.ID == 0
+}
+
+func (m *TestForWithMethod) GetID() int {
+	return int(m.ID)
 }
