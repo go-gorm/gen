@@ -111,6 +111,42 @@ func (q *QueryTx) RollbackTo(name string) error {
 
 `
 
+// QueryInterfaceWithContext interface method template with context
+const QueryInterfaceWithContext = `
+var _ IQuery = (*Query)(nil)
+
+type IQuery interface{
+	{{range $name,$d :=.Data -}}
+	{{$d.ModelStructName}}Do(ctx context.Context) I{{$d.ModelStructName}}Do
+	{{end -}}
+}
+
+{{range $name,$d :=.Data -}}
+func (q *Query) {{$d.ModelStructName}}Do(ctx context.Context) I{{$d.ModelStructName}}Do {
+	return q.{{$d.ModelStructName}}.WithContext(ctx)
+}
+
+{{end -}}
+`
+
+// QueryInterfaceWithoutContext interface method template without context
+const QueryInterfaceWithoutContext = `
+var _ IQuery = (*Query)(nil)
+
+type IQuery interface{
+	{{range $name,$d :=.Data -}}
+	{{$d.ModelStructName}}Do() I{{$d.ModelStructName}}Do
+	{{end -}}
+}
+
+{{range $name,$d :=.Data -}}
+func (q *Query) {{$d.ModelStructName}}Do() I{{$d.ModelStructName}}Do {
+	return &q.{{$d.ModelStructName}}.{{$d.QueryStructName}}Do
+}
+
+{{end -}}
+`
+
 // QueryMethodTest query method test template
 const QueryMethodTest = `
 

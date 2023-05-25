@@ -133,3 +133,33 @@ func (q *QueryTx) SavePoint(name string) error {
 func (q *QueryTx) RollbackTo(name string) error {
 	return q.db.RollbackTo(name).Error
 }
+
+var _ IQuery = (*Query)(nil)
+
+type IQuery interface {
+	BankDo(ctx context.Context) IBankDo
+	CreditCardDo(ctx context.Context) ICreditCardDo
+	CustomerDo(ctx context.Context) ICustomerDo
+	PersonDo(ctx context.Context) IPersonDo
+	UserDo(ctx context.Context) IUserDo
+}
+
+func (q *Query) BankDo(ctx context.Context) IBankDo {
+	return q.Bank.WithContext(ctx)
+}
+
+func (q *Query) CreditCardDo(ctx context.Context) ICreditCardDo {
+	return q.CreditCard.WithContext(ctx)
+}
+
+func (q *Query) CustomerDo(ctx context.Context) ICustomerDo {
+	return q.Customer.WithContext(ctx)
+}
+
+func (q *Query) PersonDo(ctx context.Context) IPersonDo {
+	return q.Person.WithContext(ctx)
+}
+
+func (q *Query) UserDo(ctx context.Context) IUserDo {
+	return q.User.WithContext(ctx)
+}
