@@ -970,6 +970,12 @@ func Table(subQueries ...SubQuery) Dao {
 	}
 }
 
+// Exists EXISTS expression
+// SELECT * FROM table WHERE EXISTS (SELECT NAME FROM users WHERE id = 1)
+func Exists(subQuery SubQuery) Condition {
+	return field.CompareSubQuery(field.ExistsOp, nil, subQuery.underlyingDB())
+}
+
 // ======================== sub query method ========================
 
 // Columns columns array
