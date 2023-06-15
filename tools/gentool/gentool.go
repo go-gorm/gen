@@ -141,7 +141,13 @@ func argParse() *CmdParams {
 		cmdParse.DB = *db
 	}
 	if *tableList != "" {
-		cmdParse.Tables = strings.Split(*tableList, ",")
+		for _, tableName := range strings.Split(*tableList, ",") {
+			_tableName := strings.TrimSpace(tableName) // trim leading and trailing space in tableName
+			if _tableName == "" { // skip empty tableName
+				continue
+			}
+			cmdParse.Tables = append(cmdParse.Tables, _tableName)
+		}
 	}
 	if *onlyModel {
 		cmdParse.OnlyModel = true
