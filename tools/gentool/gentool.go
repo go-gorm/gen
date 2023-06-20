@@ -108,22 +108,32 @@ func loadConfigFile(path string) (*CmdParams, error) {
 	return yamlConfig.Database, nil
 }
 
+// empty string config fill with default value
+func defaultStrParams(params *CmdParams) {
+	if params.DB == "" {
+		params.DB = "mysql"
+	}
+	if params.OutPath == "" {
+		params.OutPath = "./dao/query"
+	}
+}
+
 // argParse is parser for cmd
 func argParse() *CmdParams {
 	// choose is file or flag
 	genPath := flag.String("c", "", "is path for gen.yml")
 	dsn := flag.String("dsn", "", "consult[https://gorm.io/docs/connecting_to_the_database.html]")
-	db := flag.String("db", "mysql", "input mysql|postgres|sqlite|sqlserver|clickhouse. consult[https://gorm.io/docs/connecting_to_the_database.html]")
+	db := flag.String("db", "", "input mysql|postgres|sqlite|sqlserver|clickhouse. consult[https://gorm.io/docs/connecting_to_the_database.html]")
 	tableList := flag.String("tables", "", "enter the required data table or leave it blank")
-	onlyModel := flag.Bool("onlyModel", false, "only generate models (without query file)")
-	outPath := flag.String("outPath", "./dao/query", "specify a directory for output")
+	onlyModel := flag.String("onlyModel", "", "only generate models (without query file): true/false")
+	outPath := flag.String("outPath", "", "specify a directory for output")
 	outFile := flag.String("outFile", "", "query code file name, default: gen.go")
-	withUnitTest := flag.Bool("withUnitTest", false, "generate unit test for query code")
+	withUnitTest := flag.String("withUnitTest", "", "generate unit test for query code:true/false")
 	modelPkgName := flag.String("modelPkgName", "", "generated model code's package name")
-	fieldNullable := flag.Bool("fieldNullable", false, "generate with pointer when field is nullable")
-	fieldWithIndexTag := flag.Bool("fieldWithIndexTag", false, "generate field with gorm index tag")
-	fieldWithTypeTag := flag.Bool("fieldWithTypeTag", false, "generate field with gorm column type tag")
-	fieldSignable := flag.Bool("fieldSignable", false, "detect integer field's unsigned type, adjust generated data type")
+	fieldNullable := flag.String("fieldNullable", "", "generate with pointer when field is nullable:true/false")
+	fieldWithIndexTag := flag.String("fieldWithIndexTag", "", "generate field with gorm index tag:true/false")
+	fieldWithTypeTag := flag.String("fieldWithTypeTag", "", "generate field with gorm column type tag:true/false")
+	fieldSignable := flag.String("fieldSignable", "", "detect integer field's unsigned type, adjust generated data type:true/false")
 	flag.Parse()
 	var cmdParse CmdParams
 	if *genPath != "" {
@@ -143,8 +153,8 @@ func argParse() *CmdParams {
 	if *tableList != "" {
 		cmdParse.Tables = strings.Split(*tableList, ",")
 	}
-	if *onlyModel {
-		cmdParse.OnlyModel = true
+	if *onlyModel != "" {
+		cmdParse.OnlyModel = *onlyModel == "true"
 	}
 	if *outPath != "" {
 		cmdParse.OutPath = *outPath
@@ -152,24 +162,25 @@ func argParse() *CmdParams {
 	if *outFile != "" {
 		cmdParse.OutFile = *outFile
 	}
-	if *withUnitTest {
-		cmdParse.WithUnitTest = *withUnitTest
+	if *withUnitTest != "" {
+		cmdParse.WithUnitTest = *withUnitTest == "true"
 	}
 	if *modelPkgName != "" {
 		cmdParse.ModelPkgName = *modelPkgName
 	}
-	if *fieldNullable {
-		cmdParse.FieldNullable = *fieldNullable
+	if *fieldNullable != "" {
+		cmdParse.FieldNullable = *fieldNullable == "true"
 	}
-	if *fieldWithIndexTag {
-		cmdParse.FieldWithIndexTag = *fieldWithIndexTag
+	if *fieldWithIndexTag != "" {
+		cmdParse.FieldWithIndexTag = *fieldWithIndexTag == "true"
 	}
-	if *fieldWithTypeTag {
-		cmdParse.FieldWithTypeTag = *fieldWithTypeTag
+	if *fieldWithTypeTag != "" {
+		cmdParse.FieldWithTypeTag = *fieldWithTypeTag == "true"
 	}
-	if *fieldSignable {
-		cmdParse.FieldSignable = *fieldSignable
+	if *fieldSignable != "" {
+		cmdParse.FieldSignable = *fieldSignable == "true"
 	}
+	defaultStrParams(&cmdParse)
 	return &cmdParse
 }
 

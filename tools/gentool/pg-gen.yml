@@ -1,0 +1,30 @@
+version: "0.1"
+database:
+  # consult[https://gorm.io/docs/connecting_to_the_database.html]"
+  dsn: "postgresql://postgres:root@localhost:5432/postgres"
+  # input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]
+  db: "postgres"
+  # enter the required data table or leave it blank.You can input :
+  # tables  :
+  #   - orders
+  #   - users
+  #   - goods
+  tables:
+    - user
+    - corp
+  # specify a directory for output
+  outPath: "/tmp/db"
+  # query code file name, default: gen.go
+  outFile: ""
+  # generate unit test for query code
+  withUnitTest: true
+  # generated model code's package name
+  modelPkgName: ""
+  # generate with pointer when field is nullable
+  fieldNullable: true
+  # generate field with gorm index tag
+  fieldWithIndexTag: true
+  # generate field with gorm column type tag
+  fieldWithTypeTag: false
+  # detect integer field's unsigned type, adjust generated data type
+  fieldSignable: true
