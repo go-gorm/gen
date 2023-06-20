@@ -21,3 +21,12 @@ func TestPgConfig(t *testing.T) {
 	// output
 	// &{postgresql://postgres:root@localhost:5432/postgres postgres [user corp] false /tmp/db  true  true true false true}
 }
+
+// go test -v -run  PgConfig --args -c "./gen.yml"
+func TestDefaultConfig(t *testing.T) {
+	// flag.Set("c", "pg-gen.yml")
+	fmt.Println(params)
+
+	// output
+	// &{postgresql://postgres:root@localhost:5432/postgres postgres [user corp] false /tmp/db  true  true true false true}
+}
