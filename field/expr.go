@@ -190,6 +190,10 @@ func (e expr) Avg() Float64 {
 	return Float64{e.setE(clause.Expr{SQL: "AVG(?)", Vars: []interface{}{e.RawExpr()}})}
 }
 
+func (e expr) Abs() Float64 {
+	return Float64{e.setE(clause.Expr{SQL: "ABS(?)", Vars: []interface{}{e.RawExpr()}})}
+}
+
 func (e expr) Null() AssignExpr {
 	return e.setE(clause.Eq{Column: e.col.Name, Value: nil})
 }
