@@ -26,6 +26,10 @@ func (att *attrs) AssignExpr() expression {
 	return att
 }
 
+func (att *attrs) BeCond() interface{} {
+	return att.db.Statement.BuildCondition(att.Values())
+}
+
 func (att *attrs) Values() interface{} {
 	if att == nil || att.value == nil {
 		return nil
@@ -106,10 +110,6 @@ func (att *attrs) Omit(fields ...IColumnName) *attrs {
 	}
 	att.omitFields = fields
 	return att
-}
-
-func Assign(attr interface{}) *attrs {
-	return Attrs(attr)
 }
 
 func Attrs(attr interface{}) *attrs {
