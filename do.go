@@ -392,7 +392,9 @@ func (d *DO) Assign(attrs ...field.AssignExpr) Dao {
 func (d *DO) attrsValue(attrs []field.AssignExpr) []interface{} {
 	values := make([]interface{}, 0, len(attrs))
 	for _, attr := range attrs {
-		if expr, ok := attr.AssignExpr().(clause.Eq); ok {
+		if expr, ok := attr.AssignExpr().(field.IValues); ok {
+			values = append(values, expr.Values())
+		} else if expr, ok := attr.AssignExpr().(clause.Eq); ok {
 			values = append(values, expr)
 		}
 	}

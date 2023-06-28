@@ -24,7 +24,7 @@ type Expr interface {
 	Build(clause.Builder)
 
 	As(alias string) Expr
-	ColumnName() sql
+	IColumnName
 	BuildColumn(*gorm.Statement, ...BuildOpt) sql
 	BuildWithArgs(*gorm.Statement) (query sql, args []interface{})
 	RawExpr() expression
@@ -51,6 +51,10 @@ type OrderExpr interface {
 }
 
 type expression interface{}
+
+type IColumnName interface {
+	ColumnName() sql
+}
 
 type sql string
 
