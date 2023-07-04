@@ -848,6 +848,10 @@ func (d *DO) newResultSlicePointer() interface{} {
 	return reflect.New(reflect.SliceOf(reflect.PtrTo(d.modelType))).Interface()
 }
 
+func (d *DO) AddError(err error) error {
+	return d.underlyingDB().AddError(err)
+}
+
 func toColExprFullName(stmt *gorm.Statement, columns ...field.Expr) []string {
 	return buildColExpr(stmt, columns, field.WithAll)
 }
