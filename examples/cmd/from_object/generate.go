@@ -1,8 +1,8 @@
 package main
 
 import (
-	"gorm.io/gen"
-	"gorm.io/gen/helper"
+	"github.com/warjiang/gen"
+	"github.com/warjiang/gen/helper"
 )
 
 var detail, data helper.Object

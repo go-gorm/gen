@@ -10,7 +10,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"gorm.io/gen"
+	"github.com/warjiang/gen"
 
 	"gorm.io/plugin/dbresolver"
 )

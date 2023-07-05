@@ -11,12 +11,12 @@ import (
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/schema"
 
-	"gorm.io/gen"
-	"gorm.io/gen/field"
+	"github.com/warjiang/gen"
+	"github.com/warjiang/gen/field"
 
 	"gorm.io/plugin/dbresolver"
 
-	"gorm.io/gen/tests/.gen/dal_2/model"
+	"github.com/warjiang/gen/tests/.gen/dal_2/model"
 )
 
 func newCreditCard(db *gorm.DB, opts ...gen.DOOption) creditCard {

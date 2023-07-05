@@ -11,9 +11,9 @@ import (
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/schema"
 
-	"gorm.io/gen"
-	"gorm.io/gen/examples/dal/model"
-	"gorm.io/gen/field"
+	"github.com/warjiang/gen"
+	"github.com/warjiang/gen/examples/dal/model"
+	"github.com/warjiang/gen/field"
 )
 
 func newMytable(db *gorm.DB) mytable {

@@ -13,13 +13,13 @@ import (
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/schema"
 
-	"gorm.io/gen"
-	"gorm.io/gen/field"
-	"gorm.io/gen/helper"
+	"github.com/warjiang/gen"
+	"github.com/warjiang/gen/field"
+	"github.com/warjiang/gen/helper"
 
 	"gorm.io/plugin/dbresolver"
 
-	"gorm.io/gen/tests/.gen/dal_4/model"
+	"github.com/warjiang/gen/tests/.gen/dal_4/model"
 
 	"time"
 )

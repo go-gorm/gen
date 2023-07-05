@@ -11,12 +11,12 @@ import (
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/schema"
 
-	"gorm.io/gen"
-	"gorm.io/gen/field"
+	"github.com/warjiang/gen"
+	"github.com/warjiang/gen/field"
 
 	"gorm.io/plugin/dbresolver"
 
-	"gorm.io/gen/tests/.expect/dal_test/model"
+	"github.com/warjiang/gen/tests/.expect/dal_test/model"
 )
 
 func newCustomer(db *gorm.DB) customer {
