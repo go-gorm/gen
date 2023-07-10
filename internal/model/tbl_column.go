@@ -150,6 +150,12 @@ func (c *Column) defaultTagValue() string {
 	if value != "" && strings.TrimSpace(value) == "" {
 		return "'" + value + "'"
 	}
+	const castSeparator = "::"
+	values := strings.Split(value, castSeparator)
+	valuesSize := len(values)
+	if valuesSize > 1 && values[valuesSize-1] == c.columnType() {
+		return strings.Join(values[:valuesSize-1], "")
+	}
 	return value
 }
 
