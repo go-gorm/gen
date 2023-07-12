@@ -54,7 +54,7 @@ func (c *Column) ToField(nullable, coverable, signable bool) *Field {
 		fieldType = "gorm.DeletedAt"
 	case coverable && c.needDefaultTag(c.defaultTagValue()):
 		fieldType = "*" + fieldType
-	case nullable:
+	case nullable && !strings.HasPrefix(fieldType, "*"):
 		if n, ok := c.Nullable(); ok && n {
 			fieldType = "*" + fieldType
 		}
