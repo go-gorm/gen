@@ -283,6 +283,10 @@ func (e expr) value(value interface{}) AssignExpr {
 	return e.setE(clause.Eq{Column: e.col.Name, Value: value})
 }
 
+func (e expr) ValueNull() AssignExpr {
+	return e.setE(clause.Set{{Column: clause.Column{Name: e.col.Name}, Value: nil}})
+}
+
 func (e expr) between(values []interface{}) expr {
 	return e.setE(clause.Expr{SQL: "? BETWEEN ? AND ?", Vars: append([]interface{}{e.RawExpr()}, values...)})
 }
