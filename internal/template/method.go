@@ -374,7 +374,7 @@ func Test_{{.QueryStructName}}Query(t *testing.T) {
 	}
 	
 	var _a _another
-	var _aPK = field.NewString(_a.TableName(), clause.PrimaryKey)
+	var _aPK = field.NewString(_a.TableName(), "id")
 
 	err = _do.Join(&_a, primaryKey.EqCol(_aPK)).Scan(map[string]interface{}{})
 	if err != nil {
