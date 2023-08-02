@@ -64,11 +64,13 @@ func (d *DO) UseDB(db *gorm.DB, opts ...DOOption) {
 }
 
 // ReplaceDB replace db connection
-func (d *DO) ReplaceDB(db *gorm.DB) { d.db = db }
+func (d *DO) ReplaceDB(db *gorm.DB) {
+	d.db = db.Session(&gorm.Session{})
+}
 
 // ReplaceConnPool replace db connection pool
 func (d *DO) ReplaceConnPool(pool gorm.ConnPool) {
-	d.db = d.db.Session(&gorm.Session{Initialized: true})
+	d.db = d.db.Session(&gorm.Session{Initialized: true}).Session(&gorm.Session{})
 	d.db.Statement.ConnPool = pool
 }
 
@@ -254,11 +256,16 @@ func (d *DO) Order(columns ...field.Expr) Dao {
 
 func (d *DO) toOrderValue(columns ...field.Expr) string {
 	// eager build Columns
-	orderArray := make([]string, len(columns))
+	stmt := &gorm.Statement{DB: d.db.Statement.DB, Table: d.db.Statement.Table, Schema: d.db.Statement.Schema}
+
 	for i, c := range columns {
-		orderArray[i] = c.Build(d.db.Statement).String()
+		if i != 0 {
+			stmt.WriteByte(',')
+		}
+		c.Build(stmt)
 	}
-	return strings.Join(orderArray, ",")
+
+	return d.db.Dialector.Explain(stmt.SQL.String(), stmt.Vars...)
 }
 
 // Distinct ...
@@ -279,11 +286,17 @@ func (d *DO) Group(columns ...field.Expr) Dao {
 	if len(columns) == 0 {
 		return d
 	}
-	name := string(columns[0].Build(d.db.Statement))
-	for _, col := range columns[1:] {
-		name += "," + string(col.Build(d.db.Statement))
+
+	stmt := &gorm.Statement{DB: d.db.Statement.DB, Table: d.db.Statement.Table, Schema: d.db.Statement.Schema}
+
+	for i, c := range columns {
+		if i != 0 {
+			stmt.WriteByte(',')
+		}
+		c.Build(stmt)
 	}
-	return d.getInstance(d.db.Group(name))
+
+	return d.getInstance(d.db.Group(stmt.SQL.String()))
 }
 
 // Having ...
@@ -379,7 +392,9 @@ func (d *DO) Assign(attrs ...field.AssignExpr) Dao {
 func (d *DO) attrsValue(attrs []field.AssignExpr) []interface{} {
 	values := make([]interface{}, 0, len(attrs))
 	for _, attr := range attrs {
-		if expr, ok := attr.AssignExpr().(clause.Eq); ok {
+		if expr, ok := attr.AssignExpr().(field.IValues); ok {
+			values = append(values, expr.Values())
+		} else if expr, ok := attr.AssignExpr().(clause.Eq); ok {
 			values = append(values, expr)
 		}
 	}
@@ -833,6 +848,10 @@ func (d *DO) newResultSlicePointer() interface{} {
 	return reflect.New(reflect.SliceOf(reflect.PtrTo(d.modelType))).Interface()
 }
 
+func (d *DO) AddError(err error) error {
+	return d.underlyingDB().AddError(err)
+}
+
 func toColExprFullName(stmt *gorm.Statement, columns ...field.Expr) []string {
 	return buildColExpr(stmt, columns, field.WithAll)
 }
@@ -955,6 +974,12 @@ func Table(subQueries ...SubQuery) Dao {
 		db: subQueries[0].underlyingDO().db.Session(&gorm.Session{NewDB: true}).
 			Table(strings.Join(tablePlaceholder, ", "), tableExprs...),
 	}
+}
+
+// Exists EXISTS expression
+// SELECT * FROM table WHERE EXISTS (SELECT NAME FROM users WHERE id = 1)
+func Exists(subQuery SubQuery) Condition {
+	return field.CompareSubQuery(field.ExistsOp, nil, subQuery.underlyingDB())
 }
 
 // ======================== sub query method ========================

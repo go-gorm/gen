@@ -10,6 +10,9 @@ import (
 	"time"
 
 	"gorm.io/gen"
+	"gorm.io/gen/field"
+
+	"gorm.io/gen/tests/diy_method"
 )
 
 const (
@@ -58,7 +61,61 @@ var generateCase = map[string]func(dir string) *gen.Generator{
 		})
 		g.UseDB(DB)
 		g.WithJSONTagNameStrategy(func(c string) string { return "-" })
+		g.ApplyBasic(g.GenerateAllTable(gen.FieldGORMTagReg(".", func(tag field.GormTag) field.GormTag {
+			//tag.Set("serialize","json")
+			tag.Remove("comment")
+			return tag
+		}))...)
+		return g
+	},
+	generateDirPrefix + "dal_4": func(dir string) *gen.Generator {
+		g := gen.NewGenerator(gen.Config{
+			OutPath: dir + "/query",
+			Mode:    gen.WithDefaultQuery | gen.WithQueryInterface,
+
+			WithUnitTest: true,
+
+			FieldNullable:     true,
+			FieldCoverable:    true,
+			FieldWithIndexTag: true,
+		})
+		g.UseDB(DB)
+		g.WithJSONTagNameStrategy(func(c string) string { return "-" })
 		g.ApplyBasic(g.GenerateAllTable()...)
+		g.ApplyInterface(func(testIF diy_method.TestIF, testFor diy_method.TestFor, method diy_method.InsertMethod, selectMethod diy_method.SelectMethod) {
+		}, g.GenerateModel("users"))
+		return g
+	},
+	generateDirPrefix + "dal_5": func(dir string) *gen.Generator {
+		g := gen.NewGenerator(gen.Config{
+			OutPath: dir + "/query",
+			Mode:    gen.WithDefaultQuery | gen.WithQueryInterface,
+
+			WithUnitTest: true,
+
+			FieldNullable:     true,
+			FieldCoverable:    true,
+			FieldWithIndexTag: true,
+		})
+		g.UseDB(DB)
+		g.WithJSONTagNameStrategy(func(c string) string { return "-" })
+		g.ApplyBasic(g.GenerateModel("users", gen.WithMethod(diy_method.TestForWithMethod{})))
+		return g
+	},
+	generateDirPrefix + "dal_6": func(dir string) *gen.Generator {
+		g := gen.NewGenerator(gen.Config{
+			OutPath: dir + "/query",
+			Mode:    gen.WithDefaultQuery | gen.WithQueryInterface,
+
+			WithUnitTest: true,
+
+			FieldNullable:     true,
+			FieldCoverable:    true,
+			FieldWithIndexTag: true,
+		})
+		g.UseDB(DB)
+		g.WithJSONTagNameStrategy(func(c string) string { return "-" })
+		g.ApplyBasic(g.GenerateModelAs("users", DB.Config.NamingStrategy.SchemaName("users"), gen.WithMethod(diy_method.TestForWithMethod{})))
 		return g
 	},
 }

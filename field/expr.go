@@ -1,6 +1,8 @@
 package field
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -18,10 +20,12 @@ type AssignExpr interface {
 
 // Expr a query expression about field
 type Expr interface {
+	// Clause Expression interface
+	Build(clause.Builder)
+
 	As(alias string) Expr
-	ColumnName() sql
+	IColumnName
 	BuildColumn(*gorm.Statement, ...BuildOpt) sql
-	Build(*gorm.Statement) sql
 	BuildWithArgs(*gorm.Statement) (query sql, args []interface{})
 	RawExpr() expression
 
@@ -30,6 +34,7 @@ type Expr interface {
 	SubCol(col Expr) Expr
 	MulCol(col Expr) Expr
 	DivCol(col Expr) Expr
+	ConcatCol(cols ...Expr) Expr
 
 	// implement Condition
 	BeCond() interface{}
@@ -46,6 +51,10 @@ type OrderExpr interface {
 }
 
 type expression interface{}
+
+type IColumnName interface {
+	ColumnName() sql
+}
 
 type sql string
 
@@ -110,13 +119,15 @@ func (e expr) BuildColumn(stmt *gorm.Statement, opts ...BuildOpt) sql {
 	return sql(stmt.Quote(col))
 }
 
-func (e expr) Build(stmt *gorm.Statement) sql {
+func (e expr) Build(builder clause.Builder) {
 	if e.e == nil {
-		return sql(e.BuildColumn(stmt, WithAll))
+		if stmt, ok := builder.(*gorm.Statement); ok {
+			builder.WriteString(string(e.BuildColumn(stmt, WithAll)))
+			return
+		}
 	}
-	newStmt := &gorm.Statement{DB: stmt.DB, Table: stmt.Table, Schema: stmt.Schema}
-	e.e.Build(newStmt)
-	return sql(newStmt.SQL.String())
+
+	e.e.Build(builder)
 }
 
 func (e expr) BuildWithArgs(stmt *gorm.Statement) (sql, []interface{}) {
@@ -183,6 +194,10 @@ func (e expr) Avg() Float64 {
 	return Float64{e.setE(clause.Expr{SQL: "AVG(?)", Vars: []interface{}{e.RawExpr()}})}
 }
 
+func (e expr) Abs() Float64 {
+	return Float64{e.setE(clause.Expr{SQL: "ABS(?)", Vars: []interface{}{e.RawExpr()}})}
+}
+
 func (e expr) Null() AssignExpr {
 	return e.setE(clause.Eq{Column: e.col.Name, Value: nil})
 }
@@ -235,6 +250,19 @@ func (e expr) MulCol(col Expr) Expr {
 
 func (e expr) DivCol(col Expr) Expr {
 	return Field{e.setE(clause.Expr{SQL: "(?) / (?)", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})}
+}
+
+func (e expr) ConcatCol(cols ...Expr) Expr {
+	placeholders := []string{"?"}
+	vars := []interface{}{e.RawExpr()}
+	for _, col := range cols {
+		placeholders = append(placeholders, "?")
+		vars = append(vars, col.RawExpr())
+	}
+	return Field{e.setE(clause.Expr{
+		SQL:  fmt.Sprintf("Concat(%s)", strings.Join(placeholders, ",")),
+		Vars: vars,
+	})}
 }
 
 // ======================== keyword ========================

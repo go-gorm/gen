@@ -141,10 +141,6 @@ func (b bankDo) Where(conds ...gen.Condition) *bankDo {
 	return b.withDO(b.DO.Where(conds...))
 }
 
-func (b bankDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) *bankDo {
-	return b.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
-}
-
 func (b bankDo) Order(conds ...field.Expr) *bankDo {
 	return b.withDO(b.DO.Order(conds...))
 }

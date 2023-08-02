@@ -57,6 +57,46 @@ func (m *InterfaceMethod) GormRunMethodName() string {
 	return "Take"
 }
 
+// ReturnSQLResult return sql result
+func (m *InterfaceMethod) ReturnSQLResult() bool {
+	for _, res := range m.Result {
+		if res.IsSQLResult() {
+			return true
+		}
+	}
+	return false
+}
+
+// ReturnSQLRow return sql result
+func (m *InterfaceMethod) ReturnSQLRow() bool {
+	for _, res := range m.Result {
+		if res.IsSQLRow() {
+			return true
+		}
+	}
+	return false
+}
+
+// ReturnSQLRows return sql result
+func (m *InterfaceMethod) ReturnSQLRows() bool {
+	for _, res := range m.Result {
+		if res.IsSQLRows() {
+			return true
+		}
+	}
+	return false
+}
+
+// ReturnNothing not return error and rowAffected
+func (m *InterfaceMethod) ReturnNothing() bool {
+	for _, res := range m.Result {
+		if res.IsError() || res.Name == "rowsAffected" {
+			return false
+		}
+	}
+	return true
+}
+
 // ReturnRowsAffected return rows affected
 func (m *InterfaceMethod) ReturnRowsAffected() bool {
 	for _, res := range m.Result {
@@ -113,10 +153,10 @@ func paramToString(params []parser.Param) string {
 
 // DocComment return comment sql add "//" every line
 func (m *InterfaceMethod) DocComment() string {
-	return strings.Replace(strings.TrimSpace(m.Doc), "\n", "\n//", -1)
+	return strings.Replace(strings.Replace(strings.TrimSpace(m.Doc), "\n", "\n// ", -1), "//  ", "// ", -1)
 }
 
-// checkParams check all parameters
+// checkMethod check interface methods
 func (m *InterfaceMethod) checkMethod(methods []*InterfaceMethod, s *QueryStructMeta) (err error) {
 	if model.GormKeywords.FullMatch(m.MethodName) {
 		return fmt.Errorf("can not use keyword as method name:%s", m.MethodName)
@@ -196,6 +236,23 @@ func (m *InterfaceMethod) checkResult(result []parser.Param) (err error) {
 			param.Package = ""
 			param.SetName("rowsAffected")
 			m.GormOption = "Exec"
+		case param.IsSQLResult():
+			param.Type = "Result"
+			param.Package = "sql"
+			param.SetName("result")
+			m.GormOption = "Statement.ConnPool.ExecContext"
+		case param.IsSQLRow():
+			param.Type = "Row"
+			param.Package = "sql"
+			param.SetName("row")
+			m.GormOption = "Raw"
+			param.IsPointer = true
+		case param.IsSQLRows():
+			param.Type = "Rows"
+			param.Package = "sql"
+			param.SetName("rows")
+			m.GormOption = "Raw"
+			param.IsPointer = true
 		default:
 			if !m.ResultData.IsNull() {
 				return fmt.Errorf("query method cannot return more than 1 data value in [%s.%s]", m.InterfaceName, m.MethodName)

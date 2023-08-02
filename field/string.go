@@ -1,6 +1,8 @@
 package field
 
 import (
+	"fmt"
+
 	"gorm.io/gorm/clause"
 )
 
@@ -126,6 +128,15 @@ func (field String) Filed(values ...string) String {
 	return String{field.field(values)}
 }
 
+// SubstringIndex SUBSTRING_INDEX
+// https://dev.mysql.com/doc/refman/8.0/en/functions.html#function_substring-index
+func (field String) SubstringIndex(delim string, count int) String {
+	return String{expr{e: clause.Expr{
+		SQL:  fmt.Sprintf("SUBSTRING_INDEX(?,%q,%d)", delim, count),
+		Vars: []interface{}{field.RawExpr()},
+	}}}
+}
+
 func (field String) toSlice(values []string) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
@@ -235,6 +246,15 @@ func (field Bytes) FindInSetWith(target string) Expr {
 // Filed ...
 func (field Bytes) Filed(values ...[]byte) Bytes {
 	return Bytes{field.field(values)}
+}
+
+// SubstringIndex SUBSTRING_INDEX
+// https://dev.mysql.com/doc/refman/8.0/en/functions.html#function_substring-index
+func (field Bytes) SubstringIndex(delim string, count int) Bytes {
+	return Bytes{expr{e: clause.Expr{
+		SQL:  fmt.Sprintf("SUBSTRING_INDEX(?,%q,%d)", delim, count),
+		Vars: []interface{}{field.RawExpr()},
+	}}}
 }
 
 func (field Bytes) toSlice(values [][]byte) []interface{} {

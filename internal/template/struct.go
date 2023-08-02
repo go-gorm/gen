@@ -23,6 +23,8 @@ const (
 
 	func ({{.S}} {{.QueryStructName}}) Alias() string { return {{.S}}.{{.QueryStructName}}Do.Alias() }
 
+	func ({{.S}} {{.QueryStructName}}) Columns(cols ...field.Expr) gen.Columns { return {{.S}}.{{.QueryStructName}}Do.Columns(cols...) }
+
 	` + getFieldMethod + fillFieldMapMethod + cloneMethod + replaceMethod + relationship + defineMethodStruct
 
 	// TableQueryIface table query interface
@@ -234,6 +236,11 @@ func (a {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}) Where(conds ..
 
 func (a {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}) WithContext(ctx context.Context) *{{$.QueryStructName}}{{$relationship}}{{$relation.Name}} {
 	a.db = a.db.WithContext(ctx)
+	return &a
+}
+
+func (a {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}) Session(session *gorm.Session) *{{$.QueryStructName}}{{$relationship}}{{$relation.Name}} {
+	a.db = a.db.Session(session)
 	return &a
 }
 

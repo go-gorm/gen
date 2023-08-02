@@ -88,6 +88,8 @@ func (c creditCard) TableName() string { return c.creditCardDo.TableName() }
 
 func (c creditCard) Alias() string { return c.creditCardDo.Alias() }
 
+func (c creditCard) Columns(cols ...field.Expr) gen.Columns { return c.creditCardDo.Columns(cols...) }
+
 func (c *creditCard) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := c.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -223,10 +225,6 @@ func (c creditCardDo) Select(conds ...field.Expr) ICreditCardDo {
 
 func (c creditCardDo) Where(conds ...gen.Condition) ICreditCardDo {
 	return c.withDO(c.DO.Where(conds...))
-}
-
-func (c creditCardDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) ICreditCardDo {
-	return c.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (c creditCardDo) Order(conds ...field.Expr) ICreditCardDo {

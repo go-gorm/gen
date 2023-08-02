@@ -110,6 +110,10 @@ func (field Time) MonthName() String {
 	return String{expr{e: clause.Expr{SQL: "MONTHNAME(?)", Vars: []interface{}{field.RawExpr()}}}}
 }
 
+func (field Time) Year() Int {
+	return Int{expr{e: clause.Expr{SQL: "YEAR(?)", Vars: []interface{}{field.RawExpr()}}}}
+}
+
 // Month equal to MONTH(self)
 func (field Time) Month() Int {
 	return Int{expr{e: clause.Expr{SQL: "MONTH(?)", Vars: []interface{}{field.RawExpr()}}}}
@@ -181,7 +185,7 @@ func (field Time) Sum() Time {
 }
 
 // IfNull ...
-func (field Time) IfNull(value Time) Expr {
+func (field Time) IfNull(value time.Time) Expr {
 	return field.ifNull(value)
 }
 

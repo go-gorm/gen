@@ -1,34 +1,33 @@
 package model
 
 import (
-	"bytes"
 	"fmt"
 	"reflect"
 	"strings"
 
+	"gorm.io/gen/field"
 	"gorm.io/gorm"
 )
 
 // Column table column's info
 type Column struct {
 	gorm.ColumnType
-	TableName   string                                               `gorm:"column:TABLE_NAME"`
-	Indexes     []*Index                                             `gorm:"-"`
-	UseScanType bool                                                 `gorm:"-"`
-	dataTypeMap map[string]func(detailType string) (dataType string) `gorm:"-"`
-	jsonTagNS   func(columnName string) string                       `gorm:"-"`
-	newTagNS    func(columnName string) string                       `gorm:"-"`
+	TableName   string                                                        `gorm:"column:TABLE_NAME"`
+	Indexes     []*Index                                                      `gorm:"-"`
+	UseScanType bool                                                          `gorm:"-"`
+	dataTypeMap map[string]func(columnType gorm.ColumnType) (dataType string) `gorm:"-"`
+	jsonTagNS   func(columnName string) string                                `gorm:"-"`
 }
 
 // SetDataTypeMap set data type map
-func (c *Column) SetDataTypeMap(m map[string]func(detailType string) (dataType string)) {
+func (c *Column) SetDataTypeMap(m map[string]func(columnType gorm.ColumnType) (dataType string)) {
 	c.dataTypeMap = m
 }
 
 // GetDataType get data type
 func (c *Column) GetDataType() (fieldtype string) {
 	if mapping, ok := c.dataTypeMap[c.DatabaseTypeName()]; ok {
-		return mapping(c.columnType())
+		return mapping(c.ColumnType)
 	}
 	if c.UseScanType && c.ScanType() != nil {
 		return c.ScanType().String()
@@ -37,13 +36,10 @@ func (c *Column) GetDataType() (fieldtype string) {
 }
 
 // WithNS with name strategy
-func (c *Column) WithNS(jsonTagNS, newTagNS func(columnName string) string) {
-	c.jsonTagNS, c.newTagNS = jsonTagNS, newTagNS
+func (c *Column) WithNS(jsonTagNS func(columnName string) string) {
+	c.jsonTagNS = jsonTagNS
 	if c.jsonTagNS == nil {
 		c.jsonTagNS = func(n string) string { return n }
-	}
-	if c.newTagNS == nil {
-		c.newTagNS = func(string) string { return "" }
 	}
 }
 
@@ -58,7 +54,7 @@ func (c *Column) ToField(nullable, coverable, signable bool) *Field {
 		fieldType = "gorm.DeletedAt"
 	case coverable && c.needDefaultTag(c.defaultTagValue()):
 		fieldType = "*" + fieldType
-	case nullable:
+	case nullable && !strings.HasPrefix(fieldType, "*"):
 		if n, ok := c.Nullable(); ok && n {
 			fieldType = "*" + fieldType
 		}
@@ -75,8 +71,7 @@ func (c *Column) ToField(nullable, coverable, signable bool) *Field {
 		ColumnName:       c.Name(),
 		MultilineComment: c.multilineComment(),
 		GORMTag:          c.buildGormTag(),
-		JSONTag:          c.jsonTagNS(c.Name()),
-		NewTag:           c.newTagNS(c.Name()),
+		Tag:              map[string]string{field.TagKeyJson: c.jsonTagNS(c.Name())},
 		ColumnComment:    comment,
 	}
 }
@@ -86,19 +81,20 @@ func (c *Column) multilineComment() bool {
 	return ok && strings.Contains(cm, "\n")
 }
 
-func (c *Column) buildGormTag() string {
-	var buf bytes.Buffer
-	buf.WriteString(fmt.Sprintf("column:%s;type:%s", c.Name(), c.columnType()))
-
+func (c *Column) buildGormTag() field.GormTag {
+	tag := field.GormTag{
+		field.TagKeyGormColumn: []string{c.Name()},
+		field.TagKeyGormType:   []string{c.columnType()},
+	}
 	isPriKey, ok := c.PrimaryKey()
 	isValidPriKey := ok && isPriKey
 	if isValidPriKey {
-		buf.WriteString(";primaryKey")
+		tag.Set(field.TagKeyGormPrimaryKey, "")
 		if at, ok := c.AutoIncrement(); ok {
-			buf.WriteString(fmt.Sprintf(";autoIncrement:%t", at))
+			tag.Set(field.TagKeyGormAutoIncrement, fmt.Sprintf("%t", at))
 		}
 	} else if n, ok := c.Nullable(); ok && !n {
-		buf.WriteString(";not null")
+		tag.Set(field.TagKeyGormNotNull, "")
 	}
 
 	for _, idx := range c.Indexes {
@@ -109,16 +105,22 @@ func (c *Column) buildGormTag() string {
 			continue
 		}
 		if uniq, _ := idx.Unique(); uniq {
-			buf.WriteString(fmt.Sprintf(";uniqueIndex:%s,priority:%d", idx.Name(), idx.Priority))
+			tag.Append(field.TagKeyGormUniqueIndex, fmt.Sprintf("%s,priority:%d", idx.Name(), idx.Priority))
 		} else {
-			buf.WriteString(fmt.Sprintf(";index:%s,priority:%d", idx.Name(), idx.Priority))
+			tag.Append(field.TagKeyGormIndex, fmt.Sprintf("%s,priority:%d", idx.Name(), idx.Priority))
 		}
 	}
 
-	if dtValue := c.defaultTagValue(); !isValidPriKey && c.needDefaultTag(dtValue) { // cannot set default tag for primary key
-		buf.WriteString(fmt.Sprintf(`;default:%s`, dtValue))
+	if dtValue := c.defaultTagValue(); c.needDefaultTag(dtValue) { // cannot set default tag for primary key
+		tag.Set(field.TagKeyGormDefault, dtValue)
 	}
-	return buf.String()
+	if comment, ok := c.Comment(); ok && comment != "" {
+		if c.multilineComment() {
+			comment = strings.ReplaceAll(comment, "\n", "\\n")
+		}
+		tag.Set(field.TagKeyGormComment, comment)
+	}
+	return tag
 }
 
 // needDefaultTag check if default tag needed

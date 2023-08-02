@@ -19,7 +19,7 @@ import (
 // {{.ModelStructName}} {{.StructComment}}
 type {{.ModelStructName}} struct {
     {{range .Fields}}
-	{{if .MultilineComment -}}
+    {{if .MultilineComment -}}
 	/*
 {{.ColumnComment}}
     */

@@ -219,9 +219,9 @@ type RelateConfig struct {
 	RelateSlicePointer bool
 
 	JSONTag      string
-	GORMTag      string
-	NewTag       string
-	OverwriteTag string
+	GORMTag      GormTag
+	Tag          Tag
+	OverwriteTag Tag
 }
 
 // RelateFieldPrefix return generated relation field's type
@@ -236,4 +236,20 @@ func (c *RelateConfig) RelateFieldPrefix(relationshipType RelationshipType) stri
 	default:
 		return defaultRelationshipPrefix[relationshipType]
 	}
+}
+func (c *RelateConfig) GetTag(fieldName string) Tag {
+	if c == nil {
+		return Tag{}
+	}
+	if c.OverwriteTag != nil {
+		return c.OverwriteTag
+	}
+	if c.Tag == nil {
+		c.Tag = Tag{}
+	}
+	if c.JSONTag == "" {
+		c.JSONTag = ns.ColumnName("", fieldName)
+	}
+	c.Tag.Set(TagKeyJson, c.JSONTag)
+	return c.Tag
 }

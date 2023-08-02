@@ -181,6 +181,21 @@ func (p *Param) IsTime() bool {
 	return p.Package == "time" && p.Type == "Time"
 }
 
+// IsSQLResult ...
+func (p *Param) IsSQLResult() bool {
+	return (p.Package == "sql" && p.Type == "Result") || (p.Package == "gen" && p.Type == "SQLResult")
+}
+
+// IsSQLRow ...
+func (p *Param) IsSQLRow() bool {
+	return (p.Package == "sql" && p.Type == "Row") || (p.Package == "gen" && p.Type == "SQLRow")
+}
+
+// IsSQLRows ...
+func (p *Param) IsSQLRows() bool {
+	return (p.Package == "sql" && p.Type == "Rows") || (p.Package == "gen" && p.Type == "SQLRows")
+}
+
 // SetName ...
 func (p *Param) SetName(name string) {
 	p.Name = name
@@ -278,6 +293,9 @@ func (p *Param) astGetEltType(expr ast.Expr) {
 		p.astGetEltType(v.X)
 	case *ast.InterfaceType:
 		p.Type = "interface{}"
+	case *ast.ArrayType:
+		p.astGetEltType(v.Elt)
+		p.Type = "[]" + p.Type
 	default:
 		log.Fatalf("unknow param type: %+v", v)
 	}

@@ -155,10 +155,6 @@ func (c creditCardDo) Where(conds ...gen.Condition) *creditCardDo {
 	return c.withDO(c.DO.Where(conds...))
 }
 
-func (c creditCardDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) *creditCardDo {
-	return c.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
-}
-
 func (c creditCardDo) Order(conds ...field.Expr) *creditCardDo {
 	return c.withDO(c.DO.Order(conds...))
 }

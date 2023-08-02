@@ -68,11 +68,11 @@ func (q *Query) clone(db *gorm.DB) *Query {
 }
 
 func (q *Query) ReadDB() *Query {
-	return q.clone(q.db.Clauses(dbresolver.Read))
+	return q.ReplaceDB(q.db.Clauses(dbresolver.Read))
 }
 
 func (q *Query) WriteDB() *Query {
-	return q.clone(q.db.Clauses(dbresolver.Write))
+	return q.ReplaceDB(q.db.Clauses(dbresolver.Write))
 }
 
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
@@ -109,10 +109,14 @@ func (q *Query) Transaction(fc func(tx *Query) error, opts ...*sql.TxOptions) er
 }
 
 func (q *Query) Begin(opts ...*sql.TxOptions) *QueryTx {
-	return &QueryTx{q.clone(q.db.Begin(opts...))}
+	tx := q.db.Begin(opts...)
+	return &QueryTx{Query: q.clone(tx), Error: tx.Error}
 }
 
-type QueryTx struct{ *Query }
+type QueryTx struct {
+	*Query
+	Error error
+}
 
 func (q *QueryTx) Commit() error {
 	return q.db.Commit().Error

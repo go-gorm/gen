@@ -3,6 +3,7 @@ package main
 import (
 	"strings"
 
+	"gorm.io/gen/field"
 	"gorm.io/gen/helper"
 )
 
@@ -57,7 +58,7 @@ func (f *DemoField) GORMTag() string { return f.gormTag }
 func (f *DemoField) JSONTag() string { return f.jsonTag }
 
 // Tag return new tag
-func (f *DemoField) Tag() string { return f.tag }
+func (f *DemoField) Tag() field.Tag { return field.Tag{} }
 
 // Comment return comment
 func (f *DemoField) Comment() string { return f.comment }
