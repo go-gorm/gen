@@ -147,6 +147,11 @@ func (field Int) IfNull(value int) Expr {
 	return field.ifNull(value)
 }
 
+// Filed ...
+func (field Int) Filed(values ...int) Int {
+	return Int{field.field(values)}
+}
+
 func (field Int) toSlice(values ...int) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
@@ -296,6 +301,11 @@ func (field Int8) Sum() Int8 {
 // IfNull ...
 func (field Int8) IfNull(value int8) Expr {
 	return field.ifNull(value)
+}
+
+// Filed ...
+func (field Int8) Filed(values ...int8) Int8 {
+	return Int8{field.field(values)}
 }
 
 func (field Int8) toSlice(values ...int8) []interface{} {
@@ -449,6 +459,11 @@ func (field Int16) IfNull(value int16) Expr {
 	return field.ifNull(value)
 }
 
+// Filed ...
+func (field Int16) Filed(values ...int16) Int16 {
+	return Int16{field.field(values)}
+}
+
 func (field Int16) toSlice(values ...int16) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
@@ -598,6 +613,11 @@ func (field Int32) Sum() Int32 {
 // IfNull ...
 func (field Int32) IfNull(value int32) Expr {
 	return field.ifNull(value)
+}
+
+// Filed ...
+func (field Int32) Filed(values ...int32) Int32 {
+	return Int32{field.field(values)}
 }
 
 func (field Int32) toSlice(values ...int32) []interface{} {
@@ -751,6 +771,11 @@ func (field Int64) IfNull(value int64) Expr {
 	return field.ifNull(value)
 }
 
+// Filed ...
+func (field Int64) Filed(values ...int64) Int64 {
+	return Int64{field.field(values)}
+}
+
 func (field Int64) toSlice(values ...int64) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
@@ -900,6 +925,11 @@ func (field Uint) Sum() Uint {
 // IfNull ...
 func (field Uint) IfNull(value uint) Expr {
 	return field.ifNull(value)
+}
+
+// Filed ...
+func (field Uint) Filed(values ...uint) Uint {
+	return Uint{field.field(values)}
 }
 
 func (field Uint) toSlice(values ...uint) []interface{} {
@@ -1053,6 +1083,11 @@ func (field Uint8) IfNull(value uint8) Expr {
 	return field.ifNull(value)
 }
 
+// Filed ...
+func (field Uint8) Filed(values ...uint8) Uint8 {
+	return Uint8{field.field(values)}
+}
+
 func (field Uint8) toSlice(values ...uint8) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
@@ -1202,6 +1237,11 @@ func (field Uint16) Sum() Uint16 {
 // IfNull ...
 func (field Uint16) IfNull(value uint16) Expr {
 	return field.ifNull(value)
+}
+
+// Filed ...
+func (field Uint16) Filed(values ...uint16) Uint16 {
+	return Uint16{field.field(values)}
 }
 
 func (field Uint16) toSlice(values ...uint16) []interface{} {
@@ -1355,6 +1395,11 @@ func (field Uint32) IfNull(value uint32) Expr {
 	return field.ifNull(value)
 }
 
+// Filed ...
+func (field Uint32) Filed(values ...uint32) Uint32 {
+	return Uint32{field.field(values)}
+}
+
 func (field Uint32) toSlice(values ...uint32) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
@@ -1504,6 +1549,11 @@ func (field Uint64) Sum() Uint64 {
 // IfNull ...
 func (field Uint64) IfNull(value uint64) Expr {
 	return field.ifNull(value)
+}
+
+// Filed ...
+func (field Uint64) Filed(values ...uint64) Uint64 {
+	return Uint64{field.field(values)}
 }
 
 func (field Uint64) toSlice(values ...uint64) []interface{} {

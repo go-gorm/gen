@@ -411,6 +411,10 @@ func (e expr) ifNull(value interface{}) expr {
 	return e.setE(clause.Expr{SQL: "IFNULL(?,?)", Vars: []interface{}{e.RawExpr(), value}})
 }
 
+func (e expr) field(value interface{}) expr {
+	return e.setE(clause.Expr{SQL: "FIELD(?, ?)", Vars: []interface{}{e.RawExpr(), value}, WithoutParentheses: true})
+}
+
 func (e expr) sum() expr {
 	return e.setE(clause.Expr{SQL: "SUM(?)", Vars: []interface{}{e.RawExpr()}})
 }

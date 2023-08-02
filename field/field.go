@@ -70,6 +70,11 @@ func (field Field) IfNull(value driver.Valuer) Expr {
 	return field.ifNull(value)
 }
 
+// Field ...
+func (field Field) Field(value []interface{}) Expr {
+	return field.field(value)
+}
+
 func (field Field) toSlice(values ...driver.Valuer) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {

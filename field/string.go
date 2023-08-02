@@ -123,6 +123,11 @@ func (field String) Concat(before, after string) String {
 	}
 }
 
+// Filed ...
+func (field String) Filed(values ...string) String {
+	return String{field.field(values)}
+}
+
 // SubstringIndex SUBSTRING_INDEX
 // https://dev.mysql.com/doc/refman/8.0/en/functions.html#function_substring-index
 func (field String) SubstringIndex(delim string, count int) String {
@@ -236,6 +241,11 @@ func (field Bytes) FindInSet(targetList string) Expr {
 // FindInSetWith FIND_IN_SET(input_string, field_name)
 func (field Bytes) FindInSetWith(target string) Expr {
 	return expr{e: clause.Expr{SQL: "FIND_IN_SET(?,?)", Vars: []interface{}{target, field.RawExpr()}}}
+}
+
+// Filed ...
+func (field Bytes) Filed(values ...[]byte) Bytes {
+	return Bytes{field.field(values)}
 }
 
 // SubstringIndex SUBSTRING_INDEX
