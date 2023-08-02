@@ -26,3 +26,7 @@ func (f *function) FromUnixTime(date uint64, format string) String {
 	}
 	return String{expr{e: clause.Expr{SQL: "FROM_UNIXTIME(?)", Vars: []interface{}{date}}}}
 }
+
+func (f *function) Rand() String {
+	return String{expr{e: clause.Expr{SQL: "RAND()"}}}
+}
