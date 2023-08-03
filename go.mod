@@ -3,6 +3,7 @@ module gorm.io/gen
 go 1.18
 
 require (
+	github.com/creasty/defaults v1.7.0
 	golang.org/x/tools v0.6.0
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/datatypes v1.1.1-0.20230130040222-c43177d3cf8c

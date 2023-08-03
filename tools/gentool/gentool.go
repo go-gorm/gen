@@ -15,6 +15,8 @@ import (
 	"gorm.io/driver/sqlserver"
 	"gorm.io/gen"
 	"gorm.io/gorm"
+
+	"github.com/creasty/defaults"
 )
 
 // DBType database type
@@ -31,18 +33,29 @@ const (
 
 // CmdParams is command line parameters
 type CmdParams struct {
-	DSN               string   `yaml:"dsn"`               // consult[https://gorm.io/docs/connecting_to_the_database.html]"
-	DB                string   `yaml:"db"`                // input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]
-	Tables            []string `yaml:"tables"`            // enter the required data table or leave it blank
-	OnlyModel         bool     `yaml:"onlyModel"`         // only generate model
-	OutPath           string   `yaml:"outPath"`           // specify a directory for output
-	OutFile           string   `yaml:"outFile"`           // query code file name, default: gen.go
-	WithUnitTest      bool     `yaml:"withUnitTest"`      // generate unit test for query code
-	ModelPkgName      string   `yaml:"modelPkgName"`      // generated model code's package name
-	FieldNullable     bool     `yaml:"fieldNullable"`     // generate with pointer when field is nullable
-	FieldWithIndexTag bool     `yaml:"fieldWithIndexTag"` // generate field with gorm index tag
-	FieldWithTypeTag  bool     `yaml:"fieldWithTypeTag"`  // generate field with gorm column type tag
-	FieldSignable     bool     `yaml:"fieldSignable"`     // detect integer field's unsigned type, adjust generated data type
+	DSN               string   `yaml:"dsn"`                           // consult[https://gorm.io/docs/connecting_to_the_database.html]"
+	DB                string   `yaml:"db" default:"mysql"`            // input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]
+	Tables            []string `yaml:"tables"`                        // enter the required data table or leave it blank
+	OnlyModel         bool     `yaml:"onlyModel"`                     // only generate model
+	OutPath           string   `yaml:"outPath" default:"./dao/query"` // specify a directory for output
+	OutFile           string   `yaml:"outFile"`                       // query code file name, default: gen.go
+	WithUnitTest      bool     `yaml:"withUnitTest"`                  // generate unit test for query code
+	ModelPkgName      string   `yaml:"modelPkgName"`                  // generated model code's package name
+	FieldNullable     bool     `yaml:"fieldNullable"`                 // generate with pointer when field is nullable
+	FieldWithIndexTag bool     `yaml:"fieldWithIndexTag"`             // generate field with gorm index tag
+	FieldWithTypeTag  bool     `yaml:"fieldWithTypeTag"`              // generate field with gorm column type tag
+	FieldSignable     bool     `yaml:"fieldSignable"`                 // detect integer field's unsigned type, adjust generated data type
+}
+
+func (c *CmdParams) UnmarshalYAML(unmarshal func(any) error) error {
+	defaults.Set(c)
+
+	type plain CmdParams
+	if err := unmarshal((*plain)(c)); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // YamlConfig is yaml config struct
@@ -113,10 +126,10 @@ func argParse() *CmdParams {
 	// choose is file or flag
 	genPath := flag.String("c", "", "is path for gen.yml")
 	dsn := flag.String("dsn", "", "consult[https://gorm.io/docs/connecting_to_the_database.html]")
-	db := flag.String("db", "mysql", "input mysql|postgres|sqlite|sqlserver|clickhouse. consult[https://gorm.io/docs/connecting_to_the_database.html]")
+	db := flag.String("db", "", "input mysql|postgres|sqlite|sqlserver|clickhouse. consult[https://gorm.io/docs/connecting_to_the_database.html]")
 	tableList := flag.String("tables", "", "enter the required data table or leave it blank")
 	onlyModel := flag.Bool("onlyModel", false, "only generate models (without query file)")
-	outPath := flag.String("outPath", "./dao/query", "specify a directory for output")
+	outPath := flag.String("outPath", "", "specify a directory for output")
 	outFile := flag.String("outFile", "", "query code file name, default: gen.go")
 	withUnitTest := flag.Bool("withUnitTest", false, "generate unit test for query code")
 	modelPkgName := flag.String("modelPkgName", "", "generated model code's package name")
