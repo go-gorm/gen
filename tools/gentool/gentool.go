@@ -211,8 +211,6 @@ func main() {
 		log.Fatalln("parse config fail")
 	}
 
-	fmt.Printf("config: %+v\n", *config)
-
 	db, err := connectDB(DBType(config.DB), config.DSN)
 	if err != nil {
 		log.Fatalln("connect db server fail:", err)
