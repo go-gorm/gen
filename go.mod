@@ -8,7 +8,7 @@ require (
 	gorm.io/datatypes v1.1.1-0.20230130040222-c43177d3cf8c
 	gorm.io/driver/clickhouse v0.5.0
 	gorm.io/driver/mysql v1.5.1-0.20230509030346-3715c134c25b
-	gorm.io/driver/postgres v1.4.5
+	gorm.io/driver/postgres v1.5.2
 	gorm.io/driver/sqlite v1.4.3
 	gorm.io/driver/sqlserver v1.4.1
 	gorm.io/gorm v1.25.1-0.20230505075827-e61b98d69677
@@ -32,9 +32,9 @@ require (
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgproto3/v2 v2.3.1 // indirect
-	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
+	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/pgtype v1.12.0 // indirect
-	github.com/jackc/pgx/v4 v4.17.2 // indirect
+	github.com/jackc/pgx/v5 v5.3.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/klauspost/compress v1.15.11 // indirect
@@ -48,8 +48,8 @@ require (
 	github.com/stretchr/testify v1.8.2 // indirect
 	go.opentelemetry.io/otel v1.10.0 // indirect
 	go.opentelemetry.io/otel/trace v1.10.0 // indirect
-	golang.org/x/crypto v0.0.0-20221005025214-4161e89ecf1b // indirect
+	golang.org/x/crypto v0.8.0 // indirect
 	golang.org/x/mod v0.8.0 // indirect
-	golang.org/x/sys v0.5.0 // indirect
-	golang.org/x/text v0.8.0 // indirect
+	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/text v0.9.0 // indirect
 )
