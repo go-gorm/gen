@@ -123,6 +123,16 @@ func (field String) Concat(before, after string) String {
 	}
 }
 
+// Lower converts a string to lower-case.
+func (field String) Lower() String {
+	return String{expr{e: clause.Expr{SQL: "LOWER(?)", Vars: []interface{}{field.RawExpr()}}}}
+}
+
+// Upper converts a string to upper-case.
+func (field String) Upper() String {
+	return String{expr{e: clause.Expr{SQL: "UPPER(?)", Vars: []interface{}{field.RawExpr()}}}}
+}
+
 // Filed ...
 func (field String) Filed(values ...string) String {
 	return String{field.field(values)}
@@ -241,6 +251,16 @@ func (field Bytes) FindInSet(targetList string) Expr {
 // FindInSetWith FIND_IN_SET(input_string, field_name)
 func (field Bytes) FindInSetWith(target string) Expr {
 	return expr{e: clause.Expr{SQL: "FIND_IN_SET(?,?)", Vars: []interface{}{target, field.RawExpr()}}}
+}
+
+// Lower converts a string to lower-case.
+func (field Bytes) Lower() String {
+	return String{expr{e: clause.Expr{SQL: "LOWER(?)", Vars: []interface{}{field.RawExpr()}}}}
+}
+
+// Upper converts a string to upper-case.
+func (field Bytes) Upper() String {
+	return String{expr{e: clause.Expr{SQL: "UPPER(?)", Vars: []interface{}{field.RawExpr()}}}}
 }
 
 // Filed ...
