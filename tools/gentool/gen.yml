@@ -22,6 +22,8 @@ database:
   modelPkgName  : ""
   # generate with pointer when field is nullable
   fieldNullable : false
+  # generate with pointer when field has default value
+  fieldCoverable : false
   # generate field with gorm index tag
   fieldWithIndexTag : false
   # generate field with gorm column type tag

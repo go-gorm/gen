@@ -43,6 +43,7 @@ type CmdParams struct {
 	WithUnitTest      bool     `yaml:"withUnitTest"`      // generate unit test for query code
 	ModelPkgName      string   `yaml:"modelPkgName"`      // generated model code's package name
 	FieldNullable     bool     `yaml:"fieldNullable"`     // generate with pointer when field is nullable
+	FieldCoverable    bool     `yaml:"fieldCoverable"`    // generate with pointer when field has default value
 	FieldWithIndexTag bool     `yaml:"fieldWithIndexTag"` // generate field with gorm index tag
 	FieldWithTypeTag  bool     `yaml:"fieldWithTypeTag"`  // generate field with gorm column type tag
 	FieldSignable     bool     `yaml:"fieldSignable"`     // detect integer field's unsigned type, adjust generated data type
@@ -149,6 +150,7 @@ func argParse() *CmdParams {
 	withUnitTest := flag.Bool("withUnitTest", false, "generate unit test for query code")
 	modelPkgName := flag.String("modelPkgName", "", "generated model code's package name")
 	fieldNullable := flag.Bool("fieldNullable", false, "generate with pointer when field is nullable")
+	fieldCoverable := flag.Bool("fieldCoverable", false, "generate with pointer when field has default value")
 	fieldWithIndexTag := flag.Bool("fieldWithIndexTag", false, "generate field with gorm index tag")
 	fieldWithTypeTag := flag.Bool("fieldWithTypeTag", false, "generate field with gorm column type tag")
 	fieldSignable := flag.Bool("fieldSignable", false, "detect integer field's unsigned type, adjust generated data type")
@@ -187,6 +189,9 @@ func argParse() *CmdParams {
 	if *fieldNullable {
 		cmdParse.FieldNullable = *fieldNullable
 	}
+	if *fieldCoverable {
+		cmdParse.FieldCoverable = *fieldCoverable
+	}
 	if *fieldWithIndexTag {
 		cmdParse.FieldWithIndexTag = *fieldWithIndexTag
 	}
@@ -205,6 +210,7 @@ func main() {
 	if config == nil {
 		log.Fatalln("parse config fail")
 	}
+
 	db, err := connectDB(DBType(config.DB), config.DSN)
 	if err != nil {
 		log.Fatalln("connect db server fail:", err)
@@ -216,6 +222,7 @@ func main() {
 		ModelPkgPath:      config.ModelPkgName,
 		WithUnitTest:      config.WithUnitTest,
 		FieldNullable:     config.FieldNullable,
+		FieldCoverable:    config.FieldCoverable,
 		FieldWithIndexTag: config.FieldWithIndexTag,
 		FieldWithTypeTag:  config.FieldWithTypeTag,
 		FieldSignable:     config.FieldSignable,
