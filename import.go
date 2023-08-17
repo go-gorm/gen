@@ -12,7 +12,7 @@ var (
 		"gorm.io/gorm/schema",
 		"gorm.io/gorm/clause",
 		"",
-		"github.com/dieagenturverwaltung/gorm-gen",
+		"gen \"github.com/dieagenturverwaltung/gorm-gen\"",
 		"github.com/dieagenturverwaltung/gorm-gen/field",
 		"github.com/dieagenturverwaltung/gorm-gen/helper",
 		"",
