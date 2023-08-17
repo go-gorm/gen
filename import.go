@@ -1,6 +1,9 @@
 package gen
 
-import "strings"
+import (
+	"regexp"
+	"strings"
+)
 
 var (
 	importList = new(importPkgS).Add(
@@ -46,8 +49,20 @@ func (ip importPkgS) Add(paths ...string) *importPkgS {
 			p = `"` + p + `"`
 		}
 
+		reg := regexp.MustCompile(`^.*"(.*)"$`)
+
 		var exists bool
 		for _, existsP := range ip.paths {
+			submatch := reg.FindStringSubmatch(existsP)
+			if len(submatch) < 2 {
+				continue
+			}
+
+			if submatch[1] == p {
+				exists = true
+				break
+			}
+
 			if p == existsP {
 				exists = true
 				break
