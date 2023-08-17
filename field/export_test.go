@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"gorm.io/gen/field"
+	"github.com/dieagenturverwaltung/gorm-gen/field"
 )
 
 var _ field.ScanValuer = new(password)

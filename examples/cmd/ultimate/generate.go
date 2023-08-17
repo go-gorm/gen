@@ -1,10 +1,10 @@
 package main
 
 import (
-	"gorm.io/gen"
-	"gorm.io/gen/examples/conf"
-	"gorm.io/gen/examples/dal"
-	"gorm.io/gen/examples/dal/model"
+	"github.com/dieagenturverwaltung/gorm-gen"
+	"github.com/dieagenturverwaltung/gorm-gen/examples/conf"
+	"github.com/dieagenturverwaltung/gorm-gen/examples/dal"
+	"github.com/dieagenturverwaltung/gorm-gen/examples/dal/model"
 	"gorm.io/gorm"
 )
 

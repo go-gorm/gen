@@ -9,9 +9,9 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 
-	"gorm.io/gen/field"
-	"gorm.io/gen/internal/model"
-	"gorm.io/gen/internal/parser"
+	"github.com/dieagenturverwaltung/gorm-gen/field"
+	"github.com/dieagenturverwaltung/gorm-gen/internal/model"
+	"github.com/dieagenturverwaltung/gorm-gen/internal/parser"
 )
 
 type FieldParser interface {
@@ -50,7 +50,6 @@ func (b *QueryStructMeta) parseStruct(st interface{}) error {
 		return err
 	}
 	b.TableName = stmt.Table
-	b.FileName = strings.ToLower(stmt.Table)
 
 	var fp FieldParser = dummyFieldParser{}
 	if fps, ok := st.(FieldParser); ok && fps != nil {

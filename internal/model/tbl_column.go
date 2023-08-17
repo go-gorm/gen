@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"strings"
 
-	"gorm.io/gen/field"
+	"github.com/dieagenturverwaltung/gorm-gen/field"
 	"gorm.io/gorm"
 )
 
@@ -101,7 +101,7 @@ func (c *Column) buildGormTag() field.GormTag {
 		if idx == nil {
 			continue
 		}
-		if pk, _ := idx.PrimaryKey(); pk { //ignore PrimaryKey
+		if pk, _ := idx.PrimaryKey(); pk { // ignore PrimaryKey
 			continue
 		}
 		if uniq, _ := idx.Unique(); uniq {

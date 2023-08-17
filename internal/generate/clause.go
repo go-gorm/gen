@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"gorm.io/gen/internal/model"
+	"github.com/dieagenturverwaltung/gorm-gen/internal/model"
 )
 
 // Clause a symbol of clause, it can be sql condition clause, if clause, where clause, set clause and else clause

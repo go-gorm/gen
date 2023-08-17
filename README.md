@@ -8,7 +8,7 @@ Friendly & Safer GORM powered by Code Generation.
 [![OpenIssue](https://img.shields.io/github/issues/go-gorm/gen)](https://github.com/go-gorm/gen/issues?q=is%3Aopen+is%3Aissue)
 [![ClosedIssue](https://img.shields.io/github/issues-closed/go-gorm/gen)](https://github.com/go-gorm/gen/issues?q=is%3Aissue+is%3Aclosed)
 [![TODOs](https://badgen.net/https/api.tickgit.com/badgen/github.com/go-gorm/gen)](https://www.tickgit.com/browse?repo=github.com/go-gorm/gen)
-[![Go.Dev reference](https://img.shields.io/badge/go.dev-reference-blue?logo=go&logoColor=white)](https://pkg.go.dev/gorm.io/gen?tab=doc)
+[![Go.Dev reference](https://img.shields.io/badge/go.dev-reference-blue?logo=go&logoColor=white)](https://pkg.go.dev/github.com/dieagenturverwaltung/gorm-gen?tab=doc)
 
 ## Overview
 
@@ -19,7 +19,7 @@ Friendly & Safer GORM powered by Code Generation.
 
 ## Getting Started
 
-* Gen Guides [https://gorm.io/gen/index.html](https://gorm.io/gen/index.html)
+* Gen Guides [https://github.com/dieagenturverwaltung/gorm-gen/index.html](https://github.com/dieagenturverwaltung/gorm-gen/index.html)
 * GORM Guides [http://gorm.io/docs](http://gorm.io/docs)
 
 ## Maintainers

@@ -9,10 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"gorm.io/gen"
-	"gorm.io/gen/field"
+	"github.com/dieagenturverwaltung/gorm-gen/field"
 
-	"gorm.io/gen/tests/diy_method"
+	"github.com/dieagenturverwaltung/gorm-gen/tests/diy_method"
 )
 
 const (
@@ -62,7 +61,7 @@ var generateCase = map[string]func(dir string) *gen.Generator{
 		g.UseDB(DB)
 		g.WithJSONTagNameStrategy(func(c string) string { return "-" })
 		g.ApplyBasic(g.GenerateAllTable(gen.FieldGORMTagReg(".", func(tag field.GormTag) field.GormTag {
-			//tag.Set("serialize","json")
+			// tag.Set("serialize","json")
 			tag.Remove("comment")
 			return tag
 		}))...)

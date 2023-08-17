@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm/schema"
 	"gorm.io/gorm/utils/tests"
 
-	"gorm.io/gen/field"
+	"github.com/dieagenturverwaltung/gorm-gen/field"
 )
 
 func TestConfig(t *testing.T) {
@@ -65,7 +65,7 @@ type StudentRaw struct {
 	ID         int64 `gorm:"primary_key"`
 	Name       string
 	Age        int
-	Instructor int64 //导师
+	Instructor int64 // 导师
 }
 
 func (StudentRaw) TableName() string {

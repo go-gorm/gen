@@ -7,13 +7,13 @@ import (
 	"os"
 	"strings"
 
+	"github.com/dieagenturverwaltung/gorm-gen"
 	"gopkg.in/yaml.v3"
 	"gorm.io/driver/clickhouse"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/driver/sqlserver"
-	"gorm.io/gen"
 	"gorm.io/gorm"
 )
 
@@ -156,7 +156,7 @@ func argParse() *CmdParams {
 	fieldSignable := flag.Bool("fieldSignable", false, "detect integer field's unsigned type, adjust generated data type")
 	flag.Parse()
 
-	if *genPath != "" { //use yml config
+	if *genPath != "" { // use yml config
 		return parseCmdFromYaml(*genPath)
 	}
 

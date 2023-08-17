@@ -10,10 +10,10 @@ import (
 	"gorm.io/gorm/schema"
 	"gorm.io/gorm/utils/tests"
 
-	"gorm.io/gen/field"
-	"gorm.io/gen/helper"
-	"gorm.io/gen/internal/model"
-	"gorm.io/gen/internal/parser"
+	"github.com/dieagenturverwaltung/gorm-gen/field"
+	"github.com/dieagenturverwaltung/gorm-gen/helper"
+	"github.com/dieagenturverwaltung/gorm-gen/internal/model"
+	"github.com/dieagenturverwaltung/gorm-gen/internal/parser"
 )
 
 // GetQueryStructMeta generate db model by table name
@@ -148,6 +148,7 @@ func ConvertStructs(db *gorm.DB, structs ...interface{}) (metas []*QueryStructMe
 			StructInfo:      parser.Param{PkgPath: structType.PkgPath(), Type: name, Package: getPackageName(structType.String())},
 			Source:          model.Struct,
 			db:              db,
+			FileName:        uncaptialize(name),
 		}
 		if err := meta.parseStruct(st); err != nil {
 			return nil, fmt.Errorf("transform struct [%s.%s] error:%s", meta.StructInfo.Package, name, err)

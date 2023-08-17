@@ -5,10 +5,10 @@ import (
 	"strconv"
 	"strings"
 
-	"gorm.io/gen/internal/parser"
+	"github.com/dieagenturverwaltung/gorm-gen/internal/parser"
 )
 
-//GetTestParamInTmpl return param list
+// GetTestParamInTmpl return param list
 func (m *InterfaceMethod) GetTestParamInTmpl() string {
 	return testParamToString(m.Params)
 }

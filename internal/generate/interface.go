@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"gorm.io/gen/internal/model"
-	"gorm.io/gen/internal/parser"
+	"github.com/dieagenturverwaltung/gorm-gen/internal/model"
+	"github.com/dieagenturverwaltung/gorm-gen/internal/parser"
 )
 
 // InterfaceMethod interface's method
@@ -127,7 +127,7 @@ func (m *InterfaceMethod) IsRepeatFromSameInterface(newMethod *InterfaceMethod) 
 	return m.MethodName == newMethod.MethodName && m.InterfaceName == newMethod.InterfaceName && m.TargetStruct == newMethod.TargetStruct
 }
 
-//GetParamInTmpl return param list
+// GetParamInTmpl return param list
 func (m *InterfaceMethod) GetParamInTmpl() string {
 	return paramToString(m.Params)
 }

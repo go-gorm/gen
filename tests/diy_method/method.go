@@ -2,8 +2,6 @@ package diy_method
 
 import (
 	"time"
-
-	"gorm.io/gen"
 )
 
 type InsertMethod interface {
@@ -102,202 +100,202 @@ type TrimTest interface {
 type TestIF interface {
 	// FindByUsers
 	//
-	//select * from @@table
-	//{{where}}
-	//{{if user.Name !=""}}
-	//name=@user.Name
-	//{{end}}
-	//{{end}}
+	// select * from @@table
+	// {{where}}
+	// {{if user.Name !=""}}
+	// name=@user.Name
+	// {{end}}
+	// {{end}}
 	FindByUsers(user gen.T) []gen.T
 
 	// FindByComplexIf
 	//
-	//select * from @@table
-	//{{where}}
-	//{{if user != nil && user.Name !=""}}
-	//name=@user.Name
-	//{{end}}
-	//{{end}}
+	// select * from @@table
+	// {{where}}
+	// {{if user != nil && user.Name !=""}}
+	// name=@user.Name
+	// {{end}}
+	// {{end}}
 	FindByComplexIf(user *gen.T) []gen.T
 
 	// FindByIfTime
 	//
 	// select * from @@table
-	//{{if !start.IsZero()}}
-	//created_at > start
-	//{{end}}
+	// {{if !start.IsZero()}}
+	// created_at > start
+	// {{end}}
 	FindByIfTime(start time.Time) []gen.T
 }
 
 type TestFor interface {
 	// TestFor
 	//
-	//select * from @@table where
-	//{{for _,name:=range names}}
-	//name = @name and
-	//{{end}}
-	//1=1
+	// select * from @@table where
+	// {{for _,name:=range names}}
+	// name = @name and
+	// {{end}}
+	// 1=1
 	TestFor(names []string) (gen.T, error)
 
 	// TestForKey
 	//
 	// select * from @@table where
-	//{{for _,name:=range names}}
-	//or @@name = @value
-	//{{end}}
-	//and 1=1
+	// {{for _,name:=range names}}
+	// or @@name = @value
+	// {{end}}
+	// and 1=1
 	TestForKey(names []string, name, value string) (gen.T, error)
 
 	// TestForOr
 	//
-	//select * from @@table
-	//{{where}}
-	//(
-	//{{for _,name:=range names}}
-	//name = @name or
-	//{{end}}
-	//{{end}}
-	//)
+	// select * from @@table
+	// {{where}}
+	// (
+	// {{for _,name:=range names}}
+	// name = @name or
+	// {{end}}
+	// {{end}}
+	// )
 	TestForOr(names []string) (gen.T, error)
 
 	// TestIfInFor
 	//
-	//select * from @@table where
-	//{{for _,name:=range names}}
-	//{{if name !=""}}
-	//name = @name or
-	//{{end}}
-	//{{end}}
-	//1=2
+	// select * from @@table where
+	// {{for _,name:=range names}}
+	// {{if name !=""}}
+	// name = @name or
+	// {{end}}
+	// {{end}}
+	// 1=2
 	TestIfInFor(names []string, name string) (gen.T, error)
 
 	// TestForInIf
 	//
-	//select * from @@table where
-	//{{if name !="" }}
-	//{{for _,forName:=range names}}
-	//name = @forName or
-	//{{end}}
-	//{{end}}
-	//1=2
+	// select * from @@table where
+	// {{if name !="" }}
+	// {{for _,forName:=range names}}
+	// name = @forName or
+	// {{end}}
+	// {{end}}
+	// 1=2
 	TestForInIf(names []string, name string) (gen.T, error)
 
 	// TestForInWhere
 	//
-	//select * from @@table
-	//{{where}}
-	//{{for _,forName:=range names}}
-	//or name = @forName
-	//{{end}}
-	//{{end}}
+	// select * from @@table
+	// {{where}}
+	// {{for _,forName:=range names}}
+	// or name = @forName
+	// {{end}}
+	// {{end}}
 	TestForInWhere(names []string, name, forName string) (gen.T, error)
 
 	// TestForUserList
 	//
-	//select * from users
-	//{{where}}
-	//{{for _,user :=range users}}
-	//name=@user.Name
-	//{{end}}
-	//{{end}}
+	// select * from users
+	// {{where}}
+	// {{for _,user :=range users}}
+	// name=@user.Name
+	// {{end}}
+	// {{end}}
 	TestForUserList(users []*gen.T, name string) (gen.T, error)
 
 	// TestForMap
 	//
-	//select * from users
-	//{{where}}
-	//{{for key,value :=range param}}
-	//@@key=@value
-	//{{end}}
-	//{{end}}
+	// select * from users
+	// {{where}}
+	// {{for key,value :=range param}}
+	// @@key=@value
+	// {{end}}
+	// {{end}}
 	TestForMap(param map[string]string, name string) (gen.T, error)
 
 	// TestIfInIf
 	//
-	//select * from users
-	//{{where}}
-	//{{if name !="xx"}}
-	//{{if name !="xx"}}
-	//name=@name
-	//{{end}}
-	//{{end}}
-	//{{end}}
+	// select * from users
+	// {{where}}
+	// {{if name !="xx"}}
+	// {{if name !="xx"}}
+	// name=@name
+	// {{end}}
+	// {{end}}
+	// {{end}}
 	TestIfInIf(name string) gen.T
 
 	// TestMoreFor
 	//
-	//select * from @@table
-	//{{where}}
-	//{{for _,name := range names}}
-	//and name=@name
-	//{{end}}
-	//{{for _,id:=range ids}}
-	//and id=@id
-	//{{end}}
-	//{{end}}
+	// select * from @@table
+	// {{where}}
+	// {{for _,name := range names}}
+	// and name=@name
+	// {{end}}
+	// {{for _,id:=range ids}}
+	// and id=@id
+	// {{end}}
+	// {{end}}
 	TestMoreFor(names []string, ids []int) []gen.T
 
 	// TestMoreFor2
 	//
-	//select * from @@table
-	//{{where}}
-	//{{for _,name := range names}}
-	//OR (name=@name
-	//{{for _,id:=range ids}}
-	//and id=@id
-	//{{end}}
+	// select * from @@table
+	// {{where}}
+	// {{for _,name := range names}}
+	// OR (name=@name
+	// {{for _,id:=range ids}}
+	// and id=@id
+	// {{end}}
 	// and title !=@name)
-	//{{end}}
+	// {{end}}
 	// {{end}}
 	TestMoreFor2(names []string, ids []int) []gen.T
 
 	// TestForInSet
 	//
 	// update @@table
-	//{{set}}
-	//{{for _,user:=range users}}
-	//name=@user.Name,
-	//{{end}}
+	// {{set}}
+	// {{for _,user:=range users}}
+	// name=@user.Name,
+	// {{end}}
 	// {{end}} where
 	TestForInSet(users []gen.T) error
 
 	// TestInsertMoreInfo
 	//
 	// insert into @@table(name,age)values
-	//{{for index ,user:=range users}}
-	//{{if index >0}}
-	//,
-	//{{end}}
-	//(@user.Name,@user.Age)
-	//{{end}}
+	// {{for index ,user:=range users}}
+	// {{if index >0}}
+	// ,
+	// {{end}}
+	// (@user.Name,@user.Age)
+	// {{end}}
 	TestInsertMoreInfo(users []gen.T) error
 
 	// TestIfElseFor
 	//
 	// select * from @@table
 	// {{where}}
-	//{{if name =="admin"}}
-	//(
-	//{{for index,user:=range users}}
-	//{{if index !=0}}
-	//and
-	//{{end}}
-	//name like @user.Name
-	//{{end}}
-	//)
-	//{{else if name !="guest"}}
-	//{{for index,guser:=range users}}
-	//{{if index ==0}}
-	//(
-	//{{else}}
-	//and
-	//{{end}}
-	//name = @guser.Name
-	//{{end}}
-	//)
-	//{{else}}
-	//name ="guest"
-	//{{end}}
+	// {{if name =="admin"}}
+	// (
+	// {{for index,user:=range users}}
+	// {{if index !=0}}
+	// and
+	// {{end}}
+	// name like @user.Name
+	// {{end}}
+	// )
+	// {{else if name !="guest"}}
+	// {{for index,guser:=range users}}
+	// {{if index ==0}}
+	// (
+	// {{else}}
+	// and
+	// {{end}}
+	// name = @guser.Name
+	// {{end}}
+	// )
+	// {{else}}
+	// name ="guest"
+	// {{end}}
 	// {{end}}
 	TestIfElseFor(name string, users []gen.T) error
 
@@ -305,9 +303,9 @@ type TestFor interface {
 	//
 	// select * from @@table
 	// {{where}}
-	//{{for _,name:=range names}}
-	//name like concat("%",@name,"%") or
-	//{{end}}
+	// {{for _,name:=range names}}
+	// name like concat("%",@name,"%") or
+	// {{end}}
 	// {{end}}
 	TestForLike(names []string) []gen.T
 }

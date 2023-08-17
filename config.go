@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils/tests"
 
-	"gorm.io/gen/internal/model"
+	"github.com/dieagenturverwaltung/gorm-gen/internal/model"
 )
 
 // GenerateMode generate mode

@@ -20,12 +20,12 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 
-	"gorm.io/gen/helper"
-	"gorm.io/gen/internal/generate"
-	"gorm.io/gen/internal/model"
-	"gorm.io/gen/internal/parser"
-	tmpl "gorm.io/gen/internal/template"
-	"gorm.io/gen/internal/utils/pools"
+	"github.com/dieagenturverwaltung/gorm-gen/helper"
+	"github.com/dieagenturverwaltung/gorm-gen/internal/generate"
+	"github.com/dieagenturverwaltung/gorm-gen/internal/model"
+	"github.com/dieagenturverwaltung/gorm-gen/internal/parser"
+	tmpl "github.com/dieagenturverwaltung/gorm-gen/internal/template"
+	"github.com/dieagenturverwaltung/gorm-gen/internal/utils/pools"
 )
 
 // T generic type
@@ -89,8 +89,8 @@ func (i *genInfo) methodInGenInfo(m *generate.InterfaceMethod) bool {
 type Generator struct {
 	Config
 
-	Data   map[string]*genInfo                  //gen query data
-	models map[string]*generate.QueryStructMeta //gen model data
+	Data   map[string]*genInfo                  // gen query data
+	models map[string]*generate.QueryStructMeta // gen model data
 }
 
 // UseDB set db connection

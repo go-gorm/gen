@@ -6,7 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"gorm.io/gen/internal/model"
+	"github.com/dieagenturverwaltung/gorm-gen/internal/model"
 )
 
 // ITableInfo table info interface
@@ -35,7 +35,7 @@ func getTableColumns(db *gorm.DB, schemaName string, tableName string, indexTag 
 	}
 
 	index, err := mt.GetTableIndex(schemaName, tableName)
-	if err != nil { //ignore find index err
+	if err != nil { // ignore find index err
 		db.Logger.Warn(context.Background(), "GetTableIndex for %s,err=%s", tableName, err.Error())
 		return result, nil
 	}

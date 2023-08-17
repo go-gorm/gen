@@ -11,7 +11,7 @@ linters-settings:
   govet:
     check-shadowing: true
   goimports:
-    local-prefixes: gorm.io,gorm.io/gen
+    local-prefixes: gorm.io,github.com/dieagenturverwaltung/gorm-gen
   unused:
     check-exported: false
   revive:

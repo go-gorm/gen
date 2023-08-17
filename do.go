@@ -12,8 +12,8 @@ import (
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/schema"
 
-	"gorm.io/gen/field"
-	"gorm.io/gen/helper"
+	"github.com/dieagenturverwaltung/gorm-gen/field"
+	"github.com/dieagenturverwaltung/gorm-gen/helper"
 )
 
 // ResultInfo query/execute info
@@ -96,7 +96,7 @@ func (d *DO) indirect(value interface{}) reflect.Type {
 // UseTable specify table name
 func (d *DO) UseTable(tableName string) {
 	d.db = d.db.Table(tableName).Session(new(gorm.Session))
-	//d.db.Statement.Schema.Table=tableName
+	// d.db.Statement.Schema.Table=tableName
 	d.tableName = tableName
 }
 
