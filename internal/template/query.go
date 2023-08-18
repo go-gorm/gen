@@ -65,14 +65,14 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	}
 }
 
-type queryCtx struct{ 
+type QueryCtx struct{ 
 	{{range $name,$d :=.Data -}}
 	{{$d.ModelStructName}} {{$d.ReturnObject}}
 	{{end}}
 }
 
-func (q *Query) WithContext(ctx context.Context) *queryCtx  {
-	return &queryCtx{
+func (q *Query) WithContext(ctx context.Context) *QueryCtx  {
+	return &QueryCtx{
 		{{range $name,$d :=.Data -}}
 		{{$d.ModelStructName}}: q.{{$d.ModelStructName}}.WithContext(ctx),
 		{{end}}
