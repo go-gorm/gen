@@ -63,6 +63,18 @@ func (b *QueryStructMeta) parseStruct(st interface{}) error {
 			CustomGenType: fp.GetFieldGenType(f),
 		})
 	}
+	fmt.Println()
+	fmt.Println()
+	fmt.Println(stmt.Table)
+	fmt.Println(stmt.Schema.Relationships)
+	if rel, ok := stmt.Schema.Relationships.Relations["Absences"]; ok {
+		fmt.Println(rel.FieldSchema)
+		fmt.Println(rel.FieldSchema.Relationships.HasOne)
+		fmt.Println(rel.FieldSchema.Relationships.HasMany)
+		fmt.Println(rel.FieldSchema.Relationships.BelongsTo)
+		fmt.Println(rel.FieldSchema.Relationships.Many2Many)
+	}
+
 	for _, r := range ParseStructRelationShip(&stmt.Schema.Relationships) {
 		r := r
 		b.appendOrUpdateField(&model.Field{Relation: &r})
