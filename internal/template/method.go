@@ -236,6 +236,26 @@ func ({{.S}} {{.QueryStructName}}Do) FindByPage(offset int, limit int) (result [
 	return
 }
 
+func ({{.S}} {{.QueryStructName}}Do) WhereSearch(search *string, field field.String, fields ...field.String) {{.ReturnObject}} {
+	if search == nil || *search == "" {
+		return {{.S}}
+	}
+
+	words := strings.Fields(*search)
+	dao := {{.S}}
+	for _, word := range words {
+		innerWhere := {{.S}}.Where(field.Like("%" + word + "%"))
+		for _, f := range fields {
+			innerWhere.Or(f.Like("%" + word + "%"))
+		}
+
+		dao = dao.Where(innerWhere).(T)
+	}
+
+	return dao
+}
+
+
 func ({{.S}} {{.QueryStructName}}Do) ScanByPage(result interface{}, offset int, limit int) (count int64, err error) {
 	count, err = {{.S}}.Count()
 	if err != nil {
