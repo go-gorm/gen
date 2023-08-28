@@ -160,6 +160,7 @@ type I{{.ModelStructName}}Do interface {
 	Or(conds ...gen.Condition) I{{.ModelStructName}}Do
 	Select(conds ...field.Expr) I{{.ModelStructName}}Do
 	Where(conds ...gen.Condition) I{{.ModelStructName}}Do
+	WhereSearch(search *string, field field.String, fields ...field.String) I{{.ModelStructName}}Do
 	Order(conds ...field.Expr) I{{.ModelStructName}}Do
 	Distinct(cols ...field.Expr) I{{.ModelStructName}}Do
 	Omit(cols ...field.Expr) I{{.ModelStructName}}Do

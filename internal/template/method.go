@@ -238,23 +238,22 @@ func ({{.S}} {{.QueryStructName}}Do) FindByPage(offset int, limit int) (result [
 
 func ({{.S}} {{.QueryStructName}}Do) WhereSearch(search *string, field field.String, fields ...field.String) {{.ReturnObject}} {
 	if search == nil || *search == "" {
-		return {{.S}}
+		return &{{.S}}
 	}
 
 	words := strings.Fields(*search)
-	dao := {{.S}}
 	for _, word := range words {
-		innerWhere := {{.S}}.Where(field.Like("%" + word + "%"))
-		for _, f := range fields {
-			innerWhere.Or(f.Like("%" + word + "%"))
+		innerWhere := {{.S}}.DO.Where(field.Like("%" + word + "%"))
+		
+		for _, fl := range fields {
+			innerWhere.Or(fl.Like("%" + word + "%"))
 		}
 
-		dao = dao.Where(innerWhere).(T)
+		{{.S}} = *{{.S}}.withDO({{.S}}.DO.Where(innerWhere))
 	}
 
-	return dao
+	return &{{.S}}
 }
-
 
 func ({{.S}} {{.QueryStructName}}Do) ScanByPage(result interface{}, offset int, limit int) (count int64, err error) {
 	count, err = {{.S}}.Count()
