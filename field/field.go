@@ -2,9 +2,36 @@ package field
 
 import (
 	"database/sql/driver"
+	"fmt"
 
 	"gorm.io/gorm/clause"
 )
+
+type safeSQL string
+type SafeSQLChecker func(string) error
+
+var defaultSafeSQLChecker = func(string) error {
+	// TODO check if SQL is safe
+	return nil
+}
+
+// NewSafeSQL return sql in type safeSQL after default safe check
+func NewSafeSQL(sql string) (safeSQL, error) {
+	return NewSafeSQLWithChecker(sql, defaultSafeSQLChecker)
+}
+
+// NewSafeSQLWithChecker return sql in type safeSQL after custom safe check
+func NewSafeSQLWithChecker(sql string, check SafeSQLChecker) (safeSQL, error) {
+	if err := check(sql); err != nil {
+		return "", fmt.Errorf("sql not safe: %w", err)
+	}
+	return safeSQL(sql), nil
+}
+
+// NewRawExpr return expr with raw string expr
+func NewRawExpr(sql safeSQL, values ...any) expr {
+	return expr{e: clause.Expr{SQL: string(sql), Vars: values}}
+}
 
 // ScanValuer interface for Field
 type ScanValuer interface {
