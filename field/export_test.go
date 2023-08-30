@@ -141,6 +141,85 @@ func TestExpr_Build(t *testing.T) {
 			Expr:   field.NewAsterisk("user").Distinct().Count(),
 			Result: "COUNT(DISTINCT `user`.*)",
 		},
+		// ======================== raw ========================
+		{
+			Expr:         field.NewRaw("user", "password").Eq(p),
+			ExpectedVars: []interface{}{p},
+			Result:       "user.password = ?",
+		},
+		{
+			Expr:   field.NewRaw("", "id").EqCol(field.NewRaw("", "new_id")),
+			Result: "id = new_id",
+		},
+		{
+			Expr:   field.NewRaw("", "id").NeqCol(field.NewRaw("", "new_id")),
+			Result: "id <> new_id",
+		},
+		{
+			Expr:   field.NewRaw("", "id").LtCol(field.NewRaw("", "new_id")),
+			Result: "id < new_id",
+		},
+		{
+			Expr:   field.NewRaw("", "id").LteCol(field.NewRaw("", "new_id")),
+			Result: "id <= new_id",
+		},
+		{
+			Expr:   field.NewRaw("", "id").GtCol(field.NewRaw("", "new_id")),
+			Result: "id > new_id",
+		},
+		{
+			Expr:   field.NewRaw("", "id").GteCol(field.NewRaw("", "new_id")),
+			Result: "id >= new_id",
+		},
+		{
+			Expr:   field.NewRaw("", "id").EqCol(field.NewRaw("", "new_id").Avg()),
+			Result: "id = AVG(new_id)",
+		},
+		{
+			Expr:   field.NewRaw("", "id").EqCol(field.NewRaw("", "new_id").WithTable("tableB")),
+			Result: "id = tableB.new_id",
+		},
+		{
+			Expr:   field.NewRaw("", "id").EqCol(field.NewRaw("", "new_id").WithTable("tableB")),
+			Result: "id = tableB.new_id",
+		},
+		{
+			Expr:   field.NewRaw("", "id").NeqCol(field.NewRaw("", "new_id").WithTable("tableB")),
+			Result: "id <> tableB.new_id",
+		},
+		{
+			Expr:   field.NewRaw("", "id").IsNull(),
+			Result: "id IS NULL",
+		},
+		{
+			Expr:   field.NewRaw("", "id").IsNotNull(),
+			Result: "id IS NOT NULL",
+		},
+		{
+			Expr:   field.NewRaw("", "id").GroupConcat(),
+			Result: "GROUP_CONCAT(id)",
+		},
+		{
+			Expr:   field.Func.UnixTimestamp(),
+			Result: "UNIX_TIMESTAMP()",
+		},
+		{
+			Expr:         field.Func.UnixTimestamp("2005-03-27 03:00:00").Mul(99),
+			Result:       "(UNIX_TIMESTAMP(?))*?",
+			ExpectedVars: []interface{}{"2005-03-27 03:00:00", uint64(99)},
+		},
+		{
+			Expr:   field.NewRaw("t1", "id").AddCol(field.NewRaw("t2", "num")),
+			Result: "t1.id + t2.num",
+		},
+		{
+			Expr:   field.NewRaw("t1", "id").AddCol(field.NewRaw("t1", "num")).SubCol(field.NewRaw("t1", "age")),
+			Result: "t1.id + t1.num - t1.age",
+		},
+		{
+			Expr:   field.NewRaw("t1", "id").AddCol(field.NewRaw("t1", "num")).SubCol(field.NewRaw("t1", "age")).MulCol(field.NewRaw("t1", "age")).DivCol(field.NewRaw("t1", "base")),
+			Result: "((t1.id + t1.num - t1.age) * (t1.age)) / (t1.base)",
+		},
 		// ======================== integer ========================
 		{
 			Expr:   field.NewUint("", "id"),

@@ -25,6 +25,18 @@ var (
 	}
 )
 
+// ======================== raw field =======================
+
+// NewField create new field
+func NewRaw(table, column string, opts ...Option) Field {
+	col := clause.Column{Table: table, Name: column}
+	col.Raw = true
+	for _, opt := range opts {
+		col = opt(col)
+	}
+	return Field{expr: expr{col: col}}
+}
+
 // ======================== generic field =======================
 
 // NewField create new field
