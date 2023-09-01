@@ -5,8 +5,9 @@ import (
 	"reflect"
 	"strings"
 
-	"gorm.io/gen/field"
 	"gorm.io/gorm"
+
+	"gorm.io/gen/field"
 )
 
 // Column table column's info
@@ -46,7 +47,7 @@ func (c *Column) WithNS(jsonTagNS func(columnName string) string) {
 // ToField convert to field
 func (c *Column) ToField(nullable, coverable, signable bool) *Field {
 	fieldType := c.GetDataType()
-	if signable && strings.Contains(c.columnType(), "unsigned") && strings.HasPrefix(fieldType, "int") {
+	if signable && strings.Contains(strings.ToLower(c.columnType()), "unsigned") && strings.HasPrefix(fieldType, "int") {
 		fieldType = "u" + fieldType
 	}
 	switch {
@@ -101,7 +102,7 @@ func (c *Column) buildGormTag() field.GormTag {
 		if idx == nil {
 			continue
 		}
-		if pk, _ := idx.PrimaryKey(); pk { //ignore PrimaryKey
+		if pk, _ := idx.PrimaryKey(); pk { // ignore PrimaryKey
 			continue
 		}
 		if uniq, _ := idx.Unique(); uniq {
