@@ -32,6 +32,7 @@ type QueryStructMeta struct {
 	QueryStructName string // internal query struct name
 	ModelStructName string // origin/model struct name
 	TableName       string // table name in db server
+	TableComment    string // table comment in db server
 	StructInfo      parser.Param
 	Fields          []*model.Field
 	Source          model.SourceCode
@@ -151,6 +152,9 @@ func (b *QueryStructMeta) Relations() (result []field.Relation) {
 
 // StructComment struct comment
 func (b *QueryStructMeta) StructComment() string {
+	if b.TableComment != "" {
+		return b.TableComment
+	}
 	if b.TableName != "" {
 		return fmt.Sprintf(`mapped from table <%s>`, b.TableName)
 	}

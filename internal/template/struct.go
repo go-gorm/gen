@@ -3,6 +3,7 @@ package template
 const (
 	// TableQueryStruct table query struct
 	TableQueryStruct = createMethod + `
+	// {{.QueryStructName}} {{.StructComment}}
 	type {{.QueryStructName}} struct {
 		{{.QueryStructName}}Do
 		` + fields + `
@@ -11,6 +12,7 @@ const (
 
 	// TableQueryStructWithContext table query struct with context
 	TableQueryStructWithContext = createMethod + `
+	// {{.QueryStructName}} {{.StructComment}}
 	type {{.QueryStructName}} struct {
 		{{.QueryStructName}}Do {{.QueryStructName}}Do
 		` + fields + `
