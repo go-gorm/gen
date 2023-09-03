@@ -20,6 +20,24 @@ func getTableInfo(db *gorm.DB) ITableInfo {
 	return &tableInfo{db}
 }
 
+func getTableComment(db *gorm.DB, tableName string) string {
+	table, err := getTableType(db, tableName)
+	if err != nil || table == nil {
+		return ""
+	}
+	if comment, ok := table.Comment(); ok {
+		return comment
+	}
+	return ""
+}
+
+func getTableType(db *gorm.DB, tableName string) (result gorm.TableType, err error) {
+	if db == nil || db.Migrator() == nil {
+		return
+	}
+	return db.Migrator().TableType(tableName)
+}
+
 func getTableColumns(db *gorm.DB, schemaName string, tableName string, indexTag bool) (result []*model.Column, err error) {
 	if db == nil {
 		return nil, errors.New("gorm db is nil")
