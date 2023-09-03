@@ -161,6 +161,15 @@ func (b *QueryStructMeta) StructComment() string {
 	return `mapped from object`
 }
 
+// QueryStructComment query struct comment
+func (b *QueryStructMeta) QueryStructComment() string {
+	if b.TableComment != "" {
+		return fmt.Sprintf(`// %s %s`, b.QueryStructName, b.TableComment)
+	}
+
+	return ``
+}
+
 // ReviseDIYMethod check diy method duplication name
 func (b *QueryStructMeta) ReviseDIYMethod() error {
 	var duplicateMethodName []string
