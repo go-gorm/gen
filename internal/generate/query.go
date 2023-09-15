@@ -227,7 +227,11 @@ func isStructType(data reflect.Value) bool {
 		(data.Kind() == reflect.Ptr && data.Elem().Kind() == reflect.Struct)
 }
 
-func pullRelationShip(cache map[string]bool, relationships []*schema.Relationship) []field.Relation {
+func pullRelationShip(depth int, cache map[string]bool, relationships []*schema.Relationship) []field.Relation {
+	if depth > 4 {
+		return nil
+	}
+
 	if len(relationships) == 0 {
 		return nil
 	}
@@ -242,7 +246,7 @@ func pullRelationShip(cache map[string]bool, relationships []*schema.Relationshi
 			}
 
 			newCache[varType] = true
-			childRelations = pullRelationShip(newCache, append(append(append(append(
+			childRelations = pullRelationShip(depth+1, newCache, append(append(append(append(
 				make([]*schema.Relationship, 0, 4),
 				relationship.FieldSchema.Relationships.BelongsTo...),
 				relationship.FieldSchema.Relationships.HasOne...),

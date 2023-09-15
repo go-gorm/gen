@@ -223,8 +223,7 @@ func ParseStructRelationShip(relationship *schema.Relationships) []field.Relatio
 		relationship.HasOne...),
 		relationship.HasMany...),
 		relationship.Many2Many...)
-	pullRelationShip(make(map[string]bool), relationships)
-	return pullRelationShip(make(map[string]bool), relationships)
+	return pullRelationShip(0, make(map[string]bool), relationships)
 }
 
 // GetStructNames get struct names from base structs
