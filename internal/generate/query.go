@@ -228,7 +228,7 @@ func isStructType(data reflect.Value) bool {
 }
 
 func pullRelationShip(depth int, cache map[string]bool, relationships []*schema.Relationship) []field.Relation {
-	if depth > 4 {
+	if depth > 2 {
 		return nil
 	}
 
