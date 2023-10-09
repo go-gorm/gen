@@ -216,14 +216,14 @@ func BuildDIYMethod(f *parser.InterfaceSet, s *QueryStructMeta, data []*Interfac
 
 // ParseStructRelationShip parse struct's relationship
 // No one should use it directly in project
-func ParseStructRelationShip(relationship *schema.Relationships) []field.Relation {
+func ParseStructRelationShip(name string, relationship *schema.Relationships) []field.Relation {
 	relationships := append(append(append(append(
 		make([]*schema.Relationship, 0, 4),
 		relationship.BelongsTo...),
 		relationship.HasOne...),
 		relationship.HasMany...),
 		relationship.Many2Many...)
-	return pullRelationShip(0, make(map[string]bool), relationships)
+	return pullRelationShip(name, 0, make(map[string]bool), relationships)
 }
 
 // GetStructNames get struct names from base structs

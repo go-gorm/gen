@@ -47,7 +47,7 @@ func getFields(db *gorm.DB, conf *model.Config, columns []*model.Column) (fields
 				stmt := gorm.Statement{DB: db}
 				_ = stmt.Parse(m.Relation.Model())
 				if stmt.Schema != nil {
-					m.Relation.AppendChildRelation(ParseStructRelationShip(&stmt.Schema.Relationships)...)
+					m.Relation.AppendChildRelation(ParseStructRelationShip(stmt.Schema.Table, &stmt.Schema.Relationships)...)
 				}
 			}
 			m.Type = strings.ReplaceAll(m.Type, conf.ModelPkg+".", "") // remove modelPkg in field's Type, avoid import error
