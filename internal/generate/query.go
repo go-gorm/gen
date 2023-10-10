@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/dieagenturverwaltung/gorm-gen/gen_config"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 
@@ -13,10 +14,6 @@ import (
 	"github.com/dieagenturverwaltung/gorm-gen/internal/model"
 	"github.com/dieagenturverwaltung/gorm-gen/internal/parser"
 )
-
-var QueryDepth = 2
-
-var QueryDepthOverride = make(map[string]int)
 
 type FieldParser interface {
 	GetFieldGenType(f *schema.Field) string
@@ -232,11 +229,11 @@ func isStructType(data reflect.Value) bool {
 }
 
 func pullRelationShip(name string, depth int, cache map[string]bool, relationships []*schema.Relationship) []field.Relation {
-	if overrideDepth, ok := QueryDepthOverride[name]; ok {
+	if overrideDepth, ok := gen_config.QueryDepthOverride[name]; ok {
 		if depth > overrideDepth {
 			return nil
 		}
-	} else if depth > QueryDepth {
+	} else if depth > gen_config.QueryDepth {
 		return nil
 	}
 
