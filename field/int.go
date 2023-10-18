@@ -72,9 +72,19 @@ func (field Int) Add(value int) Int {
 	return Int{field.add(value)}
 }
 
+// AddCol ...
+func (field Int) AddCol(col Int) Int {
+	return Int{field.add(col.RawExpr())}
+}
+
 // Sub ...
 func (field Int) Sub(value int) Int {
 	return Int{field.sub(value)}
+}
+
+// SubCol ...
+func (field Int) SubCol(col Int) Int {
+	return Int{field.sub(col.RawExpr())}
 }
 
 // Mul ...
@@ -82,14 +92,29 @@ func (field Int) Mul(value int) Int {
 	return Int{field.mul(value)}
 }
 
+// MulCol ...
+func (field Int) MulCol(col Int) Int {
+	return Int{field.mul(col.RawExpr())}
+}
+
 // Div ...
 func (field Int) Div(value int) Int {
 	return Int{field.div(value)}
 }
 
+// DivCol ...
+func (field Int) DivCol(col Int) Int {
+	return Int{field.div(col.RawExpr())}
+}
+
 // Mod ...
 func (field Int) Mod(value int) Int {
 	return Int{field.mod(value)}
+}
+
+// ModCol ...
+func (field Int) ModCol(col Int) Int {
+	return Int{field.mod(col.RawExpr())}
 }
 
 // FloorDiv ...
