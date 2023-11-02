@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"context"
 
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -71,6 +72,59 @@ func build(stmt *gorm.Statement, opts ...stmtOpt) *gorm.Statement {
 
 	stmt.Build(findClauses()...)
 	return stmt
+}
+
+func TestDO_ReplaceDB(t *testing.T) {
+	globalUDB := u.db
+	globalStDB := student.db
+	defer func() {
+		u.db = globalUDB
+		student.db = globalStDB
+	}()
+    buildSql := func(u *user, student *Student) string {
+		e := u.Select().Where(
+			u.Columns(u.ID).Eq(
+				u.Select(u.ID).Where(
+					u.Columns(u.Name).Eq(
+						student.Select(student.Name).Where(student.ID.Eq(1)),
+					),
+				),
+			),
+		)
+		stmt := build(e.underlyingDB().Statement)
+		return strings.TrimSpace(stmt.SQL.String())
+	}
+
+	currentDB := db.Session(&gorm.Session{Context: context.TODO()})
+	// old func, Session Context is nil, so u and student will use same db.Statement, one point, same address
+	u.db = currentDB.Session(&gorm.Session{})
+	student.db = currentDB.Session(&gorm.Session{})
+	sql := buildSql(u, student) // sql will lost table name
+	result := "SELECT * WHERE `id` = (SELECT `id` FROM ` WHERE `name` = (SELECT `student`.`name` FROM ` WHERE `student`.`id` = ?))"
+	if sql != result {
+		t.Errorf("SQL expects %v got %v", result, sql)
+	}
+
+	u.UseModel(User{})
+	student.UseModel(StudentRaw{})
+	sql = buildSql(u, student) // sql will render with wrong table name
+	result = "SELECT * WHERE `id` = (SELECT `id` FROM `users_info` WHERE `name` = (SELECT `student`.`name` FROM `users_info` WHERE `student`.`id` = ?))"
+	if sql != result {
+		t.Errorf("SQL expects %v got %v", result, sql)
+	}
+
+	u.db = globalUDB
+	student.db = globalStDB
+
+	// new func
+	u.ReplaceDB(db)
+	student.ReplaceDB(db)
+
+	sql = buildSql(u, student) // sql will be right
+	result = "SELECT * WHERE `id` = (SELECT `id` FROM `users_info` WHERE `name` = (SELECT `student`.`name` FROM `student` WHERE `student`.`id` = ?))"
+	if sql != result {
+		t.Errorf("SQL expects %v got %v", result, sql)
+	}
 }
 
 func TestDO_methods(t *testing.T) {
