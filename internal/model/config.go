@@ -35,17 +35,18 @@ type NameStrategy struct {
 type FieldConfig struct {
 	DataTypeMap map[string]func(columnType gorm.ColumnType) (dataType string)
 
-	FieldNullable     bool // generate pointer when field is nullable
+	FieldNullable     bool // Use FieldNullableFormater when field is nullable
 	FieldCoverable    bool // generate pointer when field has default value
 	FieldSignable     bool // detect integer field's unsigned type, adjust generated data type
 	FieldWithIndexTag bool // generate with gorm index tag
 	FieldWithTypeTag  bool // generate with gorm column type tag
 
 	FieldJSONTagNS func(columnName string) string
-
-	ModifyOpts []FieldOption
-	FilterOpts []FieldOption
-	CreateOpts []FieldOption
+	// Formater used when field is nullable and FieldNullable is true. Default : generate pointer
+	FieldNullableNS func(columnType string) string
+	ModifyOpts      []FieldOption
+	FilterOpts      []FieldOption
+	CreateOpts      []FieldOption
 }
 
 // MethodConfig method configuration
