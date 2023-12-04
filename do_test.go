@@ -174,7 +174,6 @@ func TestDO_methods(t *testing.T) {
 			Expr:   u.Order(u.ID.Asc()).Order(u.Age),
 			Result: "ORDER BY `id` ASC,`age`",
 		},
-
 		{
 			Expr:   u.Clauses(hints.New("hint")).Select(),
 			Result: "SELECT /*+ hint */ *",
