@@ -48,6 +48,7 @@ type Expr interface {
 type OrderExpr interface {
 	Expr
 	Desc() Expr
+	ASC() Expr
 }
 
 type expression interface{}
@@ -276,6 +277,10 @@ func (e expr) As(alias string) Expr {
 
 func (e expr) Desc() Expr {
 	return e.setE(clause.Expr{SQL: "? DESC", Vars: []interface{}{e.RawExpr()}})
+}
+
+func (e expr) Asc() Expr {
+	return e.setE(clause.Expr{SQL: "? ASC", Vars: []interface{}{e.RawExpr()}})
 }
 
 // ======================== general experssion ========================
