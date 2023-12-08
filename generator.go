@@ -389,7 +389,7 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 	}
 	err = render(tmpl.Header, &buf, map[string]interface{}{
 		"Package":        g.queryPkgName,
-		"ImportPkgPaths": importList.Add(structPkgPath).Add(getImportPkgPaths(data)...).Paths(),
+		"ImportPkgPaths": importList.Add(g.importPkgPaths...).Add(structPkgPath).Add(getImportPkgPaths(data)...).Paths(),
 	})
 	if err != nil {
 		return err
