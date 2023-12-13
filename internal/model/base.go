@@ -215,7 +215,7 @@ func (m *Field) GenType() string {
 	case "serializer":
 		return "Serializer"
 	default:
-		return "Field"
+		return "GenericField[" + typ + "]"
 	}
 }
 
