@@ -30,11 +30,11 @@ type Expr interface {
 	RawExpr() expression
 
 	// col operate expression
-	AddCol(col Expr) Expr
-	SubCol(col Expr) Expr
-	MulCol(col Expr) Expr
-	DivCol(col Expr) Expr
-	ConcatCol(cols ...Expr) Expr
+	AddCol(col Expr) Float64
+	SubCol(col Expr) Float64
+	MulCol(col Expr) Float64
+	DivCol(col Expr) Float64
+	ConcatCol(cols ...Expr) String
 
 	// implement Condition
 	BeCond() interface{}
@@ -237,30 +237,30 @@ func (e expr) SetCol(col Expr) AssignExpr {
 }
 
 // ======================== operate columns ========================
-func (e expr) AddCol(col Expr) Expr {
-	return Field{e.setE(clause.Expr{SQL: "? + ?", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})}
+func (e expr) AddCol(col Expr) Float64 {
+	return Float64{e.setE(clause.Expr{SQL: "? + ?", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})}
 }
 
-func (e expr) SubCol(col Expr) Expr {
-	return Field{e.setE(clause.Expr{SQL: "? - ?", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})}
+func (e expr) SubCol(col Expr) Float64 {
+	return Float64{e.setE(clause.Expr{SQL: "? - ?", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})}
 }
 
-func (e expr) MulCol(col Expr) Expr {
-	return Field{e.setE(clause.Expr{SQL: "(?) * (?)", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})}
+func (e expr) MulCol(col Expr) Float64 {
+	return Float64{e.setE(clause.Expr{SQL: "(?) * (?)", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})}
 }
 
-func (e expr) DivCol(col Expr) Expr {
-	return Field{e.setE(clause.Expr{SQL: "(?) / (?)", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})}
+func (e expr) DivCol(col Expr) Float64 {
+	return Float64{e.setE(clause.Expr{SQL: "(?) / (?)", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})}
 }
 
-func (e expr) ConcatCol(cols ...Expr) Expr {
+func (e expr) ConcatCol(cols ...Expr) String {
 	placeholders := []string{"?"}
 	vars := []interface{}{e.RawExpr()}
 	for _, col := range cols {
 		placeholders = append(placeholders, "?")
 		vars = append(vars, col.RawExpr())
 	}
-	return Field{e.setE(clause.Expr{
+	return String{e.setE(clause.Expr{
 		SQL:  fmt.Sprintf("Concat(%s)", strings.Join(placeholders, ",")),
 		Vars: vars,
 	})}
