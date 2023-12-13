@@ -93,10 +93,6 @@ func (b *QueryStructMeta) getFieldRealType(f reflect.Type) string {
 	if f.String() == "[]uint8" || f.String() == "json.RawMessage" {
 		return "bytes"
 	}
-	if f.Kind() == reflect.Slice {
-		return f.String()
-	}
-
 	return f.Kind().String()
 }
 
