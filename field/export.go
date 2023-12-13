@@ -32,6 +32,11 @@ func NewField(table, column string, opts ...Option) Field {
 	return Field{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
+// NewField create new field
+func NewGenericField[T any](table, column string, opts ...Option) GenericField[T] {
+	return GenericField[T]{expr: expr{col: toColumn(table, column, opts...)}}
+}
+
 // NewSerializer create new field2
 func NewSerializer(table, column string, opts ...Option) Serializer {
 	return Serializer{expr: expr{col: toColumn(table, column, opts...)}}
