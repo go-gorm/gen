@@ -79,10 +79,10 @@ func (b *QueryStructMeta) getFieldRealType(f reflect.Type) string {
 	if f.Implements(serializerInterface) || reflect.New(f).Type().Implements(serializerInterface) {
 		return "serializer"
 	}
-	// scanValuer := reflect.TypeOf((*field.ScanValuer)(nil)).Elem()
-	// if f.Implements(scanValuer) || reflect.New(f).Type().Implements(scanValuer) {
-	// 	return "field"
-	// }
+	scanValuer := reflect.TypeOf((*field.ScanValuer)(nil)).Elem()
+	if f.Implements(scanValuer) || reflect.New(f).Type().Implements(scanValuer) {
+		return "field"
+	}
 
 	if f.Kind() == reflect.Ptr {
 		f = f.Elem()
