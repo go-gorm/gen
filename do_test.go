@@ -163,6 +163,18 @@ func TestDO_methods(t *testing.T) {
 			Result: "ORDER BY `id` DESC,`age`",
 		},
 		{
+			Expr:   u.Order(u.ID.Asc()),
+			Result: "ORDER BY `id` ASC",
+		},
+		{
+			Expr:   u.Order(u.ID.Asc(), u.Age),
+			Result: "ORDER BY `id` ASC,`age`",
+		},
+		{
+			Expr:   u.Order(u.ID.Asc()).Order(u.Age),
+			Result: "ORDER BY `id` ASC,`age`",
+		},
+		{
 			Expr:   u.Clauses(hints.New("hint")).Select(),
 			Result: "SELECT /*+ hint */ *",
 		},

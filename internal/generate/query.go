@@ -33,6 +33,7 @@ type QueryStructMeta struct {
 	QueryStructName string // internal query struct name
 	ModelStructName string // origin/model struct name
 	TableName       string // table name in db server
+	TableComment    string // table comment in db server
 	StructInfo      parser.Param
 	Fields          []*model.Field
 	Source          model.SourceCode
@@ -152,10 +153,22 @@ func (b *QueryStructMeta) Relations() (result []field.Relation) {
 
 // StructComment struct comment
 func (b *QueryStructMeta) StructComment() string {
+	if b.TableComment != "" {
+		return b.TableComment
+	}
 	if b.TableName != "" {
 		return fmt.Sprintf(`mapped from table <%s>`, b.TableName)
 	}
 	return `mapped from object`
+}
+
+// QueryStructComment query struct comment
+func (b *QueryStructMeta) QueryStructComment() string {
+	if b.TableComment != "" {
+		return fmt.Sprintf(`// %s %s`, b.QueryStructName, b.TableComment)
+	}
+
+	return ``
 }
 
 // ReviseDIYMethod check diy method duplication name
