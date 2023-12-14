@@ -48,7 +48,7 @@ type Expr interface {
 type OrderExpr interface {
 	Expr
 	Desc() Expr
-	ASC() Expr
+	Asc() Expr
 }
 
 type expression interface{}
