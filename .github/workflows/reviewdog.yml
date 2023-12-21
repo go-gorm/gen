@@ -11,4 +11,4 @@ jobs:
       - name: golangci-lint
         uses: reviewdog/action-golangci-lint@v2
         with:
-          golangci_lint_flags: "--timeout=1m"
+          golangci_lint_flags: "--timeout 1m"
