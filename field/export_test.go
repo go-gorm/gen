@@ -138,6 +138,10 @@ func TestExpr_Build(t *testing.T) {
 			Result: "COUNT(`user`.*)",
 		},
 		{
+			Expr:   field.ALL.Count().As("num"),
+			Result: "COUNT(*) AS `num`",
+		},
+		{
 			Expr:   field.NewAsterisk("user").Distinct().Count(),
 			Result: "COUNT(DISTINCT `user`.*)",
 		},
