@@ -1,3 +1,4 @@
 go.sum
 
 .gen/
+.model/query
