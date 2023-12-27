@@ -74,7 +74,7 @@ func (b *QueryStructMeta) parseStruct(st interface{}) error {
 	return nil
 }
 
-// getFieldComment get field comment
+// isMultilineComment check if comment is multiline
 func (b *QueryStructMeta) isMultilineComment(comment string) bool {
 	if len(comment) == 0 {
 		return false
