@@ -3,6 +3,7 @@ package tests_test
 import (
 	"context"
 	"fmt"
+	_model "gorm.io/gen/tests/.model"
 	"os"
 	"os/exec"
 	"strings"
@@ -18,6 +19,7 @@ import (
 const (
 	generateDirPrefix = ".gen/"
 	expectDirPrefix   = ".expect/"
+	modelDirPrefix    = ".model/"
 )
 
 var _ = os.Setenv("GORM_DIALECT", "mysql")
@@ -160,5 +162,14 @@ func TestGenerate_expect(t *testing.T) {
 	})
 	g.UseDB(DB)
 	g.ApplyBasic(g.GenerateAllTable()...)
+	g.Execute()
+}
+
+func TestGenFromModel(t *testing.T) {
+	g := gen.NewGenerator(gen.Config{
+		OutPath: modelDirPrefix + "query",
+		Mode:    gen.WithoutContext | gen.WithDefaultQuery | gen.WithQueryInterface, // generate mode
+	})
+	g.ApplyBasic(_model.User{})
 	g.Execute()
 }

@@ -59,10 +59,12 @@ func (b *QueryStructMeta) parseStruct(st interface{}) error {
 	}
 	for _, f := range stmt.Schema.Fields {
 		b.appendOrUpdateField(&model.Field{
-			Name:          f.Name,
-			Type:          b.getFieldRealType(f.FieldType),
-			ColumnName:    f.DBName,
-			CustomGenType: fp.GetFieldGenType(f),
+			Name:             f.Name,
+			Type:             b.getFieldRealType(f.FieldType),
+			ColumnName:       f.DBName,
+			CustomGenType:    fp.GetFieldGenType(f),
+			ColumnComment:    f.Comment,
+			MultilineComment: b.isMultilineComment(f.Comment),
 		})
 	}
 	for _, r := range ParseStructRelationShip(&stmt.Schema.Relationships) {
@@ -70,6 +72,17 @@ func (b *QueryStructMeta) parseStruct(st interface{}) error {
 		b.appendOrUpdateField(&model.Field{Relation: &r})
 	}
 	return nil
+}
+
+// getFieldComment get field comment
+func (b *QueryStructMeta) isMultilineComment(comment string) bool {
+	if len(comment) == 0 {
+		return false
+	}
+	if strings.Contains(comment, "\n") {
+		return true
+	}
+	return false
 }
 
 // getFieldRealType  get basic type of field
