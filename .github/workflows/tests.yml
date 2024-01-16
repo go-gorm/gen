@@ -2,8 +2,7 @@ name: tests
 
 on:
   push:
-    branches-ignore:
-      - "gh-pages"
+    branches: [master]
   pull_request:
     branches-ignore:
       - "gh-pages"
