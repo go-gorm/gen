@@ -155,7 +155,7 @@ func Test_Available(t *testing.T) {
 func Test_WithContext(t *testing.T) {
 	query := Use(_gen_test_db)
 	if !query.Available() {
-		t.Errorf("query Use(db) fail: query.Available() == false")
+		t.Errorf("query Use(_gen_test_db) fail: query.Available() == false")
 	}
 
 	type Content string

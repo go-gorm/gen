@@ -41,7 +41,7 @@ func init() {
 func InitializeDB() {
 	_gen_test_once.Do(func() {
 		var err error
-		db, err = gorm.Open(sqlite.Open(_gen_test_db_name), &gorm.Config{})
+		_gen_test_db, err = gorm.Open(sqlite.Open(_gen_test_db_name), &gorm.Config{})
 		if err != nil {
 			panic(fmt.Errorf("open sqlite %q fail: %w", _gen_test_db_name, err))
 		}
