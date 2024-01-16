@@ -28,7 +28,7 @@ type TestCase struct {
 	Expectation
 }
 
-const dbName = "gen_test.db"
+const _gen_test_dbName = "gen_test.db"
 
 var _gen_test_db *gorm.DB
 var _gen_test_once sync.Once
@@ -39,11 +39,11 @@ func init() {
 }
 
 func InitializeDB() {
-	once.Do(func() {
+	_gen_test_once.Do(func() {
 		var err error
-		db, err = gorm.Open(sqlite.Open(dbName), &gorm.Config{})
+		db, err = gorm.Open(sqlite.Open(_gen_test_dbName), &gorm.Config{})
 		if err != nil {
-			panic(fmt.Errorf("open sqlite %q fail: %w", dbName, err))
+			panic(fmt.Errorf("open sqlite %q fail: %w", _gen_test_dbName, err))
 		}
 	})
 }
