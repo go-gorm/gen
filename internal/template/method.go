@@ -265,14 +265,14 @@ func ({{.S}} *{{.QueryStructName}}Do) withDO(do gen.Dao) (*{{.QueryStructName}}D
 const CRUDMethodTest = `
 func init() {
 	InitializeDB()
-	err := db.AutoMigrate(&{{.StructInfo.Package}}.{{.ModelStructName}}{})
+	err := _gen_test_db.AutoMigrate(&{{.StructInfo.Package}}.{{.ModelStructName}}{})
 	if err != nil{
 		fmt.Printf("Error: AutoMigrate(&{{.StructInfo.Package}}.{{.ModelStructName}}{}) fail: %s", err)
 	}
 }
 
 func Test_{{.QueryStructName}}Query(t *testing.T) {
-	{{.QueryStructName}} := new{{.ModelStructName}}(db)
+	{{.QueryStructName}} := new{{.ModelStructName}}(_gen_test_db)
 	{{.QueryStructName}} = *{{.QueryStructName}}.As({{.QueryStructName}}.TableName())
 	_do := {{.QueryStructName}}.WithContext(context.Background()).Debug()
 
