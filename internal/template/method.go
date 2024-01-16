@@ -416,7 +416,7 @@ const DIYMethodTest = `
 var {{.OriginStruct.Type}}{{.MethodName}}TestCase = []TestCase{}
 
 func Test_{{.TargetStruct}}_{{.MethodName}}(t *testing.T) {
-	{{.TargetStruct}} := new{{.OriginStruct.Type}}(db)
+	{{.TargetStruct}} := new{{.OriginStruct.Type}}(_gen_test_db)
 	do := {{.TargetStruct}}.WithContext(context.Background()).Debug()
 
 	for i, tt := range {{.OriginStruct.Type}}{{.MethodName}}TestCase {
