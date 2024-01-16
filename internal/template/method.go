@@ -421,8 +421,8 @@ func Test_{{.TargetStruct}}_{{.MethodName}}(t *testing.T) {
 
 	for i, tt := range {{.OriginStruct.Type}}{{.MethodName}}TestCase {
 		t.Run("{{.MethodName}}_"+strconv.Itoa(i), func(t *testing.T) {
-			{{.GetTestResultParamInTmpl}} := do.{{.MethodName}}({{.GetTestParamInTmpl}})
-			{{.GetAssertInTmpl}}
+			{{if .GetTestResultParamInTmpl}}{{.GetTestResultParamInTmpl}} := do.{{.MethodName}}({{.GetTestParamInTmpl}})
+			{{.GetAssertInTmpl}}{{else}}do.{{.MethodName}}({{.GetTestParamInTmpl}}){{end}}
 		})
 	}
 }
