@@ -17,14 +17,14 @@ import (
 
 func init() {
 	InitializeDB()
-	err := db.AutoMigrate(&model.User{})
+	err := _gen_test_db.AutoMigrate(&model.User{})
 	if err != nil {
 		fmt.Printf("Error: AutoMigrate(&model.User{}) fail: %s", err)
 	}
 }
 
 func Test_userQuery(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	user = *user.As(user.TableName())
 	_do := user.WithContext(context.Background()).Debug()
 

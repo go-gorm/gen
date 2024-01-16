@@ -17,14 +17,14 @@ import (
 
 func init() {
 	InitializeDB()
-	err := db.AutoMigrate(&model.CreditCard{})
+	err := _gen_test_db.AutoMigrate(&model.CreditCard{})
 	if err != nil {
 		fmt.Printf("Error: AutoMigrate(&model.CreditCard{}) fail: %s", err)
 	}
 }
 
 func Test_creditCardQuery(t *testing.T) {
-	creditCard := newCreditCard(db)
+	creditCard := newCreditCard(_gen_test_db)
 	creditCard = *creditCard.As(creditCard.TableName())
 	_do := creditCard.WithContext(context.Background()).Debug()
 

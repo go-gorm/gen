@@ -19,14 +19,14 @@ import (
 
 func init() {
 	InitializeDB()
-	err := db.AutoMigrate(&model.User{})
+	err := _gen_test_db.AutoMigrate(&model.User{})
 	if err != nil {
 		fmt.Printf("Error: AutoMigrate(&model.User{}) fail: %s", err)
 	}
 }
 
 func Test_userQuery(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	user = *user.As(user.TableName())
 	_do := user.WithContext(context.Background()).Debug()
 
@@ -149,7 +149,7 @@ func Test_userQuery(t *testing.T) {
 var UserFindByUsersTestCase = []TestCase{}
 
 func Test_user_FindByUsers(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserFindByUsersTestCase {
@@ -163,7 +163,7 @@ func Test_user_FindByUsers(t *testing.T) {
 var UserFindByComplexIfTestCase = []TestCase{}
 
 func Test_user_FindByComplexIf(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserFindByComplexIfTestCase {
@@ -177,7 +177,7 @@ func Test_user_FindByComplexIf(t *testing.T) {
 var UserFindByIfTimeTestCase = []TestCase{}
 
 func Test_user_FindByIfTime(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserFindByIfTimeTestCase {
@@ -191,7 +191,7 @@ func Test_user_FindByIfTime(t *testing.T) {
 var UserTestForTestCase = []TestCase{}
 
 func Test_user_TestFor(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserTestForTestCase {
@@ -206,7 +206,7 @@ func Test_user_TestFor(t *testing.T) {
 var UserTestForKeyTestCase = []TestCase{}
 
 func Test_user_TestForKey(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserTestForKeyTestCase {
@@ -221,7 +221,7 @@ func Test_user_TestForKey(t *testing.T) {
 var UserTestForOrTestCase = []TestCase{}
 
 func Test_user_TestForOr(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserTestForOrTestCase {
@@ -236,7 +236,7 @@ func Test_user_TestForOr(t *testing.T) {
 var UserTestIfInForTestCase = []TestCase{}
 
 func Test_user_TestIfInFor(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserTestIfInForTestCase {
@@ -251,7 +251,7 @@ func Test_user_TestIfInFor(t *testing.T) {
 var UserTestForInIfTestCase = []TestCase{}
 
 func Test_user_TestForInIf(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserTestForInIfTestCase {
@@ -266,7 +266,7 @@ func Test_user_TestForInIf(t *testing.T) {
 var UserTestForInWhereTestCase = []TestCase{}
 
 func Test_user_TestForInWhere(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserTestForInWhereTestCase {
@@ -281,7 +281,7 @@ func Test_user_TestForInWhere(t *testing.T) {
 var UserTestForUserListTestCase = []TestCase{}
 
 func Test_user_TestForUserList(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserTestForUserListTestCase {
@@ -296,7 +296,7 @@ func Test_user_TestForUserList(t *testing.T) {
 var UserTestForMapTestCase = []TestCase{}
 
 func Test_user_TestForMap(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserTestForMapTestCase {
@@ -311,7 +311,7 @@ func Test_user_TestForMap(t *testing.T) {
 var UserTestIfInIfTestCase = []TestCase{}
 
 func Test_user_TestIfInIf(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserTestIfInIfTestCase {
@@ -325,7 +325,7 @@ func Test_user_TestIfInIf(t *testing.T) {
 var UserTestMoreForTestCase = []TestCase{}
 
 func Test_user_TestMoreFor(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserTestMoreForTestCase {
@@ -339,7 +339,7 @@ func Test_user_TestMoreFor(t *testing.T) {
 var UserTestMoreFor2TestCase = []TestCase{}
 
 func Test_user_TestMoreFor2(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserTestMoreFor2TestCase {
@@ -353,7 +353,7 @@ func Test_user_TestMoreFor2(t *testing.T) {
 var UserTestForInSetTestCase = []TestCase{}
 
 func Test_user_TestForInSet(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserTestForInSetTestCase {
@@ -367,7 +367,7 @@ func Test_user_TestForInSet(t *testing.T) {
 var UserTestInsertMoreInfoTestCase = []TestCase{}
 
 func Test_user_TestInsertMoreInfo(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserTestInsertMoreInfoTestCase {
@@ -381,7 +381,7 @@ func Test_user_TestInsertMoreInfo(t *testing.T) {
 var UserTestIfElseForTestCase = []TestCase{}
 
 func Test_user_TestIfElseFor(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserTestIfElseForTestCase {
@@ -395,7 +395,7 @@ func Test_user_TestIfElseFor(t *testing.T) {
 var UserTestForLikeTestCase = []TestCase{}
 
 func Test_user_TestForLike(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserTestForLikeTestCase {
@@ -409,7 +409,7 @@ func Test_user_TestForLike(t *testing.T) {
 var UserAddUserTestCase = []TestCase{}
 
 func Test_user_AddUser(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserAddUserTestCase {
@@ -424,7 +424,7 @@ func Test_user_AddUser(t *testing.T) {
 var UserAddUser1TestCase = []TestCase{}
 
 func Test_user_AddUser1(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserAddUser1TestCase {
@@ -439,7 +439,7 @@ func Test_user_AddUser1(t *testing.T) {
 var UserAddUser2TestCase = []TestCase{}
 
 func Test_user_AddUser2(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserAddUser2TestCase {
@@ -453,7 +453,7 @@ func Test_user_AddUser2(t *testing.T) {
 var UserAddUser3TestCase = []TestCase{}
 
 func Test_user_AddUser3(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserAddUser3TestCase {
@@ -467,7 +467,7 @@ func Test_user_AddUser3(t *testing.T) {
 var UserAddUser4TestCase = []TestCase{}
 
 func Test_user_AddUser4(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserAddUser4TestCase {
@@ -481,7 +481,7 @@ func Test_user_AddUser4(t *testing.T) {
 var UserAddUser5TestCase = []TestCase{}
 
 func Test_user_AddUser5(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserAddUser5TestCase {
@@ -495,7 +495,7 @@ func Test_user_AddUser5(t *testing.T) {
 var UserAddUser6TestCase = []TestCase{}
 
 func Test_user_AddUser6(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserAddUser6TestCase {
@@ -510,7 +510,7 @@ func Test_user_AddUser6(t *testing.T) {
 var UserFindByIDTestCase = []TestCase{}
 
 func Test_user_FindByID(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserFindByIDTestCase {
@@ -524,7 +524,7 @@ func Test_user_FindByID(t *testing.T) {
 var UserLikeSearchTestCase = []TestCase{}
 
 func Test_user_LikeSearch(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserLikeSearchTestCase {
@@ -538,7 +538,7 @@ func Test_user_LikeSearch(t *testing.T) {
 var UserInSearchTestCase = []TestCase{}
 
 func Test_user_InSearch(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserInSearchTestCase {
@@ -552,7 +552,7 @@ func Test_user_InSearch(t *testing.T) {
 var UserColumnSearchTestCase = []TestCase{}
 
 func Test_user_ColumnSearch(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	do := user.WithContext(context.Background()).Debug()
 
 	for i, tt := range UserColumnSearchTestCase {
