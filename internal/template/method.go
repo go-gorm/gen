@@ -113,8 +113,16 @@ func ({{.S}} {{.QueryStructName}}Do) Offset(offset int) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Offset(offset))
 }
 
-func ({{.S}} {{.QueryStructName}}Do) Scopes(funcs ...func(gen.Dao) gen.Dao) {{.ReturnObject}} {
-	return {{.S}}.withDO({{.S}}.DO.Scopes(funcs...))
+func ({{.S}} {{.QueryStructName}}Do) Scopes(funcs ...func({{.ReturnObject}}) {{.ReturnObject}}) {{.ReturnObject}} {
+	if funcs = nil {
+		return {{.ReturnObject}}
+	}
+
+	for _, f := range funcs {
+		{{.ReturnObject}} = f({{.ReturnObject}})
+	}
+	
+	return {{.ReturnObject}}
 }
 
 func ({{.S}} {{.QueryStructName}}Do) Unscoped() {{.ReturnObject}} {

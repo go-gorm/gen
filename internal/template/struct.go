@@ -173,7 +173,7 @@ type I{{.ModelStructName}}Do interface {
 	Limit(limit int) I{{.ModelStructName}}Do
 	Offset(offset int) I{{.ModelStructName}}Do
 	Count() (count int64, err error)
-	Scopes(funcs ...func(gen.Dao) gen.Dao) I{{.ModelStructName}}Do
+	Scopes(funcs ...func(I{{.ModelStructName}}Do) I{{.ModelStructName}}Do) I{{.ModelStructName}}Do
 	Unscoped() I{{.ModelStructName}}Do
 	Create(values ...*{{.StructInfo.Package}}.{{.StructInfo.Type}}) error
 	CreateInBatches(values []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, batchSize int) error
