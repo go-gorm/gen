@@ -8,7 +8,7 @@ const (
 		{{.QueryStructName}}Do
 		` + fields + `
 	}
-	` + tableMethod + asMethond + updateFieldMethod + getFieldMethod + fillFieldMapMethod + cloneMethod + replaceMethod + relationship + defineMethodStruct
+	` + tableMethod + asMethond + updateFieldMethod + getFieldMethod + fillFieldMapMethod + cloneMethod + replaceMethod + relationship + defineGenericsMethodStruct
 
 	// TableQueryStructWithContext table query struct with context
 	TableQueryStructWithContext = createMethod + `
@@ -27,17 +27,18 @@ const (
 
 	func ({{.S}} {{.QueryStructName}}) Columns(cols ...field.Expr) gen.Columns { return {{.S}}.{{.QueryStructName}}Do.Columns(cols...) }
 
-	` + getFieldMethod + fillFieldMapMethod + cloneMethod + replaceMethod + relationship + defineMethodStruct
+	` + getFieldMethod + fillFieldMapMethod + cloneMethod + replaceMethod + relationship + defineGenericsMethodStruct
 
 	// TableQueryIface table query interface
-	TableQueryIface = defineDoInterface
+	TableQueryIface = defineGenericsDoInterface
 )
 
 const (
 	createMethod = `
 	func new{{.ModelStructName}}(db *gorm.DB, opts ...gen.DOOption) {{.QueryStructName}} {
 		_{{.QueryStructName}} := {{.QueryStructName}}{}
-	
+		_{{.QueryStructName}}.{{.QueryStructName}}Do.RealDO = &_{{.QueryStructName}}.{{.QueryStructName}}Do
+
 		_{{.QueryStructName}}.{{.QueryStructName}}Do.UseDB(db,opts...)
 		_{{.QueryStructName}}.{{.QueryStructName}}Do.UseModel(&{{.StructInfo.Package}}.{{.StructInfo.Type}}{})
 	
@@ -131,9 +132,9 @@ func ({{.S}} *{{.QueryStructName}}) GetFieldByName(fieldName string) (field.Orde
 		`{{- $relation := .Relation }}{{- $relationship := $relation.RelationshipName}}` +
 		relationStruct + relationTx +
 		`{{end}}{{end}}`
-	defineMethodStruct = `type {{.QueryStructName}}Do struct { gen.DO }`
-
-	fillFieldMapMethod = `
+	defineMethodStruct         = `type {{.QueryStructName}}Do struct { gen.DO }`
+	defineGenericsMethodStruct = `type {{.QueryStructName}}Do struct {gen.GenericsDo[I{{.ModelStructName}}Do, *{{.StructInfo.Package}}.{{.StructInfo.Type}}]}`
+	fillFieldMapMethod         = ` 
 func ({{.S}} *{{.QueryStructName}}) fillFieldMap() {
 	{{.S}}.fieldMap =  make(map[string]field.Expr, {{len .Fields}})
 	{{range .Fields -}}
@@ -143,7 +144,15 @@ func ({{.S}} *{{.QueryStructName}}) fillFieldMap() {
 	{{end -}}
 }
 `
+	defineGenericsDoInterface = `
+type I{{.ModelStructName}}Do interface {
+	gen.IGenericsDo[I{{.ModelStructName}}Do, *{{.StructInfo.Package}}.{{.StructInfo.Type}}]
 
+	{{range .Interfaces -}}
+	{{.FuncSign}}
+	{{end}}
+}
+`
 	defineDoInterface = `
 
 type I{{.ModelStructName}}Do interface {
