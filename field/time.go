@@ -44,12 +44,12 @@ func (field Time) Date() Time {
 
 // DateDiff equal to DATADIFF(self, value)
 func (field Time) DateDiff(value time.Time) Int {
-	return Int{GenericsInt: GenericsInt[int]{GenericsField: GenericsField[int]{expr{e: clause.Expr{SQL: "DATEDIFF(?,?)", Vars: []interface{}{field.RawExpr(), value}}}}}}
+	return Int{NewGenericsInt[int](expr{e: clause.Expr{SQL: "DATEDIFF(?,?)", Vars: []interface{}{field.RawExpr(), value}}})}
 }
 
 // DateFormat equal to DATE_FORMAT(self, value)
 func (field Time) DateFormat(value string) String {
-	return String{GenericsString: GenericsString[string]{GenericsField: GenericsField[string]{expr{e: clause.Expr{SQL: "DATE_FORMAT(?,?)", Vars: []interface{}{field.RawExpr(), value}}}}}}
+	return String{NewGenericsString[string](expr{e: clause.Expr{SQL: "DATE_FORMAT(?,?)", Vars: []interface{}{field.RawExpr(), value}}})}
 }
 
 // Now return result of NOW()
@@ -69,61 +69,62 @@ func (field Time) CurTime() Time {
 
 // DayName equal to DAYNAME(self)
 func (field Time) DayName() String {
-	return String{GenericsString: GenericsString[string]{GenericsField: GenericsField[string]{expr{e: clause.Expr{SQL: "DAYNAME(?)", Vars: []interface{}{field.RawExpr()}}}}}}
+	return String{NewGenericsString[string](expr{e: clause.Expr{SQL: "DAYNAME(?)", Vars: []interface{}{field.RawExpr()}}})}
+
 }
 
 // MonthName equal to MONTHNAME(self)
 func (field Time) MonthName() String {
-	return String{GenericsString: GenericsString[string]{GenericsField: GenericsField[string]{expr{e: clause.Expr{SQL: "MONTHNAME(?)", Vars: []interface{}{field.RawExpr()}}}}}}
+	return String{NewGenericsString[string](expr{e: clause.Expr{SQL: "MONTHNAME(?)", Vars: []interface{}{field.RawExpr()}}})}
 }
 
 func (field Time) Year() Int {
-	return Int{GenericsInt: GenericsInt[int]{GenericsField: GenericsField[int]{expr{e: clause.Expr{SQL: "YEAR(?)", Vars: []interface{}{field.RawExpr()}}}}}}
+	return Int{NewGenericsInt[int](expr{e: clause.Expr{SQL: "YEAR(?)", Vars: []interface{}{field.RawExpr()}}})}
 }
 
 // Month equal to MONTH(self)
 func (field Time) Month() Int {
-	return Int{GenericsInt: GenericsInt[int]{GenericsField: GenericsField[int]{expr{e: clause.Expr{SQL: "MONTH(?)", Vars: []interface{}{field.RawExpr()}}}}}}
+	return Int{NewGenericsInt[int](expr{e: clause.Expr{SQL: "MONTH(?)", Vars: []interface{}{field.RawExpr()}}})}
 }
 
 // Day equal to DAY(self)
 func (field Time) Day() Int {
-	return Int{GenericsInt: GenericsInt[int]{GenericsField: GenericsField[int]{expr{e: clause.Expr{SQL: "DAY(?)", Vars: []interface{}{field.RawExpr()}}}}}}
+	return Int{NewGenericsInt[int](expr{e: clause.Expr{SQL: "DAY(?)", Vars: []interface{}{field.RawExpr()}}})}
 }
 
 // Hour equal to HOUR(self)
 func (field Time) Hour() Int {
-	return Int{GenericsInt: GenericsInt[int]{GenericsField: GenericsField[int]{expr{e: clause.Expr{SQL: "HOUR(?)", Vars: []interface{}{field.RawExpr()}}}}}}
+	return Int{NewGenericsInt[int](expr{e: clause.Expr{SQL: "HOUR(?)", Vars: []interface{}{field.RawExpr()}}})}
 }
 
 // Minute equal to MINUTE(self)
 func (field Time) Minute() Int {
-	return Int{GenericsInt: GenericsInt[int]{GenericsField: GenericsField[int]{expr{e: clause.Expr{SQL: "MINUTE(?)", Vars: []interface{}{field.RawExpr()}}}}}}
+	return Int{NewGenericsInt[int](expr{e: clause.Expr{SQL: "MINUTE(?)", Vars: []interface{}{field.RawExpr()}}})}
 }
 
 // Second equal to SECOND(self)
 func (field Time) Second() Int {
-	return Int{GenericsInt: GenericsInt[int]{GenericsField: GenericsField[int]{expr{e: clause.Expr{SQL: "SECOND(?)", Vars: []interface{}{field.RawExpr()}}}}}}
+	return Int{NewGenericsInt[int](expr{e: clause.Expr{SQL: "SECOND(?)", Vars: []interface{}{field.RawExpr()}}})}
 }
 
 // MicroSecond equal to MICROSECOND(self)
 func (field Time) MicroSecond() Int {
-	return Int{GenericsInt: GenericsInt[int]{GenericsField: GenericsField[int]{expr{e: clause.Expr{SQL: "MICROSECOND(?)", Vars: []interface{}{field.RawExpr()}}}}}}
+	return Int{NewGenericsInt[int](expr{e: clause.Expr{SQL: "MICROSECOND(?)", Vars: []interface{}{field.RawExpr()}}})}
 }
 
 // DayOfWeek equal to DAYOFWEEK(self)
 func (field Time) DayOfWeek() Int {
-	return Int{GenericsInt: GenericsInt[int]{GenericsField: GenericsField[int]{expr{e: clause.Expr{SQL: "DAYOFWEEK(?)", Vars: []interface{}{field.RawExpr()}}}}}}
+	return Int{NewGenericsInt[int](expr{e: clause.Expr{SQL: "DAYOFWEEK(?)", Vars: []interface{}{field.RawExpr()}}})}
 }
 
 // DayOfMonth equal to DAYOFMONTH(self)
 func (field Time) DayOfMonth() Int {
-	return Int{GenericsInt: GenericsInt[int]{GenericsField: GenericsField[int]{expr{e: clause.Expr{SQL: "DAYOFMONTH(?)", Vars: []interface{}{field.RawExpr()}}}}}}
+	return Int{NewGenericsInt[int](expr{e: clause.Expr{SQL: "DAYOFMONTH(?)", Vars: []interface{}{field.RawExpr()}}})}
 }
 
 // DayOfYear equal to DAYOFYEAR(self)
 func (field Time) DayOfYear() Int {
-	return Int{GenericsInt: GenericsInt[int]{GenericsField: GenericsField[int]{expr{e: clause.Expr{SQL: "DAYOFYEAR(?)", Vars: []interface{}{field.RawExpr()}}}}}}
+	return Int{NewGenericsInt[int](expr{e: clause.Expr{SQL: "DAYOFYEAR(?)", Vars: []interface{}{field.RawExpr()}}})}
 }
 
 // FromDays equal to FROM_DAYS(self)

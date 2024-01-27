@@ -173,31 +173,34 @@ func (e expr) IsNotNull() Expr {
 }
 
 func (e expr) Count() Int {
-	return Int{GenericsInt: GenericsInt[int]{GenericsField: GenericsField[int]{e.setE(clause.Expr{SQL: "COUNT(?)", Vars: []interface{}{e.RawExpr()}})}}}
+	return Int{NewGenericsInt[int](e.setE(clause.Expr{SQL: "COUNT(?)", Vars: []interface{}{e.RawExpr()}}))}
 }
 
 func (e expr) Distinct() Int {
-	return Int{GenericsInt: GenericsInt[int]{GenericsField: GenericsField[int]{e.setE(clause.Expr{SQL: "DISTINCT ?", Vars: []interface{}{e.RawExpr()}})}}}
+	return Int{NewGenericsInt[int](e.setE(clause.Expr{SQL: "DISTINCT ?", Vars: []interface{}{e.RawExpr()}}))}
+
 }
 
 func (e expr) Length() Int {
-	return Int{GenericsInt: GenericsInt[int]{GenericsField: GenericsField[int]{e.setE(clause.Expr{SQL: "LENGTH(?)", Vars: []interface{}{e.RawExpr()}})}}}
+	return Int{NewGenericsInt[int](e.setE(clause.Expr{SQL: "LENGTH(?)", Vars: []interface{}{e.RawExpr()}}))}
 }
 
 func (e expr) Max() Float64 {
-	return Float64{GenericsInt: GenericsInt[float64]{GenericsField: GenericsField[float64]{e.setE(clause.Expr{SQL: "MAX(?)", Vars: []interface{}{e.RawExpr()}})}}}
+	return Float64{NewGenericsInt[float64](e.setE(clause.Expr{SQL: "MAX(?)", Vars: []interface{}{e.RawExpr()}}))}
 }
 
 func (e expr) Min() Float64 {
-	return Float64{GenericsInt: GenericsInt[float64]{GenericsField: GenericsField[float64]{e.setE(clause.Expr{SQL: "MIN(?)", Vars: []interface{}{e.RawExpr()}})}}}
+	return Float64{NewGenericsInt[float64](e.setE(clause.Expr{SQL: "MIN(?)", Vars: []interface{}{e.RawExpr()}}))}
+
 }
 
 func (e expr) Avg() Float64 {
-	return Float64{GenericsInt: GenericsInt[float64]{GenericsField: GenericsField[float64]{e.setE(clause.Expr{SQL: "AVG(?)", Vars: []interface{}{e.RawExpr()}})}}}
+	return Float64{NewGenericsInt[float64](e.setE(clause.Expr{SQL: "AVG(?)", Vars: []interface{}{e.RawExpr()}}))}
+
 }
 
 func (e expr) Abs() Float64 {
-	return Float64{e.setE(clause.Expr{SQL: "ABS(?)", Vars: []interface{}{e.RawExpr()}})}
+	return Float64{NewGenericsInt[float64](e.setE(clause.Expr{SQL: "ABS(?)", Vars: []interface{}{e.RawExpr()}}))}
 }
 
 func (e expr) Null() AssignExpr {

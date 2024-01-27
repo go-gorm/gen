@@ -13,6 +13,10 @@ type ScanValuer interface {
 	Value() (driver.Value, error) // driver.Valuer
 }
 
+func NewGenerics[T any](e expr) GenericsField[T] {
+	return GenericsField[T]{e}
+}
+
 // GenericsField a generics field struct
 type GenericsField[T any] struct{ expr }
 
@@ -82,6 +86,10 @@ func (field GenericsField[T]) toSlice(values ...T) []interface{} {
 		slice[i] = v
 	}
 	return slice
+}
+
+func NewGenericsInt[T any](e expr) GenericsInt[T] {
+	return GenericsInt[T]{GenericsField: NewGenerics[T](e)}
 }
 
 // GenericsInt int type field
@@ -167,6 +175,10 @@ func (field GenericsInt[T]) BitFlip() GenericsInt[T] {
 // Zero set zero value
 func (field GenericsInt[T]) Zero() AssignExpr {
 	return field.value(0)
+}
+
+func NewGenericsString[T any](e expr) GenericsString[T] {
+	return GenericsString[T]{GenericsField: NewGenerics[T](e)}
 }
 
 // GenericsString string type field

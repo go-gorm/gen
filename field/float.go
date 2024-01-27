@@ -7,7 +7,7 @@ type Float64 struct {
 
 // Floor ...
 func (field Float64) Floor() Int {
-	return Int{GenericsInt: GenericsInt[int]{GenericsField: GenericsField[int]{field.floor()}}}
+	return Int{NewGenericsInt[int](field.floor())}
 }
 
 // Float32 float32 type field
@@ -17,5 +17,5 @@ type Float32 struct {
 
 // Floor ...
 func (field Float32) Floor() Int {
-	return Int{GenericsInt: GenericsInt[int]{GenericsField: GenericsField[int]{field.floor()}}}
+	return Int{NewGenericsInt[int](field.floor())}
 }
