@@ -21,6 +21,8 @@ Install GEN as a binary tool
         consult[https://gorm.io/docs/connecting_to_the_database.html]
   -fieldNullable
         generate with pointer when field is nullable
+  -fieldCoverable
+        generate with pointer when field has default value
   -fieldWithIndexTag
         generate field with gorm index tag
   -fieldWithTypeTag
@@ -65,6 +67,10 @@ You can use all gorm's dsn.
 #### fieldNullable
 
 generate with pointer when field is nullable
+
+#### fieldCoverable
+
+generate with pointer when field has default value
 
 #### fieldWithIndexTag
 

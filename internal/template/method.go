@@ -73,10 +73,6 @@ func ({{.S}} {{.QueryStructName}}Do) Where(conds ...gen.Condition) {{.ReturnObje
 	return {{.S}}.withDO({{.S}}.DO.Where(conds...))
 }
 
-func ({{.S}} {{.QueryStructName}}Do) Exists(subquery interface{UnderlyingDB() *gorm.DB}) {{.ReturnObject}} {
-	return {{.S}}.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
-}
-
 func ({{.S}} {{.QueryStructName}}Do) Order(conds ...field.Expr) {{.ReturnObject}} {
 	return {{.S}}.withDO({{.S}}.DO.Order(conds...))
 }
@@ -269,14 +265,14 @@ func ({{.S}} *{{.QueryStructName}}Do) withDO(do gen.Dao) (*{{.QueryStructName}}D
 const CRUDMethodTest = `
 func init() {
 	InitializeDB()
-	err := db.AutoMigrate(&{{.StructInfo.Package}}.{{.ModelStructName}}{})
+	err := _gen_test_db.AutoMigrate(&{{.StructInfo.Package}}.{{.ModelStructName}}{})
 	if err != nil{
 		fmt.Printf("Error: AutoMigrate(&{{.StructInfo.Package}}.{{.ModelStructName}}{}) fail: %s", err)
 	}
 }
 
 func Test_{{.QueryStructName}}Query(t *testing.T) {
-	{{.QueryStructName}} := new{{.ModelStructName}}(db)
+	{{.QueryStructName}} := new{{.ModelStructName}}(_gen_test_db)
 	{{.QueryStructName}} = *{{.QueryStructName}}.As({{.QueryStructName}}.TableName())
 	_do := {{.QueryStructName}}.WithContext(context.Background()).Debug()
 
@@ -378,7 +374,7 @@ func Test_{{.QueryStructName}}Query(t *testing.T) {
 	}
 	
 	var _a _another
-	var _aPK = field.NewString(_a.TableName(), clause.PrimaryKey)
+	var _aPK = field.NewString(_a.TableName(), "id")
 
 	err = _do.Join(&_a, primaryKey.EqCol(_aPK)).Scan(map[string]interface{}{})
 	if err != nil {
@@ -420,13 +416,13 @@ const DIYMethodTest = `
 var {{.OriginStruct.Type}}{{.MethodName}}TestCase = []TestCase{}
 
 func Test_{{.TargetStruct}}_{{.MethodName}}(t *testing.T) {
-	{{.TargetStruct}} := new{{.OriginStruct.Type}}(db)
+	{{.TargetStruct}} := new{{.OriginStruct.Type}}(_gen_test_db)
 	do := {{.TargetStruct}}.WithContext(context.Background()).Debug()
 
 	for i, tt := range {{.OriginStruct.Type}}{{.MethodName}}TestCase {
 		t.Run("{{.MethodName}}_"+strconv.Itoa(i), func(t *testing.T) {
-			{{.GetTestResultParamInTmpl}} := do.{{.MethodName}}({{.GetTestParamInTmpl}})
-			{{.GetAssertInTmpl}}
+			{{if .GetTestResultParamInTmpl}}{{.GetTestResultParamInTmpl}} := do.{{.MethodName}}({{.GetTestParamInTmpl}})
+			{{.GetAssertInTmpl}}{{else}}do.{{.MethodName}}({{.GetTestParamInTmpl}}){{end}}
 		})
 	}
 }

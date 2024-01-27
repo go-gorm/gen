@@ -32,6 +32,7 @@ type QueryStructMeta struct {
 	QueryStructName string // internal query struct name
 	ModelStructName string // origin/model struct name
 	TableName       string // table name in db server
+	TableComment    string // table comment in db server
 	StructInfo      parser.Param
 	Fields          []*model.Field
 	Source          model.SourceCode
@@ -151,10 +152,22 @@ func (b *QueryStructMeta) Relations() (result []field.Relation) {
 
 // StructComment struct comment
 func (b *QueryStructMeta) StructComment() string {
+	if b.TableComment != "" {
+		return b.TableComment
+	}
 	if b.TableName != "" {
 		return fmt.Sprintf(`mapped from table <%s>`, b.TableName)
 	}
 	return `mapped from object`
+}
+
+// QueryStructComment query struct comment
+func (b *QueryStructMeta) QueryStructComment() string {
+	if b.TableComment != "" {
+		return fmt.Sprintf(`// %s %s`, b.QueryStructName, b.TableComment)
+	}
+
+	return ``
 }
 
 // ReviseDIYMethod check diy method duplication name
@@ -179,9 +192,9 @@ func (b *QueryStructMeta) ReviseDIYMethod() error {
 	if tableName == nil {
 		methods = append(methods, parser.DefaultMethodTableName(b.ModelStructName))
 	} else {
-		//e.g. return "@@table" => return TableNameUser
+		// e.g. return "@@table" => return TableNameUser
 		tableName.Body = strings.ReplaceAll(tableName.Body, "\"@@table\"", "TableName"+b.ModelStructName)
-		//e.g. return "t_@@table" => return "t_user"
+		// e.g. return "t_@@table" => return "t_user"
 		tableName.Body = strings.ReplaceAll(tableName.Body, "@@table", b.TableName)
 	}
 	b.ModelMethods = methods
@@ -194,7 +207,7 @@ func (b *QueryStructMeta) ReviseDIYMethod() error {
 
 func (b *QueryStructMeta) addMethodFromAddMethodOpt(methods ...interface{}) *QueryStructMeta {
 	for _, method := range methods {
-		modelMethods, err := parser.GetModelMethod(method, 5)
+		modelMethods, err := parser.GetModelMethod(method)
 		if err != nil {
 			panic("add diy method err:" + err.Error())
 		}

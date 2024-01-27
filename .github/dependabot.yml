@@ -13,3 +13,7 @@ updates:
     directory: /tests
     schedule:
       interval: weekly
+  - package-ecosystem: gomod
+    directory: /tools/gentool
+    schedule:
+      interval: weekly

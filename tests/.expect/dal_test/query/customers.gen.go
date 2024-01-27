@@ -144,11 +144,6 @@ func (c customerDo) Select(conds ...field.Expr) *customerDo {
 func (c customerDo) Where(conds ...gen.Condition) *customerDo {
 	return c.withDO(c.DO.Where(conds...))
 }
-
-func (c customerDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) *customerDo {
-	return c.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
-}
-
 func (c customerDo) Order(conds ...field.Expr) *customerDo {
 	return c.withDO(c.DO.Order(conds...))
 }

@@ -33,5 +33,7 @@ _testmain.go
 /.vscode
 __debug_bin
 /test/
+**/go.work
+**/go.work.sum
 
 *.db

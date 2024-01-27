@@ -55,14 +55,14 @@ func (tag Tag) Remove(key string) Tag {
 }
 
 func (tag Tag) Build() string {
-	if tag == nil || len(tag) == 0 {
+	if len(tag) == 0 {
 		return ""
 	}
 
 	tags := make([]string, 0, len(tag))
 	for _, k := range tagKeys(tag) {
 		v := tag[k]
-		if k == "" || v == "" {
+		if k == "" {
 			continue
 		}
 		tags = append(tags, k+":\""+v+"\"")
@@ -92,7 +92,7 @@ func (tag GormTag) Remove(key string) GormTag {
 }
 
 func (tag GormTag) Build() string {
-	if tag == nil || len(tag) == 0 {
+	if len(tag) == 0 {
 		return ""
 	}
 	tags := make([]string, 0, len(tag))
@@ -128,7 +128,7 @@ func tagKeys(tag Tag) []string {
 	if len(tag) == 0 {
 		return keys
 	}
-	for k, _ := range tag {
+	for k := range tag {
 		keys = append(keys, k)
 	}
 	return keySort(keys)
@@ -139,7 +139,7 @@ func gormKeys(tag GormTag) []string {
 	if len(tag) == 0 {
 		return keys
 	}
-	for k, _ := range tag {
+	for k := range tag {
 		keys = append(keys, k)
 	}
 	return keySort(keys)
