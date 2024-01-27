@@ -1,8 +1,10 @@
 package field
 
 import (
+	"database/sql/driver"
 	"fmt"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -29,7 +31,7 @@ var (
 
 // NewField create new field
 func NewField(table, column string, opts ...Option) Field {
-	return Field{expr: expr{col: toColumn(table, column, opts...)}}
+	return Field{GenericsField: GenericsField[driver.Valuer]{expr{col: toColumn(table, column, opts...)}}}
 }
 
 // NewSerializer create new field2
@@ -46,90 +48,90 @@ func NewAsterisk(table string, opts ...Option) Asterisk {
 
 // NewInt create new Int
 func NewInt(table, column string, opts ...Option) Int {
-	return Int{expr: expr{col: toColumn(table, column, opts...)}}
+	return Int{NewGenericsInt[int](expr{col: toColumn(table, column, opts...)})}
 }
 
 // NewInt8 create new Int8
 func NewInt8(table, column string, opts ...Option) Int8 {
-	return Int8{expr: expr{col: toColumn(table, column, opts...)}}
+	return Int8{NewGenericsInt[int8](expr{col: toColumn(table, column, opts...)})}
 }
 
 // NewInt16 ...
 func NewInt16(table, column string, opts ...Option) Int16 {
-	return Int16{expr: expr{col: toColumn(table, column, opts...)}}
+	return Int16{NewGenericsInt[int16](expr{col: toColumn(table, column, opts...)})}
 }
 
 // NewInt32 ...
 func NewInt32(table, column string, opts ...Option) Int32 {
-	return Int32{expr: expr{col: toColumn(table, column, opts...)}}
+	return Int32{NewGenericsInt[int32](expr{col: toColumn(table, column, opts...)})}
 }
 
 // NewInt64 ...
 func NewInt64(table, column string, opts ...Option) Int64 {
-	return Int64{expr: expr{col: toColumn(table, column, opts...)}}
+	return Int64{NewGenericsInt[int64](expr{col: toColumn(table, column, opts...)})}
 }
 
 // NewUint ...
 func NewUint(table, column string, opts ...Option) Uint {
-	return Uint{expr: expr{col: toColumn(table, column, opts...)}}
+	return Uint{NewGenericsInt[uint](expr{col: toColumn(table, column, opts...)})}
 }
 
 // NewUint8 ...
 func NewUint8(table, column string, opts ...Option) Uint8 {
-	return Uint8{expr: expr{col: toColumn(table, column, opts...)}}
+	return Uint8{NewGenericsInt[uint8](expr{col: toColumn(table, column, opts...)})}
 }
 
 // NewUint16 ...
 func NewUint16(table, column string, opts ...Option) Uint16 {
-	return Uint16{expr: expr{col: toColumn(table, column, opts...)}}
+	return Uint16{NewGenericsInt[uint16](expr{col: toColumn(table, column, opts...)})}
 }
 
 // NewUint32 ...
 func NewUint32(table, column string, opts ...Option) Uint32 {
-	return Uint32{expr: expr{col: toColumn(table, column, opts...)}}
+	return Uint32{NewGenericsInt[uint32](expr{col: toColumn(table, column, opts...)})}
 }
 
 // NewUint64 ...
 func NewUint64(table, column string, opts ...Option) Uint64 {
-	return Uint64{expr: expr{col: toColumn(table, column, opts...)}}
+	return Uint64{NewGenericsInt[uint64](expr{col: toColumn(table, column, opts...)})}
 }
 
 // ======================== float =======================
 
 // NewFloat32 ...
 func NewFloat32(table, column string, opts ...Option) Float32 {
-	return Float32{expr: expr{col: toColumn(table, column, opts...)}}
+	return Float32{NewGenericsInt[float32](expr{col: toColumn(table, column, opts...)})}
 }
 
 // NewFloat64 ...
 func NewFloat64(table, column string, opts ...Option) Float64 {
-	return Float64{expr: expr{col: toColumn(table, column, opts...)}}
+	return Float64{NewGenericsInt[float64](expr{col: toColumn(table, column, opts...)})}
 }
 
 // ======================== string =======================
 
 // NewString ...
 func NewString(table, column string, opts ...Option) String {
-	return String{expr: expr{col: toColumn(table, column, opts...)}}
+	return String{NewGenericsString[string](expr{col: toColumn(table, column, opts...)})}
 }
 
 // NewBytes ...
 func NewBytes(table, column string, opts ...Option) Bytes {
-	return Bytes{expr: expr{col: toColumn(table, column, opts...)}}
+	return Bytes{NewGenericsString[[]byte](expr{col: toColumn(table, column, opts...)})}
 }
 
 // ======================== bool =======================
 
 // NewBool ...
 func NewBool(table, column string, opts ...Option) Bool {
-	return Bool{expr: expr{col: toColumn(table, column, opts...)}}
+	return Bool{NewGenerics[bool](expr{col: toColumn(table, column, opts...)})}
 }
 
 // ======================== time =======================
 
 // NewTime ...
 func NewTime(table, column string, opts ...Option) Time {
-	return Time{expr: expr{col: toColumn(table, column, opts...)}}
+	return Time{NewGenerics[time.Time](expr{col: toColumn(table, column, opts...)})}
 }
 
 func toColumn(table, column string, opts ...Option) clause.Column {

@@ -2,9 +2,11 @@ package field
 
 import (
 	"context"
+	"database/sql/driver"
+	"reflect"
+
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/schema"
-	"reflect"
 
 	"gorm.io/gorm"
 )
@@ -73,7 +75,7 @@ func (field Serializer) Value(value schema.SerializerValuerInterface) AssignExpr
 
 // Sum ...
 func (field Serializer) Sum() Field {
-	return Field{field.sum()}
+	return Field{GenericsField: GenericsField[driver.Valuer]{field.sum()}}
 }
 
 // IfNull ...
