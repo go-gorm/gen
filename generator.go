@@ -420,7 +420,7 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 		}
 	}
 
-	err = render(tmpl.CRUDMethod, &buf, data.QueryStructMeta)
+	err = render(tmpl.GetInstanceMethod, &buf, data.QueryStructMeta)
 	if err != nil {
 		return err
 	}
