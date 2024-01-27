@@ -392,7 +392,9 @@ func (d *DO) Assign(attrs ...field.AssignExpr) Dao {
 func (d *DO) attrsValue(attrs []field.AssignExpr) []interface{} {
 	values := make([]interface{}, 0, len(attrs))
 	for _, attr := range attrs {
-		if expr, ok := attr.AssignExpr().(clause.Eq); ok {
+		if expr, ok := attr.AssignExpr().(field.IValues); ok {
+			values = append(values, expr.Values())
+		} else if expr, ok := attr.AssignExpr().(clause.Eq); ok {
 			values = append(values, expr)
 		}
 	}
@@ -846,6 +848,10 @@ func (d *DO) newResultSlicePointer() interface{} {
 	return reflect.New(reflect.SliceOf(reflect.PtrTo(d.modelType))).Interface()
 }
 
+func (d *DO) AddError(err error) error {
+	return d.underlyingDB().AddError(err)
+}
+
 func toColExprFullName(stmt *gorm.Statement, columns ...field.Expr) []string {
 	return buildColExpr(stmt, columns, field.WithAll)
 }
@@ -968,6 +974,12 @@ func Table(subQueries ...SubQuery) Dao {
 		db: subQueries[0].underlyingDO().db.Session(&gorm.Session{NewDB: true}).
 			Table(strings.Join(tablePlaceholder, ", "), tableExprs...),
 	}
+}
+
+// Exists EXISTS expression
+// SELECT * FROM table WHERE EXISTS (SELECT NAME FROM users WHERE id = 1)
+func Exists(subQuery SubQuery) Condition {
+	return field.CompareSubQuery(field.ExistsOp, nil, subQuery.underlyingDB())
 }
 
 // ======================== sub query method ========================

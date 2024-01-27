@@ -17,14 +17,14 @@ import (
 
 func init() {
 	InitializeDB()
-	err := db.AutoMigrate(&model.Customer{})
+	err := _gen_test_db.AutoMigrate(&model.Customer{})
 	if err != nil {
 		fmt.Printf("Error: AutoMigrate(&model.Customer{}) fail: %s", err)
 	}
 }
 
 func Test_customerQuery(t *testing.T) {
-	customer := newCustomer(db)
+	customer := newCustomer(_gen_test_db)
 	customer = *customer.As(customer.TableName())
 	_do := customer.WithContext(context.Background()).Debug()
 
@@ -126,7 +126,7 @@ func Test_customerQuery(t *testing.T) {
 	}
 
 	var _a _another
-	var _aPK = field.NewString(_a.TableName(), clause.PrimaryKey)
+	var _aPK = field.NewString(_a.TableName(), "id")
 
 	err = _do.Join(&_a, primaryKey.EqCol(_aPK)).Scan(map[string]interface{}{})
 	if err != nil {

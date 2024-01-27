@@ -156,7 +156,7 @@ func (m *InterfaceMethod) DocComment() string {
 	return strings.Replace(strings.Replace(strings.TrimSpace(m.Doc), "\n", "\n// ", -1), "//  ", "// ", -1)
 }
 
-// checkParams check all parameters
+// checkMethod check interface methods
 func (m *InterfaceMethod) checkMethod(methods []*InterfaceMethod, s *QueryStructMeta) (err error) {
 	if model.GormKeywords.FullMatch(m.MethodName) {
 		return fmt.Errorf("can not use keyword as method name:%s", m.MethodName)

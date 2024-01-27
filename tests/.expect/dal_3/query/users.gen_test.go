@@ -17,14 +17,14 @@ import (
 
 func init() {
 	InitializeDB()
-	err := db.AutoMigrate(&model.User{})
+	err := _gen_test_db.AutoMigrate(&model.User{})
 	if err != nil {
 		fmt.Printf("Error: AutoMigrate(&model.User{}) fail: %s", err)
 	}
 }
 
 func Test_userQuery(t *testing.T) {
-	user := newUser(db)
+	user := newUser(_gen_test_db)
 	user = *user.As(user.TableName())
 	_do := user.WithContext(context.Background()).Debug()
 
@@ -126,7 +126,7 @@ func Test_userQuery(t *testing.T) {
 	}
 
 	var _a _another
-	var _aPK = field.NewString(_a.TableName(), clause.PrimaryKey)
+	var _aPK = field.NewString(_a.TableName(), "id")
 
 	err = _do.Join(&_a, primaryKey.EqCol(_aPK)).Scan(map[string]interface{}{})
 	if err != nil {

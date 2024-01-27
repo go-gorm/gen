@@ -14,9 +14,18 @@ import (
 // ModelOpt field option
 type ModelOpt = model.Option
 
+// Field exported model.Field
+type Field = *model.Field
+
 var ns = schema.NamingStrategy{}
 
 var (
+	FieldModify = func(opt func(Field) Field) model.ModifyFieldOpt {
+		return func(f *model.Field) *model.Field {
+			return opt(f)
+		}
+	}
+
 	// FieldNew add new field (any type your want)
 	FieldNew = func(fieldName, fieldType string, fieldTag field.Tag) model.CreateFieldOpt {
 		return func(*model.Field) *model.Field {

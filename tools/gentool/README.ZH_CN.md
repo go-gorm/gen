@@ -23,6 +23,8 @@
         consult[https://gorm.io/docs/connecting_to_the_database.html]
   -fieldNullable
         generate with pointer when field is nullable
+  -fieldCoverable
+        generate with pointer when field has default value
   -fieldWithIndexTag
         generate field with gorm index tag
   -fieldWithTypeTag
@@ -67,6 +69,10 @@ default ""
 #### fieldNullable
 
 字段可为空时使用指针生成
+
+#### fieldCoverable
+
+字段有默认值时使用指针生成
 
 #### fieldWithIndexTag
 
