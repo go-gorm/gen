@@ -9,9 +9,9 @@ require (
 	gorm.io/driver/clickhouse v0.6.0
 	gorm.io/driver/mysql v1.5.2
 	gorm.io/driver/postgres v1.4.5
-	gorm.io/driver/sqlite v1.4.3
+	gorm.io/driver/sqlite v1.5.5
 	gorm.io/driver/sqlserver v1.4.1
-	gorm.io/gorm v1.25.2
+	gorm.io/gorm v1.25.7-0.20240204074919-46816ad31dde
 	gorm.io/hints v1.1.0
 	gorm.io/plugin/dbresolver v1.5.0
 )
@@ -38,7 +38,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
-	github.com/mattn/go-sqlite3 v1.14.15 // indirect
+	github.com/mattn/go-sqlite3 v1.14.17 // indirect
 	github.com/microsoft/go-mssqldb v0.17.0 // indirect
 	github.com/paulmach/orb v0.10.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.18 // indirect
