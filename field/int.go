@@ -147,8 +147,8 @@ func (field Int) IfNull(value int) Expr {
 	return field.ifNull(value)
 }
 
-// Filed ...
-func (field Int) Filed(values ...int) Int {
+// Field ...
+func (field Int) Field(values ...int) Int {
 	return Int{field.field(values)}
 }
 
@@ -303,8 +303,8 @@ func (field Int8) IfNull(value int8) Expr {
 	return field.ifNull(value)
 }
 
-// Filed ...
-func (field Int8) Filed(values ...int8) Int8 {
+// Field ...
+func (field Int8) Field(values ...int8) Int8 {
 	return Int8{field.field(values)}
 }
 
@@ -459,8 +459,8 @@ func (field Int16) IfNull(value int16) Expr {
 	return field.ifNull(value)
 }
 
-// Filed ...
-func (field Int16) Filed(values ...int16) Int16 {
+// Field ...
+func (field Int16) Field(values ...int16) Int16 {
 	return Int16{field.field(values)}
 }
 
@@ -615,8 +615,8 @@ func (field Int32) IfNull(value int32) Expr {
 	return field.ifNull(value)
 }
 
-// Filed ...
-func (field Int32) Filed(values ...int32) Int32 {
+// Field ...
+func (field Int32) Field(values ...int32) Int32 {
 	return Int32{field.field(values)}
 }
 
@@ -771,8 +771,8 @@ func (field Int64) IfNull(value int64) Expr {
 	return field.ifNull(value)
 }
 
-// Filed ...
-func (field Int64) Filed(values ...int64) Int64 {
+// Field ...
+func (field Int64) Field(values ...int64) Int64 {
 	return Int64{field.field(values)}
 }
 
@@ -927,8 +927,8 @@ func (field Uint) IfNull(value uint) Expr {
 	return field.ifNull(value)
 }
 
-// Filed ...
-func (field Uint) Filed(values ...uint) Uint {
+// Field ...
+func (field Uint) Field(values ...uint) Uint {
 	return Uint{field.field(values)}
 }
 
@@ -1083,8 +1083,8 @@ func (field Uint8) IfNull(value uint8) Expr {
 	return field.ifNull(value)
 }
 
-// Filed ...
-func (field Uint8) Filed(values ...uint8) Uint8 {
+// Field ...
+func (field Uint8) Field(values ...uint8) Uint8 {
 	return Uint8{field.field(values)}
 }
 
@@ -1239,8 +1239,8 @@ func (field Uint16) IfNull(value uint16) Expr {
 	return field.ifNull(value)
 }
 
-// Filed ...
-func (field Uint16) Filed(values ...uint16) Uint16 {
+// Field ...
+func (field Uint16) Field(values ...uint16) Uint16 {
 	return Uint16{field.field(values)}
 }
 
@@ -1395,8 +1395,8 @@ func (field Uint32) IfNull(value uint32) Expr {
 	return field.ifNull(value)
 }
 
-// Filed ...
-func (field Uint32) Filed(values ...uint32) Uint32 {
+// Field ...
+func (field Uint32) Field(values ...uint32) Uint32 {
 	return Uint32{field.field(values)}
 }
 
@@ -1551,8 +1551,8 @@ func (field Uint64) IfNull(value uint64) Expr {
 	return field.ifNull(value)
 }
 
-// Filed ...
-func (field Uint64) Filed(values ...uint64) Uint64 {
+// Field ...
+func (field Uint64) Field(values ...uint64) Uint64 {
 	return Uint64{field.field(values)}
 }
 
