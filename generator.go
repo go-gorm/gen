@@ -340,6 +340,17 @@ func (g *Generator) generateQueryFile() (err error) {
 		return err
 	}
 
+	if g.judgeMode(WithQueryInterface) {
+		queryInterfaceTmpl := tmpl.QueryInterfaceWithContext
+		if g.judgeMode(WithoutContext) {
+			queryInterfaceTmpl = tmpl.QueryInterfaceWithoutContext
+		}
+		err = render(queryInterfaceTmpl, &buf, g)
+		if err != nil {
+			return err
+		}
+	}
+
 	err = g.output(g.OutFile, buf.Bytes())
 	if err != nil {
 		return err
