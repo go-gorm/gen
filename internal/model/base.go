@@ -10,6 +10,7 @@ import (
 const (
 	// DefaultModelPkg ...
 	DefaultModelPkg = "model"
+	// DefaultQueryPkg ...
 	DefaultQueryPkg = "query"
 )
 

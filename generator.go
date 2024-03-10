@@ -289,12 +289,8 @@ func (g *Generator) generateQueryFile() (err error) {
 		return nil
 	}
 
-	queryOutPath, err := g.getQueryOutputPath()
-	if err != nil {
-		return err
-	}
-
-	if err = os.MkdirAll(queryOutPath, os.ModePerm); err != nil {
+	queryOutPath := g.getQueryOutputPath()
+	if err := os.MkdirAll(queryOutPath, os.ModePerm); err != nil {
 		return fmt.Errorf("create query pkg path(%s) fail: %s", queryOutPath, err)
 	}
 
@@ -384,8 +380,8 @@ func (g *Generator) generateQueryFile() (err error) {
 	return nil
 }
 
-func (g *Generator) getQueryOutputPath() (outPath string, err error) {
-	return filepath.Join(g.OutPath, g.QueryPkgPath) + string(os.PathSeparator), nil
+func (g *Generator) getQueryOutputPath() (outPath string) {
+	return filepath.Join(g.OutPath, g.QueryPkgPath) + string(os.PathSeparator)
 }
 
 // generateSingleQueryFile generate query code and save to file
@@ -480,12 +476,8 @@ func (g *Generator) generateModelFile() error {
 		return nil
 	}
 
-	modelOutPath, err := g.getModelOutputPath()
-	if err != nil {
-		return err
-	}
-
-	if err = os.MkdirAll(modelOutPath, os.ModePerm); err != nil {
+	modelOutPath := g.getModelOutputPath()
+	if err := os.MkdirAll(modelOutPath, os.ModePerm); err != nil {
 		return fmt.Errorf("create model pkg path(%s) fail: %s", modelOutPath, err)
 	}
 
@@ -533,8 +525,8 @@ func (g *Generator) generateModelFile() error {
 	return nil
 }
 
-func (g *Generator) getModelOutputPath() (outPath string, err error) {
-	return filepath.Join(g.OutPath, g.ModelPkgPath) + string(os.PathSeparator), nil
+func (g *Generator) getModelOutputPath() (outPath string) {
+	return filepath.Join(g.OutPath, g.ModelPkgPath) + string(os.PathSeparator)
 }
 
 func (g *Generator) fillModelPkgPath(filePath string) {
