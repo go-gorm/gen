@@ -517,7 +517,7 @@ func (g *Generator) generateModelFile() error {
 		}(data)
 	}
 	select {
-	case err = <-errChan:
+	case err := <-errChan:
 		return err
 	case <-pool.AsyncWaitAll():
 		g.fillModelPkgPath(modelOutPath)
