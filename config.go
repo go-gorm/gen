@@ -33,6 +33,7 @@ type Config struct {
 	OutPath      string // query code path
 	OutFile      string // query code file name, default: gen.go
 	ModelPkgPath string // generated model code's package name
+	QueryPkgPath string // generated model code's package name
 	WithUnitTest bool   // generate unit test for query code
 
 	// generate model global configuration
@@ -120,6 +121,9 @@ func (cfg *Config) Revise() (err error) {
 	if strings.TrimSpace(cfg.ModelPkgPath) == "" {
 		cfg.ModelPkgPath = model.DefaultModelPkg
 	}
+	if strings.TrimSpace(cfg.QueryPkgPath) == "" {
+		cfg.QueryPkgPath = model.DefaultQueryPkg
+	}
 
 	cfg.OutPath, err = filepath.Abs(cfg.OutPath)
 	if err != nil {
@@ -129,11 +133,11 @@ func (cfg *Config) Revise() (err error) {
 		cfg.OutPath = fmt.Sprintf(".%squery%s", string(os.PathSeparator), string(os.PathSeparator))
 	}
 	if cfg.OutFile == "" {
-		cfg.OutFile = filepath.Join(cfg.OutPath, "gen.go")
+		cfg.OutFile = filepath.Join(cfg.OutPath, cfg.QueryPkgPath, "gen.go")
 	} else if !strings.Contains(cfg.OutFile, string(os.PathSeparator)) {
-		cfg.OutFile = filepath.Join(cfg.OutPath, cfg.OutFile)
+		cfg.OutFile = filepath.Join(cfg.OutPath, cfg.QueryPkgPath, cfg.OutFile)
 	}
-	cfg.queryPkgName = filepath.Base(cfg.OutPath)
+	cfg.queryPkgName = filepath.Base(cfg.QueryPkgPath)
 
 	if cfg.db == nil {
 		cfg.db, _ = gorm.Open(tests.DummyDialector{})
