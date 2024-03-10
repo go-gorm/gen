@@ -290,7 +290,7 @@ func (g *Generator) generateQueryFile() (err error) {
 	}
 
 	queryOutPath := g.getQueryOutputPath()
-	if err := os.MkdirAll(queryOutPath, os.ModePerm); err != nil {
+	if err = os.MkdirAll(queryOutPath, os.ModePerm); err != nil {
 		return fmt.Errorf("create query pkg path(%s) fail: %s", queryOutPath, err)
 	}
 
