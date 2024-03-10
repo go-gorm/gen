@@ -28,11 +28,13 @@ Install GEN as a binary tool
   -fieldWithTypeTag
         generate field with gorm column type tag
   -modelPkgName string
-        generated model code's package name
+        generated model code's package name (default "model")
+  -queryPkgName string
+        generated query code's package name (default "query")
   -outFile string
         query code file name, default: gen.go
   -outPath string
-        specify a directory for output (default "./dao/query")
+        specify a directory for output (default "./dao")
   -tables string
         enter the required data table or leave it blank
   -onlyModel
@@ -82,9 +84,17 @@ generate field with gorm column type tag
 
 #### modelPkgName
 
-defalut table name.
+default "model"
 
  generated model code's package name.
+ set the path after "outPath".
+
+#### queryPkgName
+
+default "query"
+
+ generated query code's package name.
+ set the path after "outPath".
 
 #### outFile
 
@@ -92,7 +102,7 @@ defalut table name.
 
 #### outPath
 
-specify a directory for output (default "./dao/query")
+specify a directory for output (default "./dao")
 
 #### tables
 
