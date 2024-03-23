@@ -261,7 +261,7 @@ func (e expr) ConcatCol(cols ...Expr) Expr {
 		vars = append(vars, col.RawExpr())
 	}
 	return Field{e.setE(clause.Expr{
-		SQL:  fmt.Sprintf("Concat(%s)", strings.Join(placeholders, ",")),
+		SQL:  fmt.Sprintf("CONCAT(%s)", strings.Join(placeholders, ",")),
 		Vars: vars,
 	})}
 }
