@@ -62,7 +62,7 @@ func (tag Tag) Build() string {
 	tags := make([]string, 0, len(tag))
 	for _, k := range tagKeys(tag) {
 		v := tag[k]
-		if k == "" || v == "" {
+		if k == "" {
 			continue
 		}
 		tags = append(tags, k+":\""+v+"\"")
