@@ -78,7 +78,7 @@ func (att *attrs) Values() interface{} {
 	if all {
 		return map[string]interface{}{}
 	}
-	for fn, _ := range fm {
+	for fn := range fm {
 		delete(values, fn)
 	}
 	return values
