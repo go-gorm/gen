@@ -101,3 +101,13 @@ func (q *QueryTx) SavePoint(name string) error {
 func (q *QueryTx) RollbackTo(name string) error {
 	return q.db.RollbackTo(name).Error
 }
+
+var _ IQuery = (*Query)(nil)
+
+type IQuery interface {
+	UserDo(ctx context.Context) IUserDo
+}
+
+func (q *Query) UserDo(ctx context.Context) IUserDo {
+	return q.User.WithContext(ctx)
+}
