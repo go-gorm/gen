@@ -184,22 +184,20 @@ func (e expr) Length() Number[int] {
 	return newNumber[int](e.setE(clause.Expr{SQL: "LENGTH(?)", Vars: []interface{}{e.RawExpr()}}))
 }
 
-func (e expr) Max() Float64 {
-	return Float64{newNumber[float64](e.setE(clause.Expr{SQL: "MAX(?)", Vars: []interface{}{e.RawExpr()}}))}
+func (e expr) Max() Number[float64] {
+	return newNumber[float64](e.setE(clause.Expr{SQL: "MAX(?)", Vars: []interface{}{e.RawExpr()}}))
 }
 
-func (e expr) Min() Float64 {
-	return Float64{newNumber[float64](e.setE(clause.Expr{SQL: "MIN(?)", Vars: []interface{}{e.RawExpr()}}))}
-
+func (e expr) Min() Number[float64] {
+	return newNumber[float64](e.setE(clause.Expr{SQL: "MIN(?)", Vars: []interface{}{e.RawExpr()}}))
 }
 
-func (e expr) Avg() Float64 {
-	return Float64{newNumber[float64](e.setE(clause.Expr{SQL: "AVG(?)", Vars: []interface{}{e.RawExpr()}}))}
-
+func (e expr) Avg() Number[float64] {
+	return newNumber[float64](e.setE(clause.Expr{SQL: "AVG(?)", Vars: []interface{}{e.RawExpr()}}))
 }
 
-func (e expr) Abs() Float64 {
-	return Float64{newNumber[float64](e.setE(clause.Expr{SQL: "ABS(?)", Vars: []interface{}{e.RawExpr()}}))}
+func (e expr) Abs() Number[float64] {
+	return newNumber[float64](e.setE(clause.Expr{SQL: "ABS(?)", Vars: []interface{}{e.RawExpr()}}))
 }
 
 func (e expr) Null() AssignExpr {

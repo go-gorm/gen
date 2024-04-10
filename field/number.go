@@ -34,62 +34,67 @@ func (field Number[T]) NotBetween(left T, right T) Expr {
 
 // Add ...
 func (field Number[T]) Add(value T) Number[T] {
-	return Number[T]{genericsField: genericsField[T]{field.add(value)}}
+	return newNumber[T](field.add(value))
 }
 
 // Sub ...
 func (field Number[T]) Sub(value T) Number[T] {
-	return Number[T]{genericsField: genericsField[T]{field.sub(value)}}
+	return newNumber[T](field.sub(value))
 }
 
 // Mul ...
 func (field Number[T]) Mul(value T) Number[T] {
-	return Number[T]{genericsField: genericsField[T]{field.mul(value)}}
+	return newNumber[T](field.mul(value))
 }
 
 // Div ...
 func (field Number[T]) Div(value T) Number[T] {
-	return Number[T]{genericsField: genericsField[T]{field.div(value)}}
+	return newNumber[T](field.div(value))
 }
 
 // Mod ...
 func (field Number[T]) Mod(value T) Number[T] {
-	return Number[T]{genericsField: genericsField[T]{field.mod(value)}}
+	return newNumber[T](field.mod(value))
 }
 
 // FloorDiv ...
 func (field Number[T]) FloorDiv(value T) Number[T] {
-	return Number[T]{genericsField: genericsField[T]{field.floorDiv(value)}}
+	return newNumber[T](field.floorDiv(value))
 }
 
 // RightShift ...
 func (field Number[T]) RightShift(value T) Number[T] {
-	return Number[T]{genericsField: genericsField[T]{field.rightShift(value)}}
+	return newNumber[T](field.rightShift(value))
 }
 
 // LeftShift ...
 func (field Number[T]) LeftShift(value T) Number[T] {
-	return Number[T]{genericsField: genericsField[T]{field.leftShift(value)}}
+	return newNumber[T](field.leftShift(value))
 }
 
 // BitXor ...
 func (field Number[T]) BitXor(value T) Number[T] {
-	return Number[T]{genericsField: genericsField[T]{field.bitXor(value)}}
+	return newNumber[T](field.bitXor(value))
 }
 
 // BitAnd ...
 func (field Number[T]) BitAnd(value T) Number[T] {
-	return Number[T]{genericsField: genericsField[T]{field.bitAnd(value)}}
+	return newNumber[T](field.bitAnd(value))
 }
 
 // BitOr ...
 func (field Number[T]) BitOr(value T) Number[T] {
-	return Number[T]{genericsField: genericsField[T]{field.bitOr(value)}}
+	return newNumber[T](field.bitOr(value))
 }
 
 // BitFlip ...
 func (field Number[T]) BitFlip() Number[T] {
-	return Number[T]{genericsField: genericsField[T]{field.bitFlip()}}
+	return newNumber[T](field.bitFlip())
+}
+
+// Floor ...
+func (field Number[T]) Floor() Number[T] {
+	return newNumber[T](field.floor())
 }
 
 // Zero set zero value
