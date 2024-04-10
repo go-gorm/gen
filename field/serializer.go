@@ -2,22 +2,20 @@ package field
 
 import (
 	"context"
-	"database/sql/driver"
 	"reflect"
 
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/schema"
-
-	"gorm.io/gorm"
 )
 
-type ValuerType struct {
+type valuerType struct {
 	Column  string
 	Value   schema.SerializerValuerInterface
 	FucName string
 }
 
-func (v ValuerType) GormValue(ctx context.Context, db *gorm.DB) (expr clause.Expr) {
+func (v valuerType) GormValue(ctx context.Context, db *gorm.DB) (expr clause.Expr) {
 	stmt := db.Statement.Schema
 	field := stmt.LookUpField(v.Column)
 	newValue, err := v.Value.Value(context.WithValue(ctx, "func_name", v.FucName), field, reflect.ValueOf(v.Value), v.Value)
@@ -25,68 +23,68 @@ func (v ValuerType) GormValue(ctx context.Context, db *gorm.DB) (expr clause.Exp
 	return clause.Expr{SQL: "?", Vars: []interface{}{newValue}}
 }
 
-// Field2 a standard field struct
+// Serializer a standard field struct
 type Serializer struct{ expr }
 
 // Eq judge equal
-func (field Serializer) Eq(value schema.SerializerValuerInterface) Expr {
-	return expr{e: clause.Eq{Column: field.RawExpr(), Value: ValuerType{Column: field.ColumnName().String(), Value: value, FucName: "Eq"}}}
+func (s Serializer) Eq(value schema.SerializerValuerInterface) Expr {
+	return expr{e: clause.Eq{Column: s.RawExpr(), Value: valuerType{Column: s.ColumnName().String(), Value: value, FucName: "Eq"}}}
 }
 
 // Neq judge not equal
-func (field Serializer) Neq(value schema.SerializerValuerInterface) Expr {
-	return expr{e: clause.Neq{Column: field.RawExpr(), Value: ValuerType{Column: field.ColumnName().String(), Value: value, FucName: "Neq"}}}
+func (s Serializer) Neq(value schema.SerializerValuerInterface) Expr {
+	return expr{e: clause.Neq{Column: s.RawExpr(), Value: valuerType{Column: s.ColumnName().String(), Value: value, FucName: "Neq"}}}
 }
 
 // In ...
-func (field Serializer) In(values ...schema.SerializerValuerInterface) Expr {
-	return expr{e: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
+func (s Serializer) In(values ...schema.SerializerValuerInterface) Expr {
+	return expr{e: clause.IN{Column: s.RawExpr(), Values: s.toSlice(values...)}}
 }
 
 // Gt ...
-func (field Serializer) Gt(value schema.SerializerValuerInterface) Expr {
-	return expr{e: clause.Gt{Column: field.RawExpr(), Value: ValuerType{Column: field.ColumnName().String(), Value: value, FucName: "Gt"}}}
+func (s Serializer) Gt(value schema.SerializerValuerInterface) Expr {
+	return expr{e: clause.Gt{Column: s.RawExpr(), Value: valuerType{Column: s.ColumnName().String(), Value: value, FucName: "Gt"}}}
 }
 
 // Gte ...
-func (field Serializer) Gte(value schema.SerializerValuerInterface) Expr {
-	return expr{e: clause.Gte{Column: field.RawExpr(), Value: ValuerType{Column: field.ColumnName().String(), Value: value, FucName: "Gte"}}}
+func (s Serializer) Gte(value schema.SerializerValuerInterface) Expr {
+	return expr{e: clause.Gte{Column: s.RawExpr(), Value: valuerType{Column: s.ColumnName().String(), Value: value, FucName: "Gte"}}}
 }
 
 // Lt ...
-func (field Serializer) Lt(value schema.SerializerValuerInterface) Expr {
-	return expr{e: clause.Lt{Column: field.RawExpr(), Value: ValuerType{Column: field.ColumnName().String(), Value: value, FucName: "Lt"}}}
+func (s Serializer) Lt(value schema.SerializerValuerInterface) Expr {
+	return expr{e: clause.Lt{Column: s.RawExpr(), Value: valuerType{Column: s.ColumnName().String(), Value: value, FucName: "Lt"}}}
 }
 
 // Lte ...
-func (field Serializer) Lte(value schema.SerializerValuerInterface) Expr {
-	return expr{e: clause.Lte{Column: field.RawExpr(), Value: ValuerType{Column: field.ColumnName().String(), Value: value, FucName: "Lte"}}}
+func (s Serializer) Lte(value schema.SerializerValuerInterface) Expr {
+	return expr{e: clause.Lte{Column: s.RawExpr(), Value: valuerType{Column: s.ColumnName().String(), Value: value, FucName: "Lte"}}}
 }
 
 // Like ...
-func (field Serializer) Like(value schema.SerializerValuerInterface) Expr {
-	return expr{e: clause.Like{Column: field.RawExpr(), Value: ValuerType{Column: field.ColumnName().String(), Value: value, FucName: "Like"}}}
+func (s Serializer) Like(value schema.SerializerValuerInterface) Expr {
+	return expr{e: clause.Like{Column: s.RawExpr(), Value: valuerType{Column: s.ColumnName().String(), Value: value, FucName: "Like"}}}
 }
 
 // Value ...
-func (field Serializer) Value(value schema.SerializerValuerInterface) AssignExpr {
-	return field.value(ValuerType{Column: field.ColumnName().String(), Value: value, FucName: "Value"})
+func (s Serializer) Value(value schema.SerializerValuerInterface) AssignExpr {
+	return s.value(valuerType{Column: s.ColumnName().String(), Value: value, FucName: "Value"})
 }
 
 // Sum ...
-func (field Serializer) Sum() Field {
-	return Field{GenericsField: GenericsField[driver.Valuer]{field.sum()}}
+func (s Serializer) Sum() Number[float64] {
+	return newNumber[float64](s.sum())
 }
 
 // IfNull ...
-func (field Serializer) IfNull(value schema.SerializerValuerInterface) Expr {
-	return field.ifNull(ValuerType{Column: field.ColumnName().String(), Value: value, FucName: "IfNull"})
+func (s Serializer) IfNull(value schema.SerializerValuerInterface) Expr {
+	return s.ifNull(valuerType{Column: s.ColumnName().String(), Value: value, FucName: "IfNull"})
 }
 
-func (field Serializer) toSlice(values ...schema.SerializerValuerInterface) []interface{} {
+func (s Serializer) toSlice(values ...schema.SerializerValuerInterface) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
-		slice[i] = ValuerType{Column: field.ColumnName().String(), Value: v, FucName: "In"}
+		slice[i] = valuerType{Column: s.ColumnName().String(), Value: v, FucName: "In"}
 	}
 	return slice
 }

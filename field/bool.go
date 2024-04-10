@@ -2,12 +2,12 @@ package field
 
 // Bool boolean type field
 type Bool struct {
-	GenericsField[bool]
+	genericsField[bool]
 }
 
 // Not ...
 func (field Bool) Not() Bool {
-	return Bool{GenericsField[bool]{field.not()}}
+	return Bool{genericsField[bool]{field.not()}}
 }
 
 // Is ...
@@ -17,32 +17,32 @@ func (field Bool) Is(value bool) Expr {
 
 // And boolean and
 func (field Bool) And(value bool) Expr {
-	return Bool{GenericsField[bool]{field.and(value)}}
+	return Bool{genericsField[bool]{field.and(value)}}
 }
 
 // Or boolean or
 func (field Bool) Or(value bool) Expr {
-	return Bool{GenericsField[bool]{field.or(value)}}
+	return Bool{genericsField[bool]{field.or(value)}}
 }
 
 // Xor ...
 func (field Bool) Xor(value bool) Expr {
-	return Bool{GenericsField[bool]{field.xor(value)}}
+	return Bool{genericsField[bool]{field.xor(value)}}
 }
 
 // BitXor ...
 func (field Bool) BitXor(value bool) Expr {
-	return Bool{GenericsField[bool]{field.bitXor(value)}}
+	return Bool{genericsField[bool]{field.bitXor(value)}}
 }
 
 // BitAnd ...
 func (field Bool) BitAnd(value bool) Expr {
-	return Bool{GenericsField[bool]{field.bitAnd(value)}}
+	return Bool{genericsField[bool]{field.bitAnd(value)}}
 }
 
 // BitOr ...
 func (field Bool) BitOr(value bool) Expr {
-	return Bool{GenericsField[bool]{field.bitOr(value)}}
+	return Bool{genericsField[bool]{field.bitOr(value)}}
 }
 
 // Zero ...
