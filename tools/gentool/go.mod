@@ -9,7 +9,7 @@ require (
 	gorm.io/driver/postgres v1.5.7
 	gorm.io/driver/sqlite v1.5.5
 	gorm.io/driver/sqlserver v1.5.3
-	gorm.io/gen v0.3.27-0.20240411164546-6d2d9ca7c3fc
+	gorm.io/gen v0.3.26
 	gorm.io/gorm v1.25.9
 )
 
