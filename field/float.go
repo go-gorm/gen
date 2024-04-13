@@ -55,16 +55,6 @@ func (field Float64) NotBetween(left float64, right float64) Expr {
 	return Not(field.Between(left, right))
 }
 
-// Like ...
-func (field Float64) Like(value float64) Expr {
-	return expr{e: clause.Like{Column: field.RawExpr(), Value: value}}
-}
-
-// NotLike ...
-func (field Float64) NotLike(value float64) Expr {
-	return expr{e: clause.Not(field.Like(value).expression())}
-}
-
 // Add ...
 func (field Float64) Add(value float64) Float64 {
 	return Float64{field.add(value)}
@@ -179,16 +169,6 @@ func (field Float32) Between(left float32, right float32) Expr {
 // NotBetween ...
 func (field Float32) NotBetween(left float32, right float32) Expr {
 	return Not(field.Between(left, right))
-}
-
-// Like ...
-func (field Float32) Like(value float32) Expr {
-	return expr{e: clause.Like{Column: field.RawExpr(), Value: value}}
-}
-
-// NotLike ...
-func (field Float32) NotLike(value float32) Expr {
-	return expr{e: clause.Not(field.Like(value).expression())}
 }
 
 // Add ...
