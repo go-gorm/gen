@@ -69,6 +69,7 @@ type IGenericsDo[T any, E any] interface {
 	UnderlyingDB() *gorm.DB
 	schema.Tabler
 	GetInstance(do Dao) T
+	ToSQL(queryFn func(T) T) string
 }
 
 type GenericsDo[T IGenericsDo[T, E], E any] struct {
@@ -309,6 +310,14 @@ func (b GenericsDo[T, E]) Scan(result interface{}) (err error) {
 
 func (b GenericsDo[T, E]) Delete(models ...E) (result ResultInfo, err error) {
 	return b.DO.Delete(models)
+}
+
+func (b GenericsDo[T, E]) ToSQL(queryFn func(T) T) string {
+	b.db = b.db.Session(&gorm.Session{DryRun: true, SkipDefaultTransaction: true})
+	t := queryFn(b.withDO(b.DO.Debug()))
+	db := t.underlyingDB()
+	stmt := db.Statement
+	return db.Dialector.Explain(stmt.SQL.String(), stmt.Vars...)
 }
 
 func (b *GenericsDo[T, E]) withDO(do Dao) T {
