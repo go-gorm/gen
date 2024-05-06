@@ -59,76 +59,76 @@ func NewNumber[T constraints.Integer | constraints.Float](table, column string, 
 }
 
 // NewInt create new field for int
-func NewInt(table, column string, opts ...Option) Number[int] {
+func NewInt(table, column string, opts ...Option) Int {
 	return NewNumber[int](table, column, opts...)
 }
 
 // NewInt8 create new field for int8
-func NewInt8(table, column string, opts ...Option) Number[int8] {
+func NewInt8(table, column string, opts ...Option) Int8 {
 	return NewNumber[int8](table, column, opts...)
 }
 
 // NewInt16 create new field for int16
-func NewInt16(table, column string, opts ...Option) Number[int16] {
+func NewInt16(table, column string, opts ...Option) Int16 {
 	return NewNumber[int16](table, column, opts...)
 }
 
 // NewInt32 create new field for int32
-func NewInt32(table, column string, opts ...Option) Number[int32] {
+func NewInt32(table, column string, opts ...Option) Int32 {
 	return NewNumber[int32](table, column, opts...)
 }
 
 // NewInt64 create new field for int64
-func NewInt64(table, column string, opts ...Option) Number[int64] {
+func NewInt64(table, column string, opts ...Option) Int64 {
 	return NewNumber[int64](table, column, opts...)
 }
 
 // NewUint create new field for uint
-func NewUint(table, column string, opts ...Option) Number[uint] {
+func NewUint(table, column string, opts ...Option) Uint {
 	return NewNumber[uint](table, column, opts...)
 }
 
 // NewUint8 create new field for uint8
-func NewUint8(table, column string, opts ...Option) Number[uint8] {
+func NewUint8(table, column string, opts ...Option) Uint8 {
 	return NewNumber[uint8](table, column, opts...)
 }
 
 // NewUint16 create new field for uint16
-func NewUint16(table, column string, opts ...Option) Number[uint16] {
+func NewUint16(table, column string, opts ...Option) Uint16 {
 	return NewNumber[uint16](table, column, opts...)
 }
 
 // NewUint32 create new field for uint32
-func NewUint32(table, column string, opts ...Option) Number[uint32] {
+func NewUint32(table, column string, opts ...Option) Uint32 {
 	return NewNumber[uint32](table, column, opts...)
 }
 
 // NewUint64 create new field for uint64
-func NewUint64(table, column string, opts ...Option) Number[uint64] {
+func NewUint64(table, column string, opts ...Option) Uint64 {
 	return NewNumber[uint64](table, column, opts...)
 }
 
 // ======================== float =======================
 
 // NewFloat32 create new field for float32
-func NewFloat32(table, column string, opts ...Option) Number[float32] {
+func NewFloat32(table, column string, opts ...Option) Float32 {
 	return NewNumber[float32](table, column, opts...)
 }
 
 // NewFloat64 create new field for float64
-func NewFloat64(table, column string, opts ...Option) Number[float64] {
+func NewFloat64(table, column string, opts ...Option) Float64 {
 	return NewNumber[float64](table, column, opts...)
 }
 
 // ======================== string =======================
 
 // NewString ...
-func NewString(table, column string, opts ...Option) Chars[string] {
+func NewString(table, column string, opts ...Option) String {
 	return newChars[string](expr{col: toColumn(table, column, opts...)})
 }
 
 // NewBytes ...
-func NewBytes(table, column string, opts ...Option) Chars[[]byte] {
+func NewBytes(table, column string, opts ...Option) Bytes {
 	return newChars[[]byte](expr{col: toColumn(table, column, opts...)})
 }
 

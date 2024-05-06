@@ -49,7 +49,7 @@ func (field Time) DateDiff(value time.Time) Number[int] {
 
 // DateFormat equal to DATE_FORMAT(self, value)
 func (field Time) DateFormat(value string) String {
-	return String{newChars[string](expr{e: clause.Expr{SQL: "DATE_FORMAT(?,?)", Vars: []interface{}{field.RawExpr(), value}}})}
+	return newChars[string](expr{e: clause.Expr{SQL: "DATE_FORMAT(?,?)", Vars: []interface{}{field.RawExpr(), value}}})
 }
 
 // Now return result of NOW()
@@ -69,13 +69,13 @@ func (field Time) CurTime() Time {
 
 // DayName equal to DAYNAME(self)
 func (field Time) DayName() String {
-	return String{newChars[string](expr{e: clause.Expr{SQL: "DAYNAME(?)", Vars: []interface{}{field.RawExpr()}}})}
+	return newChars[string](expr{e: clause.Expr{SQL: "DAYNAME(?)", Vars: []interface{}{field.RawExpr()}}})
 
 }
 
 // MonthName equal to MONTHNAME(self)
 func (field Time) MonthName() String {
-	return String{newChars[string](expr{e: clause.Expr{SQL: "MONTHNAME(?)", Vars: []interface{}{field.RawExpr()}}})}
+	return newChars[string](expr{e: clause.Expr{SQL: "MONTHNAME(?)", Vars: []interface{}{field.RawExpr()}}})
 }
 
 func (field Time) Year() Number[int] {

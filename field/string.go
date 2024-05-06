@@ -7,10 +7,10 @@ import (
 )
 
 // String string type field
-type String struct{ Chars[string] }
+type String = Chars[string]
 
 // Bytes []byte type field
-type Bytes struct{ Chars[[]byte] }
+type Bytes = Chars[[]byte]
 
 // ======================== string =======================
 

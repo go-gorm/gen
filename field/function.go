@@ -22,11 +22,11 @@ func (f *function) UnixTimestamp(date ...string) Number[uint64] {
 // FromUnixTime FROM_UNIXTIME(unix_timestamp[,format])
 func (f *function) FromUnixTime(date uint64, format string) String {
 	if strings.TrimSpace(format) != "" {
-		return String{Chars: Chars[string]{genericsField: genericsField[string]{expr{e: clause.Expr{SQL: "FROM_UNIXTIME(?, ?)", Vars: []interface{}{date, format}}}}}}
+		return String{genericsField[string]{expr{e: clause.Expr{SQL: "FROM_UNIXTIME(?, ?)", Vars: []interface{}{date, format}}}}}
 	}
-	return String{Chars: Chars[string]{genericsField: genericsField[string]{expr{e: clause.Expr{SQL: "FROM_UNIXTIME(?)", Vars: []interface{}{date}}}}}}
+	return String{genericsField[string]{expr{e: clause.Expr{SQL: "FROM_UNIXTIME(?)", Vars: []interface{}{date}}}}}
 }
 
 func (f *function) Rand() String {
-	return String{Chars: Chars[string]{genericsField: genericsField[string]{expr{e: clause.Expr{SQL: "RAND()"}}}}}
+	return String{genericsField[string]{expr{e: clause.Expr{SQL: "RAND()"}}}}
 }
