@@ -27,6 +27,16 @@ func ({{.S}} {{.TargetStruct}}Do){{.FuncSign}}{
 
 `
 
+// GetInstance method
+const GetInstanceMethod = `
+func ({{.S}} *{{.QueryStructName}}Do) GetInstance(do gen.Dao) {{.ReturnObject}} {
+	_r := &{{.QueryStructName}}Do{}
+	_r.DO = *do.(*gen.DO)
+	_r.RealDO=_r
+	return _r
+}
+`
+
 // CRUDMethod CRUD method
 const CRUDMethod = `
 func ({{.S}} {{.QueryStructName}}Do) Debug() {{.ReturnObject}} {
