@@ -73,6 +73,7 @@ func getMethodParamFromParamObjs(objs []helper.Param) []parser.Param {
 	return list
 }
 
+// GetMethodFromObj convert helper.Method to parser.Method.
 func GetMethodFromObj(md helper.Method) *parser.Method {
 	return &parser.Method{
 		Receiver:   getMethodParamFromParamObj(md.Receiver()),
@@ -83,6 +84,8 @@ func GetMethodFromObj(md helper.Method) *parser.Method {
 		Body:       md.Body(),
 	}
 }
+
+// GetMethodSliceFromObj convert helper.Method slice to parser.Method slice.
 func GetMethodSliceFromObj(mds []helper.Method) []*parser.Method {
 	res := make([]*parser.Method, 0, len(mds))
 	for _, md := range mds {

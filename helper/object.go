@@ -67,6 +67,7 @@ func CheckObject(obj Object) error {
 	return nil
 }
 
+// Method an object method interface
 type Method interface {
 	// Name return func name
 	Name() string
@@ -82,6 +83,7 @@ type Method interface {
 	Body() string
 }
 
+// Param an method param interface
 type Param interface {
 	// PackagePath return package path
 	PackagePath() string
