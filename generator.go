@@ -154,6 +154,15 @@ func (g *Generator) GenerateModelFrom(obj helper.Object) *generate.QueryStructMe
 	return s
 }
 
+func (g *Generator) generateInterfaceFrom(obj helper.Interface, applyStructNames []string) parser.InterfaceInfo {
+	return parser.InterfaceInfo{
+		Name:        obj.Name(),
+		Package:     obj.Package(),
+		ApplyStruct: applyStructNames,
+		Methods:     generate.GetMethodSliceFromObj(obj.Methods()),
+	}
+}
+
 func (g *Generator) genModelConfig(tableName string, modelName string, modelOpts []ModelOpt) *model.Config {
 	if modelOpts == nil {
 		modelOpts = g.modelOpts
@@ -219,23 +228,38 @@ func (g *Generator) ApplyInterface(fc interface{}, models ...interface{}) {
 		g.db.Logger.Error(context.Background(), "check struct fail: %v", err)
 		panic("check struct fail")
 	}
-	g.apply(fc, structs)
+	var interfaceInfos []parser.InterfaceInfo
+
+	switch fcV := fc.(type) {
+	case nil:
+	case helper.Interface:
+		interfaceInfos = append(interfaceInfos,
+			g.generateInterfaceFrom(fcV, generate.GetStructNames(structs)))
+	case []helper.Interface:
+		structNames := generate.GetStructNames(structs)
+		for _, iFace := range fcV {
+			interfaceInfos = append(interfaceInfos, g.generateInterfaceFrom(iFace, structNames))
+		}
+	default:
+		interfacePaths, err := parser.GetInterfacePath(fc)
+		if err != nil {
+			g.db.Logger.Error(context.Background(), "get interface name or file fail: %s", err)
+			panic("check interface fail")
+		}
+
+		readInterface := new(parser.InterfaceSet)
+		err = readInterface.ParseFile(interfacePaths, generate.GetStructNames(structs))
+		if err != nil {
+			g.db.Logger.Error(context.Background(), "parser interface file fail: %s", err)
+			panic("parser interface file fail")
+		}
+		interfaceInfos = readInterface.Interfaces
+	}
+
+	g.apply(interfaceInfos, structs)
 }
 
-func (g *Generator) apply(fc interface{}, structs []*generate.QueryStructMeta) {
-	interfacePaths, err := parser.GetInterfacePath(fc)
-	if err != nil {
-		g.db.Logger.Error(context.Background(), "get interface name or file fail: %s", err)
-		panic("check interface fail")
-	}
-
-	readInterface := new(parser.InterfaceSet)
-	err = readInterface.ParseFile(interfacePaths, generate.GetStructNames(structs))
-	if err != nil {
-		g.db.Logger.Error(context.Background(), "parser interface file fail: %s", err)
-		panic("parser interface file fail")
-	}
-
+func (g *Generator) apply(interfaceInfos []parser.InterfaceInfo, structs []*generate.QueryStructMeta) {
 	for _, interfaceStructMeta := range structs {
 		if g.judgeMode(WithoutContext) {
 			interfaceStructMeta.ReviseFieldNameFor(model.GormKeywords)
@@ -248,7 +272,7 @@ func (g *Generator) apply(fc interface{}, structs []*generate.QueryStructMeta) {
 			panic("gen struct fail")
 		}
 
-		functions, err := generate.BuildDIYMethod(readInterface, interfaceStructMeta, genInfo.Interfaces)
+		functions, err := generate.BuildDIYMethod(interfaceInfos, interfaceStructMeta, genInfo.Interfaces)
 		if err != nil {
 			g.db.Logger.Error(context.Background(), "check interface fail: %v", err)
 			panic("check interface fail")

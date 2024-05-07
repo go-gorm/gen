@@ -32,6 +32,11 @@ func (d *Demo) ImportPkgPaths() []string { return nil }
 // Fields return fields
 func (d *Demo) Fields() []helper.Field { return d.fields }
 
+// Methods return method array
+func (d *Demo) Methods() []helper.Method {
+	return nil
+}
+
 // DemoField demo field
 type DemoField struct {
 	name    string

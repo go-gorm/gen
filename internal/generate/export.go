@@ -52,6 +52,45 @@ func GetQueryStructMeta(db *gorm.DB, conf *model.Config) (*QueryStructMeta, erro
 	}).addMethodFromAddMethodOpt(conf.GetModelMethods()...), nil
 }
 
+func getMethodParamFromParamObj(obj helper.Param) parser.Param {
+	if obj == nil {
+		return parser.Param{}
+	}
+	return parser.Param{
+		PkgPath:   obj.PackagePath(),
+		Package:   obj.PackageName(),
+		Name:      obj.Name(),
+		Type:      obj.TypeName(),
+		IsArray:   obj.IsArray(),
+		IsPointer: obj.IsPointer(),
+	}
+}
+func getMethodParamFromParamObjs(objs []helper.Param) []parser.Param {
+	list := make([]parser.Param, 0, len(objs))
+	for _, obj := range objs {
+		list = append(list, getMethodParamFromParamObj(obj))
+	}
+	return list
+}
+
+func GetMethodFromObj(md helper.Method) *parser.Method {
+	return &parser.Method{
+		Receiver:   getMethodParamFromParamObj(md.Receiver()),
+		MethodName: md.Name(),
+		Doc:        md.Comment(),
+		Params:     getMethodParamFromParamObjs(md.Params()),
+		Result:     getMethodParamFromParamObjs(md.Result()),
+		Body:       md.Body(),
+	}
+}
+func GetMethodSliceFromObj(mds []helper.Method) []*parser.Method {
+	res := make([]*parser.Method, 0, len(mds))
+	for _, md := range mds {
+		res = append(res, GetMethodFromObj(md))
+	}
+	return res
+}
+
 // GetQueryStructMetaFromObject generate base struct from object
 func GetQueryStructMetaFromObject(obj helper.Object, conf *model.Config) (*QueryStructMeta, error) {
 	err := helper.CheckObject(obj)
@@ -107,7 +146,7 @@ func GetQueryStructMetaFromObject(obj helper.Object, conf *model.Config) (*Query
 		})
 	}
 
-	return &QueryStructMeta{
+	res := &QueryStructMeta{
 		Source:          model.Object,
 		Generated:       true,
 		FileName:        fileName,
@@ -118,7 +157,14 @@ func GetQueryStructMetaFromObject(obj helper.Object, conf *model.Config) (*Query
 		StructInfo:      parser.Param{Type: structName, Package: conf.ModelPkg},
 		ImportPkgPaths:  append(conf.ImportPkgPaths, obj.ImportPkgPaths()...),
 		Fields:          fields,
-	}, nil
+		ModelMethods:    GetMethodSliceFromObj(obj.Methods()),
+	}
+	err = res.ReviseDIYMethod()
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
 // ConvertStructs convert to base structures
@@ -175,8 +221,8 @@ func isNil(i interface{}) bool {
 }
 
 // BuildDIYMethod check the legitimacy of interfaces
-func BuildDIYMethod(f *parser.InterfaceSet, s *QueryStructMeta, data []*InterfaceMethod) (checkResults []*InterfaceMethod, err error) {
-	for _, interfaceInfo := range f.Interfaces {
+func BuildDIYMethod(interfaces []parser.InterfaceInfo, s *QueryStructMeta, data []*InterfaceMethod) (checkResults []*InterfaceMethod, err error) {
+	for _, interfaceInfo := range interfaces {
 		if interfaceInfo.MatchStruct(s.ModelStructName) {
 			for _, method := range interfaceInfo.Methods {
 				t := &InterfaceMethod{

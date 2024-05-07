@@ -17,9 +17,10 @@ type Object interface {
 	FileName() string
 	// ImportPkgPaths return need import package path
 	ImportPkgPaths() []string
-
 	// Fields return field array
 	Fields() []Field
+	// Methods return method array
+	Methods() []Method
 }
 
 // Field a field interface
@@ -56,5 +57,42 @@ func CheckObject(obj Object) error {
 			return fmt.Errorf("Object %s's Field.Type() cannot be empty", obj.StructName())
 		}
 	}
+
+	for _, method := range obj.Methods() {
+		if method.Name() == "" {
+			return fmt.Errorf("object %s's Method.Name() cannot be empty", obj.StructName())
+		}
+	}
+
 	return nil
+}
+
+type Method interface {
+	// Name return func name
+	Name() string
+	// Receiver return func receiver
+	Receiver() Param
+	// Comment return func comment
+	Comment() string
+	// Params return func input args
+	Params() []Param
+	// Result return func return args
+	Result() []Param
+	// Body return func body
+	Body() string
+}
+
+type Param interface {
+	// PackagePath return package path
+	PackagePath() string
+	// PackageName return package name
+	PackageName() string
+	// TypeName return param type name
+	TypeName() string
+	// IsPointer return if param type is pointer
+	IsPointer() bool
+	// IsArray return if param type is array
+	IsArray() bool
+	// Name return param name
+	Name() string
 }

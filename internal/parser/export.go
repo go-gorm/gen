@@ -40,7 +40,7 @@ func GetInterfacePath(v interface{}) (paths []*InterfacePath, err error) {
 		var p *build.Package
 
 		if strings.Split(arg.String(), ".")[0] == "main" {
-			_, file, _, _ := runtime.Caller(3)
+			_, file, _, _ := runtime.Caller(2)
 			p, err = ctx.ImportDir(filepath.Dir(file), build.ImportComment)
 		} else {
 			p, err = ctx.Import(arg.PkgPath(), "", build.ImportComment)
