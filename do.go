@@ -25,7 +25,7 @@ type ResultInfo struct {
 var _ Dao = new(DO)
 
 // DO (data object): implement basic query methods
-// the structure embedded with a *gorm.DB, and has a element item "alias" will be used when used as a sub query
+// the structure embedded with a *gorm.DB, and has an element item "alias" will be used when used as a sub query
 type DO struct {
 	*DOConfig
 	db        *gorm.DB
@@ -176,7 +176,7 @@ func (d *DO) Clauses(conds ...clause.Expression) Dao {
 	return d.getInstance(d.db.Clauses(conds...))
 }
 
-// As alias cannot be heired, As must used on tail
+// As alias cannot be heired, As must be used on tail
 func (d DO) As(alias string) Dao {
 	d.alias = alias
 	d.db = d.db.Table(fmt.Sprintf("%s AS %s", d.Quote(d.TableName()), d.Quote(alias)))
@@ -260,7 +260,7 @@ func (d *DO) toOrderValue(columns ...field.Expr) string {
 
 	for i, c := range columns {
 		if i != 0 {
-			stmt.WriteByte(',')
+			_ = stmt.WriteByte(',')
 		}
 		c.Build(stmt)
 	}
@@ -291,7 +291,7 @@ func (d *DO) Group(columns ...field.Expr) Dao {
 
 	for i, c := range columns {
 		if i != 0 {
-			stmt.WriteByte(',')
+			_ = stmt.WriteByte(',')
 		}
 		c.Build(stmt)
 	}
@@ -794,7 +794,7 @@ func (d *DO) Delete(models ...interface{}) (info ResultInfo, err error) {
 	if len(models) == 0 || reflect.ValueOf(models[0]).Len() == 0 {
 		result = d.db.Model(d.newResultPointer()).Delete(reflect.New(d.modelType).Interface())
 	} else {
-		targets := reflect.MakeSlice(reflect.SliceOf(reflect.PtrTo(d.modelType)), 0, len(models))
+		targets := reflect.MakeSlice(reflect.SliceOf(reflect.PointerTo(d.modelType)), 0, len(models))
 		value := reflect.ValueOf(models[0])
 		for i := 0; i < value.Len(); i++ {
 			targets = reflect.Append(targets, value.Index(i))
@@ -852,7 +852,7 @@ func (d *DO) newResultPointer() interface{} {
 }
 
 func (d *DO) newResultSlicePointer() interface{} {
-	return reflect.New(reflect.SliceOf(reflect.PtrTo(d.modelType))).Interface()
+	return reflect.New(reflect.SliceOf(reflect.PointerTo(d.modelType))).Interface()
 }
 
 func (d *DO) AddError(err error) error {
@@ -877,8 +877,8 @@ func buildColExpr(stmt *gorm.Statement, cols []field.Expr, opts ...field.BuildOp
 		case clause.Column:
 			results[i] = c.BuildColumn(stmt, opts...).String()
 		case clause.Expression:
-			sql, args := c.BuildWithArgs(stmt)
-			results[i] = stmt.Dialector.Explain(sql.String(), args...)
+			s, args := c.BuildWithArgs(stmt)
+			results[i] = stmt.Dialector.Explain(s.String(), args...)
 		}
 	}
 	return results
@@ -891,8 +891,8 @@ func buildExpr4Select(stmt *gorm.Statement, exprs ...field.Expr) (query string, 
 
 	var queryItems []string
 	for _, e := range exprs {
-		sql, vars := e.BuildWithArgs(stmt)
-		queryItems = append(queryItems, sql.String())
+		s, vars := e.BuildWithArgs(stmt)
+		queryItems = append(queryItems, s.String())
 		args = append(args, vars...)
 	}
 	if len(args) == 0 {
