@@ -545,6 +545,13 @@ func (d *DO) Preload(field field.RelationField) Dao {
 			return db.Offset(offset).Limit(limit)
 		})
 	}
+
+	if field.IsUnscoped() {
+		args = append(args, func(db *gorm.DB) *gorm.DB {
+			return db.Unscoped()
+		})
+	}
+
 	return d.getInstance(d.db.Preload(field.Path(), args...))
 }
 

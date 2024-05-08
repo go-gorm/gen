@@ -53,6 +53,7 @@ type RelationField interface {
 	Order(columns ...Expr) RelationField
 	Clauses(hints ...clause.Expression) RelationField
 	Scopes(funcs ...relationScope) RelationField
+	Unscoped() RelationField
 	Offset(offset int) RelationField
 	Limit(limit int) RelationField
 
@@ -62,6 +63,7 @@ type RelationField interface {
 	GetClauses() []clause.Expression
 	GetScopes() []relationScope
 	GetPage() (offset, limit int)
+	IsUnscoped() bool
 }
 
 // Relation relation meta info
@@ -80,6 +82,7 @@ type Relation struct {
 	order         []Expr
 	clauses       []clause.Expression
 	scopes        []relationScope
+	unscoped      bool
 	limit, offset int
 }
 
@@ -147,6 +150,12 @@ func (r Relation) Scopes(funcs ...relationScope) RelationField {
 	return &r
 }
 
+// Unscoped sets the relation to be unscoped
+func (r Relation) Unscoped() RelationField {
+	r.unscoped = true
+	return &r
+}
+
 // Offset set relation offset
 func (r Relation) Offset(offset int) RelationField {
 	r.offset = offset
@@ -176,6 +185,9 @@ func (r *Relation) GetScopes() []relationScope { return r.scopes } // nolint
 
 // GetPage get offset and limit
 func (r *Relation) GetPage() (offset, limit int) { return r.offset, r.limit }
+
+// IsUnscoped is unscoped
+func (r *Relation) IsUnscoped() bool { return r.unscoped }
 
 // StructField return struct field code
 func (r *Relation) StructField() (fieldStr string) {
