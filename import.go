@@ -27,6 +27,16 @@ var (
 		"gorm.io/driver/sqlite",
 		"gorm.io/gorm",
 	)
+	unitTestQueryImportList = new(importPkgS).Add(
+		"context",
+		"fmt",
+		"strconv",
+		"testing",
+		"",
+		"gorm.io/gen",
+		"gorm.io/gen/field",
+		"gorm.io/gorm/clause",
+	)
 )
 
 type importPkgS struct {

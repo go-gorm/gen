@@ -462,7 +462,7 @@ func (g *Generator) generateQueryUnitTestFile(data *genInfo) (err error) {
 	}
 	err = render(tmpl.Header, &buf, map[string]interface{}{
 		"Package":        g.queryPkgName,
-		"ImportPkgPaths": unitTestImportList.Add(structPkgPath).Add(data.ImportPkgPaths...).Paths(),
+		"ImportPkgPaths": unitTestQueryImportList.Add(structPkgPath).Add(data.ImportPkgPaths...).Paths(),
 	})
 	if err != nil {
 		return err
