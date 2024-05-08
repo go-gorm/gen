@@ -11,8 +11,9 @@ import (
 
 	"gorm.io/gen"
 	"gorm.io/gen/field"
-	"gorm.io/gen/tests/.gen/dal_5/model"
 	"gorm.io/gorm/clause"
+
+	"gorm.io/gen/tests/.gen/dal_5/model"
 )
 
 func init() {
