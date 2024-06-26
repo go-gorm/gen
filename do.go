@@ -607,7 +607,7 @@ func (d *DO) CreateInBatches(value interface{}, batchSize int) error {
 
 // Save ...
 func (d *DO) Save(value interface{}) error {
-	return d.db.Clauses(clause.OnConflict{UpdateAll: true}).Create(value).Error
+	return d.db.Save(value).Error
 }
 
 // First ...
