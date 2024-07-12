@@ -174,7 +174,8 @@ func (g *Generator) genModelConfig(tableName string, modelName string, modelOpts
 			FileNameNS:     g.fileNameNS,
 		},
 		FieldConfig: model.FieldConfig{
-			DataTypeMap: g.dataTypeMap,
+			DataTypeMap:   g.dataTypeMap,
+			ColumnTypeMap: g.columnTypeMap,
 
 			FieldSignable:     g.FieldSignable,
 			FieldNullable:     g.FieldNullable,
