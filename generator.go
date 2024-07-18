@@ -571,13 +571,13 @@ func (g *Generator) output(fileName string, content []byte) error {
 
 func (g *Generator) pushQueryStructMeta(meta *generate.QueryStructMeta) (*genInfo, error) {
 	structName := meta.ModelStructName
-	if g.Data[structName] == nil {
-		g.Data[structName] = &genInfo{QueryStructMeta: meta}
+	if v, ok := g.Data[structName]; ok {
+		if v.Source != meta.Source {
+			return nil, fmt.Errorf("cannot generate struct with the same name from different source:%s.%s and %s.%s",
+				meta.StructInfo.Package, meta.ModelStructName, g.Data[structName].StructInfo.Package, g.Data[structName].ModelStructName)
+		}
 	}
-	if g.Data[structName].Source != meta.Source {
-		return nil, fmt.Errorf("cannot generate struct with the same name from different source:%s.%s and %s.%s",
-			meta.StructInfo.Package, meta.ModelStructName, g.Data[structName].StructInfo.Package, g.Data[structName].ModelStructName)
-	}
+	g.Data[structName] = &genInfo{QueryStructMeta: meta}
 	return g.Data[structName], nil
 }
 
