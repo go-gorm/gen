@@ -16,6 +16,30 @@ import (
 ** Provided by @qqxhb
  */
 
+// convertIDNaming 将字段名中的ID相关部分改为Id
+func convertIDNaming(name string) string {
+	// 处理以ID结尾的情况（包括单独的ID和xxxID）
+	if strings.HasSuffix(name, "ID") && len(name) >= 2 {
+		// 如果整个字段名就是"ID"，转换为"Id"
+		if name == "ID" {
+			return "Id"
+		}
+		// 如果ID前面是大写字母或者是单词的开始部分，转换为Id
+		if len(name) > 2 {
+			if name[len(name)-3] >= 'A' && name[len(name)-3] <= 'Z' {
+				return strings.TrimSuffix(name, "ID") + "Id"
+			}
+		}
+		// 如果ID前面是小写字母，也转换为Id
+		if len(name) > 2 {
+			if name[len(name)-3] >= 'a' && name[len(name)-3] <= 'z' {
+				return strings.TrimSuffix(name, "ID") + "Id"
+			}
+		}
+	}
+	return name
+}
+
 func getFields(db *gorm.DB, conf *model.Config, columns []*model.Column) (fields []*model.Field) {
 	for _, col := range columns {
 		col.SetDataTypeMap(conf.DataTypeMap)
@@ -37,6 +61,9 @@ func getFields(db *gorm.DB, conf *model.Config, columns []*model.Column) (fields
 		} else if db.NamingStrategy != nil {
 			m.Name = db.NamingStrategy.SchemaName(m.Name)
 		}
+
+		// 处理字段名中的ID，将其转换为Id
+		m.Name = convertIDNaming(m.Name)
 
 		fields = append(fields, m)
 	}
