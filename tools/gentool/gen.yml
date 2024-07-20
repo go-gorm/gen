@@ -30,3 +30,9 @@ database:
   fieldWithTypeTag  : false
   # detect integer field's unsigned type, adjust generated data type
   fieldSignable  : false
+  # generate mode
+  #  mode  :
+  #    - WithDefaultQuery
+  #    - WithoutContext
+  #    - WithQueryInterface
+  mode  :
