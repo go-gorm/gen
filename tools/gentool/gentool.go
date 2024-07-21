@@ -232,20 +232,14 @@ func parseMode(mode ...string) gen.GenerateMode {
 		return gen.GenerateMode(0)
 	}
 
-	var g gen.GenerateMode
-	mode0, err := parseModeCode(mode[0])
-	if err != nil {
-		return gen.GenerateMode(0)
-	}
-
-	g = mode0
-	for i := 1; i < len(mode); i++ {
-		code, err := parseModeCode(mode[i])
+	g := gen.GenerateMode(0)
+	for i := 0; i < len(mode); i++ {
+		modeCode, err := parseModeCode(mode[0])
 		if err != nil {
-			continue
+			log.Fatalln("failed to parse generate mode: ", err)
 		}
 
-		g |= code
+		g |= modeCode
 	}
 
 	return g
