@@ -120,8 +120,8 @@ func (field Time) Month() Int {
 }
 
 // Week equal to WEEK(self)
-func (field Time) Week() Int {
-	return Int{expr{e: clause.Expr{SQL: "WEEK(?)", Vars: []interface{}{field.RawExpr()}}}}
+func (field Time) Week(mode int) Int {
+	return Int{expr{e: clause.Expr{SQL: fmt.Sprintf("WEEK(?, %d)", mode), Vars: []interface{}{field.RawExpr()}}}}
 }
 
 // Day equal to DAY(self)
