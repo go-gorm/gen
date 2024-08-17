@@ -119,6 +119,11 @@ func (field Time) Month() Int {
 	return Int{expr{e: clause.Expr{SQL: "MONTH(?)", Vars: []interface{}{field.RawExpr()}}}}
 }
 
+// Week equal to WEEK(self)
+func (field Time) Week() Int {
+	return Int{expr{e: clause.Expr{SQL: "WEEK(?)", Vars: []interface{}{field.RawExpr()}}}}
+}
+
 // Day equal to DAY(self)
 func (field Time) Day() Int {
 	return Int{expr{e: clause.Expr{SQL: "DAY(?)", Vars: []interface{}{field.RawExpr()}}}}
