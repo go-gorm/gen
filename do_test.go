@@ -142,6 +142,24 @@ func TestDO_methods(t *testing.T) {
 			Result:       "WHERE `id` = ?",
 		},
 		{
+			Expr:   u.Where(u.Name.Substring(1)),
+			Result: "WHERE SUBSTRING(`name`,1)",
+		},
+		{
+			Expr:         u.Where(u.Name.Substring(1, 6), u.ID.Eq(10)),
+			ExpectedVars: []interface{}{uint(10)},
+			Result:       "WHERE SUBSTRING(`name`,1,6) AND `id` = ?",
+		},
+		{
+			Expr:         u.Where(u.Name.Substr(1), u.ID.Eq(10)),
+			ExpectedVars: []interface{}{uint(10)},
+			Result:       "WHERE SUBSTR(`name`,1) AND `id` = ?",
+		},
+		{
+			Expr:   u.Where(u.Name.Substr(1, 6)),
+			Result: "WHERE SUBSTR(`name`,1,6)",
+		},
+		{
 			Expr:         u.Where(u.Name.Eq("tom"), u.Age.Gt(18)),
 			ExpectedVars: []interface{}{"tom", 18},
 			Result:       "WHERE `name` = ? AND `age` > ?",

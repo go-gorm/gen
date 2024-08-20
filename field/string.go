@@ -147,6 +147,38 @@ func (field String) SubstringIndex(delim string, count int) String {
 	}}}
 }
 
+func (field String) Substring(params ...int) String {
+	if len(params) == 0 {
+		return field
+	}
+	if len(params) == 1 {
+		return String{expr{e: clause.Expr{
+			SQL:  fmt.Sprintf("SUBSTRING(?,%d)", params[0]),
+			Vars: []interface{}{field.RawExpr()},
+		}}}
+	}
+	return String{expr{e: clause.Expr{
+		SQL:  fmt.Sprintf("SUBSTRING(?,%d,%d)", params[0], params[1]),
+		Vars: []interface{}{field.RawExpr()},
+	}}}
+}
+
+func (field String) Substr(params ...int) String {
+	if len(params) == 0 {
+		return field
+	}
+	if len(params) == 1 {
+		return String{expr{e: clause.Expr{
+			SQL:  fmt.Sprintf("SUBSTR(?,%d)", params[0]),
+			Vars: []interface{}{field.RawExpr()},
+		}}}
+	}
+	return String{expr{e: clause.Expr{
+		SQL:  fmt.Sprintf("SUBSTR(?,%d,%d)", params[0], params[1]),
+		Vars: []interface{}{field.RawExpr()},
+	}}}
+}
+
 func (field String) toSlice(values []string) []interface{} {
 	slice := make([]interface{}, len(values))
 	for i, v := range values {
