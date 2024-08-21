@@ -147,6 +147,7 @@ func (field String) SubstringIndex(delim string, count int) String {
 	}}}
 }
 
+// Substring https://dev.mysql.com/doc/refman/8.4/en/string-functions.html#function_substring
 func (field String) Substring(params ...int) String {
 	if len(params) == 0 {
 		return field
@@ -163,6 +164,8 @@ func (field String) Substring(params ...int) String {
 	}}}
 }
 
+// Substr SUBSTR is a synonym for SUBSTRING 
+// https://dev.mysql.com/doc/refman/8.4/en/string-functions.html#function_substring
 func (field String) Substr(params ...int) String {
 	if len(params) == 0 {
 		return field
