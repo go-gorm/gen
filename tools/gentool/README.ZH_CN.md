@@ -13,9 +13,9 @@
 ## 使用方式
 
 ```shell
- 
- gentool -h  
- 
+
+ gentool -h
+
  Usage of gentool:
   -db string
         input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html] (default "mysql")
@@ -30,11 +30,13 @@
   -fieldWithTypeTag
         generate field with gorm column type tag
   -modelPkgName string
-        generated model code's package name
+        generated model code's package name (default "model")
+  -queryPkgName string
+        generated query code's package name (default "query")
   -outFile string
         query code file name, default: gen.go
   -outPath string
-        specify a directory for output (default "./dao/query")
+        specify a directory for output (default "./dao")
   -tables string
         enter the required data table or leave it blank
   -onlyModel
@@ -84,9 +86,17 @@ default ""
 
 #### modelPkgName
 
-默认值是数据表名称。
+默认为：model
 
  生成的model代码的包名称。
+ 设置“outPath”后的路径。
+
+#### queryPkgName
+
+默认为：query
+
+ 生成的model代码的包名称。
+ 设置“outPath”后的路径。
 
 #### outFile
 
