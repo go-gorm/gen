@@ -163,6 +163,11 @@ func (m dataTypeMap) Get(dataType, detailType string) string {
 	return defaultDataType
 }
 
+// Gets the code Type for the sqlDataType.
+func GetDataType(sqlDataType string) string {
+	return dataType.Get(sqlDataType, "")
+}
+
 // Field user input structures
 type Field struct {
 	Name             string
