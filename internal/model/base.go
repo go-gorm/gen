@@ -111,11 +111,11 @@ func (g *KeyWord) Contain(text string) bool {
 var (
 	defaultDataType             = "string"
 	dataType        dataTypeMap = map[string]dataTypeMapping{
-		"numeric":    func(string) string { return "int32" },
-		"integer":    func(string) string { return "int32" },
-		"int":        func(string) string { return "int32" },
-		"smallint":   func(string) string { return "int32" },
-		"mediumint":  func(string) string { return "int32" },
+		"numeric":    func(string) string { return "int" },
+		"integer":    func(string) string { return "int" },
+		"int":        func(string) string { return "int" },
+		"smallint":   func(string) string { return "int" },
+		"mediumint":  func(string) string { return "int" },
 		"bigint":     func(string) string { return "int64" },
 		"float":      func(string) string { return "float32" },
 		"real":       func(string) string { return "float64" },
@@ -139,8 +139,8 @@ var (
 		"date":       func(string) string { return "time.Time" },
 		"datetime":   func(string) string { return "time.Time" },
 		"timestamp":  func(string) string { return "time.Time" },
-		"year":       func(string) string { return "int32" },
-		"bit":        func(string) string { return "[]uint8" },
+		"year":       func(string) string { return "int" },
+		"bit":        func(string) string { return "bool" },
 		"boolean":    func(string) string { return "bool" },
 		"tinyint": func(detailType string) string {
 			if strings.HasPrefix(strings.TrimSpace(detailType), "tinyint(1)") {
@@ -160,6 +160,11 @@ func (m dataTypeMap) Get(dataType, detailType string) string {
 		return convert(detailType)
 	}
 	return defaultDataType
+}
+
+// Gets the code Type for the sqlDataType.
+func GetDataType(sqlDataType string) string {
+	return dataType.Get(sqlDataType, "")
 }
 
 // Field user input structures
