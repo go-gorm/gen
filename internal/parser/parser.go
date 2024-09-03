@@ -242,7 +242,7 @@ func (p *Param) IsBaseType() bool {
 		return true
 	case "bool":
 		return true
-	case "time.Time", "uuid.UUID":
+	case "time.Time":
 		return true
 	default:
 		return false
