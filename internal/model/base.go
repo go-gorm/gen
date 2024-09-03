@@ -216,6 +216,8 @@ func (m *Field) GenType() string {
 		return strings.Title(typ)
 	case "time.Time":
 		return "Time"
+	case "uuid.UUID":
+		return "UUID"
 	case "json.RawMessage", "[]byte":
 		return "Bytes"
 	case "serializer":

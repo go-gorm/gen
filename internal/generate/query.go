@@ -89,6 +89,9 @@ func (b *QueryStructMeta) getFieldRealType(f reflect.Type) string {
 	if f.String() == "time.Time" {
 		return "time.Time"
 	}
+	if f.String() == "uuid.UUID" {
+		return "uuid.UUID"
+	}
 	if f.String() == "[]uint8" || f.String() == "json.RawMessage" {
 		return "bytes"
 	}
