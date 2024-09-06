@@ -207,6 +207,10 @@ func (e expr) GroupConcat() Expr {
 	return e.setE(clause.Expr{SQL: "GROUP_CONCAT(?)", Vars: []interface{}{e.RawExpr()}})
 }
 
+func (e expr) StringAgg() Expr {
+	return e.setE(clause.Expr{SQL: "STRING_AGG(?, ',')", Vars: []interface{}{e.RawExpr()}})
+}
+
 // ======================== comparison between columns ========================
 func (e expr) EqCol(col Expr) Expr {
 	return e.setE(clause.Expr{SQL: "? = ?", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})
