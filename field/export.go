@@ -32,6 +32,7 @@ func NewField(table, column string, opts ...Option) Field {
 	return Field{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
+// NewFieldRaw create new field by native sql
 func NewFieldRaw(rawSql string, vars ...interface{}) Field {
 	return Field{expr: expr{e: clause.Expr{SQL: rawSql, Vars: vars}}}
 }
