@@ -77,7 +77,7 @@ func (d *DO) ReplaceConnPool(pool gorm.ConnPool) {
 // UseModel specify a data model structure as a source for table name
 func (d *DO) UseModel(model interface{}) {
 	d.modelType = d.indirect(model)
-
+	d.db = d.db.Model(model).Session(&gorm.Session{})
 	err := d.db.Statement.Parse(model)
 	if err != nil {
 		panic(fmt.Errorf("Cannot parse model: %+v\n%w", model, err))
@@ -710,7 +710,7 @@ func (d *DO) Updates(value interface{}) (info ResultInfo, err error) {
 		valTyp = rawTyp
 	}
 
-	tx := d.db
+	tx := d.db.Model(d.newResultPointer())
 	if d.backfillData != nil {
 		tx = tx.Model(d.backfillData)
 	}
