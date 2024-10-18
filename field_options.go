@@ -1,6 +1,7 @@
 package gen
 
 import (
+	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
@@ -23,6 +24,50 @@ var (
 	FieldModify = func(opt func(Field) Field) model.ModifyFieldOpt {
 		return func(f *model.Field) *model.Field {
 			return opt(f)
+		}
+	}
+
+	// WithDataTypesNullType configures the types of fields to use their datatypes nullable counterparts.
+	/**
+	 *
+	 * @param {boolean} all - If true, all basic types of fields will be replaced with their `datatypes.Null[T]` types.
+	 *                        If false, only fields that are allowed to be null will be replaced with `datatypes.Null[T]` types.
+	 *
+	 * Examples:
+	 *
+	 * When `all` is true:
+	 * - `int64` will be replaced with `datatypes.NullInt64`
+	 * - `string` will be replaced with `datatypes.NullString`
+	 *
+	 * When `all` is false:
+	 * - Only fields that can be null (e.g., `*string` or `*int`) will be replaced with `datatypes.Null[T]` types.
+	 *
+	 * Note:
+	 * Ensure that proper error handling is implemented when converting
+	 * fields to their `datatypes.Null[T]` types to avoid runtime issues.
+	 */
+	WithDataTypesNullType = func(all bool) model.ModifyFieldOpt {
+		return func(f *model.Field) *model.Field {
+			ft := f.Type
+			nullable := false
+			if strings.HasPrefix(ft, "*") {
+				nullable = true
+				ft = strings.TrimLeft(ft, "*")
+			}
+			if !all && !nullable {
+				return f
+			}
+			switch ft {
+			case "time.Time", "string", "int", "int8", "int16",
+				"int32", "int64", "uint", "uint8", "uint16", "uint32",
+				"uint64", "float64", "float32", "byte", "bool":
+				ft = fmt.Sprintf("datatypes.Null[%s]", ft)
+			default:
+				return f
+			}
+			f.CustomGenType = f.GenType()
+			f.Type = ft
+			return f
 		}
 	}
 
