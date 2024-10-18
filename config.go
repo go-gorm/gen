@@ -115,6 +115,29 @@ func (cfg *Config) WithImportPkgPath(paths ...string) {
 	cfg.importPkgPaths = append(cfg.importPkgPaths, paths...)
 }
 
+// WithDataTypesNullType configures the types of fields to use their datatypes nullable counterparts.
+/**
+ *
+ * @param {boolean} all - If true, all basic types of fields will be replaced with their `datatypes.Null[T]` types.
+ *                        If false, only fields that are allowed to be null will be replaced with `datatypes.Null[T]` types.
+ *
+ * Examples:
+ *
+ * When `all` is true:
+ * - `int64` will be replaced with `datatypes.NullInt64`
+ * - `string` will be replaced with `datatypes.NullString`
+ *
+ * When `all` is false:
+ * - Only fields that can be null (e.g., `*string` or `*int`) will be replaced with `datatypes.Null[T]` types.
+ *
+ * Note:
+ * Ensure that proper error handling is implemented when converting
+ * fields to their `datatypes.Null[T]` types to avoid runtime issues.
+ */
+func (cfg *Config) WithDataTypesNullType(all bool) {
+	cfg.WithOpts(WithDataTypesNullType(all))
+}
+
 // Revise format path and db
 func (cfg *Config) Revise() (err error) {
 	if strings.TrimSpace(cfg.ModelPkgPath) == "" {
