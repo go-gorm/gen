@@ -191,6 +191,7 @@ func (b *QueryStructMeta) ReviseDIYMethod() error {
 	}
 	if tableName == nil {
 		methods = append(methods, parser.DefaultMethodTableName(b.ModelStructName))
+		methods = append(methods, parser.DefaultMethodTableComment(b.ModelStructName, b.TableComment))
 	} else {
 		// e.g. return "@@table" => return TableNameUser
 		tableName.Body = strings.ReplaceAll(tableName.Body, "\"@@table\"", "TableName"+b.ModelStructName)

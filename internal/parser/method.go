@@ -19,6 +19,16 @@ func DefaultMethodTableName(structName string) *Method {
 	}
 }
 
+func DefaultMethodTableComment(structName, comment string) *Method {
+	return &Method{
+		Receiver:   Param{IsPointer: true, Type: structName},
+		MethodName: "TableComment",
+		Doc:        fmt.Sprint("TableComment ", structName, "'s table comment "),
+		Result:     []Param{{Type: "string"}},
+		Body:       fmt.Sprintf("{\n\treturn `%s`\n} ", comment),
+	}
+}
+
 // Method Apply to query struct and base struct custom method
 type Method struct {
 	Receiver   Param
