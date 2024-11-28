@@ -19,10 +19,10 @@ import (
 	"gorm.io/gen/tests/.expect/dal_test/model"
 )
 
-func newCreditCard(db *gorm.DB) creditCard {
+func newCreditCard(db *gorm.DB, opts ...gen.DOOption) creditCard {
 	_creditCard := creditCard{}
 
-	_creditCard.creditCardDo.UseDB(db)
+	_creditCard.creditCardDo.UseDB(db, opts...)
 	_creditCard.creditCardDo.UseModel(&model.CreditCard{})
 
 	tableName := _creditCard.creditCardDo.TableName()
@@ -88,6 +88,8 @@ func (c creditCard) TableName() string { return c.creditCardDo.TableName() }
 
 func (c creditCard) Alias() string { return c.creditCardDo.Alias() }
 
+func (c creditCard) Columns(cols ...field.Expr) gen.Columns { return c.creditCardDo.Columns(cols...) }
+
 func (c *creditCard) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := c.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -109,6 +111,11 @@ func (c *creditCard) fillFieldMap() {
 }
 
 func (c creditCard) clone(db *gorm.DB) creditCard {
+	c.creditCardDo.ReplaceConnPool(db.Statement.ConnPool)
+	return c
+}
+
+func (c creditCard) replaceDB(db *gorm.DB) creditCard {
 	c.creditCardDo.ReplaceDB(db)
 	return c
 }
@@ -129,6 +136,10 @@ func (c creditCardDo) ReadDB() *creditCardDo {
 
 func (c creditCardDo) WriteDB() *creditCardDo {
 	return c.Clauses(dbresolver.Write)
+}
+
+func (c creditCardDo) Session(config *gorm.Session) *creditCardDo {
+	return c.withDO(c.DO.Session(config))
 }
 
 func (c creditCardDo) Clauses(conds ...clause.Expression) *creditCardDo {

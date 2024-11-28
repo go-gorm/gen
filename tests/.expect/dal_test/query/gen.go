@@ -10,6 +10,8 @@ import (
 
 	"gorm.io/gorm"
 
+	"gorm.io/gen"
+
 	"gorm.io/plugin/dbresolver"
 )
 
@@ -22,8 +24,8 @@ var (
 	User       *user
 )
 
-func SetDefault(db *gorm.DB) {
-	*Q = *Use(db)
+func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
+	*Q = *Use(db, opts...)
 	Bank = &Q.Bank
 	CreditCard = &Q.CreditCard
 	Customer = &Q.Customer
@@ -31,14 +33,14 @@ func SetDefault(db *gorm.DB) {
 	User = &Q.User
 }
 
-func Use(db *gorm.DB) *Query {
+func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
 		db:         db,
-		Bank:       newBank(db),
-		CreditCard: newCreditCard(db),
-		Customer:   newCustomer(db),
-		Person:     newPerson(db),
-		User:       newUser(db),
+		Bank:       newBank(db, opts...),
+		CreditCard: newCreditCard(db, opts...),
+		Customer:   newCustomer(db, opts...),
+		Person:     newPerson(db, opts...),
+		User:       newUser(db, opts...),
 	}
 }
 
@@ -74,7 +76,14 @@ func (q *Query) WriteDB() *Query {
 }
 
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
-	return q.clone(db)
+	return &Query{
+		db:         db,
+		Bank:       q.Bank.replaceDB(db),
+		CreditCard: q.CreditCard.replaceDB(db),
+		Customer:   q.Customer.replaceDB(db),
+		Person:     q.Person.replaceDB(db),
+		User:       q.User.replaceDB(db),
+	}
 }
 
 type queryCtx struct {
@@ -100,10 +109,14 @@ func (q *Query) Transaction(fc func(tx *Query) error, opts ...*sql.TxOptions) er
 }
 
 func (q *Query) Begin(opts ...*sql.TxOptions) *QueryTx {
-	return &QueryTx{q.clone(q.db.Begin(opts...))}
+	tx := q.db.Begin(opts...)
+	return &QueryTx{Query: q.clone(tx), Error: tx.Error}
 }
 
-type QueryTx struct{ *Query }
+type QueryTx struct {
+	*Query
+	Error error
+}
 
 func (q *QueryTx) Commit() error {
 	return q.db.Commit().Error

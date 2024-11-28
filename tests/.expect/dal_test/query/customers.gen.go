@@ -19,10 +19,10 @@ import (
 	"gorm.io/gen/tests/.expect/dal_test/model"
 )
 
-func newCustomer(db *gorm.DB) customer {
+func newCustomer(db *gorm.DB, opts ...gen.DOOption) customer {
 	_customer := customer{}
 
-	_customer.customerDo.UseDB(db)
+	_customer.customerDo.UseDB(db, opts...)
 	_customer.customerDo.UseModel(&model.Customer{})
 
 	tableName := _customer.customerDo.TableName()
@@ -80,6 +80,8 @@ func (c customer) TableName() string { return c.customerDo.TableName() }
 
 func (c customer) Alias() string { return c.customerDo.Alias() }
 
+func (c customer) Columns(cols ...field.Expr) gen.Columns { return c.customerDo.Columns(cols...) }
+
 func (c *customer) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := c.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -99,6 +101,11 @@ func (c *customer) fillFieldMap() {
 }
 
 func (c customer) clone(db *gorm.DB) customer {
+	c.customerDo.ReplaceConnPool(db.Statement.ConnPool)
+	return c
+}
+
+func (c customer) replaceDB(db *gorm.DB) customer {
 	c.customerDo.ReplaceDB(db)
 	return c
 }
@@ -119,6 +126,10 @@ func (c customerDo) ReadDB() *customerDo {
 
 func (c customerDo) WriteDB() *customerDo {
 	return c.Clauses(dbresolver.Write)
+}
+
+func (c customerDo) Session(config *gorm.Session) *customerDo {
+	return c.withDO(c.DO.Session(config))
 }
 
 func (c customerDo) Clauses(conds ...clause.Expression) *customerDo {
@@ -144,6 +155,7 @@ func (c customerDo) Select(conds ...field.Expr) *customerDo {
 func (c customerDo) Where(conds ...gen.Condition) *customerDo {
 	return c.withDO(c.DO.Where(conds...))
 }
+
 func (c customerDo) Order(conds ...field.Expr) *customerDo {
 	return c.withDO(c.DO.Order(conds...))
 }
