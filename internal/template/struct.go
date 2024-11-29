@@ -18,10 +18,10 @@ const (
 		` + fields + `
 	}
 	` + tableMethod + asMethond + updateFieldMethod + `
-
+	
 	func ({{.S}} *{{.QueryStructName}}) WithContext(ctx context.Context) {{.ReturnObject}} { return {{.S}}.{{.QueryStructName}}Do.WithContext(ctx)}
 
-	func ({{.S}} {{.QueryStructName}}) TableName() string { return {{.S}}.{{.QueryStructName}}Do.TableName() }
+	func ({{.S}} {{.QueryStructName}}) TableName() string { return {{.S}}.{{.QueryStructName}}Do.TableName() } 
 
 	func ({{.S}} {{.QueryStructName}}) Alias() string { return {{.S}}.{{.QueryStructName}}Do.Alias() }
 
@@ -37,10 +37,10 @@ const (
 	createMethod = `
 	func new{{.ModelStructName}}(db *gorm.DB, opts ...gen.DOOption) {{.QueryStructName}} {
 		_{{.QueryStructName}} := {{.QueryStructName}}{}
-
+	
 		_{{.QueryStructName}}.{{.QueryStructName}}Do.UseDB(db,opts...)
 		_{{.QueryStructName}}.{{.QueryStructName}}Do.UseModel(&{{.StructInfo.Package}}.{{.StructInfo.Type}}{})
-
+	
 		tableName := _{{.QueryStructName}}.{{.QueryStructName}}Do.TableName()
 		_{{$.QueryStructName}}.ALL = field.NewAsterisk(tableName)
 		{{range .Fields -}}
@@ -56,7 +56,7 @@ const (
 		{{end}}
 
 		_{{$.QueryStructName}}.fillFieldMap()
-
+		
 		return _{{.QueryStructName}}
 	}
 	`
@@ -78,27 +78,27 @@ const (
 	fieldMap  map[string]field.Expr
 `
 	tableMethod = `
-func ({{.S}} {{.QueryStructName}}) Table(newTableName string) *{{.QueryStructName}} {
+func ({{.S}} {{.QueryStructName}}) Table(newTableName string) *{{.QueryStructName}} { 
 	{{.S}}.{{.QueryStructName}}Do.UseTable(newTableName)
 	return {{.S}}.updateTableName(newTableName)
 }
 `
 
-	asMethond = `
-func ({{.S}} {{.QueryStructName}}) As(alias string) *{{.QueryStructName}} {
+	asMethond = `	
+func ({{.S}} {{.QueryStructName}}) As(alias string) *{{.QueryStructName}} { 
 	{{.S}}.{{.QueryStructName}}Do.DO = *({{.S}}.{{.QueryStructName}}Do.As(alias).(*gen.DO))
 	return {{.S}}.updateTableName(alias)
 }
 `
 	updateFieldMethod = `
-func ({{.S}} *{{.QueryStructName}}) updateTableName(table string) *{{.QueryStructName}} {
+func ({{.S}} *{{.QueryStructName}}) updateTableName(table string) *{{.QueryStructName}} { 
 	{{.S}}.ALL = field.NewAsterisk(table)
 	{{range .Fields -}}
 	{{if not .IsRelation -}}
 		{{- if .ColumnName -}}{{$.S}}.{{.Name}} = field.New{{.GenType}}(table, "{{.ColumnName}}"){{- end -}}
 	{{end}}
 	{{end}}
-
+	
 	{{.S}}.fillFieldMap()
 
 	return {{.S}}
@@ -107,16 +107,13 @@ func ({{.S}} *{{.QueryStructName}}) updateTableName(table string) *{{.QueryStruc
 
 	cloneMethod = `
 func ({{.S}} {{.QueryStructName}}) clone(db *gorm.DB) {{.QueryStructName}} {
-	{{.S}}.{{.QueryStructName}}Do.ReplaceConnPool(db.Statement.ConnPool){{range .Fields }}{{if .IsRelation}}
-  {{$.S}}.{{.Relation.Name}}.db = db.Session(&gorm.Session{Initialized: true})
-  {{$.S}}.{{.Relation.Name}}.db.Statement.ConnPool = db.Statement.ConnPool{{end}}{{end}}
+	{{.S}}.{{.QueryStructName}}Do.ReplaceConnPool(db.Statement.ConnPool)
 	return {{.S}}
 }
 `
 	replaceMethod = `
 func ({{.S}} {{.QueryStructName}}) replaceDB(db *gorm.DB) {{.QueryStructName}} {
-	{{.S}}.{{.QueryStructName}}Do.ReplaceDB(db){{range .Fields}}{{if .IsRelation}}
-  {{$.S}}.{{.Relation.Name}}.db = db.Session(&gorm.Session{}){{end}}{{end}}
+	{{.S}}.{{.QueryStructName}}Do.ReplaceDB(db)
 	return {{.S}}
 }
 `
@@ -220,9 +217,9 @@ const (
 	relationStruct = `
 type {{$.QueryStructName}}{{$relationship}}{{$relation.Name}} struct{
 	db *gorm.DB
-
+	
 	field.RelationField
-
+	
 	{{$relation.StructField}}
 }
 
