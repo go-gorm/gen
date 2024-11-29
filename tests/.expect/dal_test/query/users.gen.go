@@ -19,10 +19,10 @@ import (
 	"gorm.io/gen/tests/.expect/dal_test/model"
 )
 
-func newUser(db *gorm.DB) user {
+func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 	_user := user{}
 
-	_user.userDo.UseDB(db)
+	_user.userDo.UseDB(db, opts...)
 	_user.userDo.UseModel(&model.User{})
 
 	tableName := _user.userDo.TableName()
@@ -94,6 +94,8 @@ func (u user) TableName() string { return u.userDo.TableName() }
 
 func (u user) Alias() string { return u.userDo.Alias() }
 
+func (u user) Columns(cols ...field.Expr) gen.Columns { return u.userDo.Columns(cols...) }
+
 func (u *user) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := u.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -116,6 +118,11 @@ func (u *user) fillFieldMap() {
 }
 
 func (u user) clone(db *gorm.DB) user {
+	u.userDo.ReplaceConnPool(db.Statement.ConnPool)
+	return u
+}
+
+func (u user) replaceDB(db *gorm.DB) user {
 	u.userDo.ReplaceDB(db)
 	return u
 }
@@ -136,6 +143,10 @@ func (u userDo) ReadDB() *userDo {
 
 func (u userDo) WriteDB() *userDo {
 	return u.Clauses(dbresolver.Write)
+}
+
+func (u userDo) Session(config *gorm.Session) *userDo {
+	return u.withDO(u.DO.Session(config))
 }
 
 func (u userDo) Clauses(conds ...clause.Expression) *userDo {
@@ -161,7 +172,6 @@ func (u userDo) Select(conds ...field.Expr) *userDo {
 func (u userDo) Where(conds ...gen.Condition) *userDo {
 	return u.withDO(u.DO.Where(conds...))
 }
-
 
 func (u userDo) Order(conds ...field.Expr) *userDo {
 	return u.withDO(u.DO.Order(conds...))
