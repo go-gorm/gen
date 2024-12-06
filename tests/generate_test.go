@@ -22,6 +22,27 @@ const (
 
 var _ = os.Setenv("GORM_DIALECT", "mysql")
 
+type User struct {
+	Id       string    `gorm:"primaryKey"`
+	Posts    []Post    `gorm:"foreignKey:AuthorId"`
+	Comments []Comment `gorm:"foreignKey:AuthorId"`
+}
+
+type Post struct {
+	Id       string `gorm:"primaryKey"`
+	AuthorId string
+	Author   User      `gorm:"foreignKey:Id"`
+	Comments []Comment `gorm:"foreignKey:PostId"`
+}
+
+type Comment struct {
+	Id       string `gorm:"primaryKey"`
+	PostId   string
+	Post     Post `gorm:"foreignKey:Id"`
+	AuthorId string
+	Author   User `gorm:"foreignKey:Id"`
+}
+
 var generateCase = map[string]func(dir string) *gen.Generator{
 	generateDirPrefix + "dal_1": func(dir string) *gen.Generator {
 		g := gen.NewGenerator(gen.Config{
@@ -151,6 +172,21 @@ var generateCase = map[string]func(dir string) *gen.Generator{
 			}),
 		)
 		g.ApplyBasic(customers)
+		return g
+	},
+	generateDirPrefix + "dal_8": func(dir string) *gen.Generator {
+		g := gen.NewGenerator(gen.Config{
+			OutPath: dir + "/query",
+			Mode:    gen.WithDefaultQuery | gen.WithQueryInterface,
+
+			WithUnitTest: true,
+
+			FieldNullable:     true,
+			FieldCoverable:    true,
+			FieldWithIndexTag: true,
+		})
+		g.ApplyBasic(User{}, Post{}, Comment{})
+
 		return g
 	},
 }
