@@ -201,6 +201,8 @@ type I{{.ModelStructName}}Do interface {
 	FirstOrCreate() (*{{.StructInfo.Package}}.{{.StructInfo.Type}}, error)
 	FindByPage(offset int, limit int) (result []*{{.StructInfo.Package}}.{{.StructInfo.Type}}, count int64, err error)
 	ScanByPage(result interface{}, offset int, limit int) (count int64, err error)
+	Rows() (*sql.Rows, error)
+	Row() *sql.Row
 	Scan(result interface{}) (err error)
 	Returning(value interface{}, columns ...string) I{{.ModelStructName}}Do
 	UnderlyingDB() *gorm.DB
