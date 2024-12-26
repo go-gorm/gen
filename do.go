@@ -361,11 +361,47 @@ func (d *DO) join(table schema.Tabler, joinType clause.JoinType, conds []field.E
 		Table: clause.Table{Name: table.TableName()},
 		ON:    clause.Where{Exprs: toExpression(conds...)},
 	}
+	var relation *schema.Relationship
+	hasRelation := false
 	if do, ok := table.(Dao); ok {
 		join.Expression = helper.NewJoinTblExpr(join, Table(do).underlyingDB().Statement.TableExpr)
+		relation, hasRelation = d.db.Statement.Schema.Relationships.Relations[do.underlyingDB().Statement.Schema.Name]
 	}
 	if al, ok := table.(interface{ Alias() string }); ok {
 		join.Table.Alias = al.Alias()
+	}
+
+	if !hasRelation {
+		for _, r := range d.db.Statement.Schema.Relationships.Relations {
+			if r.FieldSchema.Table == table.TableName() {
+				relation = r
+				hasRelation = true
+				break
+			}
+		}
+	}
+	if hasRelation {
+		onStmt := gorm.Statement{Table: table.TableName(), DB: d.db, Clauses: map[string]clause.Clause{}}
+		for _, c := range relation.FieldSchema.QueryClauses {
+			onStmt.AddClause(c)
+		}
+		if cs, ok := onStmt.Clauses["WHERE"]; ok {
+			if where, ok := cs.Expression.(clause.Where); ok {
+				where.Build(&onStmt)
+
+				if onSQL := onStmt.SQL.String(); onSQL != "" {
+					vars := onStmt.Vars
+					for idx, v := range vars {
+						bindvar := strings.Builder{}
+						onStmt.Vars = vars[0 : idx+1]
+						d.db.Dialector.BindVarTo(&bindvar, &onStmt, v)
+						onSQL = strings.Replace(onSQL, bindvar.String(), "?", 1)
+					}
+
+					join.ON.Exprs = append(join.ON.Exprs, clause.Expr{SQL: onSQL, Vars: vars})
+				}
+			}
+		}
 	}
 
 	from := getFromClause(d.db)
