@@ -10,6 +10,8 @@ import (
 const (
 	// DefaultModelPkg ...
 	DefaultModelPkg = "model"
+	// DefaultQueryPkg ...
+	DefaultQueryPkg = "query"
 )
 
 // Status sql status
