@@ -28,6 +28,11 @@ func (field genericsField[T]) In(values ...T) Expr {
 	return expr{e: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
 }
 
+// NotIn ...
+func (field genericsField[T]) NotIn(values ...T) Expr {
+	return expr{e: clause.Not(field.In(values...).expression())}
+}
+
 // Gt ...
 func (field genericsField[T]) Gt(value T) Expr {
 	return expr{e: clause.Gt{Column: field.RawExpr(), Value: value}}
@@ -71,6 +76,11 @@ func (field genericsField[T]) Sum() genericsField[T] {
 // IfNull ...
 func (field genericsField[T]) IfNull(value T) Expr {
 	return field.ifNull(value)
+}
+
+// Field ...
+func (field genericsField[T]) Field(value []interface{}) Expr {
+	return field.field(value)
 }
 
 func (field genericsField[T]) toSlice(values ...T) []interface{} {

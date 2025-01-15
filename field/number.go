@@ -137,3 +137,8 @@ func (field Number[T]) Floor() Number[T] {
 func (field Number[T]) Zero() AssignExpr {
 	return field.value(0)
 }
+
+// Field ...
+func (field Number[T]) Field(values ...T) Number[T] {
+	return newNumber[T](field.field(values))
+}
