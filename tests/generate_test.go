@@ -123,8 +123,6 @@ var generateCase = map[string]func(dir string) *gen.Generator{
 			OutPath: dir + "/query",
 			Mode:    gen.WithDefaultQuery | gen.WithGeneric,
 
-			WithUnitTest: true,
-
 			FieldNullable:     true,
 			FieldCoverable:    true,
 			FieldWithIndexTag: true,
