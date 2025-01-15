@@ -136,7 +136,7 @@ func (c *Column) needDefaultTag(defaultTagValue string) bool {
 	case reflect.String:
 		return defaultTagValue != ""
 	case reflect.Struct:
-		return strings.Trim(defaultTagValue, "'0:- ") != ""
+		return strings.Trim(defaultTagValue, "'0:-") != ""
 	}
 	return c.Name() != "created_at" && c.Name() != "updated_at"
 }
