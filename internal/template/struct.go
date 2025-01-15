@@ -30,7 +30,9 @@ const (
 	` + getFieldMethod + fillFieldMapMethod + cloneMethod + replaceMethod + relationship
 
 	// TableQueryIface table query interface
-	TableQueryIface        = defineDoInterface
+	TableQueryIface = defineDoInterface
+
+	// TableGenericQueryIface table generic query interface
 	TableGenericQueryIface = defineGenericsDoInterface
 
 	//DefineGenericsMethodStruct generics do struct
