@@ -395,22 +395,37 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 		return err
 	}
 
-	data.QueryStructMeta = data.QueryStructMeta.IfaceMode(g.judgeMode(WithQueryInterface))
+	data.QueryStructMeta = data.QueryStructMeta.IfaceMode(g.judgeMode(WithQueryInterface) || g.judgeMode(WithGeneric))
+	data.QueryStructMeta = data.QueryStructMeta.GenericMode(g.judgeMode(WithGeneric))
 
 	structTmpl := tmpl.TableQueryStructWithContext
+	crudTmpl := tmpl.CRUDMethod
+	ifaceTmpl := ""
+
+	if g.judgeMode(WithQueryInterface) {
+		ifaceTmpl = tmpl.TableQueryIface
+	}
 	if g.judgeMode(WithoutContext) {
 		structTmpl = tmpl.TableQueryStruct
+	}
+	if g.judgeMode(WithGeneric) {
+		structTmpl += tmpl.DefineGenericsMethodStruct
+		crudTmpl = tmpl.CRUDGenericMethod
+		ifaceTmpl = tmpl.TableGenericQueryIface
+	} else {
+		structTmpl += tmpl.DefineMethodStruct
 	}
 	err = render(structTmpl, &buf, data.QueryStructMeta)
 	if err != nil {
 		return err
 	}
-
-	if g.judgeMode(WithQueryInterface) {
-		err = render(tmpl.TableQueryIface, &buf, data)
-		if err != nil {
-			return err
-		}
+	err = render(ifaceTmpl, &buf, data)
+	if err != nil {
+		return err
+	}
+	err = render(crudTmpl, &buf, data.QueryStructMeta)
+	if err != nil {
+		return err
 	}
 
 	for _, method := range data.Interfaces {
@@ -418,11 +433,6 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 		if err != nil {
 			return err
 		}
-	}
-
-	err = render(tmpl.GetInstanceMethod, &buf, data.QueryStructMeta)
-	if err != nil {
-		return err
 	}
 
 	defer g.info(fmt.Sprintf("generate query file: %s%s%s.gen.go", g.OutPath, string(os.PathSeparator), data.FileName))
@@ -583,6 +593,9 @@ func (g *Generator) pushQueryStructMeta(meta *generate.QueryStructMeta) (*genInf
 }
 
 func render(tmpl string, wr io.Writer, data interface{}) error {
+	if tmpl == "" {
+		return nil
+	}
 	t, err := template.New(tmpl).Parse(tmpl)
 	if err != nil {
 		return err

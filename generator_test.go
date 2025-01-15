@@ -86,11 +86,11 @@ type user struct {
 	userDo
 
 	ALL        field.Asterisk
-	ID         field.Number[uint]
-	Name       field.Chars[string]
-	Age        field.Number[int]
-	Score      field.Number[float64]
-	Address    field.Chars[string]
+	ID         field.Uint
+	Name       field.String
+	Age        field.Int
+	Score      field.Float64
+	Address    field.String
 	Famous     field.Bool
 	RegisterAt field.Time
 }

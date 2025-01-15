@@ -37,8 +37,8 @@ var (
 // ======================== generic field =======================
 
 // NewField create new field
-func NewField(table, column string, opts ...Option) genericsField[driver.Valuer] {
-	return genericsField[driver.Valuer]{expr{col: toColumn(table, column, opts...)}}
+func NewField(table, column string, opts ...Option) Field {
+	return Field(genericsField[driver.Valuer]{expr{col: toColumn(table, column, opts...)}})
 }
 
 // NewSerializer create new field2

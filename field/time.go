@@ -78,6 +78,7 @@ func (field Time) MonthName() String {
 	return newChars[string](expr{e: clause.Expr{SQL: "MONTHNAME(?)", Vars: []interface{}{field.RawExpr()}}})
 }
 
+// Year equal to YEAR(self)
 func (field Time) Year() Number[int] {
 	return newNumber[int](expr{e: clause.Expr{SQL: "YEAR(?)", Vars: []interface{}{field.RawExpr()}}})
 }

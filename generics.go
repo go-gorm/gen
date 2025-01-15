@@ -2,7 +2,7 @@ package gen
 
 import (
 	"context"
-
+	"database/sql"
 	"gorm.io/gen/field"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -10,6 +10,7 @@ import (
 	"gorm.io/plugin/dbresolver"
 )
 
+// IGenericsDo generic query interface
 type IGenericsDo[T any, E any] interface {
 	SubQuery
 	Debug() T
@@ -18,6 +19,7 @@ type IGenericsDo[T any, E any] interface {
 	ReplaceDB(db *gorm.DB)
 	ReadDB() T
 	WriteDB() T
+	As(alias string) Dao
 	Session(config *gorm.Session) T
 	Columns(cols ...field.Expr) Columns
 	Clauses(conds ...clause.Expression) T
@@ -64,6 +66,8 @@ type IGenericsDo[T any, E any] interface {
 	FirstOrCreate() (E, error)
 	FindByPage(offset int, limit int) (result []E, count int64, err error)
 	ScanByPage(result interface{}, offset int, limit int) (count int64, err error)
+	Rows() (*sql.Rows, error)
+	Row() *sql.Row
 	Scan(result interface{}) (err error)
 	Returning(value interface{}, columns ...string) T
 	UnderlyingDB() *gorm.DB
@@ -72,6 +76,7 @@ type IGenericsDo[T any, E any] interface {
 	ToSQL(queryFn func(T) T) string
 }
 
+// GenericsDo base impl of IGenericsDo
 type GenericsDo[T IGenericsDo[T, E], E any] struct {
 	DO
 	RealDO T
@@ -119,10 +124,6 @@ func (b GenericsDo[T, E]) Select(conds ...field.Expr) T {
 
 func (b GenericsDo[T, E]) Where(conds ...Condition) T {
 	return b.withDO(b.DO.Where(conds...))
-}
-
-func (b GenericsDo[T, E]) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) T {
-	return b.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (b GenericsDo[T, E]) Order(conds ...field.Expr) T {
@@ -314,7 +315,7 @@ func (b GenericsDo[T, E]) Delete(models ...E) (result ResultInfo, err error) {
 
 func (b GenericsDo[T, E]) ToSQL(queryFn func(T) T) string {
 	b.db = b.db.Session(&gorm.Session{DryRun: true, SkipDefaultTransaction: true})
-	t := queryFn(b.withDO(b.DO.Debug()))
+	t := queryFn(b.withDO(&b.DO))
 	db := t.underlyingDB()
 	stmt := db.Statement
 	return db.Dialector.Explain(stmt.SQL.String(), stmt.Vars...)

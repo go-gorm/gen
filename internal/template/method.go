@@ -27,8 +27,8 @@ func ({{.S}} {{.TargetStruct}}Do){{.FuncSign}}{
 
 `
 
-// GetInstance method
-const GetInstanceMethod = `
+// CRUDGenericMethod generic CRUD method
+const CRUDGenericMethod = `
 func ({{.S}} *{{.QueryStructName}}Do) GetInstance(do gen.Dao) {{.ReturnObject}} {
 	_r := &{{.QueryStructName}}Do{}
 	_r.DO = *do.(*gen.DO)

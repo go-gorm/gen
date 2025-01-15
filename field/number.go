@@ -5,28 +5,40 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+// Int type field
 type Int = Number[int]
 
+// Int8 type field
 type Int8 = Number[int8]
 
+// Int16 type field
 type Int16 = Number[int16]
 
+// Int32 type field
 type Int32 = Number[int32]
 
+// Int64 type field
 type Int64 = Number[int64]
 
+// Uint type field
 type Uint = Number[uint]
 
+// Uint8 type field
 type Uint8 = Number[uint8]
 
+// Uint16 type field
 type Uint16 = Number[uint16]
 
+// Uint32 type field
 type Uint32 = Number[uint32]
 
+// Uint64 type field
 type Uint64 = Number[uint64]
 
+// Float32 type field
 type Float32 = Number[float32]
 
+// Float64 type field
 type Float64 = Number[float64]
 
 // ======================== number =======================
