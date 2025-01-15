@@ -13,7 +13,7 @@ import (
 
 	"gorm.io/gen"
 	"gorm.io/gen/field"
-	"gorm.io/gen/tests/.gen/dal_4/model"
+	"gorm.io/gen/tests/.gen/dal_7/model"
 	"gorm.io/gorm/clause"
 )
 

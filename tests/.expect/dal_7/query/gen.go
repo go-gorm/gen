@@ -16,8 +16,8 @@ import (
 )
 
 var (
-	Q          = new(Query)
-	User       *user
+	Q    = new(Query)
+	User *user
 )
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
@@ -27,23 +27,23 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
-		db:         db,
-		User:       newUser(db, opts...),
+		db:   db,
+		User: newUser(db, opts...),
 	}
 }
 
 type Query struct {
 	db *gorm.DB
 
-	User       user
+	User user
 }
 
 func (q *Query) Available() bool { return q.db != nil }
 
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
-		db:         db,
-		User:       q.User.clone(db),
+		db:   db,
+		User: q.User.clone(db),
 	}
 }
 
@@ -57,18 +57,18 @@ func (q *Query) WriteDB() *Query {
 
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
-		db:         db,
-		User:       q.User.replaceDB(db),
+		db:   db,
+		User: q.User.replaceDB(db),
 	}
 }
 
 type queryCtx struct {
-	User       IUserDo
+	User IUserDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
-		User:       q.User.WithContext(ctx),
+		User: q.User.WithContext(ctx),
 	}
 }
 

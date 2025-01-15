@@ -9,17 +9,12 @@ import (
 	"database/sql"
 	"strings"
 
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
-	"gorm.io/gorm/schema"
-
 	"gorm.io/gen"
 	"gorm.io/gen/field"
 	"gorm.io/gen/helper"
+	"gorm.io/gorm"
 
-	"gorm.io/plugin/dbresolver"
-
-	"gorm.io/gen/tests/.gen/dal_4/model"
+	"gorm.io/gen/tests/.gen/dal_7/model"
 
 	"time"
 )
