@@ -12,11 +12,12 @@ import (
 // Column table column's info
 type Column struct {
 	gorm.ColumnType
-	TableName   string                                                        `gorm:"column:TABLE_NAME"`
-	Indexes     []*Index                                                      `gorm:"-"`
-	UseScanType bool                                                          `gorm:"-"`
-	dataTypeMap map[string]func(columnType gorm.ColumnType) (dataType string) `gorm:"-"`
-	jsonTagNS   func(columnName string) string                                `gorm:"-"`
+	TableName            string                                                        `gorm:"column:TABLE_NAME"`
+	Indexes              []*Index                                                      `gorm:"-"`
+	UseScanType          bool                                                          `gorm:"-"`
+	dataTypeMap          map[string]func(columnType gorm.ColumnType) (dataType string) `gorm:"-"`
+	jsonTagNS            func(columnName string) string                                `gorm:"-"`
+	nullableTypeFormater func(columnType string) string                                `gorm:"-"`
 }
 
 // SetDataTypeMap set data type map
@@ -43,6 +44,15 @@ func (c *Column) WithNS(jsonTagNS func(columnName string) string) {
 	}
 }
 
+// WithNullableFieldTypeNS with nullable type name strategy
+// If nil use pointer, the default
+func (c *Column) WithNullableFieldTypeNS(formater func(columnType string) string) {
+	c.nullableTypeFormater = formater
+	if c.nullableTypeFormater == nil {
+		c.nullableTypeFormater = func(fType string) string { return "*" + fType }
+	}
+}
+
 // ToField convert to field
 func (c *Column) ToField(nullable, coverable, signable bool) *Field {
 	fieldType := c.GetDataType()
@@ -56,7 +66,7 @@ func (c *Column) ToField(nullable, coverable, signable bool) *Field {
 		fieldType = "*" + fieldType
 	case nullable && !strings.HasPrefix(fieldType, "*"):
 		if n, ok := c.Nullable(); ok && n {
-			fieldType = "*" + fieldType
+			fieldType = c.nullableTypeFormater(fieldType)
 		}
 	}
 
