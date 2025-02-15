@@ -16,7 +16,7 @@ import (
 
 	"gorm.io/plugin/dbresolver"
 
-	"gorm.io/gen/tests/.expect/dal_test/model"
+	"gorm.io/gen/tests/.expect/dal_test_relation/model"
 )
 
 func newCreditCard(db *gorm.DB, opts ...gen.DOOption) creditCard {
