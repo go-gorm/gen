@@ -22,8 +22,7 @@ func TestConfig(t *testing.T) {
 		OutFile: "",
 
 		ModelPkgPath: "models",
-
-		queryPkgName: "query",
+		QueryPkgPath: "query",
 	}
 }
 
