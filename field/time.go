@@ -165,7 +165,7 @@ func (field Time) FromDays(value int) Time {
 }
 
 // FromUnixtime equal to FROM_UNIXTIME(self)
-func (field Time) FromUnixtime(value int) Time {
+func (field Time) FromUnixtime(value int64) Time {
 	return Time{expr{e: clause.Expr{SQL: fmt.Sprintf("FROM_UNIXTIME(%d)", value)}}}
 }
 
