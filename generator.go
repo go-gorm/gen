@@ -276,8 +276,8 @@ func (g *Generator) Execute() {
 
 var disableLog bool
 
-func SetDisableLog(d bool) {
-	disableLog = d
+func DisableGenerateLog() {
+	disableLog = true
 }
 
 // info logger
