@@ -274,8 +274,17 @@ func (g *Generator) Execute() {
 	g.info("Generate code done.")
 }
 
+var disableLog bool
+
+func SetDisableLog(d bool) {
+	disableLog = d
+}
+
 // info logger
 func (g *Generator) info(logInfos ...string) {
+	if disableLog {
+		return
+	}
 	for _, l := range logInfos {
 		g.db.Logger.Info(context.Background(), l)
 		log.Println(l)
