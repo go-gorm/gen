@@ -276,6 +276,7 @@ func (g *Generator) Execute() {
 
 var disableLog bool
 
+// DisableGenerateLog  disable generate log
 func DisableGenerateLog() {
 	disableLog = true
 }
