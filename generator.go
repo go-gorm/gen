@@ -85,6 +85,7 @@ func (i *genInfo) methodInGenInfo(m *generate.InterfaceMethod) bool {
 	return false
 }
 
+// Logger  gen logger interface
 type Logger interface {
 	Println(v ...any)
 }
