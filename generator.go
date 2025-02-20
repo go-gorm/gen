@@ -55,9 +55,10 @@ func NewGenerator(cfg Config) *Generator {
 
 	return &Generator{
 		Config: cfg,
-		logger: log.Default(),
 		Data:   make(map[string]*genInfo),
 		models: make(map[string]*generate.QueryStructMeta),
+
+		logger: log.Default(),
 	}
 }
 
