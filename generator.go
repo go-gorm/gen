@@ -93,9 +93,10 @@ type Logger interface {
 // Generator code generator
 type Generator struct {
 	Config
-	logger Logger
 	Data   map[string]*genInfo                  //gen query data
 	models map[string]*generate.QueryStructMeta //gen model data
+
+	logger Logger
 }
 
 func (g *Generator) SetLogger(logger Logger) {
