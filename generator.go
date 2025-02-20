@@ -55,6 +55,7 @@ func NewGenerator(cfg Config) *Generator {
 
 	return &Generator{
 		Config: cfg,
+		logger: log.Default(),
 		Data:   make(map[string]*genInfo),
 		models: make(map[string]*generate.QueryStructMeta),
 	}
@@ -84,12 +85,20 @@ func (i *genInfo) methodInGenInfo(m *generate.InterfaceMethod) bool {
 	return false
 }
 
+type Logger interface {
+	Println(v ...any)
+}
+
 // Generator code generator
 type Generator struct {
 	Config
-
+	logger Logger
 	Data   map[string]*genInfo                  //gen query data
 	models map[string]*generate.QueryStructMeta //gen model data
+}
+
+func (g *Generator) SetLogger(logger Logger) {
+	g.logger = logger
 }
 
 // UseDB set db connection
@@ -276,12 +285,9 @@ func (g *Generator) Execute() {
 
 // info logger
 func (g *Generator) info(logInfos ...string) {
-	if g.DisableGenLog {
-		return
-	}
 	for _, l := range logInfos {
 		g.db.Logger.Info(context.Background(), l)
-		log.Println(l)
+		g.logger.Println(l)
 	}
 }
 
