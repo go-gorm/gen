@@ -274,16 +274,9 @@ func (g *Generator) Execute() {
 	g.info("Generate code done.")
 }
 
-var disableLog bool
-
-// DisableGenerateLog  disable generate log
-func DisableGenerateLog() {
-	disableLog = true
-}
-
 // info logger
 func (g *Generator) info(logInfos ...string) {
-	if disableLog {
+	if g.DisableGenLog {
 		return
 	}
 	for _, l := range logInfos {

@@ -44,6 +44,8 @@ type Config struct {
 
 	Mode GenerateMode // generate mode
 
+	DisableGenLog bool // disable gen log
+
 	queryPkgName   string // generated query code's package name
 	modelPkgPath   string // model pkg path in target project
 	dbNameOpts     []model.SchemaNameOpt
