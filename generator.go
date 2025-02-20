@@ -100,6 +100,7 @@ type Generator struct {
 	logger Logger
 }
 
+// SetLogger  set gen logger
 func (g *Generator) SetLogger(logger Logger) {
 	g.logger = logger
 }
