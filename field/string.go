@@ -44,8 +44,8 @@ func (field Chars[T]) Regexp(value string) Expr {
 	return field.regexp(value)
 }
 
-// NotRegxp ...
-func (field Chars[T]) NotRegxp(value string) Expr {
+// NotRegexp ...
+func (field Chars[T]) NotRegexp(value string) Expr {
 	return expr{e: clause.Not(field.Regexp(value).expression())}
 }
 
