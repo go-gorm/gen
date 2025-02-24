@@ -315,7 +315,7 @@ func TestExpr_Build(t *testing.T) {
 			Result:       "`name` REGEXP ?",
 		},
 		{
-			Expr:         field.NewString("", "name").NotRegxp(".*"),
+			Expr:         field.NewString("", "name").NotRegexp(".*"),
 			ExpectedVars: []interface{}{".*"},
 			Result:       "NOT `name` REGEXP ?",
 		},
