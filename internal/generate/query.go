@@ -65,6 +65,9 @@ func (b *QueryStructMeta) parseStruct(st interface{}) error {
 			CustomGenType: fp.GetFieldGenType(f),
 			ColumnComment: f.Comment,
 		}
+		if len(f.EmbeddedBindNames) > 1 {
+			gf.Name = strings.Join(f.EmbeddedBindNames, "")
+		}
 		if gf.ColumnComment == "" {
 			gf.ColumnComment = f.TagSettings["COMMENT"]
 		}
