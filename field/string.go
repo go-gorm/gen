@@ -164,7 +164,7 @@ func (field String) Substring(params ...int) String {
 	}}}
 }
 
-// Substr SUBSTR is a synonym for SUBSTRING 
+// Substr SUBSTR is a synonym for SUBSTRING
 // https://dev.mysql.com/doc/refman/8.4/en/string-functions.html#function_substring
 func (field String) Substr(params ...int) String {
 	if len(params) == 0 {
@@ -318,4 +318,28 @@ func (field Bytes) toSlice(values [][]byte) []interface{} {
 		slice[i] = v
 	}
 	return slice
+}
+
+type PgSQLArrayOp string
+
+const (
+	PgSQLArrayOpEq          PgSQLArrayOp = "="
+	PgSQLArrayOpNeq         PgSQLArrayOp = "<>"
+	PgSQLArrayOpLt          PgSQLArrayOp = "<"
+	PgSQLArrayOpLte         PgSQLArrayOp = "<="
+	PgSQLArrayOpGt          PgSQLArrayOp = ">"
+	PgSQLArrayOpGte         PgSQLArrayOp = ">="
+	PgSQLArrayOpContains    PgSQLArrayOp = "@>"
+	PgSQLArrayOpContainedBy PgSQLArrayOp = "<@"
+	PgSQLArrayOpOverlap     PgSQLArrayOp = "&&"
+	PgSQLArrayOpConcat      PgSQLArrayOp = "||"
+)
+
+// PgSQLArrayOperate values is like '{1, 2, 3}'
+
+func (field String) PgSQLArrayOperate(op PgSQLArrayOp, values string) Expr {
+	return expr{e: clause.Expr{
+		SQL:  fmt.Sprintf("? %s ?", op),
+		Vars: []interface{}{field.RawExpr(), values},
+	}}
 }
