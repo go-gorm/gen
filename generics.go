@@ -72,14 +72,16 @@ type IGenericsDo[T any, E any] interface {
 	Returning(value interface{}, columns ...string) T
 	UnderlyingDB() *gorm.DB
 	schema.Tabler
-	GetInstance(do Dao) T
 	ToSQL(queryFn func(T) T) string
+}
+type IWithDO[T any] interface {
+	WithDO(do Dao) T
 }
 
 // GenericsDo base impl of IGenericsDo
 type GenericsDo[T IGenericsDo[T, E], E any] struct {
 	DO
-	RealDO T
+	IWithDO[T]
 }
 
 // Debug ...
@@ -364,5 +366,5 @@ func (b GenericsDo[T, E]) ToSQL(queryFn func(T) T) string {
 }
 
 func (b *GenericsDo[T, E]) withDO(do Dao) T {
-	return b.RealDO.GetInstance(do)
+	return b.WithDO(do)
 }

@@ -22,7 +22,7 @@ import (
 func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 	_user := user{}
 
-	_user.userDo.RealDO = &_user.userDo
+	_user.userDo.IWithDO = &_user.userDo
 
 	_user.userDo.UseDB(db, opts...)
 	_user.userDo.UseModel(&model.User{})
@@ -165,10 +165,10 @@ type IUserDo interface {
 	ColumnSearch(name string, names []string) (result []*model.User)
 }
 
-func (u *userDo) GetInstance(do gen.Dao) IUserDo {
+func (u *userDo) WithDO(do gen.Dao) IUserDo {
 	_r := &userDo{}
 	_r.DO = *do.(*gen.DO)
-	_r.RealDO = _r
+	_r.IWithDO = _r
 	return _r
 }
 

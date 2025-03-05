@@ -29,10 +29,10 @@ func ({{.S}} {{.TargetStruct}}Do){{.FuncSign}}{
 
 // CRUDGenericMethod generic CRUD method
 const CRUDGenericMethod = `
-func ({{.S}} *{{.QueryStructName}}Do) GetInstance(do gen.Dao) {{.ReturnObject}} {
+func ({{.S}} *{{.QueryStructName}}Do) WithDO(do gen.Dao) {{.ReturnObject}} {
 	_r := &{{.QueryStructName}}Do{}
 	_r.DO = *do.(*gen.DO)
-	_r.RealDO=_r
+	_r.IWithDO = _r
 	return _r
 }
 `
