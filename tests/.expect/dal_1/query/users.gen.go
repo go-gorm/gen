@@ -127,6 +127,11 @@ func (u user) replaceDB(db *gorm.DB) user {
 	return u
 }
 
+func (u user) clauses(conds ...clause.Expression) user {
+	u.userDo.ReplaceDB(u.userDo.UnderlyingDB().Clauses(conds...))
+	return u
+}
+
 type userDo struct{ gen.DO }
 
 func (u userDo) Debug() *userDo {

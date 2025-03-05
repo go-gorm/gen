@@ -174,6 +174,11 @@ func (p person) replaceDB(db *gorm.DB) person {
 	return p
 }
 
+func (p person) clauses(conds ...clause.Expression) person {
+	p.personDo.ReplaceDB(p.personDo.UnderlyingDB().Clauses(conds...))
+	return p
+}
+
 type personDo struct{ gen.DO }
 
 func (p personDo) Debug() *personDo {

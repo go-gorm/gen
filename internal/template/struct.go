@@ -8,7 +8,7 @@ const (
 		{{.QueryStructName}}Do
 		` + fields + `
 	}
-	` + tableMethod + asMethond + updateFieldMethod + getFieldMethod + fillFieldMapMethod + cloneMethod + replaceMethod + relationship + defineMethodStruct
+	` + tableMethod + asMethond + updateFieldMethod + getFieldMethod + fillFieldMapMethod + cloneMethod + replaceMethod + clausesMethod + relationship + defineMethodStruct
 
 	// TableQueryStructWithContext table query struct with context
 	TableQueryStructWithContext = createMethod + `
@@ -27,7 +27,7 @@ const (
 
 	func ({{.S}} {{.QueryStructName}}) Columns(cols ...field.Expr) gen.Columns { return {{.S}}.{{.QueryStructName}}Do.Columns(cols...) }
 
-	` + getFieldMethod + fillFieldMapMethod + cloneMethod + replaceMethod + relationship + defineMethodStruct
+	` + getFieldMethod + fillFieldMapMethod + cloneMethod + replaceMethod + clausesMethod + relationship + defineMethodStruct
 
 	// TableQueryIface table query interface
 	TableQueryIface = defineDoInterface
@@ -114,6 +114,12 @@ func ({{.S}} {{.QueryStructName}}) clone(db *gorm.DB) {{.QueryStructName}} {
 	replaceMethod = `
 func ({{.S}} {{.QueryStructName}}) replaceDB(db *gorm.DB) {{.QueryStructName}} {
 	{{.S}}.{{.QueryStructName}}Do.ReplaceDB(db)
+	return {{.S}}
+}
+`
+	clausesMethod = `
+func ({{.S}} {{.QueryStructName}}) clauses(conds ...clause.Expression) {{.QueryStructName}} {
+	{{.S}}.{{.QueryStructName}}Do.ReplaceDB({{.S}}.{{.QueryStructName}}Do.UnderlyingDB().Clauses(conds...))
 	return {{.S}}
 }
 `

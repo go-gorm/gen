@@ -49,11 +49,11 @@ func (q *Query) clone(db *gorm.DB) *Query {
 }
 
 func (q *Query) ReadDB() *Query {
-	return q.ReplaceDB(q.db.Clauses(dbresolver.Read))
+	return q.Clauses(dbresolver.Read)
 }
 
 func (q *Query) WriteDB() *Query {
-	return q.ReplaceDB(q.db.Clauses(dbresolver.Write))
+	return q.Clauses(dbresolver.Write)
 }
 
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
@@ -61,6 +61,16 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		db: db,
 		{{range $name,$d :=.Data -}}
 		{{$d.ModelStructName}}: q.{{$d.ModelStructName}}.replaceDB(db),
+		{{end}}
+	}
+}
+
+
+func (q *Query) Clauses(conds ...clause.Expression) *Query {
+	return &Query{
+		db: q.db.Clauses(conds...),
+		{{range $name,$d :=.Data -}}
+		{{$d.ModelStructName}}: q.{{$d.ModelStructName}}.clauses(conds...),
 		{{end}}
 	}
 }
