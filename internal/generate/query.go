@@ -58,12 +58,21 @@ func (b *QueryStructMeta) parseStruct(st interface{}) error {
 		fp = fps
 	}
 	for _, f := range stmt.Schema.Fields {
-		b.appendOrUpdateField(&model.Field{
+		gf := &model.Field{
 			Name:          f.Name,
 			Type:          b.getFieldRealType(f.FieldType),
 			ColumnName:    f.DBName,
 			CustomGenType: fp.GetFieldGenType(f),
-		})
+			ColumnComment: f.Comment,
+		}
+		if len(f.EmbeddedBindNames) > 1 {
+			gf.Name = strings.Join(f.EmbeddedBindNames, "")
+		}
+		if gf.ColumnComment == "" {
+			gf.ColumnComment = f.TagSettings["COMMENT"]
+		}
+		gf.MultilineComment = strings.Contains(gf.ColumnComment, "\n")
+		b.appendOrUpdateField(gf)
 	}
 	for _, r := range ParseStructRelationShip(&stmt.Schema.Relationships) {
 		r := r
@@ -186,16 +195,12 @@ func (b *QueryStructMeta) ReviseDIYMethod() error {
 		}
 		method.Receiver.Package = ""
 		method.Receiver.Type = b.ModelStructName
+		b.pasreTableName(method)
 		methods = append(methods, method)
 		methodMap[method.MethodName] = true
 	}
 	if tableName == nil {
 		methods = append(methods, parser.DefaultMethodTableName(b.ModelStructName))
-	} else {
-		// e.g. return "@@table" => return TableNameUser
-		tableName.Body = strings.ReplaceAll(tableName.Body, "\"@@table\"", "TableName"+b.ModelStructName)
-		// e.g. return "t_@@table" => return "t_user"
-		tableName.Body = strings.ReplaceAll(tableName.Body, "@@table", b.TableName)
 	}
 	b.ModelMethods = methods
 
@@ -204,7 +209,16 @@ func (b *QueryStructMeta) ReviseDIYMethod() error {
 	}
 	return nil
 }
+func (b *QueryStructMeta) pasreTableName(method *parser.Method) {
+	if method == nil || method.Body == "" || !strings.Contains(method.Body, "@@table") {
+		return
+	}
+	// e.g. return "@@table" => return TableNameUser
+	method.Body = strings.ReplaceAll(method.Body, "\"@@table\"", "TableName"+b.ModelStructName)
+	// e.g. return "t_@@table" => return "t_user"
+	method.Body = strings.ReplaceAll(method.Body, "@@table", b.TableName)
 
+}
 func (b *QueryStructMeta) addMethodFromAddMethodOpt(methods ...interface{}) *QueryStructMeta {
 	for _, method := range methods {
 		modelMethods, err := parser.GetModelMethod(method)

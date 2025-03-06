@@ -74,8 +74,8 @@ func (field String) Regexp(value string) Expr {
 	return field.regexp(value)
 }
 
-// NotRegxp ...
-func (field String) NotRegxp(value string) Expr {
+// NotRegexp ...
+func (field String) NotRegexp(value string) Expr {
 	return expr{e: clause.Not(field.Regexp(value).expression())}
 }
 
@@ -258,8 +258,8 @@ func (field Bytes) Regexp(value string) Expr {
 	return field.regexp(value)
 }
 
-// NotRegxp ...
-func (field Bytes) NotRegxp(value string) Expr {
+// NotRegexp ...
+func (field Bytes) NotRegexp(value string) Expr {
 	return Not(field.Regexp(value))
 }
 
