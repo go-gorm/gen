@@ -8,6 +8,7 @@ import (
 	"log"
 	"path"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -250,6 +251,7 @@ func (p *Param) IsBaseType() bool {
 }
 
 func (p *Param) astGetParamType(param *ast.Field) {
+	fmt.Println("astGetParamType", param.Type, reflect.TypeOf(param), reflect.ValueOf(param))
 	switch v := param.Type.(type) {
 	case *ast.Ident:
 		p.Type = v.Name
@@ -299,7 +301,7 @@ func (p *Param) astGetEltType(expr ast.Expr) {
 		p.astGetEltType(v.Elt)
 		p.Type = "[]" + p.Type
 	case *ast.IndexExpr:
-		p.Type = astGetType(v.X)
+		p.astGetEltType(v.X)
 	default:
 		log.Fatalf("unknow param type: %+v", v)
 	}
