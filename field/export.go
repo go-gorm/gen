@@ -32,8 +32,12 @@ func NewField(table, column string, opts ...Option) Field {
 	return Field{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
-// NewFieldRaw create new field by native sql
-func NewFieldRaw(rawSQL string, vars ...interface{}) Field {
+// NewUnsafeFieldRaw create new field by native sql
+//
+// Warning: Using NewUnsafeFieldRaw with raw SQL exposes your application to SQL injection vulnerabilities.
+// Always validate/sanitize inputs and prefer parameterized queries or NewField methods for field construction.
+// Use this low-level function only when absolutely necessary, and ensure any embedded values are properly escaped.
+func NewUnsafeFieldRaw(rawSQL string, vars ...interface{}) Field {
 	return Field{expr: expr{e: clause.Expr{SQL: rawSQL, Vars: vars}}}
 }
 
