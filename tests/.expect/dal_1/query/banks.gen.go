@@ -106,6 +106,11 @@ func (b bank) replaceDB(db *gorm.DB) bank {
 	return b
 }
 
+func (b bank) clauses(conds ...clause.Expression) bank {
+	b.bankDo.ReplaceDB(b.bankDo.UnderlyingDB().Clauses(conds...))
+	return b
+}
+
 type bankDo struct{ gen.DO }
 
 func (b bankDo) Debug() *bankDo {

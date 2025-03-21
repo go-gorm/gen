@@ -110,6 +110,11 @@ func (c customer) replaceDB(db *gorm.DB) customer {
 	return c
 }
 
+func (c customer) clauses(conds ...clause.Expression) customer {
+	c.customerDo.ReplaceDB(c.customerDo.UnderlyingDB().Clauses(conds...))
+	return c
+}
+
 type customerDo struct{ gen.DO }
 
 func (c customerDo) Debug() *customerDo {
