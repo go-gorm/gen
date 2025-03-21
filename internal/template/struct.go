@@ -252,6 +252,11 @@ func (a {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}) Model(m *{{$.S
 	return &{{$.QueryStructName}}{{$relationship}}{{$relation.Name}}Tx{a.db.Model(m).Association(a.Name())}
 }
 
+func (a {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}) Unscoped() *{{$.QueryStructName}}{{$relationship}}{{$relation.Name}} {
+	a.db = a.db.Unscoped()
+	return &a
+}
+
 `
 	relationTx = `
 type {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}Tx struct{ tx *gorm.Association }
@@ -290,6 +295,11 @@ func (a {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}Tx) Clear() erro
 
 func (a {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}Tx) Count() int64 {
 	return a.tx.Count()
+}
+
+func (a {{$.QueryStructName}}{{$relationship}}{{$relation.Name}}Tx) Unscoped() *{{$.QueryStructName}}{{$relationship}}{{$relation.Name}}Tx {
+	a.tx = a.tx.Unscoped()
+	return &a
 }
 `
 )
