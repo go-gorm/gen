@@ -50,7 +50,11 @@ var (
 
 // UseDB specify a db connection(*gorm.DB)
 func (d *DO) UseDB(db *gorm.DB, opts ...DOOption) {
-	db = db.Session(&gorm.Session{Context: context.Background()})
+	ctx := db.Statement.Context
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	db = db.Session(&gorm.Session{Context: ctx})
 	d.db = db
 	config := &DOConfig{}
 	for _, opt := range opts {
