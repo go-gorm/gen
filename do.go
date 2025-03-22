@@ -50,9 +50,9 @@ var (
 
 // UseDB specify a db connection(*gorm.DB)
 func (d *DO) UseDB(db *gorm.DB, opts ...DOOption) {
-	ctx := db.Statement.Context
-	if ctx == nil {
-		ctx = context.Background()
+	ctx := context.Background()
+	if db.Statement != nil && db.Statement.Context != nil {
+		ctx = db.Statement.Context
 	}
 	db = db.Session(&gorm.Session{Context: ctx})
 	d.db = db
