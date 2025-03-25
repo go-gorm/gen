@@ -254,25 +254,32 @@ func isStructType(data reflect.Value) bool {
 		(data.Kind() == reflect.Ptr && data.Elem().Kind() == reflect.Struct)
 }
 
-func pullRelationShip(cache map[string]bool, relationships []*schema.Relationship) []field.Relation {
+func pullRelationShip(cache map[string][]field.Relation, relationships []*schema.Relationship) []field.Relation {
 	if len(relationships) == 0 {
 		return nil
 	}
 	result := make([]field.Relation, len(relationships))
-	for i, relationship := range relationships {
-		var childRelations []field.Relation
+
+	for _, relationship := range relationships {
 		varType := strings.TrimLeft(relationship.Field.FieldType.String(), "[]*")
-		if !cache[varType] {
-			cache[varType] = true
-			childRelations = pullRelationShip(cache, append(append(append(append(
+		_, ok := cache[varType]
+		if !ok {
+			cache[varType] = []field.Relation{}
+			childRelations := pullRelationShip(cache, append(append(append(append(
 				make([]*schema.Relationship, 0, 4),
 				relationship.FieldSchema.Relationships.BelongsTo...),
 				relationship.FieldSchema.Relationships.HasOne...),
 				relationship.FieldSchema.Relationships.HasMany...),
 				relationship.FieldSchema.Relationships.Many2Many...),
 			)
+			cache[varType] = childRelations
 		}
-		result[i] = *field.NewRelationWithType(field.RelationshipType(relationship.Type), relationship.Name, varType, childRelations...)
+	}
+
+	for i, relationship := range relationships {
+		varType := strings.TrimLeft(relationship.Field.FieldType.String(), "[]*")
+		cached := cache[varType]
+		result[i] = *field.NewRelationWithType(field.RelationshipType(relationship.Type), relationship.Name, varType, cached...)
 	}
 	return result
 }
