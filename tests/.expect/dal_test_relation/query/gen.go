@@ -20,8 +20,6 @@ var (
 	Bank       *bank
 	CreditCard *creditCard
 	Customer   *customer
-	Person     *person
-	User       *user
 )
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
@@ -29,8 +27,6 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	Bank = &Q.Bank
 	CreditCard = &Q.CreditCard
 	Customer = &Q.Customer
-	Person = &Q.Person
-	User = &Q.User
 }
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
@@ -39,8 +35,6 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		Bank:       newBank(db, opts...),
 		CreditCard: newCreditCard(db, opts...),
 		Customer:   newCustomer(db, opts...),
-		Person:     newPerson(db, opts...),
-		User:       newUser(db, opts...),
 	}
 }
 
@@ -50,8 +44,6 @@ type Query struct {
 	Bank       bank
 	CreditCard creditCard
 	Customer   customer
-	Person     person
-	User       user
 }
 
 func (q *Query) Available() bool { return q.db != nil }
@@ -62,8 +54,6 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		Bank:       q.Bank.clone(db),
 		CreditCard: q.CreditCard.clone(db),
 		Customer:   q.Customer.clone(db),
-		Person:     q.Person.clone(db),
-		User:       q.User.clone(db),
 	}
 }
 
@@ -81,8 +71,6 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		Bank:       q.Bank.replaceDB(db),
 		CreditCard: q.CreditCard.replaceDB(db),
 		Customer:   q.Customer.replaceDB(db),
-		Person:     q.Person.replaceDB(db),
-		User:       q.User.replaceDB(db),
 	}
 }
 
@@ -90,8 +78,6 @@ type queryCtx struct {
 	Bank       *bankDo
 	CreditCard *creditCardDo
 	Customer   *customerDo
-	Person     *personDo
-	User       *userDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
@@ -99,8 +85,6 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		Bank:       q.Bank.WithContext(ctx),
 		CreditCard: q.CreditCard.WithContext(ctx),
 		Customer:   q.Customer.WithContext(ctx),
-		Person:     q.Person.WithContext(ctx),
-		User:       q.User.WithContext(ctx),
 	}
 }
 
