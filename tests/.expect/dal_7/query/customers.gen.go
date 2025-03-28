@@ -6,6 +6,7 @@ package query
 
 import (
 	"context"
+	"database/sql"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -164,6 +165,11 @@ func (a customerHasOneBank) Model(m *model.Customer) *customerHasOneBankTx {
 	return &customerHasOneBankTx{a.db.Model(m).Association(a.Name())}
 }
 
+func (a customerHasOneBank) Unscoped() *customerHasOneBank {
+	a.db = a.db.Unscoped()
+	return &a
+}
+
 type customerHasOneBankTx struct{ tx *gorm.Association }
 
 func (a customerHasOneBankTx) Find() (result *model.Bank, err error) {
@@ -202,6 +208,11 @@ func (a customerHasOneBankTx) Count() int64 {
 	return a.tx.Count()
 }
 
+func (a customerHasOneBankTx) Unscoped() *customerHasOneBankTx {
+	a.tx = a.tx.Unscoped()
+	return &a
+}
+
 type customerHasManyCreditCards struct {
 	db *gorm.DB
 
@@ -233,6 +244,11 @@ func (a customerHasManyCreditCards) Session(session *gorm.Session) *customerHasM
 
 func (a customerHasManyCreditCards) Model(m *model.Customer) *customerHasManyCreditCardsTx {
 	return &customerHasManyCreditCardsTx{a.db.Model(m).Association(a.Name())}
+}
+
+func (a customerHasManyCreditCards) Unscoped() *customerHasManyCreditCards {
+	a.db = a.db.Unscoped()
+	return &a
 }
 
 type customerHasManyCreditCardsTx struct{ tx *gorm.Association }
@@ -271,6 +287,11 @@ func (a customerHasManyCreditCardsTx) Clear() error {
 
 func (a customerHasManyCreditCardsTx) Count() int64 {
 	return a.tx.Count()
+}
+
+func (a customerHasManyCreditCardsTx) Unscoped() *customerHasManyCreditCardsTx {
+	a.tx = a.tx.Unscoped()
+	return &a
 }
 
 type customerDo struct{ gen.DO }
@@ -330,6 +351,8 @@ type ICustomerDo interface {
 	FirstOrCreate() (*model.Customer, error)
 	FindByPage(offset int, limit int) (result []*model.Customer, count int64, err error)
 	ScanByPage(result interface{}, offset int, limit int) (count int64, err error)
+	Rows() (*sql.Rows, error)
+	Row() *sql.Row
 	Scan(result interface{}) (err error)
 	Returning(value interface{}, columns ...string) ICustomerDo
 	UnderlyingDB() *gorm.DB
