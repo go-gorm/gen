@@ -76,7 +76,7 @@ func (cfg *Config) GetNames() (tableName, structName, fileName string) {
 	if cfg.TableNameNS != nil {
 		tableName = cfg.TableNameNS(tableName)
 	}
-	if !strings.HasPrefix(tableName, cfg.TablePrefix) {
+	if tableName != "" && !strings.HasPrefix(tableName, cfg.TablePrefix) {
 		tableName = cfg.TablePrefix + tableName
 	}
 
