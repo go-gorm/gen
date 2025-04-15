@@ -671,7 +671,7 @@ func (d *DO) FirstOrCreate() (result interface{}, err error) {
 
 // Update ...
 func (d *DO) Update(column field.Expr, value interface{}) (info ResultInfo, err error) {
-	tx := d.db.Model(d.newResultPointer())
+	tx := d.db
 	columnStr := column.BuildColumn(d.db.Statement, field.WithoutQuote).String()
 
 	var result *gorm.DB
@@ -692,7 +692,7 @@ func (d *DO) UpdateSimple(columns ...field.AssignExpr) (info ResultInfo, err err
 		return
 	}
 
-	result := d.db.Model(d.newResultPointer()).Clauses(d.assignSet(columns)).Omit("*").Updates(map[string]interface{}{})
+	result := d.db.Clauses(d.assignSet(columns)).Omit("*").Updates(map[string]interface{}{})
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
@@ -708,27 +708,22 @@ func (d *DO) Updates(value interface{}) (info ResultInfo, err error) {
 	}
 
 	tx := d.db.Model(d.newResultPointer())
-	if d.backfillData != nil {
-		tx = tx.Model(d.backfillData)
-	}
 	switch {
-	case valTyp != d.modelType: // different type with model
+	case valTyp == d.modelType: // use value mode
 		if d.backfillData == nil {
-			tx = tx.Model(d.newResultPointer())
+			tx = tx.Model(value)
 		}
 	case rawTyp.Kind() == reflect.Ptr: // ignore ptr value
-	default: // for fixing "reflect.Value.Addr of unaddressable value" panic
-		ptr := reflect.New(d.modelType)
-		ptr.Elem().Set(reflect.ValueOf(value))
-		value = ptr.Interface()
+	default:
 	}
+
 	result := tx.Updates(value)
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
 // UpdateColumn ...
 func (d *DO) UpdateColumn(column field.Expr, value interface{}) (info ResultInfo, err error) {
-	tx := d.db.Model(d.newResultPointer())
+	tx := d.db
 	columnStr := column.BuildColumn(d.db.Statement, field.WithoutQuote).String()
 
 	var result *gorm.DB
@@ -749,13 +744,13 @@ func (d *DO) UpdateColumnSimple(columns ...field.AssignExpr) (info ResultInfo, e
 		return
 	}
 
-	result := d.db.Model(d.newResultPointer()).Clauses(d.assignSet(columns)).Omit("*").UpdateColumns(map[string]interface{}{})
+	result := d.db.Clauses(d.assignSet(columns)).Omit("*").UpdateColumns(map[string]interface{}{})
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
 // UpdateColumns ...
 func (d *DO) UpdateColumns(value interface{}) (info ResultInfo, err error) {
-	result := d.db.Model(d.newResultPointer()).UpdateColumns(value)
+	result := d.db.UpdateColumns(value)
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
@@ -782,7 +777,7 @@ func (d *DO) assignSet(exprs []field.AssignExpr) (set clause.Set) {
 func (d *DO) Delete(models ...interface{}) (info ResultInfo, err error) {
 	var result *gorm.DB
 	if len(models) == 0 || reflect.ValueOf(models[0]).Len() == 0 {
-		result = d.db.Model(d.newResultPointer()).Delete(reflect.New(d.modelType).Interface())
+		result = d.db.Delete(reflect.New(d.modelType).Interface())
 	} else {
 		targets := reflect.MakeSlice(reflect.SliceOf(reflect.PtrTo(d.modelType)), 0, len(models))
 		value := reflect.ValueOf(models[0])
@@ -796,32 +791,32 @@ func (d *DO) Delete(models ...interface{}) (info ResultInfo, err error) {
 
 // Count ...
 func (d *DO) Count() (count int64, err error) {
-	return count, d.db.Session(&gorm.Session{}).Model(d.newResultPointer()).Count(&count).Error
+	return count, d.db.Session(&gorm.Session{}).Count(&count).Error
 }
 
 // Row ...
 func (d *DO) Row() *sql.Row {
-	return d.db.Model(d.newResultPointer()).Row()
+	return d.db.Row()
 }
 
 // Rows ...
 func (d *DO) Rows() (*sql.Rows, error) {
-	return d.db.Model(d.newResultPointer()).Rows()
+	return d.db.Rows()
 }
 
 // Scan ...
 func (d *DO) Scan(dest interface{}) error {
-	return d.db.Model(d.newResultPointer()).Scan(dest).Error
+	return d.db.Scan(dest).Error
 }
 
 // Pluck ...
 func (d *DO) Pluck(column field.Expr, dest interface{}) error {
-	return d.db.Model(d.newResultPointer()).Pluck(column.ColumnName().String(), dest).Error
+	return d.db.Pluck(column.ColumnName().String(), dest).Error
 }
 
 // ScanRows ...
 func (d *DO) ScanRows(rows *sql.Rows, dest interface{}) error {
-	return d.db.Model(d.newResultPointer()).ScanRows(rows, dest)
+	return d.db.ScanRows(rows, dest)
 }
 
 // WithResult ...
