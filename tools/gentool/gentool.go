@@ -29,7 +29,7 @@ const (
 	dbClickHouse DBType = "clickhouse"
 )
 const (
-	defaultQueryPath = "./dao/query"
+	defaultQueryPath = "./dao"
 )
 
 // CmdParams is command line parameters
@@ -42,6 +42,7 @@ type CmdParams struct {
 	OutFile           string   `yaml:"outFile"`           // query code file name, default: gen.go
 	WithUnitTest      bool     `yaml:"withUnitTest"`      // generate unit test for query code
 	ModelPkgName      string   `yaml:"modelPkgName"`      // generated model code's package name
+	QueryPkgName      string   `yaml:"queryPkgName"`      // generated query code's package name
 	FieldNullable     bool     `yaml:"fieldNullable"`     // generate with pointer when field is nullable
 	FieldCoverable    bool     `yaml:"fieldCoverable"`    // generate with pointer when field has default value
 	FieldWithIndexTag bool     `yaml:"fieldWithIndexTag"` // generate field with gorm index tag
@@ -149,6 +150,7 @@ func argParse() *CmdParams {
 	outFile := flag.String("outFile", "", "query code file name, default: gen.go")
 	withUnitTest := flag.Bool("withUnitTest", false, "generate unit test for query code")
 	modelPkgName := flag.String("modelPkgName", "", "generated model code's package name")
+	queryPkgName := flag.String("queryPkgName", "", "generated query code's package name")
 	fieldNullable := flag.Bool("fieldNullable", false, "generate with pointer when field is nullable")
 	fieldCoverable := flag.Bool("fieldCoverable", false, "generate with pointer when field has default value")
 	fieldWithIndexTag := flag.Bool("fieldWithIndexTag", false, "generate field with gorm index tag")
@@ -186,6 +188,9 @@ func argParse() *CmdParams {
 	if *modelPkgName != "" {
 		cmdParse.ModelPkgName = *modelPkgName
 	}
+	if *queryPkgName != "" {
+		cmdParse.QueryPkgName = *queryPkgName
+	}
 	if *fieldNullable {
 		cmdParse.FieldNullable = *fieldNullable
 	}
@@ -220,6 +225,7 @@ func main() {
 		OutPath:           config.OutPath,
 		OutFile:           config.OutFile,
 		ModelPkgPath:      config.ModelPkgName,
+		QueryPkgPath:      config.QueryPkgName,
 		WithUnitTest:      config.WithUnitTest,
 		FieldNullable:     config.FieldNullable,
 		FieldCoverable:    config.FieldCoverable,

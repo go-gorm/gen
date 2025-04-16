@@ -13,13 +13,15 @@ database:
   # only generate models (without query file)
   onlyModel : false
   # specify a directory for output
-  outPath :  "./dao/query"
+  outPath :  "./dao"
   # query code file name, default: gen.go
   outFile :  ""
   # generate unit test for query code
   withUnitTest  : false
   # generated model code's package name
-  modelPkgName  : ""
+  modelPkgName  : "model"
+  # generated query code's package name
+  queryPkgName  : "query"
   # generate with pointer when field is nullable
   fieldNullable : false
   # generate with pointer when field has default value
