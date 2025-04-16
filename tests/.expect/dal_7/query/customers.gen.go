@@ -17,7 +17,7 @@ import (
 
 	"gorm.io/plugin/dbresolver"
 
-	"gorm.io/gen/tests/.gen/dal_4/model"
+	"gorm.io/gen/tests/.gen/dal_7/model"
 )
 
 func newCustomer(db *gorm.DB, opts ...gen.DOOption) customer {
@@ -33,6 +33,17 @@ func newCustomer(db *gorm.DB, opts ...gen.DOOption) customer {
 	_customer.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_customer.DeletedAt = field.NewField(tableName, "deleted_at")
 	_customer.BankID = field.NewInt64(tableName, "bank_id")
+	_customer.Bank = customerHasOneBank{
+		db: db.Session(&gorm.Session{}),
+
+		RelationField: field.NewRelation("Bank", "model.Bank"),
+	}
+
+	_customer.CreditCards = customerHasManyCreditCards{
+		db: db.Session(&gorm.Session{}),
+
+		RelationField: field.NewRelation("CreditCards", "model.CreditCard"),
+	}
 
 	_customer.fillFieldMap()
 
@@ -48,6 +59,9 @@ type customer struct {
 	UpdatedAt field.Time
 	DeletedAt field.Field
 	BankID    field.Int64
+	Bank      customerHasOneBank
+
+	CreditCards customerHasManyCreditCards
 
 	fieldMap map[string]field.Expr
 }
@@ -93,22 +107,191 @@ func (c *customer) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (c *customer) fillFieldMap() {
-	c.fieldMap = make(map[string]field.Expr, 5)
+	c.fieldMap = make(map[string]field.Expr, 7)
 	c.fieldMap["id"] = c.ID
 	c.fieldMap["created_at"] = c.CreatedAt
 	c.fieldMap["updated_at"] = c.UpdatedAt
 	c.fieldMap["deleted_at"] = c.DeletedAt
 	c.fieldMap["bank_id"] = c.BankID
+
 }
 
 func (c customer) clone(db *gorm.DB) customer {
 	c.customerDo.ReplaceConnPool(db.Statement.ConnPool)
+	c.Bank.db = db.Session(&gorm.Session{Initialized: true})
+	c.Bank.db.Statement.ConnPool = db.Statement.ConnPool
+	c.CreditCards.db = db.Session(&gorm.Session{Initialized: true})
+	c.CreditCards.db.Statement.ConnPool = db.Statement.ConnPool
 	return c
 }
 
 func (c customer) replaceDB(db *gorm.DB) customer {
 	c.customerDo.ReplaceDB(db)
+	c.Bank.db = db.Session(&gorm.Session{})
+	c.CreditCards.db = db.Session(&gorm.Session{})
 	return c
+}
+
+type customerHasOneBank struct {
+	db *gorm.DB
+
+	field.RelationField
+}
+
+func (a customerHasOneBank) Where(conds ...field.Expr) *customerHasOneBank {
+	if len(conds) == 0 {
+		return &a
+	}
+
+	exprs := make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		exprs = append(exprs, cond.BeCond().(clause.Expression))
+	}
+	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
+	return &a
+}
+
+func (a customerHasOneBank) WithContext(ctx context.Context) *customerHasOneBank {
+	a.db = a.db.WithContext(ctx)
+	return &a
+}
+
+func (a customerHasOneBank) Session(session *gorm.Session) *customerHasOneBank {
+	a.db = a.db.Session(session)
+	return &a
+}
+
+func (a customerHasOneBank) Model(m *model.Customer) *customerHasOneBankTx {
+	return &customerHasOneBankTx{a.db.Model(m).Association(a.Name())}
+}
+
+func (a customerHasOneBank) Unscoped() *customerHasOneBank {
+	a.db = a.db.Unscoped()
+	return &a
+}
+
+type customerHasOneBankTx struct{ tx *gorm.Association }
+
+func (a customerHasOneBankTx) Find() (result *model.Bank, err error) {
+	return result, a.tx.Find(&result)
+}
+
+func (a customerHasOneBankTx) Append(values ...*model.Bank) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Append(targetValues...)
+}
+
+func (a customerHasOneBankTx) Replace(values ...*model.Bank) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Replace(targetValues...)
+}
+
+func (a customerHasOneBankTx) Delete(values ...*model.Bank) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Delete(targetValues...)
+}
+
+func (a customerHasOneBankTx) Clear() error {
+	return a.tx.Clear()
+}
+
+func (a customerHasOneBankTx) Count() int64 {
+	return a.tx.Count()
+}
+
+func (a customerHasOneBankTx) Unscoped() *customerHasOneBankTx {
+	a.tx = a.tx.Unscoped()
+	return &a
+}
+
+type customerHasManyCreditCards struct {
+	db *gorm.DB
+
+	field.RelationField
+}
+
+func (a customerHasManyCreditCards) Where(conds ...field.Expr) *customerHasManyCreditCards {
+	if len(conds) == 0 {
+		return &a
+	}
+
+	exprs := make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		exprs = append(exprs, cond.BeCond().(clause.Expression))
+	}
+	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
+	return &a
+}
+
+func (a customerHasManyCreditCards) WithContext(ctx context.Context) *customerHasManyCreditCards {
+	a.db = a.db.WithContext(ctx)
+	return &a
+}
+
+func (a customerHasManyCreditCards) Session(session *gorm.Session) *customerHasManyCreditCards {
+	a.db = a.db.Session(session)
+	return &a
+}
+
+func (a customerHasManyCreditCards) Model(m *model.Customer) *customerHasManyCreditCardsTx {
+	return &customerHasManyCreditCardsTx{a.db.Model(m).Association(a.Name())}
+}
+
+func (a customerHasManyCreditCards) Unscoped() *customerHasManyCreditCards {
+	a.db = a.db.Unscoped()
+	return &a
+}
+
+type customerHasManyCreditCardsTx struct{ tx *gorm.Association }
+
+func (a customerHasManyCreditCardsTx) Find() (result []*model.CreditCard, err error) {
+	return result, a.tx.Find(&result)
+}
+
+func (a customerHasManyCreditCardsTx) Append(values ...*model.CreditCard) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Append(targetValues...)
+}
+
+func (a customerHasManyCreditCardsTx) Replace(values ...*model.CreditCard) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Replace(targetValues...)
+}
+
+func (a customerHasManyCreditCardsTx) Delete(values ...*model.CreditCard) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Delete(targetValues...)
+}
+
+func (a customerHasManyCreditCardsTx) Clear() error {
+	return a.tx.Clear()
+}
+
+func (a customerHasManyCreditCardsTx) Count() int64 {
+	return a.tx.Count()
+}
+
+func (a customerHasManyCreditCardsTx) Unscoped() *customerHasManyCreditCardsTx {
+	a.tx = a.tx.Unscoped()
+	return &a
 }
 
 type customerDo struct{ gen.DO }

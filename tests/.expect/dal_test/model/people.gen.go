@@ -16,6 +16,7 @@ const TableNamePerson = "people"
 type Person struct {
 	ID             int64          `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
 	Name           string         `gorm:"column:name" json:"name"`
+	Alias_         string         `gorm:"column:alias" json:"alias"`
 	Age            int32          `gorm:"column:age" json:"age"`
 	Flag           bool           `gorm:"column:flag" json:"flag"`
 	AnotherFlag    int32          `gorm:"column:another_flag" json:"another_flag"`
