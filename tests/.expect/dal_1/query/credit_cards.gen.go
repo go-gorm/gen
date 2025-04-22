@@ -120,6 +120,11 @@ func (c creditCard) replaceDB(db *gorm.DB) creditCard {
 	return c
 }
 
+func (c creditCard) clauses(conds ...clause.Expression) creditCard {
+	c.creditCardDo.ReplaceDB(c.creditCardDo.UnderlyingDB().Clauses(conds...))
+	return c
+}
+
 type creditCardDo struct{ gen.DO }
 
 func (c creditCardDo) Debug() *creditCardDo {

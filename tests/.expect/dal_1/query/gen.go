@@ -7,6 +7,7 @@ package query
 import (
 	"context"
 	"database/sql"
+	"gorm.io/gorm/clause"
 
 	"gorm.io/gorm"
 
@@ -68,11 +69,11 @@ func (q *Query) clone(db *gorm.DB) *Query {
 }
 
 func (q *Query) ReadDB() *Query {
-	return q.ReplaceDB(q.db.Clauses(dbresolver.Read))
+	return q.Clauses(dbresolver.Read)
 }
 
 func (q *Query) WriteDB() *Query {
-	return q.ReplaceDB(q.db.Clauses(dbresolver.Write))
+	return q.Clauses(dbresolver.Write)
 }
 
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
@@ -83,6 +84,17 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		Customer:   q.Customer.replaceDB(db),
 		Person:     q.Person.replaceDB(db),
 		User:       q.User.replaceDB(db),
+	}
+}
+
+func (q *Query) Clauses(conds ...clause.Expression) *Query {
+	return &Query{
+		db:         q.db.Clauses(conds...),
+		Bank:       q.Bank.clauses(conds...),
+		CreditCard: q.CreditCard.clauses(conds...),
+		Customer:   q.Customer.clauses(conds...),
+		Person:     q.Person.clauses(conds...),
+		User:       q.User.clauses(conds...),
 	}
 }
 
