@@ -224,7 +224,7 @@ func (g *Generator) ApplyBasic(models ...interface{}) {
 	g.ApplyInterface(func() {}, models...)
 }
 
-// ApplyInterface specifies .diy_method interfaces on structures, implment codes will be generated after calling g.Execute()
+// ApplyInterface specifies .diy_method interfaces on structures, implement codes will be generated after calling g.Execute()
 // eg: g.ApplyInterface(func(model.Method){}, model.User{}, model.Company{})
 func (g *Generator) ApplyInterface(fc interface{}, models ...interface{}) {
 	structs, err := generate.ConvertStructs(g.db, models...)
