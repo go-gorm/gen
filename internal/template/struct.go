@@ -47,7 +47,7 @@ const (
 	func new{{.ModelStructName}}(db *gorm.DB, opts ...gen.DOOption) {{.QueryStructName}} {
 		_{{.QueryStructName}} := {{.QueryStructName}}{}
 		{{if .UseGenericMode}}
-		_{{.QueryStructName}}.{{.QueryStructName}}Do.IWithDO = &_{{.QueryStructName}}.{{.QueryStructName}}Do
+		_{{.QueryStructName}}.{{.QueryStructName}}Do.IWithDO = gen.WithDOFunc[{{.ReturnObject}}](_{{.QueryStructName}}.{{.QueryStructName}}Do.withDO)
 		{{end}}
 		_{{.QueryStructName}}.{{.QueryStructName}}Do.UseDB(db,opts...)
 		_{{.QueryStructName}}.{{.QueryStructName}}Do.UseModel(&{{.StructInfo.Package}}.{{.StructInfo.Type}}{})

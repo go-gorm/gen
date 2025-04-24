@@ -368,3 +368,9 @@ func (b GenericsDo[T, E]) ToSQL(queryFn func(T) T) string {
 func (b *GenericsDo[T, E]) withDO(do Dao) T {
 	return b.WithDO(do)
 }
+
+type WithDOFunc[T any] func(do Dao) T
+
+func (b WithDOFunc[T]) WithDO(do Dao) T {
+	return b(do)
+}
