@@ -109,9 +109,9 @@ type IBankDo interface {
 	gen.IGenericsDo[IBankDo, *model.Bank]
 }
 
-func (u *bankDo) withDO(do gen.Dao) IBankDo {
+func (b *bankDo) withDO(do gen.Dao) IBankDo {
 	_r := &bankDo{}
 	_r.DO = *do.(*gen.DO)
-	_r.IWithDO = gen.WithDOFunc[IBankDo](u.withDO)
+	_r.IWithDO = gen.WithDOFunc[IBankDo](b.withDO)
 	return _r
 }
