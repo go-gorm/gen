@@ -6,9 +6,9 @@ require (
 	golang.org/x/exp v0.0.0-20240409090435-93d18d7e34b8
 	golang.org/x/tools v0.20.0
 	gorm.io/datatypes v1.2.4
-	gorm.io/gorm v1.25.11
+	gorm.io/gorm v1.25.12
 	gorm.io/hints v1.1.0
-	gorm.io/plugin/dbresolver v1.5.0
+	gorm.io/plugin/dbresolver v1.5.3
 )
 
 require (
@@ -20,5 +20,5 @@ require (
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	gorm.io/driver/mysql v1.5.6 // indirect
+	gorm.io/driver/mysql v1.5.7 // indirect
 )

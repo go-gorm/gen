@@ -30,3 +30,7 @@ func (f *function) FromUnixTime(date uint64, format string) String {
 func (f *function) Rand() String {
 	return String{genericsField[string]{expr{e: clause.Expr{SQL: "RAND()"}}}}
 }
+
+func (f *function) Random() String {
+	return String{genericsField[string]{expr{e: clause.Expr{SQL: "RANDOM()"}}}}
+}

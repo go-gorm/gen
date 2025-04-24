@@ -27,6 +27,12 @@ var (
 		}
 	}
 
+	FieldFilter = func(opt func(Field) Field) model.FilterFieldOpt {
+		return func(f *model.Field) *model.Field {
+			return opt(f)
+		}
+	}
+
 	// WithDataTypesNullType configures the types of fields to use their datatypes nullable counterparts.
 	/**
 	 *

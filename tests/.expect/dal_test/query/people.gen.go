@@ -19,16 +19,17 @@ import (
 	"gorm.io/gen/tests/.expect/dal_test/model"
 )
 
-func newPerson(db *gorm.DB) person {
+func newPerson(db *gorm.DB, opts ...gen.DOOption) person {
 	_person := person{}
 
-	_person.personDo.UseDB(db)
+	_person.personDo.UseDB(db, opts...)
 	_person.personDo.UseModel(&model.Person{})
 
 	tableName := _person.personDo.TableName()
 	_person.ALL = field.NewAsterisk(tableName)
 	_person.ID = field.NewInt64(tableName, "id")
 	_person.Name = field.NewString(tableName, "name")
+	_person.Alias_ = field.NewString(tableName, "alias")
 	_person.Age = field.NewInt32(tableName, "age")
 	_person.Flag = field.NewBool(tableName, "flag")
 	_person.AnotherFlag = field.NewInt32(tableName, "another_flag")
@@ -59,6 +60,7 @@ type person struct {
 	ALL            field.Asterisk
 	ID             field.Int64
 	Name           field.String
+	Alias_         field.String
 	Age            field.Int32
 	Flag           field.Bool
 	AnotherFlag    field.Int32
@@ -95,6 +97,7 @@ func (p *person) updateTableName(table string) *person {
 	p.ALL = field.NewAsterisk(table)
 	p.ID = field.NewInt64(table, "id")
 	p.Name = field.NewString(table, "name")
+	p.Alias_ = field.NewString(table, "alias")
 	p.Age = field.NewInt32(table, "age")
 	p.Flag = field.NewBool(table, "flag")
 	p.AnotherFlag = field.NewInt32(table, "another_flag")
@@ -125,6 +128,8 @@ func (p person) TableName() string { return p.personDo.TableName() }
 
 func (p person) Alias() string { return p.personDo.Alias() }
 
+func (p person) Columns(cols ...field.Expr) gen.Columns { return p.personDo.Columns(cols...) }
+
 func (p *person) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := p.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -135,9 +140,10 @@ func (p *person) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (p *person) fillFieldMap() {
-	p.fieldMap = make(map[string]field.Expr, 20)
+	p.fieldMap = make(map[string]field.Expr, 21)
 	p.fieldMap["id"] = p.ID
 	p.fieldMap["name"] = p.Name
+	p.fieldMap["alias"] = p.Alias_
 	p.fieldMap["age"] = p.Age
 	p.fieldMap["flag"] = p.Flag
 	p.fieldMap["another_flag"] = p.AnotherFlag
@@ -159,6 +165,11 @@ func (p *person) fillFieldMap() {
 }
 
 func (p person) clone(db *gorm.DB) person {
+	p.personDo.ReplaceConnPool(db.Statement.ConnPool)
+	return p
+}
+
+func (p person) replaceDB(db *gorm.DB) person {
 	p.personDo.ReplaceDB(db)
 	return p
 }
@@ -179,6 +190,10 @@ func (p personDo) ReadDB() *personDo {
 
 func (p personDo) WriteDB() *personDo {
 	return p.Clauses(dbresolver.Write)
+}
+
+func (p personDo) Session(config *gorm.Session) *personDo {
+	return p.withDO(p.DO.Session(config))
 }
 
 func (p personDo) Clauses(conds ...clause.Expression) *personDo {
@@ -204,6 +219,7 @@ func (p personDo) Select(conds ...field.Expr) *personDo {
 func (p personDo) Where(conds ...gen.Condition) *personDo {
 	return p.withDO(p.DO.Where(conds...))
 }
+
 func (p personDo) Order(conds ...field.Expr) *personDo {
 	return p.withDO(p.DO.Order(conds...))
 }

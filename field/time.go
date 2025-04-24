@@ -133,8 +133,8 @@ func (field Time) FromDays(value int) Time {
 	return Time{genericsField[time.Time]{expr{e: clause.Expr{SQL: fmt.Sprintf("FROM_DAYS(%d)", value)}}}}
 }
 
-// FromUnixtime equal to FROM_UNIXTIME(self)
-func (field Time) FromUnixtime(value int) Time {
+// FromUnixTime equal to FROM_UNIXTIME(self)
+func (field Time) FromUnixTime(value int) Time {
 	return Time{genericsField[time.Time]{expr{e: clause.Expr{SQL: fmt.Sprintf("FROM_UNIXTIME(%d)", value)}}}}
 }
 

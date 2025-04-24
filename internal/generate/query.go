@@ -60,12 +60,21 @@ func (b *QueryStructMeta) parseStruct(st interface{}) error {
 		fp = fps
 	}
 	for _, f := range stmt.Schema.Fields {
-		b.appendOrUpdateField(&model.Field{
+		gf := &model.Field{
 			Name:          f.Name,
 			Type:          b.getFieldRealType(f.FieldType),
 			ColumnName:    f.DBName,
 			CustomGenType: fp.GetFieldGenType(f),
-		})
+			ColumnComment: f.Comment,
+		}
+		if len(f.EmbeddedBindNames) > 1 {
+			gf.Name = strings.Join(f.EmbeddedBindNames, "")
+		}
+		if gf.ColumnComment == "" {
+			gf.ColumnComment = f.TagSettings["COMMENT"]
+		}
+		gf.MultilineComment = strings.Contains(gf.ColumnComment, "\n")
+		b.appendOrUpdateField(gf)
 	}
 	for _, r := range ParseStructRelationShip(&stmt.Schema.Relationships) {
 		r := r
