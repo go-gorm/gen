@@ -72,7 +72,7 @@ type IGenericsDo[T any, E any] interface {
 	Returning(value interface{}, columns ...string) T
 	UnderlyingDB() *gorm.DB
 	schema.Tabler
-	ToSQL(queryFn func(T) T) string
+	ToSQL(queryFn func(T)) string
 }
 type IWithDO[T any] interface {
 	WithDO(do Dao) T
@@ -357,10 +357,10 @@ func (b GenericsDo[T, E]) Delete(models ...E) (result ResultInfo, err error) {
 }
 
 // ToSQL ...
-func (b GenericsDo[T, E]) ToSQL(queryFn func(T) T) string {
-	b.db = b.db.Session(&gorm.Session{DryRun: true, SkipDefaultTransaction: true})
-	t := queryFn(b.withDO(&b.DO))
-	db := t.underlyingDB()
+func (b GenericsDo[T, E]) ToSQL(queryFn func(T)) string {
+	b.db = b.db.Session(&gorm.Session{DryRun: true, SkipDefaultTransaction: true, NewDB: true}).Table(b.TableName())
+	queryFn(b.withDO(&b.DO))
+	db := b.db
 	stmt := db.Statement
 	return db.Dialector.Explain(stmt.SQL.String(), stmt.Vars...)
 }
