@@ -111,9 +111,11 @@ func (c *Column) buildGormTag() field.GormTag {
 		}
 	}
 
-	if dtValue := c.defaultTagValue(); c.needDefaultTag(dtValue) { // cannot set default tag for primary key
+	if _, valid := c.DefaultValue(); valid {
+		dtValue := c.defaultTagValue()
 		tag.Set(field.TagKeyGormDefault, dtValue)
 	}
+
 	if comment, ok := c.Comment(); ok && comment != "" {
 		if c.multilineComment() {
 			comment = strings.ReplaceAll(comment, "\n", "\\n")
@@ -149,6 +151,9 @@ func (c *Column) defaultTagValue() string {
 	}
 	if value != "" && strings.TrimSpace(value) == "" {
 		return "'" + value + "'"
+	}
+	if value == "" {
+		return "''"
 	}
 	return value
 }
