@@ -128,6 +128,9 @@ func (c *Column) needDefaultTag(defaultTagValue string) bool {
 	if defaultTagValue == "" {
 		return false
 	}
+	if c.ScanType() == nil {
+		return c.Name() != "created_at" && c.Name() != "updated_at" && defaultTagValue != "" && defaultTagValue != "0" && defaultTagValue != "false"
+	}
 	switch c.ScanType().Kind() {
 	case reflect.Bool:
 		return defaultTagValue != "false"
