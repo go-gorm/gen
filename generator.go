@@ -457,7 +457,7 @@ func (g *Generator) generateQueryUnitTestFile(data *genInfo) (err error) {
 		return err
 	}
 
-	err = render(tmpl.CRUDMethodTest, &buf, data.QueryStructMeta)
+	err = render(tmpl.GenerateCRUDMethodTest(), &buf, data.QueryStructMeta)
 	if err != nil {
 		return err
 	}
