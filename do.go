@@ -698,7 +698,7 @@ func (d *DO) UpdateSimple(columns ...field.AssignExpr) (info ResultInfo, err err
 	if d.backfillData != nil {
 		tx = tx.Model(d.backfillData)
 	}
-	result := d.db.Clauses(d.assignSet(columns)).Omit("*").Updates(map[string]interface{}{})
+	result := tx.Clauses(d.assignSet(columns)).Omit("*").Updates(map[string]interface{}{})
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
