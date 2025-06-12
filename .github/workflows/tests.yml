@@ -75,4 +75,4 @@ jobs:
           key: ${{ runner.os }}-go-${{ matrix.go }}-${{ hashFiles('tests/go.mod') }}
 
       - name: Tests
-        run: GITHUB_ACTION=true GORM_DIALECT=mysql GORM_DSN="gen:gen@tcp(localhost:9910)/gen?charset=utf8&parseTime=True" ./tests/test.sh
+        run: GITHUB_ACTION=true GORM_DIALECT=mysql GEN_DSN="root:123456@tcp(localhost:9910)/gen?charset=utf8&parseTime=True" ./tests/test.sh
