@@ -70,7 +70,7 @@ func OpenTestConnection() (db *gorm.DB, err error) {
 	if err != nil {
 		return
 	}
-
+	db.Exec("SET GLOBAL sql_mode = 'STRICT_TRANS_TABLES';")
 	if debug := os.Getenv("DEBUG"); debug == "true" {
 		db.Logger = db.Logger.LogMode(logger.Info)
 	} else if debug == "false" {
