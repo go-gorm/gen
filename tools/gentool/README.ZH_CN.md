@@ -2,8 +2,6 @@
 
 将Gen作为二进制的方式进行安装
 
-
-
 ## 安装
 
 ```shell
@@ -13,40 +11,47 @@
 ## 使用方式
 
 ```shell
- 
- gentool -h  
- 
- Usage of gentool:
+gentool -h  
+
+Usage of gentool:
+  -c string
+        is path for gen.yml
   -db string
-        input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html] (default "mysql")
+        input mysql|postgres|sqlite|sqlserver|clickhouse. consult[https://gorm.io/docs/connecting_to_the_database.html] (default "mysql")
   -dsn string
         consult[https://gorm.io/docs/connecting_to_the_database.html]
-  -fieldNullable
-        generate with pointer when field is nullable
   -fieldCoverable
         generate with pointer when field has default value
+  -fieldNullable
+        generate with pointer when field is nullable
+  -fieldSignable
+        detect integer field's unsigned type, adjust generated data type
   -fieldWithIndexTag
         generate field with gorm index tag
   -fieldWithTypeTag
         generate field with gorm column type tag
   -modelPkgName string
         generated model code's package name
+  -onlyModel
+        only generate models (without query file)
   -outFile string
         query code file name, default: gen.go
   -outPath string
         specify a directory for output (default "./dao/query")
   -tables string
         enter the required data table or leave it blank
-  -onlyModel
-        only generate models (without query file)
+  -withDefaultQuery
+        create default query in generated code
+  -withQueryInterface
+        generate code with exported interface object
   -withUnitTest
         generate unit test for query code
-  -fieldSignable
-        detect integer field's unsigned type, adjust generated data type
-
+  -withoutContext
+        generate code without context constrain
 ```
 
 #### c
+
 default ""
 可以指定配置文件gen.yml的路径。
 用配置文件来代替命令行。
@@ -126,6 +131,23 @@ Value : False / True
 
 基于数据表定义的数据类型，生成对应的数据类型
 
+#### withDefaultQuery
+
+默认: false
+
+为 true 时，生成 query 类的默认实例变量。
+
+#### withQueryInterface
+
+默认: false
+
+为 true 时，生成 query 类的相应接口。
+
+#### withoutContext
+
+默认: false
+
+为 true 时，生成的 query 类不接受 context 参数。
 
 ### 使用示例
 
