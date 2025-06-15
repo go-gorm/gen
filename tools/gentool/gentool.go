@@ -13,8 +13,9 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/driver/sqlserver"
-	"gorm.io/gen"
 	"gorm.io/gorm"
+
+	"gorm.io/gen"
 )
 
 // DBType database type
@@ -34,19 +35,22 @@ const (
 
 // CmdParams is command line parameters
 type CmdParams struct {
-	DSN               string   `yaml:"dsn"`               // consult[https://gorm.io/docs/connecting_to_the_database.html]"
-	DB                string   `yaml:"db"`                // input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]
-	Tables            []string `yaml:"tables"`            // enter the required data table or leave it blank
-	OnlyModel         bool     `yaml:"onlyModel"`         // only generate model
-	OutPath           string   `yaml:"outPath"`           // specify a directory for output
-	OutFile           string   `yaml:"outFile"`           // query code file name, default: gen.go
-	WithUnitTest      bool     `yaml:"withUnitTest"`      // generate unit test for query code
-	ModelPkgName      string   `yaml:"modelPkgName"`      // generated model code's package name
-	FieldNullable     bool     `yaml:"fieldNullable"`     // generate with pointer when field is nullable
-	FieldCoverable    bool     `yaml:"fieldCoverable"`    // generate with pointer when field has default value
-	FieldWithIndexTag bool     `yaml:"fieldWithIndexTag"` // generate field with gorm index tag
-	FieldWithTypeTag  bool     `yaml:"fieldWithTypeTag"`  // generate field with gorm column type tag
-	FieldSignable     bool     `yaml:"fieldSignable"`     // detect integer field's unsigned type, adjust generated data type
+	DSN                string   `yaml:"dsn"`                // consult[https://gorm.io/docs/connecting_to_the_database.html]"
+	DB                 string   `yaml:"db"`                 // input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]
+	Tables             []string `yaml:"tables"`             // enter the required data table or leave it blank
+	OnlyModel          bool     `yaml:"onlyModel"`          // only generate model
+	OutPath            string   `yaml:"outPath"`            // specify a directory for output
+	OutFile            string   `yaml:"outFile"`            // query code file name, default: gen.go
+	WithUnitTest       bool     `yaml:"withUnitTest"`       // generate unit test for query code
+	ModelPkgName       string   `yaml:"modelPkgName"`       // generated model code's package name
+	FieldNullable      bool     `yaml:"fieldNullable"`      // generate with pointer when field is nullable
+	FieldCoverable     bool     `yaml:"fieldCoverable"`     // generate with pointer when field has default value
+	FieldWithIndexTag  bool     `yaml:"fieldWithIndexTag"`  // generate field with gorm index tag
+	FieldWithTypeTag   bool     `yaml:"fieldWithTypeTag"`   // generate field with gorm column type tag
+	FieldSignable      bool     `yaml:"fieldSignable"`      // detect integer field's unsigned type, adjust generated data type
+	WithDefaultQuery   bool     `yaml:"withDefaultQuery"`   // create default query in generated code
+	WithoutContext     bool     `yaml:"withoutContext"`     // generate code without context constrain
+	WithQueryInterface bool     `yaml:"withQueryInterface"` // generate code with exported interface object
 }
 
 func (c *CmdParams) revise() *CmdParams {
@@ -154,9 +158,13 @@ func argParse() *CmdParams {
 	fieldWithIndexTag := flag.Bool("fieldWithIndexTag", false, "generate field with gorm index tag")
 	fieldWithTypeTag := flag.Bool("fieldWithTypeTag", false, "generate field with gorm column type tag")
 	fieldSignable := flag.Bool("fieldSignable", false, "detect integer field's unsigned type, adjust generated data type")
+	WithDefaultQuery := flag.Bool("withDefaultQuery", false, "create default query in generated code")
+	WithoutContext := flag.Bool("withoutContext", false, "generate code without context constrain")
+	WithQueryInterface := flag.Bool("withQueryInterface", false, "generate code with exported interface object")
+
 	flag.Parse()
 
-	if *genPath != "" { //use yml config
+	if *genPath != "" { // use yml config
 		return parseCmdFromYaml(*genPath)
 	}
 
@@ -201,6 +209,16 @@ func argParse() *CmdParams {
 	if *fieldSignable {
 		cmdParse.FieldSignable = *fieldSignable
 	}
+	if *WithDefaultQuery {
+		cmdParse.WithDefaultQuery = true
+	}
+	if *WithoutContext {
+		cmdParse.WithoutContext = true
+	}
+	if *WithQueryInterface {
+		cmdParse.WithQueryInterface = true
+	}
+
 	return &cmdParse
 }
 
@@ -216,6 +234,17 @@ func main() {
 		log.Fatalln("connect db server fail:", err)
 	}
 
+	var generateMode gen.GenerateMode
+	if config.WithDefaultQuery {
+		generateMode |= gen.WithDefaultQuery
+	}
+	if config.WithoutContext {
+		generateMode |= gen.WithoutContext
+	}
+	if config.WithQueryInterface {
+		generateMode |= gen.WithQueryInterface
+	}
+
 	g := gen.NewGenerator(gen.Config{
 		OutPath:           config.OutPath,
 		OutFile:           config.OutFile,
@@ -226,6 +255,7 @@ func main() {
 		FieldWithIndexTag: config.FieldWithIndexTag,
 		FieldWithTypeTag:  config.FieldWithTypeTag,
 		FieldSignable:     config.FieldSignable,
+		Mode:              generateMode,
 	})
 
 	g.UseDB(db)
