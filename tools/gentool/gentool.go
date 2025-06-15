@@ -13,8 +13,9 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/driver/sqlserver"
-	"gorm.io/gen"
 	"gorm.io/gorm"
+
+	"gorm.io/gen"
 )
 
 // DBType database type
@@ -48,7 +49,7 @@ type CmdParams struct {
 	FieldWithTypeTag   bool     `yaml:"fieldWithTypeTag"`   // generate field with gorm column type tag
 	FieldSignable      bool     `yaml:"fieldSignable"`      // detect integer field's unsigned type, adjust generated data type
 	WithDefaultQuery   bool     `yaml:"withDefaultQuery"`   // create default query in generated code
-	WithoutContext     bool     `yaml:"WithoutContext"`     // generate code without context constrain
+	WithoutContext     bool     `yaml:"withoutContext"`     // generate code without context constrain
 	WithQueryInterface bool     `yaml:"withQueryInterface"` // generate code with exported interface object
 }
 
