@@ -127,7 +127,7 @@ func (m *InterfaceMethod) IsRepeatFromSameInterface(newMethod *InterfaceMethod) 
 	return m.MethodName == newMethod.MethodName && m.InterfaceName == newMethod.InterfaceName && m.TargetStruct == newMethod.TargetStruct
 }
 
-//GetParamInTmpl return param list
+// GetParamInTmpl return param list
 func (m *InterfaceMethod) GetParamInTmpl() string {
 	return paramToString(m.Params)
 }

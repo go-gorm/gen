@@ -8,12 +8,10 @@ import (
 // It delegates the type mapping logic to the model.GetDataType function.
 //
 // Parameters:
-//
-//	sqlDataType - the SQL data type as a string.
+//   - sqlDataType: the SQL data type as a string.
 //
 // Returns:
-//
-//	The Go data type as a string.
+//   - The Go data type as a string.
 func GetDataType(sqlDataType string) string {
 	return model.GetDataType(sqlDataType)
 }
