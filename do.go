@@ -50,7 +50,11 @@ var (
 
 // UseDB specify a db connection(*gorm.DB)
 func (d *DO) UseDB(db *gorm.DB, opts ...DOOption) {
-	db = db.Session(&gorm.Session{Context: context.Background()})
+	ctx := context.Background()
+	if db.Statement != nil && db.Statement.Context != nil {
+		ctx = db.Statement.Context
+	}
+	db = db.Session(&gorm.Session{Context: ctx})
 	d.db = db
 	config := &DOConfig{}
 	for _, opt := range opts {
@@ -355,21 +359,8 @@ func (d *DO) join(table schema.Tabler, joinType clause.JoinType, conds []field.E
 	if len(conds) == 0 {
 		return d.withError(ErrEmptyCondition)
 	}
-
-	join := clause.Join{
-		Type:  joinType,
-		Table: clause.Table{Name: table.TableName()},
-		ON:    clause.Where{Exprs: toExpression(conds...)},
-	}
-	if do, ok := table.(Dao); ok {
-		join.Expression = helper.NewJoinTblExpr(join, Table(do).underlyingDB().Statement.TableExpr)
-	}
-	if al, ok := table.(interface{ Alias() string }); ok {
-		join.Table.Alias = al.Alias()
-	}
-
 	from := getFromClause(d.db)
-	from.Joins = append(from.Joins, join)
+	from.Joins = append(from.Joins, toClauseJoins(field.RelationJoin{Table: table, Type: joinType, Condition: conds})...)
 	return d.getInstance(d.db.Clauses(from))
 }
 
@@ -458,13 +449,17 @@ func (d *DO) Joins(field field.RelationField) Dao {
 			Exprs: exprs,
 		}))
 	}
-	if columns := field.GetSelects(); len(columns) > 0 {
-		colNames := make([]string, len(columns))
-		for i, c := range columns {
-			colNames[i] = string(c.ColumnName())
-		}
+	if joins := field.GetJoins(); len(joins) > 0 {
 		args = append(args, func(db *gorm.DB) *gorm.DB {
-			return db.Select(colNames)
+			//from := clause.From{Joins: toClauseJoins(joins...)}
+			//from.Joins = append(from.Joins, toClauseJoins(joins...)...)
+			return db.Clauses(clause.From{Joins: toClauseJoins(joins...)})
+		})
+	}
+	if columns := field.GetSelects(); len(columns) > 0 {
+		args = append(args, func(db *gorm.DB) *gorm.DB {
+			query, queryArgs := buildExpr4Select(db.Statement, columns...)
+			return db.Select(query, queryArgs...)
 		})
 	}
 	if columns := field.GetOrderCol(); len(columns) > 0 {
@@ -513,16 +508,18 @@ func (d *DO) Joins(field field.RelationField) Dao {
 // Preload ...
 func (d *DO) Preload(field field.RelationField) Dao {
 	var args []interface{}
+	if joins := field.GetJoins(); len(joins) > 0 {
+		args = append(args, func(db *gorm.DB) *gorm.DB {
+			return db.Clauses(clause.From{Joins: toClauseJoins(joins...)})
+		})
+	}
 	if conds := field.GetConds(); len(conds) > 0 {
 		args = append(args, toExpressionInterface(conds...)...)
 	}
 	if columns := field.GetSelects(); len(columns) > 0 {
-		colNames := make([]string, len(columns))
-		for i, c := range columns {
-			colNames[i] = string(c.ColumnName())
-		}
 		args = append(args, func(db *gorm.DB) *gorm.DB {
-			return db.Select(colNames)
+			query, queryArgs := buildExpr4Select(db.Statement, columns...)
+			return db.Select(query, queryArgs...)
 		})
 	}
 	if columns := field.GetOrderCol(); len(columns) > 0 {
@@ -674,7 +671,7 @@ func (d *DO) FirstOrCreate() (result interface{}, err error) {
 
 // Update ...
 func (d *DO) Update(column field.Expr, value interface{}) (info ResultInfo, err error) {
-	tx := d.db.Model(d.newResultPointer())
+	tx := d.db
 	columnStr := column.BuildColumn(d.db.Statement, field.WithoutQuote).String()
 
 	var result *gorm.DB
@@ -695,7 +692,7 @@ func (d *DO) UpdateSimple(columns ...field.AssignExpr) (info ResultInfo, err err
 		return
 	}
 
-	result := d.db.Model(d.newResultPointer()).Clauses(d.assignSet(columns)).Omit("*").Updates(map[string]interface{}{})
+	result := d.db.Clauses(d.assignSet(columns)).Omit("*").Updates(map[string]interface{}{})
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
@@ -711,27 +708,22 @@ func (d *DO) Updates(value interface{}) (info ResultInfo, err error) {
 	}
 
 	tx := d.db.Model(d.newResultPointer())
-	if d.backfillData != nil {
-		tx = tx.Model(d.backfillData)
-	}
 	switch {
-	case valTyp != d.modelType: // different type with model
+	case valTyp == d.modelType: // use value mode
 		if d.backfillData == nil {
-			tx = tx.Model(d.newResultPointer())
+			tx = tx.Model(value)
 		}
 	case rawTyp.Kind() == reflect.Ptr: // ignore ptr value
-	default: // for fixing "reflect.Value.Addr of unaddressable value" panic
-		ptr := reflect.New(d.modelType)
-		ptr.Elem().Set(reflect.ValueOf(value))
-		value = ptr.Interface()
+	default:
 	}
+
 	result := tx.Updates(value)
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
 // UpdateColumn ...
 func (d *DO) UpdateColumn(column field.Expr, value interface{}) (info ResultInfo, err error) {
-	tx := d.db.Model(d.newResultPointer())
+	tx := d.db
 	columnStr := column.BuildColumn(d.db.Statement, field.WithoutQuote).String()
 
 	var result *gorm.DB
@@ -752,13 +744,13 @@ func (d *DO) UpdateColumnSimple(columns ...field.AssignExpr) (info ResultInfo, e
 		return
 	}
 
-	result := d.db.Model(d.newResultPointer()).Clauses(d.assignSet(columns)).Omit("*").UpdateColumns(map[string]interface{}{})
+	result := d.db.Clauses(d.assignSet(columns)).Omit("*").UpdateColumns(map[string]interface{}{})
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
 // UpdateColumns ...
 func (d *DO) UpdateColumns(value interface{}) (info ResultInfo, err error) {
-	result := d.db.Model(d.newResultPointer()).UpdateColumns(value)
+	result := d.db.UpdateColumns(value)
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
@@ -785,7 +777,7 @@ func (d *DO) assignSet(exprs []field.AssignExpr) (set clause.Set) {
 func (d *DO) Delete(models ...interface{}) (info ResultInfo, err error) {
 	var result *gorm.DB
 	if len(models) == 0 || reflect.ValueOf(models[0]).Len() == 0 {
-		result = d.db.Model(d.newResultPointer()).Delete(reflect.New(d.modelType).Interface())
+		result = d.db.Delete(reflect.New(d.modelType).Interface())
 	} else {
 		targets := reflect.MakeSlice(reflect.SliceOf(reflect.PtrTo(d.modelType)), 0, len(models))
 		value := reflect.ValueOf(models[0])
@@ -799,32 +791,32 @@ func (d *DO) Delete(models ...interface{}) (info ResultInfo, err error) {
 
 // Count ...
 func (d *DO) Count() (count int64, err error) {
-	return count, d.db.Session(&gorm.Session{}).Model(d.newResultPointer()).Count(&count).Error
+	return count, d.db.Session(&gorm.Session{}).Count(&count).Error
 }
 
 // Row ...
 func (d *DO) Row() *sql.Row {
-	return d.db.Model(d.newResultPointer()).Row()
+	return d.db.Row()
 }
 
 // Rows ...
 func (d *DO) Rows() (*sql.Rows, error) {
-	return d.db.Model(d.newResultPointer()).Rows()
+	return d.db.Rows()
 }
 
 // Scan ...
 func (d *DO) Scan(dest interface{}) error {
-	return d.db.Model(d.newResultPointer()).Scan(dest).Error
+	return d.db.Scan(dest).Error
 }
 
 // Pluck ...
 func (d *DO) Pluck(column field.Expr, dest interface{}) error {
-	return d.db.Model(d.newResultPointer()).Pluck(column.ColumnName().String(), dest).Error
+	return d.db.Pluck(column.ColumnName().String(), dest).Error
 }
 
 // ScanRows ...
 func (d *DO) ScanRows(rows *sql.Rows, dest interface{}) error {
-	return d.db.Model(d.newResultPointer()).ScanRows(rows, dest)
+	return d.db.ScanRows(rows, dest)
 }
 
 // WithResult ...
@@ -940,6 +932,25 @@ func toInterfaceSlice(value interface{}) []interface{} {
 	default:
 		return nil
 	}
+}
+
+func toClauseJoins(joins ...field.RelationJoin) []clause.Join {
+	clauseJoins := make([]clause.Join, 0, len(joins))
+	for _, j := range joins {
+		join := clause.Join{
+			Type:  j.Type,
+			Table: clause.Table{Name: j.Table.TableName()},
+			ON:    clause.Where{Exprs: toExpression(j.Condition...)},
+		}
+		if do, ok := j.Table.(Dao); ok {
+			join.Expression = helper.NewJoinTblExpr(join, Table(do).underlyingDB().Statement.TableExpr)
+		}
+		if al, ok := j.Table.(interface{ Alias() string }); ok {
+			join.Table.Alias = al.Alias()
+		}
+		clauseJoins = append(clauseJoins, join)
+	}
+	return clauseJoins
 }
 
 // ======================== New Table ========================

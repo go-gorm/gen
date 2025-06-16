@@ -22,6 +22,27 @@ const (
 
 var _ = os.Setenv("GORM_DIALECT", "mysql")
 
+type User struct {
+	Id       string    `gorm:"primaryKey"`
+	Posts    []Post    `gorm:"foreignKey:AuthorId"`
+	Comments []Comment `gorm:"foreignKey:AuthorId"`
+}
+
+type Post struct {
+	Id       string `gorm:"primaryKey"`
+	AuthorId string
+	Author   User      `gorm:"foreignKey:Id"`
+	Comments []Comment `gorm:"foreignKey:PostId"`
+}
+
+type Comment struct {
+	Id       string `gorm:"primaryKey"`
+	PostId   string
+	Post     Post `gorm:"foreignKey:Id"`
+	AuthorId string
+	Author   User `gorm:"foreignKey:Id"`
+}
+
 var generateCase = map[string]func(dir string) *gen.Generator{
 	generateDirPrefix + "dal_1": func(dir string) *gen.Generator {
 		g := gen.NewGenerator(gen.Config{
@@ -118,6 +139,56 @@ var generateCase = map[string]func(dir string) *gen.Generator{
 		g.ApplyBasic(g.GenerateModelAs("users", DB.Config.NamingStrategy.SchemaName("users"), gen.WithMethod(diy_method.TestForWithMethod{})))
 		return g
 	},
+	generateDirPrefix + "dal_7": func(dir string) *gen.Generator {
+		g := gen.NewGenerator(gen.Config{
+			OutPath: dir + "/query",
+			Mode:    gen.WithDefaultQuery | gen.WithQueryInterface,
+
+			WithUnitTest: true,
+
+			FieldNullable:     true,
+			FieldCoverable:    true,
+			FieldWithIndexTag: true,
+		})
+		g.UseDB(DB)
+		g.WithJSONTagNameStrategy(func(c string) string { return "-" })
+
+		banks := g.GenerateModel("banks")
+		creditCards := g.GenerateModel("credit_cards")
+		customers := g.GenerateModel("customers",
+			gen.FieldRelate(field.HasOne, "Bank", banks, &field.RelateConfig{
+				JSONTag: "bank",
+				GORMTag: field.GormTag{
+					"foreignKey": []string{"BankID"},
+					"references": []string{"ID"},
+				},
+			}),
+			gen.FieldRelate(field.HasMany, "CreditCards", creditCards, &field.RelateConfig{
+				JSONTag: "credit_cards",
+				GORMTag: field.GormTag{
+					"foreignKey": []string{"CustomerRefer"},
+					"references": []string{"ID"},
+				},
+			}),
+		)
+		g.ApplyBasic(customers)
+		return g
+	},
+	generateDirPrefix + "dal_8": func(dir string) *gen.Generator {
+		g := gen.NewGenerator(gen.Config{
+			OutPath: dir + "/query",
+			Mode:    gen.WithDefaultQuery | gen.WithQueryInterface,
+
+			WithUnitTest: true,
+
+			FieldNullable:     true,
+			FieldCoverable:    true,
+			FieldWithIndexTag: true,
+		})
+		g.ApplyBasic(User{}, Post{}, Comment{})
+
+		return g
+	},
 }
 
 func TestGenerate(t *testing.T) {
@@ -160,5 +231,32 @@ func TestGenerate_expect(t *testing.T) {
 	})
 	g.UseDB(DB)
 	g.ApplyBasic(g.GenerateAllTable()...)
+	g.Execute()
+
+	g = gen.NewGenerator(gen.Config{
+		OutPath: expectDirPrefix + "dal_test_relation" + "/query",
+		Mode:    gen.WithDefaultQuery,
+	})
+	g.UseDB(DB)
+
+	banks := g.GenerateModel("banks")
+	creditCards := g.GenerateModel("credit_cards")
+	customers := g.GenerateModel("customers",
+		gen.FieldRelate(field.HasOne, "Bank", banks, &field.RelateConfig{
+			JSONTag: "bank",
+			GORMTag: field.GormTag{
+				"foreignKey": []string{"BankID"},
+				"references": []string{"ID"},
+			},
+		}),
+		gen.FieldRelate(field.HasMany, "CreditCards", creditCards, &field.RelateConfig{
+			JSONTag: "credit_cards",
+			GORMTag: field.GormTag{
+				"foreignKey": []string{"CustomerRefer"},
+				"references": []string{"ID"},
+			},
+		}),
+	)
+	g.ApplyBasic(customers, creditCards, banks)
 	g.Execute()
 }
