@@ -56,7 +56,7 @@ type Config struct {
 
 	dataTypeMap    map[string]func(columnType gorm.ColumnType) (dataType string)
 	columnTypeMap  map[string]func(columnType gorm.ColumnType) (colType string)
-	fieldJSONTagNS func(columnName string) (tagContent string)
+	fieldJSONTagNS func(tableName, columnName string) (tagContent string)
 
 	modelOpts []ModelOpt
 }
@@ -105,7 +105,7 @@ func (cfg *Config) WithColumnTypeMap(newMap map[string]func(columnType gorm.Colu
 }
 
 // WithJSONTagNameStrategy specify json tag naming strategy
-func (cfg *Config) WithJSONTagNameStrategy(ns func(columnName string) (tagContent string)) {
+func (cfg *Config) WithJSONTagNameStrategy(ns func(tableName, columnName string) (tagContent string)) {
 	cfg.fieldJSONTagNS = ns
 }
 

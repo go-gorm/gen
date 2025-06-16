@@ -34,9 +34,9 @@ func getFields(db *gorm.DB, conf *model.Config, columns []*model.Column) (fields
 		m = modifyField(m, conf.ModifyOpts)
 		if ns, ok := db.NamingStrategy.(schema.NamingStrategy); ok {
 			ns.SingularTable = true
-			m.Name = ns.SchemaName(ns.TablePrefix + m.Name)
+			m.Name = ns.ColumnName(col.TableName, ns.TablePrefix+m.Name)
 		} else if db.NamingStrategy != nil {
-			m.Name = db.NamingStrategy.SchemaName(m.Name)
+			m.Name = db.NamingStrategy.ColumnName(col.TableName, m.Name)
 		}
 
 		fields = append(fields, m)

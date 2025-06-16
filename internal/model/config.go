@@ -42,7 +42,7 @@ type FieldConfig struct {
 	FieldWithIndexTag bool // generate with gorm index tag
 	FieldWithTypeTag  bool // generate with gorm column type tag
 
-	FieldJSONTagNS func(columnName string) string
+	FieldJSONTagNS func(tableName, columnName string) string
 
 	ModifyOpts []FieldOption
 	FilterOpts []FieldOption
