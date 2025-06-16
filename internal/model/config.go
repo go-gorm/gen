@@ -33,7 +33,8 @@ type NameStrategy struct {
 
 // FieldConfig field configuration
 type FieldConfig struct {
-	DataTypeMap map[string]func(columnType gorm.ColumnType) (dataType string)
+	DataTypeMap   map[string]func(columnType gorm.ColumnType) (dataType string)
+	ColumnTypeMap map[string]func(columnType gorm.ColumnType) (colType string)
 
 	FieldNullable     bool // generate pointer when field is nullable
 	FieldCoverable    bool // generate pointer when field has default value

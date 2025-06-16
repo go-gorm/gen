@@ -162,6 +162,16 @@ func (m dataTypeMap) Get(dataType, detailType string) string {
 	return defaultDataType
 }
 
+// Gets the code Type for the sqlDataType.
+func GetDataType(sqlDataType string) string {
+	return dataType.Get(sqlDataType, "")
+}
+
+// Add or override values in the override map.
+func SetDataType(dbType string, getTypeFunc dataTypeMapping) {
+	dataType[dbType] = getTypeFunc
+}
+
 // Field user input structures
 type Field struct {
 	Name             string
