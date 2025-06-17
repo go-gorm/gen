@@ -162,30 +162,6 @@ func (m dataTypeMap) Get(dataType, detailType string) string {
 	return defaultDataType
 }
 
-// GetDataType returns the corresponding Go data type for a given SQL data type string.
-// It uses the dataType mapping to look up the Go type associated with the provided SQL data type.
-// If the SQL data type is not found in the mapping, it returns an empty string.
-//
-// Parameters:
-//   - sqlDataType: the SQL data type as a string.
-//
-// Returns:
-//   - The Go data type as a string, or an empty string if not found.
-func GetDataType(sqlDataType string) string {
-	return dataType.Get(sqlDataType, "")
-}
-
-// SetDataType registers a mapping function for a specific database type.
-// It associates the provided dbType string with the getTypeFunc, which defines
-// how to map the database type to the application's data type.
-//
-// Parameters:
-//   - dbType: the name of the database type to map.
-//   - getTypeFunc: a function that returns the application's data type for the given dbType.
-func SetDataType(dbType string, getTypeFunc dataTypeMapping) {
-	dataType[dbType] = getTypeFunc
-}
-
 // Field user input structures
 type Field struct {
 	Name             string
