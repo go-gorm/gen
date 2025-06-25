@@ -672,6 +672,9 @@ func (d *DO) FirstOrCreate() (result interface{}, err error) {
 // Update ...
 func (d *DO) Update(column field.Expr, value interface{}) (info ResultInfo, err error) {
 	tx := d.db
+	if d.backfillData != nil {
+		tx = tx.Model(d.backfillData)
+	}
 	columnStr := column.BuildColumn(d.db.Statement, field.WithoutQuote).String()
 
 	var result *gorm.DB
@@ -691,8 +694,11 @@ func (d *DO) UpdateSimple(columns ...field.AssignExpr) (info ResultInfo, err err
 	if len(columns) == 0 {
 		return
 	}
-
-	result := d.db.Clauses(d.assignSet(columns)).Omit("*").Updates(map[string]interface{}{})
+	tx := d.db
+	if d.backfillData != nil {
+		tx = tx.Model(d.backfillData)
+	}
+	result := tx.Clauses(d.assignSet(columns)).Omit("*").Updates(map[string]interface{}{})
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
@@ -707,7 +713,10 @@ func (d *DO) Updates(value interface{}) (info ResultInfo, err error) {
 		valTyp = rawTyp
 	}
 
-	tx := d.db.Model(d.newResultPointer())
+	tx := d.db
+	if d.backfillData != nil {
+		tx = tx.Model(d.backfillData)
+	}
 	switch {
 	case valTyp == d.modelType: // use value mode
 		if d.backfillData == nil {
@@ -724,6 +733,9 @@ func (d *DO) Updates(value interface{}) (info ResultInfo, err error) {
 // UpdateColumn ...
 func (d *DO) UpdateColumn(column field.Expr, value interface{}) (info ResultInfo, err error) {
 	tx := d.db
+	if d.backfillData != nil {
+		tx = tx.Model(d.backfillData)
+	}
 	columnStr := column.BuildColumn(d.db.Statement, field.WithoutQuote).String()
 
 	var result *gorm.DB
@@ -743,14 +755,21 @@ func (d *DO) UpdateColumnSimple(columns ...field.AssignExpr) (info ResultInfo, e
 	if len(columns) == 0 {
 		return
 	}
-
-	result := d.db.Clauses(d.assignSet(columns)).Omit("*").UpdateColumns(map[string]interface{}{})
+	tx := d.db
+	if d.backfillData != nil {
+		tx = tx.Model(d.backfillData)
+	}
+	result := tx.Clauses(d.assignSet(columns)).Omit("*").UpdateColumns(map[string]interface{}{})
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
 // UpdateColumns ...
 func (d *DO) UpdateColumns(value interface{}) (info ResultInfo, err error) {
-	result := d.db.UpdateColumns(value)
+	tx := d.db
+	if d.backfillData != nil {
+		tx = tx.Model(d.backfillData)
+	}
+	result := tx.UpdateColumns(value)
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
@@ -776,15 +795,19 @@ func (d *DO) assignSet(exprs []field.AssignExpr) (set clause.Set) {
 // Delete ...
 func (d *DO) Delete(models ...interface{}) (info ResultInfo, err error) {
 	var result *gorm.DB
+	tx := d.db
+	if d.backfillData != nil {
+		tx = tx.Model(d.backfillData)
+	}
 	if len(models) == 0 || reflect.ValueOf(models[0]).Len() == 0 {
-		result = d.db.Delete(reflect.New(d.modelType).Interface())
+		result = tx.Delete(reflect.New(d.modelType).Interface())
 	} else {
 		targets := reflect.MakeSlice(reflect.SliceOf(reflect.PtrTo(d.modelType)), 0, len(models))
 		value := reflect.ValueOf(models[0])
 		for i := 0; i < value.Len(); i++ {
 			targets = reflect.Append(targets, value.Index(i))
 		}
-		result = d.db.Delete(targets.Interface())
+		result = tx.Delete(targets.Interface())
 	}
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
