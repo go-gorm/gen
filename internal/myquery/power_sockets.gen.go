@@ -69,19 +69,6 @@ func newPowerSocket(db *gorm.DB, opts ...gen.DOOption) powerSocket {
 				RelationField: field.NewRelation("ChargePoint.ChargingStation.ChargePoints", "mymodel.ChargePoint"),
 			},
 		},
-		PowerSockets: struct {
-			field.RelationField
-			ChargePoint struct {
-				field.RelationField
-			}
-		}{
-			RelationField: field.NewRelation("ChargePoint.PowerSockets", "mymodel.PowerSocket"),
-			ChargePoint: struct {
-				field.RelationField
-			}{
-				RelationField: field.NewRelation("ChargePoint.PowerSockets.ChargePoint", "mymodel.ChargePoint"),
-			},
-		},
 	}
 
 	_powerSocket.fillFieldMap()
@@ -172,12 +159,6 @@ type powerSocketBelongsToChargePoint struct {
 			}
 		}
 		ChargePoints struct {
-			field.RelationField
-		}
-	}
-	PowerSockets struct {
-		field.RelationField
-		ChargePoint struct {
 			field.RelationField
 		}
 	}

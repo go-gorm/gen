@@ -69,19 +69,6 @@ func newChargingStation(db *gorm.DB, opts ...gen.DOOption) chargingStation {
 				RelationField: field.NewRelation("ChargePoints.ChargingStation.ChargePoints", "mymodel.ChargePoint"),
 			},
 		},
-		PowerSockets: struct {
-			field.RelationField
-			ChargePoint struct {
-				field.RelationField
-			}
-		}{
-			RelationField: field.NewRelation("ChargePoints.PowerSockets", "mymodel.PowerSocket"),
-			ChargePoint: struct {
-				field.RelationField
-			}{
-				RelationField: field.NewRelation("ChargePoints.PowerSockets.ChargePoint", "mymodel.ChargePoint"),
-			},
-		},
 	}
 
 	_chargingStation.City = chargingStationBelongsToCity{
@@ -183,12 +170,6 @@ type chargingStationHasManyChargePoints struct {
 			}
 		}
 		ChargePoints struct {
-			field.RelationField
-		}
-	}
-	PowerSockets struct {
-		field.RelationField
-		ChargePoint struct {
 			field.RelationField
 		}
 	}

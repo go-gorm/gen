@@ -18,7 +18,7 @@ type ChargePoint struct {
 
 	ChargingStationID uint
 	ChargingStation   ChargingStation
-	PowerSockets      []PowerSocket // 配置该关系后，会导致 query.ChargePoint.ChargingStation.City 关系缺失
+	// PowerSockets      []PowerSocket // 配置该关系后，会导致 query.ChargePoint.ChargingStation.City 关系缺失
 }
 
 // 充电站

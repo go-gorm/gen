@@ -33,73 +33,36 @@ func newChargePoint(db *gorm.DB, opts ...gen.DOOption) chargePoint {
 	_chargePoint.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_chargePoint.DeletedAt = field.NewField(tableName, "deleted_at")
 	_chargePoint.ChargingStationID = field.NewUint(tableName, "charging_station_id")
-	_chargePoint.PowerSockets = chargePointHasManyPowerSockets{
-		db: db.Session(&gorm.Session{}),
-
-		RelationField: field.NewRelation("PowerSockets", "mymodel.PowerSocket"),
-		ChargePoint: struct {
-			field.RelationField
-			ChargingStation struct {
-				field.RelationField
-				City struct {
-					field.RelationField
-					Province struct {
-						field.RelationField
-					}
-				}
-				ChargePoints struct {
-					field.RelationField
-				}
-			}
-			PowerSockets struct {
-				field.RelationField
-			}
-		}{
-			RelationField: field.NewRelation("PowerSockets.ChargePoint", "mymodel.ChargePoint"),
-			ChargingStation: struct {
-				field.RelationField
-				City struct {
-					field.RelationField
-					Province struct {
-						field.RelationField
-					}
-				}
-				ChargePoints struct {
-					field.RelationField
-				}
-			}{
-				RelationField: field.NewRelation("PowerSockets.ChargePoint.ChargingStation", "mymodel.ChargingStation"),
-				City: struct {
-					field.RelationField
-					Province struct {
-						field.RelationField
-					}
-				}{
-					RelationField: field.NewRelation("PowerSockets.ChargePoint.ChargingStation.City", "mymodel.City"),
-					Province: struct {
-						field.RelationField
-					}{
-						RelationField: field.NewRelation("PowerSockets.ChargePoint.ChargingStation.City.Province", "mymodel.Province"),
-					},
-				},
-				ChargePoints: struct {
-					field.RelationField
-				}{
-					RelationField: field.NewRelation("PowerSockets.ChargePoint.ChargingStation.ChargePoints", "mymodel.ChargePoint"),
-				},
-			},
-			PowerSockets: struct {
-				field.RelationField
-			}{
-				RelationField: field.NewRelation("PowerSockets.ChargePoint.PowerSockets", "mymodel.PowerSocket"),
-			},
-		},
-	}
-
 	_chargePoint.ChargingStation = chargePointBelongsToChargingStation{
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("ChargingStation", "mymodel.ChargingStation"),
+		City: struct {
+			field.RelationField
+			Province struct {
+				field.RelationField
+			}
+		}{
+			RelationField: field.NewRelation("ChargingStation.City", "mymodel.City"),
+			Province: struct {
+				field.RelationField
+			}{
+				RelationField: field.NewRelation("ChargingStation.City.Province", "mymodel.Province"),
+			},
+		},
+		ChargePoints: struct {
+			field.RelationField
+			ChargingStation struct {
+				field.RelationField
+			}
+		}{
+			RelationField: field.NewRelation("ChargingStation.ChargePoints", "mymodel.ChargePoint"),
+			ChargingStation: struct {
+				field.RelationField
+			}{
+				RelationField: field.NewRelation("ChargingStation.ChargePoints.ChargingStation", "mymodel.ChargingStation"),
+			},
+		},
 	}
 
 	_chargePoint.fillFieldMap()
@@ -116,9 +79,7 @@ type chargePoint struct {
 	UpdatedAt         field.Time
 	DeletedAt         field.Field
 	ChargingStationID field.Uint
-	PowerSockets      chargePointHasManyPowerSockets
-
-	ChargingStation chargePointBelongsToChargingStation
+	ChargingStation   chargePointBelongsToChargingStation
 
 	fieldMap map[string]field.Expr
 }
@@ -156,7 +117,7 @@ func (c *chargePoint) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (c *chargePoint) fillFieldMap() {
-	c.fieldMap = make(map[string]field.Expr, 7)
+	c.fieldMap = make(map[string]field.Expr, 6)
 	c.fieldMap["id"] = c.ID
 	c.fieldMap["created_at"] = c.CreatedAt
 	c.fieldMap["updated_at"] = c.UpdatedAt
@@ -167,8 +128,6 @@ func (c *chargePoint) fillFieldMap() {
 
 func (c chargePoint) clone(db *gorm.DB) chargePoint {
 	c.chargePointDo.ReplaceConnPool(db.Statement.ConnPool)
-	c.PowerSockets.db = db.Session(&gorm.Session{Initialized: true})
-	c.PowerSockets.db.Statement.ConnPool = db.Statement.ConnPool
 	c.ChargingStation.db = db.Session(&gorm.Session{Initialized: true})
 	c.ChargingStation.db.Statement.ConnPool = db.Statement.ConnPool
 	return c
@@ -176,115 +135,27 @@ func (c chargePoint) clone(db *gorm.DB) chargePoint {
 
 func (c chargePoint) replaceDB(db *gorm.DB) chargePoint {
 	c.chargePointDo.ReplaceDB(db)
-	c.PowerSockets.db = db.Session(&gorm.Session{})
 	c.ChargingStation.db = db.Session(&gorm.Session{})
 	return c
-}
-
-type chargePointHasManyPowerSockets struct {
-	db *gorm.DB
-
-	field.RelationField
-
-	ChargePoint struct {
-		field.RelationField
-		ChargingStation struct {
-			field.RelationField
-			City struct {
-				field.RelationField
-				Province struct {
-					field.RelationField
-				}
-			}
-			ChargePoints struct {
-				field.RelationField
-			}
-		}
-		PowerSockets struct {
-			field.RelationField
-		}
-	}
-}
-
-func (a chargePointHasManyPowerSockets) Where(conds ...field.Expr) *chargePointHasManyPowerSockets {
-	if len(conds) == 0 {
-		return &a
-	}
-
-	exprs := make([]clause.Expression, 0, len(conds))
-	for _, cond := range conds {
-		exprs = append(exprs, cond.BeCond().(clause.Expression))
-	}
-	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
-	return &a
-}
-
-func (a chargePointHasManyPowerSockets) WithContext(ctx context.Context) *chargePointHasManyPowerSockets {
-	a.db = a.db.WithContext(ctx)
-	return &a
-}
-
-func (a chargePointHasManyPowerSockets) Session(session *gorm.Session) *chargePointHasManyPowerSockets {
-	a.db = a.db.Session(session)
-	return &a
-}
-
-func (a chargePointHasManyPowerSockets) Model(m *mymodel.ChargePoint) *chargePointHasManyPowerSocketsTx {
-	return &chargePointHasManyPowerSocketsTx{a.db.Model(m).Association(a.Name())}
-}
-
-func (a chargePointHasManyPowerSockets) Unscoped() *chargePointHasManyPowerSockets {
-	a.db = a.db.Unscoped()
-	return &a
-}
-
-type chargePointHasManyPowerSocketsTx struct{ tx *gorm.Association }
-
-func (a chargePointHasManyPowerSocketsTx) Find() (result []*mymodel.PowerSocket, err error) {
-	return result, a.tx.Find(&result)
-}
-
-func (a chargePointHasManyPowerSocketsTx) Append(values ...*mymodel.PowerSocket) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Append(targetValues...)
-}
-
-func (a chargePointHasManyPowerSocketsTx) Replace(values ...*mymodel.PowerSocket) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Replace(targetValues...)
-}
-
-func (a chargePointHasManyPowerSocketsTx) Delete(values ...*mymodel.PowerSocket) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Delete(targetValues...)
-}
-
-func (a chargePointHasManyPowerSocketsTx) Clear() error {
-	return a.tx.Clear()
-}
-
-func (a chargePointHasManyPowerSocketsTx) Count() int64 {
-	return a.tx.Count()
-}
-
-func (a chargePointHasManyPowerSocketsTx) Unscoped() *chargePointHasManyPowerSocketsTx {
-	a.tx = a.tx.Unscoped()
-	return &a
 }
 
 type chargePointBelongsToChargingStation struct {
 	db *gorm.DB
 
 	field.RelationField
+
+	City struct {
+		field.RelationField
+		Province struct {
+			field.RelationField
+		}
+	}
+	ChargePoints struct {
+		field.RelationField
+		ChargingStation struct {
+			field.RelationField
+		}
+	}
 }
 
 func (a chargePointBelongsToChargingStation) Where(conds ...field.Expr) *chargePointBelongsToChargingStation {
