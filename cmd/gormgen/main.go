@@ -1,3 +1,4 @@
+// gorm gen 模型生成
 package main
 
 import (
@@ -26,6 +27,6 @@ func main() {
 	g.Execute()
 }
 
-// Dynamic SQL
+// Querier 查询接口
 type Querier interface {
 }
