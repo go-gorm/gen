@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 
 	"gorm.io/gen/field"
@@ -97,11 +98,18 @@ func (c *Column) buildGormTag() field.GormTag {
 		tag.Set(field.TagKeyGormNotNull, "")
 	}
 
-	for _, idx := range c.Indexes {
+	// Create a copy of indexes and sort by name to ensure consistent order
+	indexes := make([]*Index, len(c.Indexes))
+	copy(indexes, c.Indexes)
+	sort.Slice(indexes, func(i, j int) bool {
+		return indexes[i].Name() < indexes[j].Name()
+	})
+
+	for _, idx := range indexes {
 		if idx == nil {
 			continue
 		}
-		if pk, _ := idx.PrimaryKey(); pk { //ignore PrimaryKey
+		if pk, _ := idx.PrimaryKey(); pk { // ignore PrimaryKey
 			continue
 		}
 		if uniq, _ := idx.Unique(); uniq {
