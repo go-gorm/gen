@@ -41,7 +41,8 @@ Install GEN as a binary tool
         generate unit test for query code
   -fieldSignable
         detect integer field's unsigned type, adjust generated data type
-
+  -mode
+        enter the genreate mode or leave it blank
 ```
 #### c
 default ""
@@ -120,7 +121,29 @@ Value : False / True
 
 detect integer field's unsigned type, adjust generated data type
 
+#### mode
 
+Value: enter the required data table or leave it blank
+
+Items to be selected:
+
+- WithDefaultQuery
+- WithoutContext
+- WithQUeryInterface
+
+eg:
+
+```shell
+gentool -mode="WithDefaultQuery"
+```
+
+```shell
+gentool -mode="WithDefaultQuery,WithoutContext"
+```
+
+```shell
+gentool -mode="WithDefaultQuery,WithoutContext,WithQUeryInterface"
+```
 
 ### example
 
