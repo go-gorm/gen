@@ -426,6 +426,11 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 	}
 
 	for _, method := range data.Interfaces {
+		if method.Section == nil || method.Section.IsNull() {
+			// Do not generate method when Section is nil or isNull,
+			// which indicates SkipImpl is true.
+			continue
+		}
 		err = render(tmpl.DIYMethod, &buf, method)
 		if err != nil {
 			return err

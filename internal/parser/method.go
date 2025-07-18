@@ -27,6 +27,7 @@ type Method struct {
 	Params     []Param
 	Result     []Param
 	Body       string
+	SkipImpl   bool
 }
 
 // FuncSign function signature
