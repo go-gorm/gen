@@ -7,7 +7,7 @@ require (
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/driver/sqlite v1.4.4
 	gorm.io/gen v0.3.19
-	gorm.io/gorm v1.25.12
+	gorm.io/gorm v1.30.1
 	gorm.io/hints v1.1.1 // indirect
 	gorm.io/plugin/dbresolver v1.5.3
 )
