@@ -260,3 +260,29 @@ func TestGenerate_expect(t *testing.T) {
 	g.ApplyBasic(customers, creditCards, banks)
 	g.Execute()
 }
+
+func Test_GenSkipImpl(t *testing.T) {
+	dir := ".gen/skip_impl_test"
+	os.RemoveAll(dir)
+	g := gen.NewGenerator(gen.Config{
+		OutPath: dir + "/query",
+		Mode:    gen.WithDefaultQuery | gen.WithQueryInterface,
+	})
+	g.UseDB(DB)
+	model := g.GenerateModel("users")
+	g.ApplyInterface(func(diy_method.TestSkipImpl) {}, model)
+	g.Execute()
+
+	queryFile := dir + "/query/users.gen.go"
+	content, err := os.ReadFile(queryFile)
+	if err != nil {
+		t.Fatalf("read generated file failed: %v", err)
+	}
+	str := string(content)
+	if !strings.Contains(str, "func (u userDo) NoSkipMethod(") {
+		t.Error("should generate NoSkipMethod implementation")
+	}
+	if strings.Contains(str, "func (u userDo) SkipMethod(") || strings.Contains(str, "func (u usersDo) SkipMethod(") {
+		t.Error("should not generate SkipMethod implementation for // gen:skip interface")
+	}
+}

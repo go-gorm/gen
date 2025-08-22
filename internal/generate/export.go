@@ -199,6 +199,10 @@ func BuildDIYMethod(f *parser.InterfaceSet, s *QueryStructMeta, data []*Interfac
 				if err = t.checkResult(method.Result); err != nil {
 					return
 				}
+				if method.SkipImpl {
+					checkResults = append(checkResults, t)
+					continue
+				}
 				if err = t.checkSQL(); err != nil {
 					return
 				}

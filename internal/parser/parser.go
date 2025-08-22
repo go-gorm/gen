@@ -88,6 +88,9 @@ func (i *InterfaceSet) Visit(n ast.Node) (w ast.Visitor) {
 						Params:     getParamList(m.Type.(*ast.FuncType).Params),
 						Result:     getParamList(m.Type.(*ast.FuncType).Results),
 					}
+					if strings.Contains(method.Doc, "gen:skip") {
+						method.SkipImpl = true
+					}
 					fixParamPackagePath(i.imports, method.Params)
 					r.Methods = append(r.Methods, method)
 				}
