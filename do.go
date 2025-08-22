@@ -767,6 +767,9 @@ func (d *DO) prepareTx() *gorm.DB {
 // assignSet fetch all set
 func (d *DO) assignSet(exprs []field.AssignExpr) (set clause.Set) {
 	for _, expr := range exprs {
+		if expr == nil {
+			continue
+		}
 		column := clause.Column{Table: d.alias, Name: string(expr.ColumnName())}
 		switch e := expr.AssignExpr().(type) {
 		case clause.Expr:
