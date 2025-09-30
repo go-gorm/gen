@@ -301,6 +301,10 @@ func (g *Generator) generateQueryFile() (err error) {
 		return nil
 	}
 
+	if g.judgeMode(WithoutQuery) {
+		return nil
+	}
+
 	if err = os.MkdirAll(g.OutPath, os.ModePerm); err != nil {
 		return fmt.Errorf("make dir outpath(%s) fail: %s", g.OutPath, err)
 	}
