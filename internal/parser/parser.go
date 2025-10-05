@@ -322,7 +322,11 @@ func (p *Param) astGetGenericType(exprList ...ast.Expr) {
 	}
 	var types []string
 	for _, expr := range exprList {
-		types = append(types, astGetType(expr))
+		typeStr := astGetType(expr)
+		if typeStr == "" {
+			typeStr = "interface{}" // fallback for unsupported types
+		}
+		types = append(types, typeStr)
 	}
 	p.Type = fmt.Sprintf("%s[%s]", p.Type, strings.Join(types, ", "))
 }
