@@ -56,8 +56,8 @@ func (s *Section) current() section {
 	return s.members[s.currentIndex]
 }
 
-func (s *Section) appendTmpl(value string) {
-	s.Tmpls = append(s.Tmpls, value)
+func (s *Section) appendTmpl(value ...string) {
+	s.Tmpls = append(s.Tmpls, value...)
 }
 
 func (s *Section) hasSameName(value string) bool {
@@ -76,13 +76,29 @@ func (s *Section) BuildSQL() ([]Clause, error) {
 	}
 	name := "generateSQL"
 	res := make([]Clause, 0, len(s.members))
+	ordWrite := false
 	for {
 		c := s.current()
 		switch c.Type {
 		case model.SQL, model.DATA, model.VARIABLE:
 			sqlClause := s.parseSQL(name)
 			res = append(res, sqlClause)
-			s.appendTmpl(sqlClause.Finish())
+			s.appendTmpl(sqlClause.Finishes(ordWrite)...)
+		case model.SELECT:
+			selectClause, err := s.parseSelect()
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, selectClause)
+			s.appendTmpl(selectClause.Finishes()...)
+		case model.ORDERBY:
+			ordWrite = true
+			orderByClause, err := s.parseOrderBy()
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, orderByClause)
+			s.appendTmpl(orderByClause.Finishes()...)
 		case model.IF:
 			ifClause, err := s.parseIF(name)
 			if err != nil {
@@ -131,6 +147,78 @@ func (s *Section) BuildSQL() ([]Clause, error) {
 	return res, nil
 }
 
+// parseSelect parse select clause
+func (s *Section) parseSelect() (res SelectClause, err error) {
+	c := s.current()
+	s.current()
+	res.VarName = s.GetName(c.Type)
+	s.appendTmpl(res.Create())
+	res.Type = c.Type
+
+	if !s.HasMore() {
+		return
+	}
+	c = s.next()
+	for {
+		switch c.Type {
+		case model.SQL:
+			sqlClause := s.parseSQL(res.VarName)
+			res.Value = append(res.Value, sqlClause)
+			s.appendTmpl(sqlClause.Finishes()...)
+		case model.END:
+			return
+		default:
+			err = fmt.Errorf("unknow clause : %s", c.Value)
+			return
+		}
+		if !s.HasMore() {
+			break
+		}
+		c = s.next()
+	}
+	if c.isEnd() {
+		return
+	}
+	err = fmt.Errorf("incomplete SQL,select not end")
+	return
+}
+
+// parseOrderBy parse order by clause
+func (s *Section) parseOrderBy() (res OrderByClause, err error) {
+	c := s.current()
+	s.current()
+	res.VarName = s.GetName(c.Type)
+	s.appendTmpl(res.Create())
+	res.Type = c.Type
+
+	if !s.HasMore() {
+		return
+	}
+	c = s.next()
+	for {
+		switch c.Type {
+		case model.SQL:
+			sqlClause := s.parseSQL(res.VarName)
+			res.Value = append(res.Value, sqlClause)
+			s.appendTmpl(sqlClause.Finishes()...)
+		case model.END:
+			return
+		default:
+			err = fmt.Errorf("unknow clause : %s", c.Value)
+			return
+		}
+		if !s.HasMore() {
+			break
+		}
+		c = s.next()
+	}
+	if c.isEnd() {
+		return
+	}
+	err = fmt.Errorf("incomplete SQL,order by not end")
+	return
+}
+
 // parseIF parse if clause
 func (s *Section) parseIF(name string) (res IfClause, err error) {
 	c := s.current()
@@ -146,7 +234,7 @@ func (s *Section) parseIF(name string) (res IfClause, err error) {
 		case model.SQL, model.DATA, model.VARIABLE:
 			sqlClause := s.parseSQL(name)
 			res.Value = append(res.Value, sqlClause)
-			s.appendTmpl(sqlClause.Finish())
+			s.appendTmpl(sqlClause.Finishes()...)
 		case model.IF:
 			var ifClause IfClause
 			ifClause, err = s.parseIF(name)
@@ -301,7 +389,7 @@ func (s *Section) parseWhere() (res WhereClause, err error) {
 		case model.SQL, model.DATA, model.VARIABLE:
 			sqlClause := s.parseSQL(res.VarName)
 			res.Value = append(res.Value, sqlClause)
-			s.appendTmpl(sqlClause.Finish())
+			s.appendTmpl(sqlClause.Finishes()...)
 		case model.IF:
 			var ifClause IfClause
 			ifClause, err = s.parseIF(res.VarName)
@@ -368,7 +456,7 @@ func (s *Section) parseSet() (res SetClause, err error) {
 		case model.SQL, model.DATA, model.VARIABLE:
 			sqlClause := s.parseSQL(res.VarName)
 			res.Value = append(res.Value, sqlClause)
-			s.appendTmpl(sqlClause.Finish())
+			s.appendTmpl(sqlClause.Finishes()...)
 		case model.IF:
 			var ifClause IfClause
 			ifClause, err = s.parseIF(res.VarName)
@@ -434,7 +522,7 @@ func (s *Section) parseTrim() (res TrimClause, err error) {
 		case model.SQL, model.DATA, model.VARIABLE:
 			sqlClause := s.parseSQL(res.VarName)
 			res.Value = append(res.Value, sqlClause)
-			s.appendTmpl(sqlClause.Finish())
+			s.appendTmpl(sqlClause.Finishes()...)
 		case model.IF:
 			var ifClause IfClause
 			ifClause, err = s.parseIF(res.VarName)
@@ -593,6 +681,12 @@ func (s *Section) GetName(status model.Status) string {
 	case model.TRIM:
 		defer func() { s.ClauseTotal[model.TRIM]++ }()
 		return fmt.Sprintf("trimSQL%d", s.ClauseTotal[model.TRIM])
+	case model.SELECT:
+		defer func() { s.ClauseTotal[model.SELECT]++ }()
+		return "selectSQL"
+	case model.ORDERBY:
+		defer func() { s.ClauseTotal[model.ORDERBY]++ }()
+		return "generateSQL"
 	default:
 		return "generateSQL"
 	}
@@ -677,6 +771,10 @@ func (s *section) sectionType(str string) error {
 		s.Type = model.END
 	case "trim":
 		s.Type = model.TRIM
+	case "select":
+		s.Type = model.SELECT
+	case "orderby":
+		s.Type = model.ORDERBY
 	default:
 		return fmt.Errorf("unknown syntax: %s", str)
 	}

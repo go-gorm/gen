@@ -5,23 +5,44 @@ const DIYMethod = `
 
 // {{.DocComment }}
 func ({{.S}} {{.TargetStruct}}Do){{.FuncSign}}{
-	{{if .HasSQLData}}var params []interface{}
+	{{- $needParams := or .HasSQLData .NeedPaginate }}
+	{{- $execSqlName := "generateSQL"}}
+	{{- $needRecordError := or .NeedCount .ReturnError}}
+	{{if $needParams}}var params []interface{}
 
 	{{end}}var generateSQL strings.Builder
+	{{if .NeedPaginate}}{{$execSqlName = "recordSQL"}}var recordSQL, selectSQL strings.Builder{{end}}
+	{{if .NeedCount}}var countSQL strings.Builder{{end}}
 	{{range $line:=.Section.Tmpls}}{{$line}}
 	{{end}}
-
+	{{if .NeedPaginate}}
+	{{if not .NeedCount}}helper.JoinRecordBuilder(&recordSQL, selectSQL, generateSQL){{end}}
+	params = append(params, page.GetLimit(), page.GetOffset())
+	{{end}}
 	{{if .HasNeedNewResult}}result ={{if .ResultData.IsMap}}make{{else}}new{{end}}({{if ne .ResultData.Package ""}}{{.ResultData.Package}}.{{end}}{{.ResultData.Type}}){{end}}
 	{{if .ReturnSQLResult}}stmt := {{.S}}.UnderlyingDB().Statement
-	result,{{if .ReturnError}}err{{else}}_{{end}} = stmt.ConnPool.ExecContext(stmt.Context,generateSQL.String(){{if .HasSQLData}},params...{{end}}) // ignore_security_alert
-	{{else if .ReturnSQLRow}}row = {{.S}}.UnderlyingDB().Raw(generateSQL.String(){{if .HasSQLData}},params...{{end}}).Row() // ignore_security_alert
-	{{else if .ReturnSQLRows}}rows,{{if .ReturnError}}err{{else}}_{{end}} = {{.S}}.UnderlyingDB().Raw(generateSQL.String(){{if .HasSQLData}},params...{{end}}).Rows() // ignore_security_alert
+	result,{{if $needRecordError}}err{{else}}_{{end}} = stmt.ConnPool.ExecContext(stmt.Context,{{$execSqlName}}.String(){{if $needParams}},params...{{end}}) // ignore_security_alert
+	{{else if .ReturnSQLRow}}row = {{.S}}.UnderlyingDB().Raw({{$execSqlName}}.String(){{if $needParams}},params...{{end}}).Row() // ignore_security_alert
+	{{else if .ReturnSQLRows}}rows,{{if $needRecordError}}err{{else}}_{{end}} = {{.S}}.UnderlyingDB().Raw({{$execSqlName}}.String(){{if $needParams}},params...{{end}}).Rows() // ignore_security_alert
 	{{else}}var executeSQL *gorm.DB
-	executeSQL = {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL.String(){{if .HasSQLData}},params...{{end}}){{if not .ResultData.IsNull}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}  // ignore_security_alert
+	executeSQL = {{.S}}.UnderlyingDB().{{.GormOption}}({{$execSqlName}}.String(){{if $needParams}},params...{{end}}){{if not .ResultData.IsNull}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}  // ignore_security_alert
 	{{if .ReturnRowsAffected}}rowsAffected = executeSQL.RowsAffected
-	{{end}}{{if .ReturnError}}err = executeSQL.Error
+	{{end}}{{if $needRecordError}}err = executeSQL.Error
 	{{end}}{{if .ReturnNothing}}_ = executeSQL
 	{{end}}{{end}}
+	{{- if .NeedCount}}if err != nil {
+		return
+	}
+
+	if size := len({{.ResultData.Name}}); 0 < page.GetLimit() && 0 < size && size < page.GetLimit() {
+		count = int64(size+page.GetOffset())
+		return
+	}
+
+	executeSQL = {{.S}}.UnderlyingDB().{{.GormOption}}(countSQL.String(){{if $needParams}},params[:len(params)-2]...{{end}}).Take(&count)  // ignore_security_alert
+	{{if .ReturnError}}err = executeSQL.Error
+	{{else}}_ = executeSQL{{end}}
+	{{end}}
 	return
 }
 

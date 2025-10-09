@@ -27,6 +27,8 @@ type InterfaceMethod struct { // feature will replace InterfaceMethod to parser.
 	InterfaceName string         // origin interface name
 	Package       string         // interface package name
 	HasForParams  bool           //
+	NeedPaginate  bool           // need paginate or not
+	NeedCount     bool           // need count or not
 }
 
 // FuncSign function signature
@@ -127,7 +129,7 @@ func (m *InterfaceMethod) IsRepeatFromSameInterface(newMethod *InterfaceMethod) 
 	return m.MethodName == newMethod.MethodName && m.InterfaceName == newMethod.InterfaceName && m.TargetStruct == newMethod.TargetStruct
 }
 
-//GetParamInTmpl return param list
+// GetParamInTmpl return param list
 func (m *InterfaceMethod) GetParamInTmpl() string {
 	return paramToString(m.Params)
 }
@@ -193,6 +195,9 @@ func (m *InterfaceMethod) checkParams(params []parser.Param) (err error) {
 		case param.IsGenT():
 			param.Type = m.OriginStruct.Type
 			param.Package = m.OriginStruct.Package
+		case param.IsGenPage():
+			param.SetName("page")
+			m.NeedPaginate = true // need paginate
 		}
 		paramList[i] = param
 	}
@@ -200,7 +205,7 @@ func (m *InterfaceMethod) checkParams(params []parser.Param) (err error) {
 	return
 }
 
-// checkResult check all parameters and replace gen.T by target structure. Parameters must be one of int/string/struct/map
+// checkResult check all parameters and replace gen.T by target structure. Parameters must be one of int/int64/string/struct/map
 func (m *InterfaceMethod) checkResult(result []parser.Param) (err error) {
 	resList := make([]parser.Param, len(result))
 	var hasError bool
@@ -215,6 +220,12 @@ func (m *InterfaceMethod) checkResult(result []parser.Param) (err error) {
 		switch {
 		case param.InMainPkg():
 			return fmt.Errorf("query method cannot return struct of main package in [%s.%s]", m.InterfaceName, m.MethodName)
+		case m.NeedPaginate && !m.ResultData.IsNull() && param.IsCount():
+			if m.NeedCount {
+				return fmt.Errorf("query method cannot return more than 1 count value in [%s.%s]", m.InterfaceName, m.MethodName)
+			}
+			param.SetName("count")
+			m.NeedCount = true
 		case param.IsError():
 			if hasError {
 				return fmt.Errorf("query method cannot return more than 1 error value in [%s.%s]", m.InterfaceName, m.MethodName)

@@ -141,6 +141,16 @@ func (p *Param) IsError() bool {
 	return p.Type == "error"
 }
 
+// IsGenPage ...
+func (p *Param) IsGenPage() bool {
+	return p.Package == "gen" && p.Type == "Page" && !p.IsPointer
+}
+
+// IsCount ...
+func (p *Param) IsCount() bool {
+	return p.Package == "" && p.Type == "int64" && !p.IsPointer
+}
+
 // IsGenM ...
 func (p *Param) IsGenM() bool {
 	return p.Package == "gen" && p.Type == "M"

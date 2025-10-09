@@ -51,9 +51,62 @@ func (s SQLClause) Create() string {
 	return fmt.Sprintf("%s.WriteString(%s)", s.VarName, s.String())
 }
 
-// Finish finish clause
-func (s SQLClause) Finish() string {
-	return fmt.Sprintf("%s.WriteString(%s)", s.VarName, s.String())
+// Finishes finish clause
+func (s SQLClause) Finishes(conds ...bool) []string {
+	var lines []string
+	if s.VarName == "generateSQL" && conds != nil && len(conds) > 0 && conds[0] {
+		if strings.Trim(s.String(), " ;\"") != "" {
+			lines = append(lines, fmt.Sprintf("recordSQL.WriteString(%s)", s.String()))
+			lines = append(lines, fmt.Sprintf("countSQL.WriteString(%s)", s.String()))
+		}
+	} else {
+		lines = append(lines, fmt.Sprintf("%s.WriteString(%s)", s.VarName, s.String()))
+	}
+	return lines
+}
+
+// SelectClause select clause
+type SelectClause struct {
+	clause
+	Value []Clause
+}
+
+// String string clause
+func (s SelectClause) String() string {
+	return fmt.Sprintf("helper.SelectTrim(%s.String())", s.VarName)
+}
+
+// Create create clause
+func (s SelectClause) Create() string {
+	return ""
+}
+
+// Finishes finish clause
+func (s SelectClause) Finishes() []string {
+	return nil
+}
+
+// OrderByClause order by clause
+type OrderByClause struct {
+	clause
+	Value []Clause
+}
+
+// String string clause
+func (s OrderByClause) String() string {
+	return fmt.Sprintf("helper.OrderByTrim(%s.String())", s.VarName)
+}
+
+// Create create clause
+func (s OrderByClause) Create() string {
+	return "helper.JoinCountBuilder(&countSQL, generateSQL)"
+}
+
+// Finishes finish clause
+func (s OrderByClause) Finishes() []string {
+	return []string{
+		"helper.JoinRecordBuilder(&recordSQL, selectSQL, generateSQL)",
+	}
 }
 
 // IfClause if clause

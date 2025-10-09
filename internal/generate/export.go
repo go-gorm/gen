@@ -207,6 +207,14 @@ func BuildDIYMethod(f *parser.InterfaceSet, s *QueryStructMeta, data []*Interfac
 					err = fmt.Errorf("sql [%s] build err:%w", t.SQLString, err)
 					return
 				}
+				if !t.NeedPaginate && t.Section.ClauseTotal[model.SELECT] > 0 {
+					err = fmt.Errorf("sql [%s] check err:select block can only be used if the page parameter exists", t.SQLString)
+					return
+				}
+				if !t.NeedCount && t.Section.ClauseTotal[model.ORDERBY] > 0 {
+					err = fmt.Errorf("sql [%s] check err:order by block can only be used if the count result exists", t.SQLString)
+					return
+				}
 				checkResults = append(checkResults, t)
 			}
 		}
