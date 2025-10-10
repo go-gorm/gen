@@ -358,6 +358,21 @@ func astGetType(expr ast.Expr) string {
 		return v.Name
 	case *ast.InterfaceType:
 		return "interface{}"
+	case *ast.SelectorExpr:
+		typ := v.Sel.Name
+		pkg := astGetPackageName(v.X)
+		if pkg != "" {
+			return fmt.Sprintf("%s.%s", pkg, typ)
+		}
+		return typ
+	}
+	return ""
+}
+
+func astGetPackageName(expr ast.Expr) string {
+	switch v := expr.(type) {
+	case *ast.Ident:
+		return v.Name
 	}
 	return ""
 }
