@@ -73,6 +73,7 @@ func (c *Column) ToField(nullable, coverable, signable bool) *Field {
 		GORMTag:          c.buildGormTag(),
 		Tag:              map[string]string{field.TagKeyJson: c.jsonTagNS(c.Name())},
 		ColumnComment:    comment,
+		Column:           c,
 	}
 }
 
