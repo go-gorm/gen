@@ -8,6 +8,7 @@ import (
 	"context"
 	"gorm.io/gen"
 	"gorm.io/gen/field"
+
 	"gorm.io/gorm"
 
 	"gorm.io/gen/tests/.gen/dal_generic/model"

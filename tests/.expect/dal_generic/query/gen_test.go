@@ -78,9 +78,6 @@ func Test_WithContext(t *testing.T) {
 
 	for _, ctx := range []context.Context{
 		qCtx.Bank.UnderlyingDB().Statement.Context,
-		qCtx.CreditCard.UnderlyingDB().Statement.Context,
-		qCtx.Customer.UnderlyingDB().Statement.Context,
-		qCtx.Person.UnderlyingDB().Statement.Context,
 		qCtx.User.UnderlyingDB().Statement.Context,
 	} {
 		if v := ctx.Value(key); v != value {

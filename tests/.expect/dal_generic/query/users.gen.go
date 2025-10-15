@@ -12,6 +12,7 @@ import (
 	"gorm.io/gen"
 	"gorm.io/gen/field"
 	"gorm.io/gen/helper"
+
 	"gorm.io/gorm"
 
 	"gorm.io/gen/tests/.gen/dal_generic/model"
@@ -134,6 +135,35 @@ type userDo struct {
 }
 type IUserDo interface {
 	gen.IGenericsDo[IUserDo, *model.User]
+ 	FindByUsers(user model.User) (result []model.User)
+ 	FindByComplexIf(user *model.User) (result []model.User)
+ 	FindByIfTime(start time.Time) (result []model.User)
+ 	TestFor(names []string) (result model.User, err error)
+ 	TestForKey(names []string, name string, value string) (result model.User, err error)
+ 	TestForOr(names []string) (result model.User, err error)
+ 	TestIfInFor(names []string, name string) (result model.User, err error)
+ 	TestForInIf(names []string, name string) (result model.User, err error)
+ 	TestForInWhere(names []string, name string, forName string) (result model.User, err error)
+ 	TestForUserList(users []*model.User, name string) (result model.User, err error)
+ 	TestForMap(param map[string]string, name string) (result model.User, err error)
+ 	TestIfInIf(name string) (result model.User)
+ 	TestMoreFor(names []string, ids []int) (result []model.User)
+ 	TestMoreFor2(names []string, ids []int) (result []model.User)
+ 	TestForInSet(users []model.User) (err error)
+ 	TestInsertMoreInfo(users []model.User) (err error)
+ 	TestIfElseFor(name string, users []model.User) (err error)
+ 	TestForLike(names []string) (result []model.User)
+ 	AddUser(name string, age int) (result sql.Result, err error)
+ 	AddUser1(name string, age int) (rowsAffected int64, err error)
+ 	AddUser2(name string, age int) (rowsAffected int64)
+ 	AddUser3(name string, age int) (result sql.Result)
+ 	AddUser4(name string, age int) (row *sql.Row)
+ 	AddUser5(name string, age int) (rows *sql.Rows)
+ 	AddUser6(name string, age int) (rows *sql.Rows, err error)
+ 	FindByID(id int) (result model.User)
+ 	LikeSearch(name string) (result *model.User)
+ 	InSearch(names []string) (result []*model.User)
+ 	ColumnSearch(name string, names []string) (result []*model.User)
 }
 
 func (u *userDo) withDO(do gen.Dao) IUserDo {
