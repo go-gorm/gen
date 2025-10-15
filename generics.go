@@ -310,21 +310,21 @@ func (b GenericsDo[T, E]) Preload(fields ...field.RelationField) T {
 // FirstOrInit ...
 func (b GenericsDo[T, E]) FirstOrInit() (E, error) {
 	var e E
-	if result, err := b.DO.FirstOrInit(); err != nil {
+	result, err := b.DO.FirstOrInit()
+	if err != nil {
 		return e, err
-	} else {
-		return result.(E), nil
 	}
+	return result.(E), nil
 }
 
 // FirstOrCreate ...
 func (b GenericsDo[T, E]) FirstOrCreate() (E, error) {
 	var e E
-	if result, err := b.DO.FirstOrCreate(); err != nil {
+	result, err := b.DO.FirstOrCreate()
+	if err != nil {
 		return e, err
-	} else {
-		return result.(E), nil
 	}
+	return result.(E), nil
 }
 
 // FindByPage ...
