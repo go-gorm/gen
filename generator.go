@@ -436,16 +436,17 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 	if err != nil {
 		return err
 	}
-	err = render(crudTmpl, &buf, data.QueryStructMeta)
-	if err != nil {
-		return err
-	}
 
 	for _, method := range data.Interfaces {
 		err = render(tmpl.DIYMethod, &buf, method)
 		if err != nil {
 			return err
 		}
+	}
+
+	err = render(crudTmpl, &buf, data.QueryStructMeta)
+	if err != nil {
+		return err
 	}
 
 	defer g.info(fmt.Sprintf("generate query file: %s%s%s.gen.go", g.OutPath, string(os.PathSeparator), data.FileName))

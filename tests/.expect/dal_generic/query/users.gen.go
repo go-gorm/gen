@@ -166,13 +166,6 @@ type IUserDo interface {
 	ColumnSearch(name string, names []string) (result []*model.User)
 }
 
-func (u *userDo) withDO(do gen.Dao) IUserDo {
-	_r := &userDo{}
-	_r.DO = *do.(*gen.DO)
-	_r.IWithDO = gen.WithDOFunc[IUserDo](u.withDO)
-	return _r
-}
-
 // FindByUsers
 //
 // select * from @@table
@@ -905,4 +898,11 @@ func (u userDo) ColumnSearch(name string, names []string) (result []*model.User)
 	_ = executeSQL
 
 	return
+}
+
+func (u *userDo) withDO(do gen.Dao) IUserDo {
+	_r := &userDo{}
+	_r.DO = *do.(*gen.DO)
+	_r.IWithDO = gen.WithDOFunc[IUserDo](u.withDO)
+	return _r
 }
