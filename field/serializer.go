@@ -2,11 +2,11 @@ package field
 
 import (
 	"context"
-	"gorm.io/gorm/clause"
-	"gorm.io/gorm/schema"
 	"reflect"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
+	"gorm.io/gorm/schema"
 )
 
 type ValuerType struct {
@@ -22,7 +22,7 @@ func (v ValuerType) GormValue(ctx context.Context, db *gorm.DB) (expr clause.Exp
 	return clause.Expr{SQL: "?", Vars: []interface{}{newValue}}
 }
 
-// Field2 a standard field struct
+// Serializer a standard field struct
 type Serializer struct{ expr }
 
 // Eq judge equal
@@ -71,8 +71,8 @@ func (field Serializer) Value(value schema.SerializerValuerInterface) AssignExpr
 }
 
 // Sum ...
-func (field Serializer) Sum() Field {
-	return Field{field.sum()}
+func (field Serializer) Sum() Number[float64] {
+	return newNumber[float64](field.sum())
 }
 
 // IfNull ...

@@ -8,7 +8,7 @@ const (
 		{{.QueryStructName}}Do
 		` + fields + `
 	}
-	` + tableMethod + asMethond + updateFieldMethod + getFieldMethod + fillFieldMapMethod + cloneMethod + replaceMethod + relationship + defineMethodStruct
+	` + tableMethod + asMethond + updateFieldMethod + getFieldMethod + fillFieldMapMethod + cloneMethod + replaceMethod + relationship
 
 	// TableQueryStructWithContext table query struct with context
 	TableQueryStructWithContext = createMethod + `
@@ -27,17 +27,28 @@ const (
 
 	func ({{.S}} {{.QueryStructName}}) Columns(cols ...field.Expr) gen.Columns { return {{.S}}.{{.QueryStructName}}Do.Columns(cols...) }
 
-	` + getFieldMethod + fillFieldMapMethod + cloneMethod + replaceMethod + relationship + defineMethodStruct
+	` + getFieldMethod + fillFieldMapMethod + cloneMethod + replaceMethod + relationship
 
 	// TableQueryIface table query interface
 	TableQueryIface = defineDoInterface
+
+	// TableGenericQueryIface table generic query interface
+	TableGenericQueryIface = defineGenericsDoInterface
+
+	//DefineGenericsMethodStruct generics do struct
+	DefineGenericsMethodStruct = `type {{.QueryStructName}}Do struct {gen.GenericsDo[I{{.ModelStructName}}Do, *{{.StructInfo.Package}}.{{.StructInfo.Type}}]}`
+
+	// DefineMethodStruct do struct
+	DefineMethodStruct = `type {{.QueryStructName}}Do struct { gen.DO }`
 )
 
 const (
 	createMethod = `
 	func new{{.ModelStructName}}(db *gorm.DB, opts ...gen.DOOption) {{.QueryStructName}} {
 		_{{.QueryStructName}} := {{.QueryStructName}}{}
-	
+		{{if .UseGenericMode}}
+		_{{.QueryStructName}}.{{.QueryStructName}}Do.IWithDO = gen.WithDOFunc[{{.ReturnObject}}](_{{.QueryStructName}}.{{.QueryStructName}}Do.withDO)
+		{{end}}
 		_{{.QueryStructName}}.{{.QueryStructName}}Do.UseDB(db,opts...)
 		_{{.QueryStructName}}.{{.QueryStructName}}Do.UseModel(&{{.StructInfo.Package}}.{{.StructInfo.Type}}{})
 	
@@ -134,7 +145,6 @@ func ({{.S}} *{{.QueryStructName}}) GetFieldByName(fieldName string) (field.Orde
 		`{{- $relation := .Relation }}{{- $relationship := $relation.RelationshipName}}` +
 		relationStruct + relationTx +
 		`{{end}}{{end}}`
-	defineMethodStruct = `type {{.QueryStructName}}Do struct { gen.DO }`
 
 	fillFieldMapMethod = `
 func ({{.S}} *{{.QueryStructName}}) fillFieldMap() {
@@ -146,7 +156,14 @@ func ({{.S}} *{{.QueryStructName}}) fillFieldMap() {
 	{{end -}}
 }
 `
-
+	defineGenericsDoInterface = `
+type I{{.ModelStructName}}Do interface {
+	gen.IGenericsDo[I{{.ModelStructName}}Do, *{{.StructInfo.Package}}.{{.StructInfo.Type}}]
+	{{range .Interfaces -}}
+	{{.FuncSign}}
+	{{end}}
+}
+`
 	defineDoInterface = `
 
 type I{{.ModelStructName}}Do interface {

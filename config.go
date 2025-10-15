@@ -24,6 +24,9 @@ const (
 
 	// WithQueryInterface generate code with exported interface object
 	WithQueryInterface
+
+	// WithGeneric generate code with generic
+	WithGeneric
 )
 
 // Config generator's basic configuration

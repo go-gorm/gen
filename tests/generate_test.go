@@ -144,15 +144,13 @@ var generateCase = map[string]func(dir string) *gen.Generator{
 			OutPath: dir + "/query",
 			Mode:    gen.WithDefaultQuery | gen.WithQueryInterface,
 
-			WithUnitTest: true,
-
+			WithUnitTest:      true,
 			FieldNullable:     true,
 			FieldCoverable:    true,
 			FieldWithIndexTag: true,
 		})
 		g.UseDB(DB)
 		g.WithJSONTagNameStrategy(func(c string) string { return "-" })
-
 		banks := g.GenerateModel("banks")
 		creditCards := g.GenerateModel("credit_cards")
 		customers := g.GenerateModel("customers",
@@ -172,6 +170,24 @@ var generateCase = map[string]func(dir string) *gen.Generator{
 			}),
 		)
 		g.ApplyBasic(customers)
+		return g
+	},
+	generateDirPrefix + "dal_generic": func(dir string) *gen.Generator {
+		g := gen.NewGenerator(gen.Config{
+			OutPath: dir + "/query",
+			Mode:    gen.WithDefaultQuery | gen.WithGeneric,
+
+			WithUnitTest: true,
+
+			FieldNullable:     true,
+			FieldCoverable:    true,
+			FieldWithIndexTag: true,
+		})
+		g.UseDB(DB)
+		g.WithJSONTagNameStrategy(func(c string) string { return "-" })
+		g.ApplyBasic(g.GenerateModel("banks"))
+		g.ApplyInterface(func(testIF diy_method.TestIF, testFor diy_method.TestFor, method diy_method.InsertMethod, selectMethod diy_method.SelectMethod) {
+		}, g.GenerateModel("users"))
 		return g
 	},
 	generateDirPrefix + "dal_8": func(dir string) *gen.Generator {

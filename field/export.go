@@ -1,11 +1,13 @@
 package field
 
 import (
+	"database/sql/driver"
 	"fmt"
-	"strings"
-
+	"golang.org/x/exp/constraints"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"strings"
+	"time"
 )
 
 var (
@@ -14,6 +16,12 @@ var (
 	// ALL same with Star
 	ALL = Star
 )
+
+// ScanValuer interface for Field
+type ScanValuer interface {
+	Scan(src interface{}) error   // sql.Scanner
+	Value() (driver.Value, error) // driver.Valuer
+}
 
 // Option field option
 type Option func(clause.Column) clause.Column
@@ -29,7 +37,7 @@ var (
 
 // NewField create new field
 func NewField(table, column string, opts ...Option) Field {
-	return Field{expr: expr{col: toColumn(table, column, opts...)}}
+	return Field(genericsField[driver.Valuer]{expr{col: toColumn(table, column, opts...)}})
 }
 
 // NewUnsafeFieldRaw create new field by native sql
@@ -53,92 +61,97 @@ func NewAsterisk(table string, opts ...Option) Asterisk {
 
 // ======================== integer =======================
 
-// NewInt create new Int
+// NewNumber build number type field
+func NewNumber[T constraints.Integer | constraints.Float](table, column string, opts ...Option) Number[T] {
+	return newNumber[T](expr{col: toColumn(table, column, opts...)})
+}
+
+// NewInt create new field for int
 func NewInt(table, column string, opts ...Option) Int {
-	return Int{expr: expr{col: toColumn(table, column, opts...)}}
+	return NewNumber[int](table, column, opts...)
 }
 
-// NewInt8 create new Int8
+// NewInt8 create new field for int8
 func NewInt8(table, column string, opts ...Option) Int8 {
-	return Int8{expr: expr{col: toColumn(table, column, opts...)}}
+	return NewNumber[int8](table, column, opts...)
 }
 
-// NewInt16 ...
+// NewInt16 create new field for int16
 func NewInt16(table, column string, opts ...Option) Int16 {
-	return Int16{expr: expr{col: toColumn(table, column, opts...)}}
+	return NewNumber[int16](table, column, opts...)
 }
 
-// NewInt32 ...
+// NewInt32 create new field for int32
 func NewInt32(table, column string, opts ...Option) Int32 {
-	return Int32{expr: expr{col: toColumn(table, column, opts...)}}
+	return NewNumber[int32](table, column, opts...)
 }
 
-// NewInt64 ...
+// NewInt64 create new field for int64
 func NewInt64(table, column string, opts ...Option) Int64 {
-	return Int64{expr: expr{col: toColumn(table, column, opts...)}}
+	return NewNumber[int64](table, column, opts...)
 }
 
-// NewUint ...
+// NewUint create new field for uint
 func NewUint(table, column string, opts ...Option) Uint {
-	return Uint{expr: expr{col: toColumn(table, column, opts...)}}
+	return NewNumber[uint](table, column, opts...)
 }
 
-// NewUint8 ...
+// NewUint8 create new field for uint8
 func NewUint8(table, column string, opts ...Option) Uint8 {
-	return Uint8{expr: expr{col: toColumn(table, column, opts...)}}
+	return NewNumber[uint8](table, column, opts...)
 }
 
-// NewUint16 ...
+// NewUint16 create new field for uint16
 func NewUint16(table, column string, opts ...Option) Uint16 {
-	return Uint16{expr: expr{col: toColumn(table, column, opts...)}}
+	return NewNumber[uint16](table, column, opts...)
 }
 
-// NewUint32 ...
+// NewUint32 create new field for uint32
 func NewUint32(table, column string, opts ...Option) Uint32 {
-	return Uint32{expr: expr{col: toColumn(table, column, opts...)}}
+	return NewNumber[uint32](table, column, opts...)
 }
 
-// NewUint64 ...
+// NewUint64 create new field for uint64
 func NewUint64(table, column string, opts ...Option) Uint64 {
-	return Uint64{expr: expr{col: toColumn(table, column, opts...)}}
+	return NewNumber[uint64](table, column, opts...)
 }
 
 // ======================== float =======================
 
-// NewFloat32 ...
+// NewFloat32 create new field for float32
 func NewFloat32(table, column string, opts ...Option) Float32 {
-	return Float32{expr: expr{col: toColumn(table, column, opts...)}}
+	return NewNumber[float32](table, column, opts...)
 }
 
-// NewFloat64 ...
+// NewFloat64 create new field for float64
 func NewFloat64(table, column string, opts ...Option) Float64 {
-	return Float64{expr: expr{col: toColumn(table, column, opts...)}}
+	return NewNumber[float64](table, column, opts...)
 }
 
 // ======================== string =======================
 
 // NewString ...
 func NewString(table, column string, opts ...Option) String {
-	return String{expr: expr{col: toColumn(table, column, opts...)}}
+	return newChars[string](expr{col: toColumn(table, column, opts...)})
 }
 
 // NewBytes ...
 func NewBytes(table, column string, opts ...Option) Bytes {
-	return Bytes{expr: expr{col: toColumn(table, column, opts...)}}
+	return newChars[[]byte](expr{col: toColumn(table, column, opts...)})
 }
 
 // ======================== bool =======================
 
 // NewBool ...
 func NewBool(table, column string, opts ...Option) Bool {
-	return Bool{expr: expr{col: toColumn(table, column, opts...)}}
+	return Bool{genericsField[bool]{expr{col: toColumn(table, column, opts...)}}}
 }
 
 // ======================== time =======================
 
 // NewTime ...
 func NewTime(table, column string, opts ...Option) Time {
-	return Time{expr: expr{col: toColumn(table, column, opts...)}}
+	return Time{genericsField[time.Time]{expr{col: toColumn(table, column, opts...)}}}
 }
 
 func toColumn(table, column string, opts ...Option) clause.Column {
