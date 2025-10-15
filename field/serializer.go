@@ -36,8 +36,8 @@ func (field Serializer) Neq(value schema.SerializerValuerInterface) Expr {
 }
 
 // In ...
-func (s Serializer) In(values ...schema.SerializerValuerInterface) Expr {
-	return expr{e: clause.IN{Column: s.RawExpr(), Values: s.toSlice(values...)}}
+func (field Serializer) In(values ...schema.SerializerValuerInterface) Expr {
+	return expr{e: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
 }
 
 // Gt ...
@@ -71,8 +71,8 @@ func (field Serializer) Value(value schema.SerializerValuerInterface) AssignExpr
 }
 
 // Sum ...
-func (s Serializer) Sum() Number[float64] {
-	return newNumber[float64](s.sum())
+func (field Serializer) Sum() Number[float64] {
+	return newNumber[float64](field.sum())
 }
 
 // IfNull ...

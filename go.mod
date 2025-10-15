@@ -3,8 +3,8 @@ module gorm.io/gen
 go 1.18
 
 require (
-	golang.org/x/exp v0.0.0-20240409090435-93d18d7e34b8
-	golang.org/x/tools v0.20.0
+	golang.org/x/exp v0.0.0-20240112132812-db7319d0e0e3
+	golang.org/x/tools v0.17.0
 	gorm.io/datatypes v1.2.4
 	gorm.io/gorm v1.25.12
 	gorm.io/hints v1.1.0

@@ -3,12 +3,11 @@ package field
 import (
 	"database/sql/driver"
 	"fmt"
-	"strings"
-	"time"
-
 	"golang.org/x/exp/constraints"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"strings"
+	"time"
 )
 
 var (

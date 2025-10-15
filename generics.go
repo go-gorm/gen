@@ -74,7 +74,14 @@ type IGenericsDo[T any, E any] interface {
 	schema.Tabler
 	ToSQL(queryFn func(T)) string
 }
+
+// IWithDO is a generic interface for types that can be associated with a DAO (Data Access Object)
+// It enables method chaining by returning the concrete implementation type
 type IWithDO[T any] interface {
+	// WithDO associates a DAO instance with the implementing type
+	//   - do: The DAO (Data Access Object) to be used for data operations
+	// Returns a new instance of the implementing type with the DAO set
+	// This enables fluent-style method chaining while maintaining type safety
 	WithDO(do Dao) T
 }
 
@@ -224,31 +231,31 @@ func (b GenericsDo[T, E]) Save(values ...E) error {
 // First ...
 func (b GenericsDo[T, E]) First() (E, error) {
 	var e E
-	if result, err := b.DO.First(); err != nil {
+	result, err := b.DO.First()
+	if err != nil {
 		return e, err
-	} else {
-		return result.(E), nil
 	}
+	return result.(E), nil
 }
 
 // Take ...
 func (b GenericsDo[T, E]) Take() (E, error) {
 	var e E
-	if result, err := b.DO.Take(); err != nil {
+	result, err := b.DO.Take()
+	if err != nil {
 		return e, err
-	} else {
-		return result.(E), nil
 	}
+	return result.(E), nil
 }
 
 // Last ...
 func (b GenericsDo[T, E]) Last() (E, error) {
 	var e E
-	if result, err := b.DO.Last(); err != nil {
+	result, err := b.DO.Last()
+	if err != nil {
 		return e, err
-	} else {
-		return result.(E), nil
 	}
+	return result.(E), nil
 }
 
 // Find ...
@@ -369,8 +376,32 @@ func (b *GenericsDo[T, E]) withDO(do Dao) T {
 	return b.WithDO(do)
 }
 
+// WithDOFunc is a function type that implements the IWithDO interface through
+// functional options. It provides a mechanism to inject DAO dependencies while
+// maintaining type safety with generics.
+//
+// The generic type T should be constrained to pointer receivers of concrete
+// types to ensure proper value semantics and immutability.
 type WithDOFunc[T any] func(do Dao) T
 
+// WithDO executes the receiver function with the provided DAO instance,
+// returning a new instance of type T. This method enables fluent chaining
+// while preserving immutability by design.
+//
+// Parameters:
+//
+//	do - Data Access Object instance (non-nil) to be injected
+//
+// Returns:
+//
+//	New instance of type T initialized with the DAO dependency
+//
+// Example:
+//
+//	constructor := func(do Dao) *UserService {
+//	    return &UserService{dao: do}
+//	}
+//	service := WithDOFunc[*UserService](constructor).WithDO(db)
 func (b WithDOFunc[T]) WithDO(do Dao) T {
 	return b(do)
 }

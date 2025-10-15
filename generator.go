@@ -407,8 +407,9 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 		return err
 	}
 
-	data.QueryStructMeta = data.QueryStructMeta.IfaceMode(g.judgeMode(WithQueryInterface) || g.judgeMode(WithGeneric))
-	data.QueryStructMeta = data.QueryStructMeta.GenericMode(g.judgeMode(WithGeneric))
+	data.QueryStructMeta = data.QueryStructMeta.
+		IfaceMode(g.judgeMode(WithQueryInterface) || g.judgeMode(WithGeneric)).
+		GenericMode(g.judgeMode(WithGeneric))
 
 	structTmpl := tmpl.TableQueryStructWithContext
 	crudTmpl := tmpl.CRUDMethod
