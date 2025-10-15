@@ -6,10 +6,11 @@ package query
 
 import (
 	"context"
-	"gorm.io/gen"
-	"gorm.io/gen/field"
 
 	"gorm.io/gorm"
+
+	"gorm.io/gen"
+	"gorm.io/gen/field"
 
 	"gorm.io/gen/tests/.gen/dal_generic/model"
 )
