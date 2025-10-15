@@ -3,6 +3,7 @@ package gen
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"gorm.io/gen/field"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -235,7 +236,11 @@ func (b GenericsDo[T, E]) First() (E, error) {
 	if err != nil {
 		return e, err
 	}
-	return result.(E), nil
+	v, ok := result.(E)
+	if !ok {
+		return e, fmt.Errorf("gen: First type mismatch, expected %T, got %T", new(E), result)
+	}
+	return v, nil
 }
 
 // Take ...
@@ -245,7 +250,11 @@ func (b GenericsDo[T, E]) Take() (E, error) {
 	if err != nil {
 		return e, err
 	}
-	return result.(E), nil
+	v, ok := result.(E)
+	if !ok {
+		return e, fmt.Errorf("gen: Take type mismatch, expected %T, got %T", new(E), result)
+	}
+	return v, nil
 }
 
 // Last ...
@@ -255,17 +264,31 @@ func (b GenericsDo[T, E]) Last() (E, error) {
 	if err != nil {
 		return e, err
 	}
-	return result.(E), nil
+	v, ok := result.(E)
+	if !ok {
+		return e, fmt.Errorf("gen: Last type mismatch, expected %T, got %T", new(E), result)
+	}
+	return v, nil
 }
 
 // Find ...
 func (b GenericsDo[T, E]) Find() ([]E, error) {
 	result, err := b.DO.Find()
-	return result.([]E), err
+	if err != nil {
+		return nil, err
+	}
+	v, ok := result.([]E)
+	if !ok {
+		return nil, fmt.Errorf("gen: Find type mismatch, expected []E, got %T", result)
+	}
+	return v, nil
 }
 
 // FindInBatch ...
 func (b GenericsDo[T, E]) FindInBatch(batchSize int, fc func(tx Dao, batch int) error) (results []E, err error) {
+	if batchSize <= 0 {
+		return nil, fmt.Errorf("gen: invalid batchSize %d, must be > 0", batchSize)
+	}
 	buf := make([]E, 0, batchSize)
 	err = b.DO.FindInBatches(&buf, batchSize, func(tx Dao, batch int) error {
 		defer func() { results = append(results, buf...) }()
@@ -314,7 +337,11 @@ func (b GenericsDo[T, E]) FirstOrInit() (E, error) {
 	if err != nil {
 		return e, err
 	}
-	return result.(E), nil
+	v, ok := result.(E)
+	if !ok {
+		return e, fmt.Errorf("gen: FirstOrInit type mismatch, expected %T, got %T", new(E), result)
+	}
+	return v, nil
 }
 
 // FirstOrCreate ...
@@ -324,7 +351,11 @@ func (b GenericsDo[T, E]) FirstOrCreate() (E, error) {
 	if err != nil {
 		return e, err
 	}
-	return result.(E), nil
+	v, ok := result.(E)
+	if !ok {
+		return e, fmt.Errorf("gen: FirstOrCreate type mismatch, expected %T, got %T", new(E), result)
+	}
+	return v, nil
 }
 
 // FindByPage ...
@@ -373,6 +404,9 @@ func (b GenericsDo[T, E]) ToSQL(queryFn func(T)) string {
 }
 
 func (b *GenericsDo[T, E]) withDO(do Dao) T {
+	if b.IWithDO == nil {
+		panic("gen: IWithDO is nil")
+	}
 	return b.WithDO(do)
 }
 
