@@ -301,8 +301,9 @@ func (g *Generator) generateQueryFile() (err error) {
 		return nil
 	}
 
-	if err = os.MkdirAll(g.OutPath, os.ModePerm); err != nil {
-		return fmt.Errorf("make dir outpath(%s) fail: %s", g.OutPath, err)
+	queryOutPath := g.getQueryOutputPath()
+	if err = os.MkdirAll(queryOutPath, os.ModePerm); err != nil {
+		return fmt.Errorf("create query pkg path(%s) fail: %s", queryOutPath, err)
 	}
 
 	errChan := make(chan error)
@@ -391,6 +392,10 @@ func (g *Generator) generateQueryFile() (err error) {
 	return nil
 }
 
+func (g *Generator) getQueryOutputPath() (outPath string) {
+	return filepath.Join(g.OutPath, g.QueryPkgPath) + string(os.PathSeparator)
+}
+
 // generateSingleQueryFile generate query code and save to file
 func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 	var buf bytes.Buffer
@@ -454,8 +459,10 @@ func (g *Generator) generateSingleQueryFile(data *genInfo) (err error) {
 		return err
 	}
 
-	defer g.info(fmt.Sprintf("generate query file: %s%s%s.gen.go", g.OutPath, string(os.PathSeparator), data.FileName))
-	return g.output(fmt.Sprintf("%s%s%s.gen.go", g.OutPath, string(os.PathSeparator), data.FileName), buf.Bytes())
+	outputPath := filepath.Join(g.OutPath, g.QueryPkgPath)
+
+	defer g.info(fmt.Sprintf("generate query file: %s%s%s.gen.go", outputPath, string(os.PathSeparator), data.FileName))
+	return g.output(fmt.Sprintf("%s%s%s.gen.go", outputPath, string(os.PathSeparator), data.FileName), buf.Bytes())
 }
 
 // generateQueryUnitTestFile generate unit test file for query
@@ -486,8 +493,10 @@ func (g *Generator) generateQueryUnitTestFile(data *genInfo) (err error) {
 		}
 	}
 
-	defer g.info(fmt.Sprintf("generate unit test file: %s%s%s.gen_test.go", g.OutPath, string(os.PathSeparator), data.FileName))
-	return g.output(fmt.Sprintf("%s%s%s.gen_test.go", g.OutPath, string(os.PathSeparator), data.FileName), buf.Bytes())
+	outputPath := filepath.Join(g.OutPath, g.QueryPkgPath)
+
+	defer g.info(fmt.Sprintf("generate unit test file: %s%s%s.gen_test.go", outputPath, string(os.PathSeparator), data.FileName))
+	return g.output(fmt.Sprintf("%s%s%s.gen_test.go", outputPath, string(os.PathSeparator), data.FileName), buf.Bytes())
 }
 
 // generateModelFile generate model structures and save to file
@@ -496,12 +505,8 @@ func (g *Generator) generateModelFile() error {
 		return nil
 	}
 
-	modelOutPath, err := g.getModelOutputPath()
-	if err != nil {
-		return err
-	}
-
-	if err = os.MkdirAll(modelOutPath, os.ModePerm); err != nil {
+	modelOutPath := g.getModelOutputPath()
+	if err := os.MkdirAll(modelOutPath, os.ModePerm); err != nil {
 		return fmt.Errorf("create model pkg path(%s) fail: %s", modelOutPath, err)
 	}
 
@@ -541,7 +546,7 @@ func (g *Generator) generateModelFile() error {
 		}(data)
 	}
 	select {
-	case err = <-errChan:
+	case err := <-errChan:
 		return err
 	case <-pool.AsyncWaitAll():
 		g.fillModelPkgPath(modelOutPath)
@@ -549,16 +554,8 @@ func (g *Generator) generateModelFile() error {
 	return nil
 }
 
-func (g *Generator) getModelOutputPath() (outPath string, err error) {
-	if strings.Contains(g.ModelPkgPath, string(os.PathSeparator)) {
-		outPath, err = filepath.Abs(g.ModelPkgPath)
-		if err != nil {
-			return "", fmt.Errorf("cannot parse model pkg path: %w", err)
-		}
-	} else {
-		outPath = filepath.Join(filepath.Dir(g.OutPath), g.ModelPkgPath)
-	}
-	return outPath + string(os.PathSeparator), nil
+func (g *Generator) getModelOutputPath() (outPath string) {
+	return filepath.Join(g.OutPath, g.ModelPkgPath) + string(os.PathSeparator)
 }
 
 func (g *Generator) fillModelPkgPath(filePath string) {
