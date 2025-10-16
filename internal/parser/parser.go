@@ -276,8 +276,10 @@ func (p *Param) astGetParamType(param *ast.Field) {
 		p.astGetEltType(v.X)
 	case *ast.IndexExpr:
 		p.astGetEltType(v.X)
+		p.astGetGenericType(v.Index)
 	case *ast.IndexListExpr:
 		p.astGetEltType(v.X)
+		p.astGetGenericType(v.Indices...)
 	default:
 		log.Printf("Unsupported param type: %+v", v)
 	}
@@ -305,9 +307,31 @@ func (p *Param) astGetEltType(expr ast.Expr) {
 		p.Type = "[]" + p.Type
 	case *ast.IndexExpr:
 		p.astGetEltType(v.X)
+		p.astGetGenericType(v.Index)
+	case *ast.IndexListExpr:
+		p.astGetEltType(v.X)
+		p.astGetGenericType(v.Indices...)
 	default:
 		log.Printf("Unsupported param type: %+v", v)
 	}
+}
+
+func (p *Param) astGetGenericType(exprList ...ast.Expr) {
+	if p.Package == "" {
+		p.Package = "UNDEFINED" // Generic types are definitely not built-in types.
+	}
+	if len(exprList) == 0 {
+		return
+	}
+	var types []string
+	for _, expr := range exprList {
+		typeStr := astGetType(expr)
+		if typeStr == "" {
+			typeStr = "interface{}" // fallback for unsupported types
+		}
+		types = append(types, typeStr)
+	}
+	p.Type = fmt.Sprintf("%s[%s]", p.Type, strings.Join(types, ", "))
 }
 
 func (p *Param) astGetPackageName(expr ast.Expr) {
