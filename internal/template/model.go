@@ -29,6 +29,12 @@ type {{.ModelStructName}} struct {
 	`{{end}}
 }
 
+{{if .WithAutoRegistry}}
+func init() {
+	RegisterModel(&{{.ModelStructName}}{}, TableName{{.ModelStructName}})
+}
+{{end}}
+
 `
 
 // ModelMethod model struct DIY method
