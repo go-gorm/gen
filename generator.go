@@ -515,6 +515,14 @@ func (g *Generator) generateModelFile() error {
 		go func(data *generate.QueryStructMeta) {
 			defer pool.Done()
 
+			// Set auto registry fields if enabled
+			if g.judgeMode(WithAutoRegistry) {
+				// Check if this table should have auto registry
+				if g.shouldEnableAutoRegistry(data.TableName) {
+					data.WithAutoRegistry = true
+				}
+			}
+
 			var buf bytes.Buffer
 			err := render(tmpl.Model, &buf, data)
 			if err != nil {
@@ -546,7 +554,57 @@ func (g *Generator) generateModelFile() error {
 	case <-pool.AsyncWaitAll():
 		g.fillModelPkgPath(modelOutPath)
 	}
+
+	// Generate registry file if auto registry is enabled
+	if g.judgeMode(WithAutoRegistry) {
+		err = g.generateModelRegistryFile(modelOutPath)
+		if err != nil {
+			return fmt.Errorf("generate model registry file fail: %w", err)
+		}
+	}
+
 	return nil
+}
+
+// generateModelRegistryFile generate model registry file
+func (g *Generator) generateModelRegistryFile(modelOutPath string) error {
+	var buf bytes.Buffer
+
+	// Get model package name from path
+	modelPkgName := filepath.Base(strings.TrimSuffix(modelOutPath, string(os.PathSeparator)))
+
+	err := render(tmpl.ModelRegistry, &buf, map[string]interface{}{
+		"Package": modelPkgName,
+	})
+	if err != nil {
+		return err
+	}
+
+	registryFile := filepath.Join(modelOutPath, "gen.go")
+	err = g.output(registryFile, buf.Bytes())
+	if err != nil {
+		return err
+	}
+
+	g.info(fmt.Sprintf("generate model registry file: %s", registryFile))
+	return nil
+}
+
+// shouldEnableAutoRegistry check if auto registry should be enabled for the given table
+func (g *Generator) shouldEnableAutoRegistry(tableName string) bool {
+	// If no specific tables configured, enable for all tables
+	if len(g.RegistryTableList) == 0 {
+		return true
+	}
+
+	// Check if table name is in the configured list
+	for _, configuredTable := range g.RegistryTableList {
+		if configuredTable == tableName {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (g *Generator) getModelOutputPath() (outPath string, err error) {

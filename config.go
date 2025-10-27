@@ -27,6 +27,9 @@ const (
 
 	// WithGeneric generate code with generic
 	WithGeneric
+
+	// WithAutoRegistry generate init functions to auto-register models
+	WithAutoRegistry
 )
 
 // Config generator's basic configuration
@@ -37,6 +40,9 @@ type Config struct {
 	OutFile      string // query code file name, default: gen.go
 	ModelPkgPath string // generated model code's package name
 	WithUnitTest bool   // generate unit test for query code
+
+	// auto registry configuration
+	RegistryTableList []string // specific table names to enable auto registry, empty means all tables
 
 	// generate model global configuration
 	FieldNullable     bool // generate pointer when field is nullable
@@ -104,6 +110,13 @@ func (cfg *Config) WithDataTypeMap(newMap map[string]func(columnType gorm.Column
 // WithJSONTagNameStrategy specify json tag naming strategy
 func (cfg *Config) WithJSONTagNameStrategy(ns func(columnName string) (tagContent string)) {
 	cfg.fieldJSONTagNS = ns
+}
+
+// WithAutoRegistry enable auto registry feature for generated models
+// tableNames: optional table names to enable auto registry, if empty, all tables will be enabled
+func (cfg *Config) WithAutoRegistry(tableNames ...string) {
+	cfg.Mode |= WithAutoRegistry
+	cfg.RegistryTableList = tableNames
 }
 
 // WithImportPkgPath specify import package path
