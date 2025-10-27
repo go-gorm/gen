@@ -142,7 +142,7 @@ func checkInitFunction(t *testing.T, modelDir, tableName string, shouldHaveInit 
 		// 验证 RegisterModel 调用格式
 		if hasInitFunc && hasRegisterCall {
 			expectedModelName := getExpectedModelName(tableName)
-			expectedCall := "RegisterModel(" + expectedModelName + "{}, \"" + expectedModelName + "\")"
+			expectedCall := "RegisterModel(&" + expectedModelName + "{}, TableName" + expectedModelName + ")"
 
 			if !strings.Contains(fileContent, expectedCall) {
 				t.Errorf("file %s should contain %s", fileName, expectedCall)
