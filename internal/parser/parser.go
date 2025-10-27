@@ -199,6 +199,11 @@ func (p *Param) IsSQLRows() bool {
 	return (p.Package == "sql" && p.Type == "Rows") || (p.Package == "gen" && p.Type == "SQLRows")
 }
 
+// IsGormDB ...
+func (p *Param) IsGormDB() bool {
+	return p.Package == "gorm" && p.Type == "DB"
+}
+
 // SetName ...
 func (p *Param) SetName(name string) {
 	p.Name = name
