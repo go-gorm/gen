@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"gorm.io/driver/sqlite"
+	"gorm.io/gen/internal/model"
 	"gorm.io/gorm"
 )
 
@@ -165,7 +166,7 @@ func getExpectedModelName(tableName string) string {
 		return "Order"
 	default:
 		// 简单的首字母大写
-		return strings.Title(tableName)
+		return model.TitleCase(tableName)
 	}
 }
 
@@ -273,8 +274,12 @@ func TestWithAutoRegistryConfig(t *testing.T) {
 
 			for i, expected := range tt.expectedList {
 				if i >= len(cfg.RegistryTableList) || cfg.RegistryTableList[i] != expected {
+					actual := "<out of bounds>"
+					if i < len(cfg.RegistryTableList) {
+						actual = cfg.RegistryTableList[i]
+					}
 					t.Errorf("RegistryTableList[%d] = %s, want %s",
-						i, cfg.RegistryTableList[i], expected)
+						i, actual, expected)
 				}
 			}
 		})

@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	golang.org/x/exp v0.0.0-20240112132812-db7319d0e0e3
+	golang.org/x/text v0.14.0
 	golang.org/x/tools v0.17.0
 	gorm.io/datatypes v1.2.4
 	gorm.io/driver/sqlite v1.4.3
@@ -21,6 +22,5 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.15 // indirect
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
 	gorm.io/driver/mysql v1.5.7 // indirect
 )
