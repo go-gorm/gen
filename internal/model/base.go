@@ -38,6 +38,10 @@ const (
 	END
 	// TRIM ...
 	TRIM
+	// SELECT ...
+	SELECT
+	// ORDERBY ...
+	ORDERBY
 )
 
 // SourceCode source code

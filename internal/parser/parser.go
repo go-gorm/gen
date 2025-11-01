@@ -144,6 +144,16 @@ func (p *Param) IsError() bool {
 	return p.Type == "error"
 }
 
+// IsGenPage ...
+func (p *Param) IsGenPage() bool {
+	return p.Package == "gen" && p.Type == "Page" && !p.IsPointer
+}
+
+// IsCount ...
+func (p *Param) IsCount() bool {
+	return p.Package == "" && p.Type == "int64" && !p.IsPointer
+}
+
 // IsGenM ...
 func (p *Param) IsGenM() bool {
 	return p.Package == "gen" && p.Type == "M"
@@ -276,8 +286,10 @@ func (p *Param) astGetParamType(param *ast.Field) {
 		p.astGetEltType(v.X)
 	case *ast.IndexExpr:
 		p.astGetEltType(v.X)
+		p.astGetGenericType(v.Index)
 	case *ast.IndexListExpr:
 		p.astGetEltType(v.X)
+		p.astGetGenericType(v.Indices...)
 	default:
 		log.Printf("Unsupported param type: %+v", v)
 	}
@@ -305,9 +317,31 @@ func (p *Param) astGetEltType(expr ast.Expr) {
 		p.Type = "[]" + p.Type
 	case *ast.IndexExpr:
 		p.astGetEltType(v.X)
+		p.astGetGenericType(v.Index)
+	case *ast.IndexListExpr:
+		p.astGetEltType(v.X)
+		p.astGetGenericType(v.Indices...)
 	default:
 		log.Printf("Unsupported param type: %+v", v)
 	}
+}
+
+func (p *Param) astGetGenericType(exprList ...ast.Expr) {
+	if p.Package == "" {
+		p.Package = "UNDEFINED" // Generic types are definitely not built-in types.
+	}
+	if len(exprList) == 0 {
+		return
+	}
+	var types []string
+	for _, expr := range exprList {
+		typeStr := astGetType(expr)
+		if typeStr == "" {
+			typeStr = "interface{}" // fallback for unsupported types
+		}
+		types = append(types, typeStr)
+	}
+	p.Type = fmt.Sprintf("%s[%s]", p.Type, strings.Join(types, ", "))
 }
 
 func (p *Param) astGetPackageName(expr ast.Expr) {
@@ -327,6 +361,21 @@ func astGetType(expr ast.Expr) string {
 		return v.Name
 	case *ast.InterfaceType:
 		return "interface{}"
+	case *ast.SelectorExpr:
+		typ := v.Sel.Name
+		pkg := astGetPackageName(v.X)
+		if pkg != "" {
+			return fmt.Sprintf("%s.%s", pkg, typ)
+		}
+		return typ
+	}
+	return ""
+}
+
+func astGetPackageName(expr ast.Expr) string {
+	switch v := expr.(type) {
+	case *ast.Ident:
+		return v.Name
 	}
 	return ""
 }

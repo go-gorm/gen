@@ -110,6 +110,32 @@ func setValue(value string) string {
 	return strings.Trim(value, ", ")
 }
 
+// JoinRecordBuilder join records builder
+func JoinRecordBuilder(src *strings.Builder, selectValue, suffix strings.Builder) {
+	value1 := trimAll(selectValue.String())
+	if value1 != "" {
+		src.WriteString("SELECT ")
+		src.WriteString(value1)
+		src.WriteString(" ")
+	}
+	value2 := trimAll(suffix.String())
+	if value2 != "" {
+		src.WriteString(strings.Trim(value2, " ;"))
+		src.WriteString(" ")
+		src.WriteString("LIMIT ? OFFSET ?; ")
+	}
+}
+
+// JoinCountBuilder join count builder
+func JoinCountBuilder(src *strings.Builder, suffix strings.Builder) {
+	value := trimAll(suffix.String())
+	if value != "" {
+		src.WriteString("SELECT COUNT(*) ")
+		src.WriteString(strings.Trim(value, " ;"))
+		src.WriteString("; ")
+	}
+}
+
 // JoinWhereBuilder join where builder
 func JoinWhereBuilder(src *strings.Builder, whereValue strings.Builder) {
 	value := trimAll(whereValue.String())

@@ -27,6 +27,26 @@ import (
 	"gorm.io/gen/internal/utils/pools"
 )
 
+// Page pagination info
+type Page struct {
+	Page  int // current page
+	Limit int // limit size
+}
+
+func (p Page) GetLimit() int {
+	if p.Limit < 1 {
+		return 10
+	}
+	return p.Limit
+}
+
+func (p Page) GetOffset() int {
+	if p.Page <= 1 {
+		return 0
+	}
+	return (p.Page - 1) * p.GetLimit()
+}
+
 // T generic type
 type T interface{}
 
