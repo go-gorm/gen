@@ -1,10 +1,10 @@
 module gorm.io/gen
 
-go 1.18
+go 1.24.0
 
 require (
 	golang.org/x/exp v0.0.0-20240112132812-db7319d0e0e3
-	golang.org/x/tools v0.17.0
+	golang.org/x/tools v0.39.0
 	gorm.io/datatypes v1.2.4
 	gorm.io/gorm v1.25.12
 	gorm.io/hints v1.1.0
@@ -17,8 +17,8 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	golang.org/x/mod v0.17.0 // indirect
-	golang.org/x/sync v0.7.0 // indirect
+	golang.org/x/mod v0.30.0 // indirect
+	golang.org/x/sync v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	gorm.io/driver/mysql v1.5.7 // indirect
 )
