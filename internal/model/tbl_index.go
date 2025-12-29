@@ -1,6 +1,10 @@
 package model
 
-import "gorm.io/gorm"
+import (
+	"strings"
+
+	"gorm.io/gorm"
+)
 
 // Index table index info
 type Index struct {
@@ -27,4 +31,20 @@ func GroupByColumn(indexList []gorm.Index) map[string][]*Index {
 		}
 	}
 	return columnIndexMap
+}
+
+func sortIndexesByName(a, b *Index) int {
+	if a == nil && b == nil {
+		return 0
+	}
+
+	if a == nil {
+		return 1
+	}
+
+	if b == nil {
+		return -1
+	}
+
+	return strings.Compare(a.Name(), b.Name())
 }
