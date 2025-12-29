@@ -1,6 +1,7 @@
 package model
 
 import (
+	"sort"
 	"strings"
 
 	"gorm.io/gorm"
@@ -33,18 +34,21 @@ func GroupByColumn(indexList []gorm.Index) map[string][]*Index {
 	return columnIndexMap
 }
 
-func sortIndexesByName(a, b *Index) int {
-	if a == nil && b == nil {
-		return 0
-	}
+func sortIndexesByName(indexes []*Index) {
+	sort.Slice(indexes, func(i, j int) bool {
+		a, b := indexes[i], indexes[j]
+		if a == nil && b == nil {
+			return false
+		}
 
-	if a == nil {
-		return 1
-	}
+		if a == nil {
+			return false
+		}
 
-	if b == nil {
-		return -1
-	}
+		if b == nil {
+			return true
+		}
 
-	return strings.Compare(a.Name(), b.Name())
+		return strings.Compare(a.Name(), b.Name()) < 0
+	})
 }
