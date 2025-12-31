@@ -4,8 +4,17 @@ import (
 	"bytes"
 	"strings"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"gorm.io/gen/field"
 )
+
+// TitleCase converts a string to title case using golang.org/x/text/cases
+// This replaces the deprecated strings.Title function
+func TitleCase(s string) string {
+	caser := cases.Title(language.English)
+	return caser.String(s)
+}
 
 const (
 	// DefaultModelPkg ...
@@ -203,13 +212,13 @@ func (m *Field) GenType() string {
 	typ := strings.TrimLeft(m.Type, "*")
 	switch typ {
 	case "string", "bytes":
-		return strings.Title(typ)
+		return TitleCase(typ)
 	case "int", "int8", "int16", "int32", "int64", "uint", "uint8", "uint16", "uint32", "uint64":
-		return strings.Title(typ)
+		return TitleCase(typ)
 	case "float64", "float32":
-		return strings.Title(typ)
+		return TitleCase(typ)
 	case "bool":
-		return strings.Title(typ)
+		return TitleCase(typ)
 	case "time.Time":
 		return "Time"
 	case "json.RawMessage", "[]byte":

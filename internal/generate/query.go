@@ -42,6 +42,9 @@ type QueryStructMeta struct {
 	interfaceMode bool
 
 	UseGenericMode bool // use generic mode
+
+	// auto registry fields
+	WithAutoRegistry bool // whether to generate auto registry init function
 }
 
 // parseStruct get all elements of struct with gorm's Parse, ignore unexported elements

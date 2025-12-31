@@ -1,9 +1,10 @@
 package main
 
 import (
+	"examples/conf"
+	"examples/dal"
+
 	"gorm.io/gen"
-	"gorm.io/gen/examples/conf"
-	"gorm.io/gen/examples/dal"
 )
 
 func init() {
