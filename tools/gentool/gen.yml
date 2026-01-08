@@ -30,3 +30,9 @@ database:
   fieldWithTypeTag  : false
   # detect integer field's unsigned type, adjust generated data type
   fieldSignable  : false
+  # create default query in generated code
+  withDefaultQuery: false
+  # generate code without context constrain
+  withoutContext: false
+  # generate code with exported interface object
+  withQueryInterface: false
