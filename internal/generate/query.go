@@ -40,8 +40,9 @@ type QueryStructMeta struct {
 	Fields                []*model.Field   // normalized model and relationship fields
 	Source                model.SourceCode // generated model source, when model generation is enabled
 	// ImportPkgPaths contains additional quoted imports required by generated code.
-	ImportPkgPaths []string
-	ModelMethods   []*parser.Method // user custom method bind to db base struct
+	ImportPkgPaths  []string
+	ModelMethods    []*parser.Method // user custom method bind to db base struct
+	CustomTemplates []string         // custom template text
 
 	interfaceMode bool
 
