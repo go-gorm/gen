@@ -235,6 +235,12 @@ func (g *Generator) ApplyInterface(fc interface{}, models ...interface{}) {
 	g.apply(fc, structs)
 }
 
+func (g *Generator) ApplyCustomTemplateForModel(templateText string) {
+	for _, modelMeta := range g.models {
+		modelMeta.CustomTemplates = append(modelMeta.CustomTemplates, templateText)
+	}
+}
+
 func (g *Generator) apply(fc interface{}, structs []*generate.QueryStructMeta) {
 	interfacePaths, err := parser.GetInterfacePath(fc)
 	if err != nil {
@@ -520,6 +526,14 @@ func (g *Generator) generateModelFile() error {
 			if err != nil {
 				errChan <- err
 				return
+			}
+
+			for _, customTemplate := range data.CustomTemplates {
+				err = render(customTemplate, &buf, data)
+				if err != nil {
+					errChan <- err
+					return
+				}
 			}
 
 			for _, method := range data.ModelMethods {
