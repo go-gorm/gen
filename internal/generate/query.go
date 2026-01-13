@@ -38,6 +38,7 @@ type QueryStructMeta struct {
 	Source          model.SourceCode
 	ImportPkgPaths  []string
 	ModelMethods    []*parser.Method // user custom method bind to db base struct
+	CustomTemplates []string         // custom template text
 
 	interfaceMode bool
 
