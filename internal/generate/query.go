@@ -52,8 +52,8 @@ func (b *QueryStructMeta) parseStruct(st interface{}) error {
 	if err != nil {
 		return err
 	}
-	b.TableName = stmt.Table
-	b.FileName = strings.ToLower(stmt.Table)
+	b.TableName = b.db.NamingStrategy.TableName(stmt.Table)
+	b.FileName = strings.ToLower(b.TableName)
 
 	var fp FieldParser = dummyFieldParser{}
 	if fps, ok := st.(FieldParser); ok && fps != nil {
