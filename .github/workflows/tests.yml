@@ -12,7 +12,7 @@ jobs:
   tests:
     strategy:
       matrix:
-        go: ["1.21", "1.20", "1.19", "1.18"]
+        go: ["1.25", "1.24", "1.21", "1.20", "1.19", "1.18"]
         platform: [ubuntu-latest] # can not run in windows OS
     runs-on: ${{ matrix.platform }}
 
@@ -38,7 +38,7 @@ jobs:
     strategy:
       matrix:
         dbversion: ["mysql:5.7", "mysql:latest"]
-        go: ["1.21", "1.20", "1.19", "1.18"]
+        go: ["1.25", "1.24", "1.21", "1.20", "1.19", "1.18"]
         platform: [ubuntu-latest]
     runs-on: ${{ matrix.platform }}
 
