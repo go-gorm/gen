@@ -66,6 +66,7 @@ func (b *QueryStructMeta) parseStruct(st interface{}) error {
 			ColumnName:    f.DBName,
 			CustomGenType: fp.GetFieldGenType(f),
 			ColumnComment: f.Comment,
+			Tag:           f.TagSettings,
 		}
 		if len(f.EmbeddedBindNames) > 1 {
 			gf.Name = strings.Join(f.EmbeddedBindNames, "")
