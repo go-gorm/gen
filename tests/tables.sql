@@ -86,7 +86,7 @@ CREATE TABLE `users` (
   PRIMARY KEY (`id`),
   KEY `idx_name` (`name`) USING BTREE,
   KEY `idx_name_company_id` (`name`,`company_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='table multiline comment\nline1\nline2';
 
 
 

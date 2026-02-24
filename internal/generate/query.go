@@ -26,18 +26,19 @@ func (dummyFieldParser) GetFieldGenType(*schema.Field) string { return "" }
 type QueryStructMeta struct {
 	db *gorm.DB
 
-	Generated       bool   // whether to generate db model
-	FileName        string // generated file name
-	S               string // the first letter(lower case)of simple Name (receiver)
-	QueryStructName string // internal query struct name
-	ModelStructName string // origin/model struct name
-	TableName       string // table name in db server
-	TableComment    string // table comment in db server
-	StructInfo      parser.Param
-	Fields          []*model.Field
-	Source          model.SourceCode
-	ImportPkgPaths  []string
-	ModelMethods    []*parser.Method // user custom method bind to db base struct
+	Generated             bool   // whether to generate db model
+	FileName              string // generated file name
+	S                     string // the first letter(lower case)of simple Name (receiver)
+	QueryStructName       string // internal query struct name
+	ModelStructName       string // origin/model struct name
+	TableName             string // table name in db server
+	MultilineTableComment bool   // indicator that table comment consists of multiple rows
+	TableComment          string // table comment in db server
+	StructInfo            parser.Param
+	Fields                []*model.Field
+	Source                model.SourceCode
+	ImportPkgPaths        []string
+	ModelMethods          []*parser.Method // user custom method bind to db base struct
 
 	interfaceMode bool
 
@@ -174,7 +175,13 @@ func (b *QueryStructMeta) StructComment() string {
 
 // QueryStructComment query struct comment
 func (b *QueryStructMeta) QueryStructComment() string {
+
 	if b.TableComment != "" {
+
+		if b.MultilineTableComment {
+			return fmt.Sprintf(`/*%s %s*/`, b.QueryStructName, b.TableComment)
+		}
+
 		return fmt.Sprintf(`// %s %s`, b.QueryStructName, b.TableComment)
 	}
 

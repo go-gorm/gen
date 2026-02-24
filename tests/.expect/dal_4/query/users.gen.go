@@ -46,6 +46,11 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 	return _user
 }
 
+/*
+user table multiline comment
+line1
+line2
+*/
 type user struct {
 	userDo userDo
 

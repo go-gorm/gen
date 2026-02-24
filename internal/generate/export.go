@@ -36,19 +36,22 @@ func GetQueryStructMeta(db *gorm.DB, conf *model.Config) (*QueryStructMeta, erro
 		return nil, err
 	}
 
+	tc := getTableComment(db, tableName)
+
 	return (&QueryStructMeta{
-		db:              db,
-		Source:          model.Table,
-		Generated:       true,
-		FileName:        fileName,
-		TableName:       tableName,
-		TableComment:    getTableComment(db, tableName),
-		ModelStructName: structName,
-		QueryStructName: uncaptialize(structName),
-		S:               strings.ToLower(structName[0:1]),
-		StructInfo:      parser.Param{Type: structName, Package: conf.ModelPkg},
-		ImportPkgPaths:  conf.ImportPkgPaths,
-		Fields:          getFields(db, conf, columns),
+		db:                    db,
+		Source:                model.Table,
+		Generated:             true,
+		FileName:              fileName,
+		TableName:             tableName,
+		MultilineTableComment: strings.Contains(tc, "\n"),
+		TableComment:          tc,
+		ModelStructName:       structName,
+		QueryStructName:       uncaptialize(structName),
+		S:                     strings.ToLower(structName[0:1]),
+		StructInfo:            parser.Param{Type: structName, Package: conf.ModelPkg},
+		ImportPkgPaths:        conf.ImportPkgPaths,
+		Fields:                getFields(db, conf, columns),
 	}).addMethodFromAddMethodOpt(conf.GetModelMethods()...), nil
 }
 
