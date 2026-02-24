@@ -179,7 +179,7 @@ func (b *QueryStructMeta) QueryStructComment() string {
 	if b.TableComment != "" {
 
 		if b.MultilineTableComment {
-			return fmt.Sprintf(`/*%s %s*/`, b.QueryStructName, b.TableComment)
+			return fmt.Sprintf("/*\n%s %s\n*/", b.QueryStructName, b.TableComment)
 		}
 
 		return fmt.Sprintf(`// %s %s`, b.QueryStructName, b.TableComment)
