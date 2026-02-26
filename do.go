@@ -744,7 +744,7 @@ func (d *DO) UpdateColumnSimple(columns ...field.AssignExpr) (info ResultInfo, e
 		return
 	}
 	tx := d.prepareTx()
-	result := tx.Clauses(d.assignSet(columns)).Omit("*").UpdateColumns(map[string]interface{}{})
+	result := tx.Clauses(d.assignSetWithoutAutoUpdate(columns)).Omit("*").UpdateColumns(map[string]interface{}{})
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
@@ -766,6 +766,13 @@ func (d *DO) prepareTx() *gorm.DB {
 
 // assignSet fetch all set
 func (d *DO) assignSet(exprs []field.AssignExpr) (set clause.Set) {
+	set = d.assignSetWithoutAutoUpdate(exprs)
+	stmt := d.db.Session(&gorm.Session{}).Statement
+	stmt.Dest = map[string]interface{}{}
+	return append(set, callbacks.ConvertToAssignments(stmt)...)
+}
+
+func (d *DO) assignSetWithoutAutoUpdate(exprs []field.AssignExpr) (set clause.Set) {
 	for _, expr := range exprs {
 		if expr == nil {
 			continue
@@ -780,10 +787,7 @@ func (d *DO) assignSet(exprs []field.AssignExpr) (set clause.Set) {
 			set = append(set, e...)
 		}
 	}
-
-	stmt := d.db.Session(&gorm.Session{}).Statement
-	stmt.Dest = map[string]interface{}{}
-	return append(set, callbacks.ConvertToAssignments(stmt)...)
+	return set
 }
 
 // Delete ...

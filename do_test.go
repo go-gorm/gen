@@ -1,13 +1,16 @@
 package gen
 
 import (
+	"context"
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"gorm.io/gorm/logger"
 	"gorm.io/hints"
 
 	"gorm.io/gen/field"
@@ -421,5 +424,45 @@ func TestDO_methods(t *testing.T) {
 
 	for _, testcase := range testcases {
 		checkBuildExpr(t, testcase.Expr, testcase.Opts, testcase.Result, testcase.ExpectedVars)
+	}
+}
+
+type captureLogger struct {
+	lastSQL string
+}
+
+func (l *captureLogger) LogMode(level logger.LogLevel) logger.Interface { return l }
+func (l *captureLogger) Info(ctx context.Context, s string, args ...interface{}) {
+}
+func (l *captureLogger) Warn(ctx context.Context, s string, args ...interface{}) {
+}
+func (l *captureLogger) Error(ctx context.Context, s string, args ...interface{}) {
+}
+func (l *captureLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
+	sql, _ := fc()
+	l.lastSQL = sql
+}
+
+type updateColumnSimpleModel struct {
+	gorm.Model
+	Num int
+}
+
+func TestUpdateColumnSimpleNoUpdatedAt(t *testing.T) {
+	l := &captureLogger{}
+	dry := db.Session(&gorm.Session{DryRun: true, NewDB: true, Logger: l})
+	var d DO
+	d.UseDB(dry)
+	d.UseModel(updateColumnSimpleModel{})
+
+	_, err := d.Where(field.NewInt("", "id").Eq(1)).UpdateColumnSimple(field.NewInt("", "num").Add(1))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if l.lastSQL == "" {
+		t.Fatalf("empty sql")
+	}
+	if strings.Contains(strings.ToLower(l.lastSQL), "updated_at") {
+		t.Fatalf("unexpected updated_at in sql: %s", l.lastSQL)
 	}
 }
