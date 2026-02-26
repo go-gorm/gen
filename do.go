@@ -760,6 +760,10 @@ func (d *DO) prepareTx() *gorm.DB {
 	tx := d.db
 	if d.backfillData != nil {
 		tx = tx.Model(d.backfillData)
+	} else if tx.Statement != nil && tx.Statement.Model == nil {
+		if resultPtr := d.newResultPointer(); resultPtr != nil {
+			tx = tx.Model(resultPtr)
+		}
 	}
 	return tx
 }
