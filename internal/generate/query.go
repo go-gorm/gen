@@ -137,6 +137,44 @@ func (b *QueryStructMeta) appendOrUpdateField(f *model.Field) {
 
 func (b *QueryStructMeta) appendField(f *model.Field) { b.Fields = append(b.Fields, f) }
 
+func (b *QueryStructMeta) HasUniqueIndex() bool {
+	for _, f := range b.Fields {
+		if f == nil {
+			continue
+		}
+		if len(f.GORMTag[field.TagKeyGormUniqueIndex]) > 0 {
+			return true
+		}
+		if f.Column == nil {
+			continue
+		}
+		for _, idx := range f.Column.Indexes {
+			if idx == nil {
+				continue
+			}
+			if unique, ok := idx.Unique(); ok && unique {
+				return true
+			}
+		}
+	}
+	if b.db == nil || b.TableName == "" {
+		return false
+	}
+	indexes, err := b.db.Migrator().GetIndexes(b.TableName)
+	if err != nil {
+		return false
+	}
+	for _, idx := range indexes {
+		if idx == nil {
+			continue
+		}
+		if unique, ok := idx.Unique(); ok && unique {
+			return true
+		}
+	}
+	return false
+}
+
 // HasField check if BaseStruct has fields
 func (b *QueryStructMeta) HasField() bool { return len(b.Fields) > 0 }
 

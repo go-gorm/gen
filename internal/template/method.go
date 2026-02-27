@@ -298,19 +298,26 @@ func Test_{{.QueryStructName}}Query(t *testing.T) {
 		t.Error("GetFieldByName(\"\") from {{.QueryStructName}} success")
 	}
 
-	err = _do.Create(&{{.StructInfo.Package}}.{{.ModelStructName}}{})
+	item := &{{.StructInfo.Package}}.{{.ModelStructName}}{}
+	err = _do.Create(item)
 	if err != nil {
 		t.Error("create item in table <{{.TableName}}> fail:", err)
 	}
 
-	err = _do.Save(&{{.StructInfo.Package}}.{{.ModelStructName}}{})
+{{- if not .HasUniqueIndex }}
+	err = _do.Save(item)
 	if err != nil {
-		t.Error("create item in table <{{.TableName}}> fail:", err)
+		t.Error("save item in table <{{.TableName}}> fail:", err)
 	}
+{{- end }}
 
-	err = _do.CreateInBatches([]*{{.StructInfo.Package}}.{{.ModelStructName}}{ {}, {} }, 10)
+{{- if .HasUniqueIndex }}
+	err = _do.CreateInBatches([]*{{.StructInfo.Package}}.{{.ModelStructName}}{&{{.StructInfo.Package}}.{{.ModelStructName}}{}}, 10)
+{{- else }}
+	err = _do.CreateInBatches([]*{{.StructInfo.Package}}.{{.ModelStructName}}{&{{.StructInfo.Package}}.{{.ModelStructName}}{}, &{{.StructInfo.Package}}.{{.ModelStructName}}{}}, 10)
+{{- end }}
 	if err != nil {
-		t.Error("create item in table <{{.TableName}}> fail:", err)
+		t.Error("create items in table <{{.TableName}}> fail:", err)
 	}
 
 	_, err = _do.Select({{.QueryStructName}}.ALL).Take()
