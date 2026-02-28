@@ -1,15 +1,16 @@
 package parser
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"go/build"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"runtime"
 	"strings"
-
-	"golang.org/x/tools/go/packages"
 )
 
 // InterfacePath interface path
@@ -38,8 +39,13 @@ func GetInterfacePath(v interface{}) (paths []*InterfacePath, err error) {
 			path.Name = n
 		}
 
-		cfg := &packages.Config{Mode: packages.NeedFiles}
-		var pkgs []*packages.Package
+		type goListPackage struct {
+			Dir        string   `json:"Dir"`
+			GoFiles    []string `json:"GoFiles"`
+			ImportPath string   `json:"ImportPath"`
+		}
+		var pkg goListPackage
+		var output []byte
 		if strings.Split(arg.String(), ".")[0] == "main" {
 			var skip int
 			var file string
@@ -50,24 +56,24 @@ func GetInterfacePath(v interface{}) (paths []*InterfacePath, err error) {
 				}
 				skip++
 			}
-			cfg.Dir = filepath.Dir(file)
-			pkgs, err = packages.Load(cfg, ".")
+			cmd := exec.Command("go", "list", "-json", ".")
+			cmd.Dir = filepath.Dir(file)
+			output, err = cmd.CombinedOutput()
 		} else {
-			pkgs, err = packages.Load(cfg, arg.PkgPath())
+			cmd := exec.Command("go", "list", "-json", arg.PkgPath())
+			output, err = cmd.CombinedOutput()
 		}
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("go list package %s fail: %w\n%s", arg.PkgPath(), err, bytes.TrimSpace(output))
 		}
-		if len(pkgs) == 0 {
-			return nil, fmt.Errorf("interface package not found:%s", arg.PkgPath())
+		if unmarshalErr := json.Unmarshal(output, &pkg); unmarshalErr != nil {
+			return nil, fmt.Errorf("parse go list output for %s fail: %w", arg.PkgPath(), unmarshalErr)
 		}
-		if len(pkgs[0].Errors) > 0 {
-			return nil, fmt.Errorf("load package %s fail: %w", arg.PkgPath(), pkgs[0].Errors[0])
-		}
-		path.Package = pkgs[0].PkgPath
-		for _, file := range pkgs[0].GoFiles {
-			if fileExists(file) {
-				path.Files = append(path.Files, file)
+		path.Package = pkg.ImportPath
+		for _, f := range pkg.GoFiles {
+			goFile := filepath.Join(pkg.Dir, f)
+			if fileExists(goFile) {
+				path.Files = append(path.Files, goFile)
 			}
 		}
 
