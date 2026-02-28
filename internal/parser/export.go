@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+
+	"golang.org/x/tools/go/packages"
 )
 
 // InterfacePath interface path
@@ -36,24 +38,36 @@ func GetInterfacePath(v interface{}) (paths []*InterfacePath, err error) {
 			path.Name = n
 		}
 
-		ctx := build.Default
-		var p *build.Package
-
+		cfg := &packages.Config{Mode: packages.NeedFiles}
+		var pkgs []*packages.Package
 		if strings.Split(arg.String(), ".")[0] == "main" {
-			_, file, _, _ := runtime.Caller(3)
-			p, err = ctx.ImportDir(filepath.Dir(file), build.ImportComment)
+			var skip int
+			var file string
+			for {
+				_, file, _, _ = runtime.Caller(skip)
+				if !(strings.Contains(file, "gorm/gen/generator.go") || strings.Contains(file, "gorm/gen/internal")) || file == "" {
+					break
+				}
+				skip++
+			}
+			cfg.Dir = filepath.Dir(file)
+			pkgs, err = packages.Load(cfg, ".")
 		} else {
-			p, err = ctx.Import(arg.PkgPath(), "", build.ImportComment)
+			pkgs, err = packages.Load(cfg, arg.PkgPath())
 		}
-
 		if err != nil {
-			return
+			return nil, err
 		}
-
-		for _, file := range p.GoFiles {
-			goFile := fmt.Sprintf("%s/%s", p.Dir, file)
-			if fileExists(goFile) {
-				path.Files = append(path.Files, goFile)
+		if len(pkgs) == 0 {
+			return nil, fmt.Errorf("interface package not found:%s", arg.PkgPath())
+		}
+		if len(pkgs[0].Errors) > 0 {
+			return nil, fmt.Errorf("load package %s fail: %w", arg.PkgPath(), pkgs[0].Errors[0])
+		}
+		path.Package = pkgs[0].PkgPath
+		for _, file := range pkgs[0].GoFiles {
+			if fileExists(file) {
+				path.Files = append(path.Files, file)
 			}
 		}
 
