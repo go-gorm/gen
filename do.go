@@ -172,7 +172,7 @@ func (d *DO) WithContext(ctx context.Context) Dao { return d.getInstance(d.db.Wi
 
 // Clauses specify Clauses
 func (d *DO) Clauses(conds ...clause.Expression) Dao {
-	if err := checkConds(conds); err != nil {
+	if err := checkCondsWithChecker(conds, d.ClauseChecker); err != nil {
 		newDB := d.db.Session(new(gorm.Session))
 		_ = newDB.AddError(err)
 		return d.getInstance(newDB)
