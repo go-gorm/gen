@@ -1,9 +1,12 @@
 package parser
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"go/build"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -36,22 +39,39 @@ func GetInterfacePath(v interface{}) (paths []*InterfacePath, err error) {
 			path.Name = n
 		}
 
-		ctx := build.Default
-		var p *build.Package
-
+		type goListPackage struct {
+			Dir        string   `json:"Dir"`
+			GoFiles    []string `json:"GoFiles"`
+			ImportPath string   `json:"ImportPath"`
+		}
+		var pkg goListPackage
+		var output []byte
 		if strings.Split(arg.String(), ".")[0] == "main" {
-			_, file, _, _ := runtime.Caller(3)
-			p, err = ctx.ImportDir(filepath.Dir(file), build.ImportComment)
+			var skip int
+			var file string
+			for {
+				_, file, _, _ = runtime.Caller(skip)
+				if file == "" || (!strings.Contains(file, "gorm/gen/generator.go") && !strings.Contains(file, "gorm/gen/internal")) {
+					break
+				}
+				skip++
+			}
+			cmd := exec.Command("go", "list", "-json", ".")
+			cmd.Dir = filepath.Dir(file)
+			output, err = cmd.CombinedOutput()
 		} else {
-			p, err = ctx.Import(arg.PkgPath(), "", build.ImportComment)
+			cmd := exec.Command("go", "list", "-json", arg.PkgPath())
+			output, err = cmd.CombinedOutput()
 		}
-
 		if err != nil {
-			return
+			return nil, fmt.Errorf("go list package %s fail: %w\n%s", arg.PkgPath(), err, bytes.TrimSpace(output))
 		}
-
-		for _, file := range p.GoFiles {
-			goFile := fmt.Sprintf("%s/%s", p.Dir, file)
+		if unmarshalErr := json.Unmarshal(output, &pkg); unmarshalErr != nil {
+			return nil, fmt.Errorf("parse go list output for %s fail: %w", arg.PkgPath(), unmarshalErr)
+		}
+		path.Package = pkg.ImportPath
+		for _, f := range pkg.GoFiles {
+			goFile := filepath.Join(pkg.Dir, f)
 			if fileExists(goFile) {
 				path.Files = append(path.Files, goFile)
 			}

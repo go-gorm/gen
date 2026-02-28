@@ -4,17 +4,18 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
 	"text/template"
 
-	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/imports"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
@@ -571,19 +572,25 @@ func (g *Generator) getModelOutputPath() (outPath string, err error) {
 }
 
 func (g *Generator) fillModelPkgPath(filePath string) {
-	pkgs, err := packages.Load(&packages.Config{
-		Mode: packages.NeedName,
-		Dir:  filePath,
-	})
+	cmd := exec.Command("go", "list", "-json", ".")
+	cmd.Dir = filePath
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		g.db.Logger.Warn(context.Background(), "parse model pkg path fail: %s", err)
+		g.db.Logger.Warn(context.Background(), "parse model pkg path fail: %s", bytes.TrimSpace(output))
 		return
 	}
-	if len(pkgs) == 0 {
-		g.db.Logger.Warn(context.Background(), "parse model pkg path fail: got 0 packages")
+	var pkg struct {
+		ImportPath string `json:"ImportPath"`
+	}
+	if unmarshalErr := json.Unmarshal(output, &pkg); unmarshalErr != nil {
+		g.db.Logger.Warn(context.Background(), "parse model pkg path fail: %s", unmarshalErr)
 		return
 	}
-	g.Config.modelPkgPath = pkgs[0].PkgPath
+	if pkg.ImportPath == "" {
+		g.db.Logger.Warn(context.Background(), "parse model pkg path fail: got empty import path")
+		return
+	}
+	g.Config.modelPkgPath = pkg.ImportPath
 }
 
 // output format and output
