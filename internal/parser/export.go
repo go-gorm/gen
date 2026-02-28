@@ -51,7 +51,7 @@ func GetInterfacePath(v interface{}) (paths []*InterfacePath, err error) {
 			var file string
 			for {
 				_, file, _, _ = runtime.Caller(skip)
-				if !(strings.Contains(file, "gorm/gen/generator.go") || strings.Contains(file, "gorm/gen/internal")) || file == "" {
+				if file == "" || (!strings.Contains(file, "gorm/gen/generator.go") && !strings.Contains(file, "gorm/gen/internal")) {
 					break
 				}
 				skip++
