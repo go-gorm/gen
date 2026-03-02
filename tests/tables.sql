@@ -80,7 +80,7 @@ CREATE TABLE `users` (
   `name` varchar(255) DEFAULT NULL COMMENT 'oneline',
   `address` varchar(255) DEFAULT '',
   `register_time` datetime(3) DEFAULT NULL,
-  `alive` tinyint(1) DEFAULT NULL COMMENT 'column multiline /*comment*/\nline1\nline2',
+  `alive` tinyint(1) DEFAULT NULL COMMENT 'column multiline /*comment*/\nline1\nline2\ncolon:colon\nsemicolon:semicolon\n"quotation mark"\n`accent`',
   `company_id` bigint(20) unsigned DEFAULT '666',
   `private_url` varchar(255) DEFAULT 'https://a.b.c ',
   PRIMARY KEY (`id`),

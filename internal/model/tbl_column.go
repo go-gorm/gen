@@ -126,6 +126,10 @@ func (c *Column) buildGormTag() field.GormTag {
 	if comment, ok := c.Comment(); ok && comment != "" {
 		if c.multilineComment() {
 			comment = strings.ReplaceAll(comment, "\n", "\\n")
+			comment = strings.ReplaceAll(comment, `"`, `\"`)
+			comment = strings.ReplaceAll(comment, "`", "'")
+			comment = strings.ReplaceAll(comment, ":", " ")
+			comment = strings.ReplaceAll(comment, ";", " ")
 		}
 		tag.Set(field.TagKeyGormComment, comment)
 	}

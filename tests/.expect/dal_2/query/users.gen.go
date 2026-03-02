@@ -59,6 +59,10 @@ type user struct {
 		column multiline /*comment* /
 		line1
 		line2
+		colon:colon
+		semicolon:semicolon
+		"quotation mark"
+		`accent`
 	*/
 	Alive      field.Bool
 	CompanyID  field.Int64

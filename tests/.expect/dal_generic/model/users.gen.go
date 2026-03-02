@@ -25,8 +25,12 @@ type User struct {
 		column multiline /*comment* /
 		line1
 		line2
+		colon:colon
+		semicolon:semicolon
+		"quotation mark"
+		`accent`
 	*/
-	Alive      *bool   `gorm:"column:alive;comment:column multiline /*comment*/\nline1\nline2" json:"-"`
+	Alive      *bool   `gorm:"column:alive;comment:column multiline /*comment*/\nline1\nline2\ncolon colon\nsemicolon semicolon\n\"quotation mark\"\n'accent'" json:"-"`
 	CompanyID  *int64  `gorm:"column:company_id;index:idx_name_company_id,priority:2;default:666" json:"-"`
 	PrivateURL *string `gorm:"column:private_url;default:https://a.b.c" json:"-"`
 }

@@ -25,6 +25,10 @@ type User struct {
 		column multiline /*comment* /
 		line1
 		line2
+		colon:colon
+		semicolon:semicolon
+		"quotation mark"
+		`accent`
 	*/
 	Alive      *bool   `gorm:"column:alive" json:"-"`
 	CompanyID  *int64  `gorm:"column:company_id;index:idx_name_company_id,priority:2;default:666" json:"-"`
