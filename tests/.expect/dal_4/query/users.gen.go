@@ -46,6 +46,11 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 	return _user
 }
 
+/*
+user table multiline /*comment* /
+line1
+line2
+*/
 type user struct {
 	userDo userDo
 
@@ -56,9 +61,13 @@ type user struct {
 	Address      field.String
 	RegisterTime field.Time
 	/*
-		multiline
+		column multiline /*comment* /
 		line1
 		line2
+		colon:colon
+		semicolon:semicolon
+		"quotation mark"
+		`accent`
 	*/
 	Alive      field.Bool
 	CompanyID  field.Int64

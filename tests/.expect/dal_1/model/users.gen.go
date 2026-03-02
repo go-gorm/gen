@@ -10,7 +10,11 @@ import (
 
 const TableNameUser = "users"
 
-// User mapped from table <users>
+/*
+User table multiline /*comment* /
+line1
+line2
+*/
 type User struct {
 	ID           int64     `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
 	CreatedAt    time.Time `gorm:"column:created_at" json:"created_at"`
@@ -18,11 +22,15 @@ type User struct {
 	Address      string    `gorm:"column:address" json:"address"`
 	RegisterTime time.Time `gorm:"column:register_time" json:"register_time"`
 	/*
-		multiline
+		column multiline /*comment* /
 		line1
 		line2
+		colon:colon
+		semicolon:semicolon
+		"quotation mark"
+		`accent`
 	*/
-	Alive      bool   `gorm:"column:alive;comment:multiline\nline1\nline2" json:"alive"`
+	Alive      bool   `gorm:"column:alive;comment:column multiline /*comment*/\nline1\nline2\ncolon colon\nsemicolon semicolon\n\"quotation mark\"\n'accent'" json:"alive"`
 	CompanyID  int64  `gorm:"column:company_id;default:666" json:"company_id"`
 	PrivateURL string `gorm:"column:private_url;default:https://a.b.c" json:"private_url"`
 }

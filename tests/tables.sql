@@ -80,13 +80,13 @@ CREATE TABLE `users` (
   `name` varchar(255) DEFAULT NULL COMMENT 'oneline',
   `address` varchar(255) DEFAULT '',
   `register_time` datetime(3) DEFAULT NULL,
-  `alive` tinyint(1) DEFAULT NULL COMMENT 'multiline\nline1\nline2',
+  `alive` tinyint(1) DEFAULT NULL COMMENT 'column multiline /*comment*/\nline1\nline2\ncolon:colon\nsemicolon:semicolon\n"quotation mark"\n`accent`',
   `company_id` bigint(20) unsigned DEFAULT '666',
   `private_url` varchar(255) DEFAULT 'https://a.b.c ',
   PRIMARY KEY (`id`),
   KEY `idx_name` (`name`) USING BTREE,
   KEY `idx_name_company_id` (`name`,`company_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='table multiline /*comment*/\nline1\nline2';
 
 
 
