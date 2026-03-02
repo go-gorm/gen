@@ -11,7 +11,7 @@ import (
 const TableNameUser = "users"
 
 /*
-User table multiline comment
+User table multiline /*comment* /
 line1
 line2
 */
@@ -22,7 +22,7 @@ type User struct {
 	Address      *string    `gorm:"column:address" json:"-"`
 	RegisterTime *time.Time `gorm:"column:register_time" json:"-"`
 	/*
-		multiline
+		column multiline /*comment* /
 		line1
 		line2
 	*/

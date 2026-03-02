@@ -72,7 +72,7 @@ func (c *Column) ToField(nullable, coverable, signable bool) *Field {
 		MultilineComment: c.multilineComment(),
 		GORMTag:          c.buildGormTag(),
 		Tag:              map[string]string{field.TagKeyJson: c.jsonTagNS(c.Name())},
-		ColumnComment:    comment,
+		ColumnComment:    c.sanitizeComment(comment),
 		Column:           c,
 	}
 }
@@ -80,6 +80,14 @@ func (c *Column) ToField(nullable, coverable, signable bool) *Field {
 func (c *Column) multilineComment() bool {
 	cm, ok := c.Comment()
 	return ok && strings.Contains(cm, "\n")
+}
+
+func (c *Column) sanitizeComment(s string) string {
+	if c.multilineComment() {
+		return strings.Replace(s, "*/", "* /", -1)
+	}
+
+	return s
 }
 
 func (c *Column) buildGormTag() field.GormTag {

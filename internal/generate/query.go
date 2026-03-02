@@ -74,7 +74,13 @@ func (b *QueryStructMeta) parseStruct(st interface{}) error {
 		if gf.ColumnComment == "" {
 			gf.ColumnComment = f.TagSettings["COMMENT"]
 		}
+
 		gf.MultilineComment = strings.Contains(gf.ColumnComment, "\n")
+
+		if gf.MultilineComment {
+			gf.ColumnComment = strings.Replace(gf.ColumnComment, "*/", "* /", -1)
+		}
+
 		b.appendOrUpdateField(gf)
 	}
 	for _, r := range ParseStructRelationShip(&stmt.Schema.Relationships) {
@@ -165,7 +171,7 @@ func (b *QueryStructMeta) Relations() (result []field.Relation) {
 // StructComment struct comment
 func (b *QueryStructMeta) StructComment() string {
 	if b.TableComment != "" {
-		return b.TableComment
+		return strings.Replace(b.TableComment, "*/", "* /", -1)
 	}
 	if b.TableName != "" {
 		return fmt.Sprintf(`mapped from table <%s>`, b.TableName)
@@ -179,7 +185,9 @@ func (b *QueryStructMeta) QueryStructComment() string {
 	if b.TableComment != "" {
 
 		if b.MultilineTableComment {
-			return fmt.Sprintf("/*\n%s %s\n*/", b.QueryStructName, b.TableComment)
+			c := strings.Replace(b.TableComment, "*/", "* /", -1)
+
+			return fmt.Sprintf("/*\n%s %s\n*/", b.QueryStructName, c)
 		}
 
 		return fmt.Sprintf(`// %s %s`, b.QueryStructName, b.TableComment)
