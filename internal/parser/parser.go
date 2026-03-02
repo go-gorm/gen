@@ -132,6 +132,7 @@ type Param struct { // (user model.User)
 	Type      string // param's type: User
 	IsArray   bool   // is array or not
 	IsPointer bool   // is pointer or not
+	IsVariadic bool  // is variadic or not
 }
 
 // Eq if param equal to another
@@ -221,7 +222,11 @@ func (p *Param) TmplString() string {
 	}
 
 	if p.IsArray {
-		res.WriteString("[]")
+		if p.IsVariadic {
+			res.WriteString("...")
+		} else {
+			res.WriteString("[]")
+		}
 	}
 	if p.IsPointer {
 		res.WriteString("*")
@@ -267,6 +272,7 @@ func (p *Param) astGetParamType(param *ast.Field) {
 	case *ast.Ellipsis:
 		p.astGetEltType(v.Elt)
 		p.IsArray = true
+		p.IsVariadic = true
 	case *ast.MapType:
 		p.astGetMapType(v)
 	case *ast.InterfaceType:

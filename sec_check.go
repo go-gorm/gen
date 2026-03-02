@@ -19,6 +19,22 @@ func checkConds(conds []clause.Expression) error {
 	return nil
 }
 
+func checkCondsWithChecker(conds []clause.Expression, checker ClauseChecker) error {
+	for _, cond := range conds {
+		if checker != nil {
+			if err := checker(cond); err == nil {
+				continue
+			} else if err != ErrClauseNotHandled {
+				return err
+			}
+		}
+		if err := CheckClause(cond); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 var banClauses = map[string]bool{
 	// "INSERT": true,
 	"VALUES": true,

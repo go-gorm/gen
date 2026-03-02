@@ -172,7 +172,7 @@ func (d *DO) WithContext(ctx context.Context) Dao { return d.getInstance(d.db.Wi
 
 // Clauses specify Clauses
 func (d *DO) Clauses(conds ...clause.Expression) Dao {
-	if err := checkConds(conds); err != nil {
+	if err := checkCondsWithChecker(conds, d.ClauseChecker); err != nil {
 		newDB := d.db.Session(new(gorm.Session))
 		_ = newDB.AddError(err)
 		return d.getInstance(newDB)
@@ -744,7 +744,7 @@ func (d *DO) UpdateColumnSimple(columns ...field.AssignExpr) (info ResultInfo, e
 		return
 	}
 	tx := d.prepareTx()
-	result := tx.Clauses(d.assignSet(columns)).Omit("*").UpdateColumns(map[string]interface{}{})
+	result := tx.Clauses(d.assignSetWithoutAutoUpdate(columns)).Omit("*").UpdateColumns(map[string]interface{}{})
 	return ResultInfo{RowsAffected: result.RowsAffected, Error: result.Error}, result.Error
 }
 
@@ -766,6 +766,13 @@ func (d *DO) prepareTx() *gorm.DB {
 
 // assignSet fetch all set
 func (d *DO) assignSet(exprs []field.AssignExpr) (set clause.Set) {
+	set = d.assignSetWithoutAutoUpdate(exprs)
+	stmt := d.db.Session(&gorm.Session{}).Statement
+	stmt.Dest = map[string]interface{}{}
+	return append(set, callbacks.ConvertToAssignments(stmt)...)
+}
+
+func (d *DO) assignSetWithoutAutoUpdate(exprs []field.AssignExpr) (set clause.Set) {
 	for _, expr := range exprs {
 		if expr == nil {
 			continue
@@ -780,17 +787,16 @@ func (d *DO) assignSet(exprs []field.AssignExpr) (set clause.Set) {
 			set = append(set, e...)
 		}
 	}
-
-	stmt := d.db.Session(&gorm.Session{}).Statement
-	stmt.Dest = map[string]interface{}{}
-	return append(set, callbacks.ConvertToAssignments(stmt)...)
+	return set
 }
 
 // Delete ...
 func (d *DO) Delete(models ...interface{}) (info ResultInfo, err error) {
 	var result *gorm.DB
 	tx := d.prepareTx()
-	if len(models) == 0 || reflect.ValueOf(models[0]).Len() == 0 {
+	if d.backfillData != nil && len(models) == 0 {
+		result = tx.Delete(d.backfillData)
+	} else if len(models) == 0 || reflect.ValueOf(models[0]).Len() == 0 {
 		result = tx.Delete(reflect.New(d.modelType).Interface())
 	} else {
 		targets := reflect.MakeSlice(reflect.SliceOf(reflect.PtrTo(d.modelType)), 0, len(models))
@@ -888,12 +894,17 @@ func buildExpr4Select(stmt *gorm.Statement, exprs ...field.Expr) (query string, 
 		return "", nil
 	}
 
-	var queryItems []string
+	var (
+		queryItems []string
+		offset     = len(stmt.Vars)
+	)
+	newStmt := &gorm.Statement{DB: stmt.DB, Table: stmt.Table, Schema: stmt.Schema, Vars: make([]interface{}, offset)}
 	for _, e := range exprs {
-		sql, vars := e.BuildWithArgs(stmt)
+		sql, vars := e.BuildWithArgs(newStmt)
 		queryItems = append(queryItems, sql.String())
-		args = append(args, vars...)
+		newStmt.Vars = append(newStmt.Vars, vars...)
 	}
+	args = newStmt.Vars[offset:]
 	if len(args) == 0 {
 		return queryItems[0], toInterfaceSlice(queryItems[1:])
 	}

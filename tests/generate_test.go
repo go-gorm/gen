@@ -302,3 +302,26 @@ func Test_GenSkipImpl(t *testing.T) {
 		t.Error("should not generate SkipMethod implementation for // gen:skip interface")
 	}
 }
+
+func Test_GenVariadic(t *testing.T) {
+	dir := ".gen/variadic_test"
+	os.RemoveAll(dir)
+	g := gen.NewGenerator(gen.Config{
+		OutPath: dir + "/query",
+		Mode:    gen.WithDefaultQuery | gen.WithQueryInterface,
+	})
+	g.UseDB(DB)
+	model := g.GenerateModel("users")
+	g.ApplyInterface(func(diy_method.VariadicTest) {}, model)
+	g.Execute()
+
+	queryFile := dir + "/query/users.gen.go"
+	content, err := os.ReadFile(queryFile)
+	if err != nil {
+		t.Fatalf("read generated file failed: %v", err)
+	}
+	str := string(content)
+	if !strings.Contains(str, "VariadicMethod(ids ...int)") {
+		t.Error("should generate VariadicMethod implementation")
+	}
+}

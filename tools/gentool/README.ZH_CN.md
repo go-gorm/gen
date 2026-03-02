@@ -29,6 +29,8 @@
         generate field with gorm index tag
   -fieldWithTypeTag
         generate field with gorm column type tag
+  -fieldWithDefaultTag
+        generate field with gorm default tag
   -modelPkgName string
         generated model code's package name
   -outFile string
@@ -41,6 +43,8 @@
         only generate models (without query file)
   -withUnitTest
         generate unit test for query code
+  -unitTestTemplate string
+        custom unit test template file path for query code
   -fieldSignable
         detect integer field's unsigned type, adjust generated data type
 
@@ -82,6 +86,10 @@ default ""
 
 使用gorm列类型标记生成字段
 
+#### fieldWithDefaultTag
+
+使用gorm默认值标记生成字段
+
 #### modelPkgName
 
 默认值是数据表名称。
@@ -119,6 +127,10 @@ eg :
 值为 : False / True
 
 生成单元测试。
+
+#### unitTestTemplate
+
+自定义 query 单测模板文件路径
 
 #### fieldSignable
 

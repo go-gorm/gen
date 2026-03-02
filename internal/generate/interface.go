@@ -416,6 +416,18 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 				}
 				for ; ; i++ {
 					if strOutRange(i, sqlString) || isEnd(sqlString[i]) {
+						if !strOutRange(i, sqlString) && sqlString[i] == '(' && i+1 < len(sqlString) && sqlString[i+1] == ')' {
+							buf.WriteSQL(sqlString[i])
+							i++
+							buf.WriteSQL(sqlString[i])
+							varString := buf.Dump()
+							params, err := m.Section.checkSQLVar(varString, status, m)
+							if err != nil {
+								return fmt.Errorf("sql [%s] varable %s err:%s", sqlString, varString, err)
+							}
+							m.Section.members = append(m.Section.members, params)
+							break
+						}
 						varString := buf.Dump()
 						params, err := m.Section.checkSQLVar(varString, status, m)
 						if err != nil {

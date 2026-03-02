@@ -217,6 +217,31 @@ func TestExpr_Build(t *testing.T) {
 			Expr:   field.NewUint("", "id").Avg().As("number"),
 			Result: "AVG(`id`) AS `number`",
 		},
+	{
+		Expr:         field.NewValuerNumber[password]("t", "amount").Add(p),
+		Result:       "`t`.`amount`+?",
+		ExpectedVars: []interface{}{p},
+	},
+	{
+		Expr:         field.NewValuerNumber[password]("t", "amount").Sub(p),
+		Result:       "`t`.`amount`-?",
+		ExpectedVars: []interface{}{p},
+	},
+	{
+		Expr:         field.NewValuerNumber[password]("t", "amount").Mul(p),
+		Result:       "`t`.`amount`*?",
+		ExpectedVars: []interface{}{p},
+	},
+	{
+		Expr:         field.NewValuerNumber[password]("t", "amount").Div(p),
+		Result:       "`t`.`amount`/?",
+		ExpectedVars: []interface{}{p},
+	},
+	{
+		Expr:         field.NewValuerNumber[password]("t", "amount").Between(p, p),
+		Result:       "`t`.`amount` BETWEEN ? AND ?",
+		ExpectedVars: []interface{}{p, p},
+	},
 		{
 			Expr:         field.NewUint("", "id").Eq(10),
 			ExpectedVars: []interface{}{uint(10)},

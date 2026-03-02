@@ -1,6 +1,7 @@
 package field
 
 import (
+	"database/sql/driver"
 	"golang.org/x/exp/constraints"
 	"gorm.io/gorm/clause"
 )
@@ -43,9 +44,41 @@ type Float64 = Number[float64]
 
 // ======================== number =======================
 
+func newValuerNumber[T driver.Valuer](e expr) ValuerNumber[T] {
+	return ValuerNumber[T]{genericsField: newGenerics[T](e)}
+}
+
 // newNumber build number type field
 func newNumber[T constraints.Integer | constraints.Float](e expr) Number[T] {
 	return Number[T]{genericsField: newGenerics[T](e)}
+}
+
+type ValuerNumber[T driver.Valuer] struct {
+	genericsField[T]
+}
+
+func (field ValuerNumber[T]) Between(left T, right T) Expr {
+	return field.between([]interface{}{left, right})
+}
+
+func (field ValuerNumber[T]) NotBetween(left T, right T) Expr {
+	return Not(field.Between(left, right))
+}
+
+func (field ValuerNumber[T]) Add(value T) ValuerNumber[T] {
+	return newValuerNumber[T](field.add(value))
+}
+
+func (field ValuerNumber[T]) Sub(value T) ValuerNumber[T] {
+	return newValuerNumber[T](field.sub(value))
+}
+
+func (field ValuerNumber[T]) Mul(value T) ValuerNumber[T] {
+	return newValuerNumber[T](field.mul(value))
+}
+
+func (field ValuerNumber[T]) Div(value T) ValuerNumber[T] {
+	return newValuerNumber[T](field.div(value))
 }
 
 // Number int type field

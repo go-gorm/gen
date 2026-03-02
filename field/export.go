@@ -66,6 +66,10 @@ func NewNumber[T constraints.Integer | constraints.Float](table, column string, 
 	return newNumber[T](expr{col: toColumn(table, column, opts...)})
 }
 
+func NewValuerNumber[T driver.Valuer](table, column string, opts ...Option) ValuerNumber[T] {
+	return newValuerNumber[T](expr{col: toColumn(table, column, opts...)})
+}
+
 // NewInt create new field for int
 func NewInt(table, column string, opts ...Option) Int {
 	return NewNumber[int](table, column, opts...)

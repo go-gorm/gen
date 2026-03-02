@@ -39,6 +39,8 @@ type Query struct{
 
 func (q *Query) Available() bool { return q.db != nil }
 
+func (q *Query) UnderlyingDB() *gorm.DB { return q.db }
+
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
 		db: db,

@@ -44,6 +44,22 @@ func TestClause(t *testing.T) {
 		GenerateResult []string
 	}{
 		{
+			SQL: "update @@table set modify_time=@wrong.Now() where id=@wrong.Id",
+			SplitResult: []string{
+				"\"update \"",
+				"\"users\"",
+				"\" set modify_time=\"",
+				"wrong.Now()",
+				"\" where id=\"",
+				"wrong.Id",
+			},
+			GenerateResult: []string{
+				"params = append(params,wrong.Now())",
+				"params = append(params,wrong.Id)",
+				"generateSQL.WriteString(\"update users set modify_time=? where id=? \")",
+			},
+		},
+		{
 			SQL: "select * from @@table",
 			SplitResult: []string{
 				"\"select * from \"",

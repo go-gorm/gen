@@ -67,6 +67,7 @@ func (b *QueryStructMeta) parseStruct(st interface{}) error {
 			ColumnName:    f.DBName,
 			CustomGenType: fp.GetFieldGenType(f),
 			ColumnComment: f.Comment,
+			Tag:           f.TagSettings,
 		}
 		if len(f.EmbeddedBindNames) > 1 {
 			gf.Name = strings.Join(f.EmbeddedBindNames, "")
@@ -143,6 +144,18 @@ func (b *QueryStructMeta) appendOrUpdateField(f *model.Field) {
 }
 
 func (b *QueryStructMeta) appendField(f *model.Field) { b.Fields = append(b.Fields, f) }
+
+func (b *QueryStructMeta) HasUniqueIndex() bool {
+	for _, f := range b.Fields {
+		if f == nil {
+			continue
+		}
+		if len(f.GORMTag[field.TagKeyGormUniqueIndex]) > 0 {
+			return true
+		}
+	}
+	return false
+}
 
 // HasField check if BaseStruct has fields
 func (b *QueryStructMeta) HasField() bool { return len(b.Fields) > 0 }

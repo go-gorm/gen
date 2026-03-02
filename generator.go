@@ -189,11 +189,12 @@ func (g *Generator) genModelConfig(tableName string, modelName string, modelOpts
 		FieldConfig: model.FieldConfig{
 			DataTypeMap: g.dataTypeMap,
 
-			FieldSignable:     g.FieldSignable,
-			FieldNullable:     g.FieldNullable,
-			FieldCoverable:    g.FieldCoverable,
-			FieldWithIndexTag: g.FieldWithIndexTag,
-			FieldWithTypeTag:  g.FieldWithTypeTag,
+			FieldSignable:       g.FieldSignable,
+			FieldNullable:       g.FieldNullable,
+			FieldCoverable:      g.FieldCoverable,
+			FieldWithIndexTag:   g.FieldWithIndexTag,
+			FieldWithTypeTag:    g.FieldWithTypeTag,
+			FieldWithDefaultTag: g.FieldWithDefaultTag,
 
 			FieldJSONTagNS: g.fieldJSONTagNS,
 		},
@@ -474,7 +475,15 @@ func (g *Generator) generateQueryUnitTestFile(data *genInfo) (err error) {
 		return err
 	}
 
-	err = render(tmpl.CRUDMethodTest, &buf, data.QueryStructMeta)
+	crudTmpl := tmpl.CRUDMethodTest
+	if g.UnitTestTemplate != "" {
+		content, readErr := os.ReadFile(g.UnitTestTemplate)
+		if readErr != nil {
+			return readErr
+		}
+		crudTmpl = string(content)
+	}
+	err = render(crudTmpl, &buf, data.QueryStructMeta)
 	if err != nil {
 		return err
 	}

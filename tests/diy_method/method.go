@@ -335,3 +335,9 @@ type TestSkipImpl interface {
 	// select * from users where id=@id
 	NoSkipMethod(id int) (gen.T, error)
 }
+
+type VariadicTest interface {
+// VariadicMethod
+// SELECT * FROM @@table WHERE id IN (@ids)
+VariadicMethod(ids ...int) ([]gen.T, error)
+}

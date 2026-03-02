@@ -21,7 +21,7 @@ func getFields(db *gorm.DB, conf *model.Config, columns []*model.Column) (fields
 		col.SetDataTypeMap(conf.DataTypeMap)
 		col.WithNS(conf.FieldJSONTagNS)
 
-		m := col.ToField(conf.FieldNullable, conf.FieldCoverable, conf.FieldSignable)
+		m := col.ToField(conf.FieldNullable, conf.FieldCoverable, conf.FieldSignable, conf.FieldWithDefaultTag)
 
 		if filterField(m, conf.FilterOpts) == nil {
 			continue

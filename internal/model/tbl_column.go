@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 
 	"gorm.io/gen/field"
@@ -44,7 +45,7 @@ func (c *Column) WithNS(jsonTagNS func(columnName string) string) {
 }
 
 // ToField convert to field
-func (c *Column) ToField(nullable, coverable, signable bool) *Field {
+func (c *Column) ToField(nullable, coverable, signable, withDefaultTag bool) *Field {
 	fieldType := c.GetDataType()
 	if signable && strings.Contains(c.columnType(), "unsigned") && strings.HasPrefix(fieldType, "int") {
 		fieldType = "u" + fieldType
@@ -52,7 +53,7 @@ func (c *Column) ToField(nullable, coverable, signable bool) *Field {
 	switch {
 	case c.Name() == "deleted_at" && fieldType == "time.Time":
 		fieldType = "gorm.DeletedAt"
-	case coverable && c.needDefaultTag(c.defaultTagValue()):
+	case coverable && c.needDefaultTag(c.defaultTagValue(), withDefaultTag):
 		fieldType = "*" + fieldType
 	case nullable && !strings.HasPrefix(fieldType, "*"):
 		if n, ok := c.Nullable(); ok && n {
@@ -70,7 +71,7 @@ func (c *Column) ToField(nullable, coverable, signable bool) *Field {
 		Type:             fieldType,
 		ColumnName:       c.Name(),
 		MultilineComment: c.multilineComment(),
-		GORMTag:          c.buildGormTag(),
+		GORMTag:          c.buildGormTag(withDefaultTag),
 		Tag:              map[string]string{field.TagKeyJson: c.jsonTagNS(c.Name())},
 		ColumnComment:    c.sanitizeComment(comment),
 		Column:           c,
@@ -90,7 +91,7 @@ func (c *Column) sanitizeComment(s string) string {
 	return s
 }
 
-func (c *Column) buildGormTag() field.GormTag {
+func (c *Column) buildGormTag(withDefaultTag bool) field.GormTag {
 	tag := field.GormTag{
 		field.TagKeyGormColumn: []string{c.Name()},
 		field.TagKeyGormType:   []string{c.columnType()},
@@ -106,6 +107,26 @@ func (c *Column) buildGormTag() field.GormTag {
 		tag.Set(field.TagKeyGormNotNull, "")
 	}
 
+	sort.SliceStable(c.Indexes, func(i, j int) bool {
+		idxI := c.Indexes[i]
+		idxJ := c.Indexes[j]
+		if idxI == nil && idxJ == nil {
+			return false
+		}
+		if idxI == nil {
+			return false
+		}
+		if idxJ == nil {
+			return true
+		}
+		nameI := idxI.Name()
+		nameJ := idxJ.Name()
+		if nameI == nameJ {
+			return idxI.Priority < idxJ.Priority
+		}
+		return nameI < nameJ
+	})
+
 	for _, idx := range c.Indexes {
 		if idx == nil {
 			continue
@@ -120,7 +141,7 @@ func (c *Column) buildGormTag() field.GormTag {
 		}
 	}
 
-	if dtValue := c.defaultTagValue(); c.needDefaultTag(dtValue) { // cannot set default tag for primary key
+	if dtValue := c.defaultTagValue(); c.needDefaultTag(dtValue, withDefaultTag) { // cannot set default tag for primary key
 		tag.Set(field.TagKeyGormDefault, dtValue)
 	}
 	if comment, ok := c.Comment(); ok && comment != "" {
@@ -137,9 +158,12 @@ func (c *Column) buildGormTag() field.GormTag {
 }
 
 // needDefaultTag check if default tag needed
-func (c *Column) needDefaultTag(defaultTagValue string) bool {
+func (c *Column) needDefaultTag(defaultTagValue string, withDefaultTag bool) bool {
 	if defaultTagValue == "" {
 		return false
+	}
+	if withDefaultTag {
+		return c.Name() != "created_at" && c.Name() != "updated_at"
 	}
 	if c.ScanType() == nil {
 		return c.Name() != "created_at" && c.Name() != "updated_at" && defaultTagValue != "" && defaultTagValue != "0" && defaultTagValue != "false"
