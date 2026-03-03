@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"gorm.io/gen/internal/diagnostic"
 	"gorm.io/gen/internal/model"
 	"gorm.io/gen/internal/parser"
 )
@@ -16,6 +17,9 @@ type InterfaceMethod struct { // feature will replace InterfaceMethod to parser.
 	OriginStruct  parser.Param   // origin struct name
 	TargetStruct  string         // generated query struct bane
 	MethodName    string         // generated function name
+	File          string
+	DocLine       int
+	DocColumn     int
 	Params        []parser.Param // function input params
 	Result        []parser.Param // function output params
 	ResultData    parser.Param   // output data
@@ -273,13 +277,16 @@ func (m *InterfaceMethod) checkResult(result []parser.Param) (err error) {
 func (m *InterfaceMethod) checkSQL() (err error) {
 	m.SQLString = m.parseDocString()
 	if err = m.sqlStateCheckAndSplit(); err != nil {
-		err = fmt.Errorf("interface %s member method %s check sql err:%w", m.InterfaceName, m.MethodName, err)
+		err = diagnostic.WithMethod(err, m.InterfaceName, m.MethodName)
+		err = diagnostic.WithLocation(err, m.File, m.DocLine, m.DocColumn)
 	}
 	return
 }
 
 func (m *InterfaceMethod) parseDocString() string {
-	docString := strings.TrimSpace(m.getSQLDocString())
+	docString, lineOffset := m.getSQLDocString()
+	docString = strings.TrimSpace(docString)
+	m.DocLine += lineOffset
 	switch {
 	case strings.HasPrefix(strings.ToLower(docString), "sql("):
 		docString = docString[4 : len(docString)-1]
@@ -304,8 +311,9 @@ func (m *InterfaceMethod) parseDocString() string {
 	return docString
 }
 
-func (m *InterfaceMethod) getSQLDocString() string {
+func (m *InterfaceMethod) getSQLDocString() (string, int) {
 	docString := strings.TrimSpace(m.Doc)
+	lineOffset := 0
 	/*
 		// methodName descriptive message
 		// (this blank line is needed)
@@ -315,13 +323,14 @@ func (m *InterfaceMethod) getSQLDocString() string {
 		if strings.Contains(docString[index+2:], m.MethodName) {
 			docString = docString[:index]
 		} else {
+			lineOffset = strings.Count(docString[:index+2], "\n")
 			docString = docString[index+2:]
 		}
 	}
 	/* //methodName sql */
 	docString = strings.TrimPrefix(docString, m.MethodName)
 	// TODO: using sql key word to split comment
-	return docString
+	return docString, lineOffset
 }
 
 // sqlStateCheckAndSplit check sql with an adeterministic finite automaton
@@ -336,7 +345,7 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 			_ = buf.WriteByte(sqlString[i])
 			for i++; ; i++ {
 				if strOutRange(i, sqlString) {
-					return fmt.Errorf("incomplete SQL:%s", sqlString)
+					return m.diagSQL(i, "SQL_INCOMPLETE", "incomplete SQL", sqlString, nil)
 				}
 				_ = buf.WriteByte(sqlString[i])
 				if sqlString[i] == '"' && sqlString[i-1] != '\\' {
@@ -347,7 +356,7 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 			_ = buf.WriteByte(sqlString[i])
 			for i++; ; i++ {
 				if strOutRange(i, sqlString) {
-					return fmt.Errorf("incomplete SQL:%s", sqlString)
+					return m.diagSQL(i, "SQL_INCOMPLETE", "incomplete SQL", sqlString, nil)
 				}
 				_ = buf.WriteByte(sqlString[i])
 				if sqlString[i] == '\'' && sqlString[i-1] != '\\' {
@@ -355,7 +364,7 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 				}
 			}
 		case '\\':
-			if sqlString[i+1] == '@' {
+			if i+1 < len(sqlString) && sqlString[i+1] == '@' {
 				i++
 				buf.WriteSQL(sqlString[i])
 				continue
@@ -370,18 +379,18 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 			}
 
 			if strOutRange(i+1, sqlString) {
-				return fmt.Errorf("incomplete SQL:%s", sqlString)
+				return m.diagSQL(i, "SQL_INCOMPLETE", "incomplete SQL", sqlString, nil)
 			}
 			if b == '{' && sqlString[i+1] == '{' {
 				for i += 2; ; i++ {
 					if strOutRange(i, sqlString) {
-						return fmt.Errorf("incomplete SQL:%s", sqlString)
+						return m.diagSQL(i, "SQL_INCOMPLETE", "incomplete SQL", sqlString, nil)
 					}
 					if sqlString[i] == '"' {
 						_ = buf.WriteByte(sqlString[i])
 						for i++; ; i++ {
 							if strOutRange(i, sqlString) {
-								return fmt.Errorf("incomplete SQL:%s", sqlString)
+								return m.diagSQL(i, "SQL_INCOMPLETE", "incomplete SQL", sqlString, nil)
 							}
 							_ = buf.WriteByte(sqlString[i])
 							if sqlString[i] == '"' && sqlString[i-1] != '\\' {
@@ -392,14 +401,14 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 					}
 
 					if strOutRange(i+1, sqlString) {
-						return fmt.Errorf("incomplete SQL:%s", sqlString)
+						return m.diagSQL(i, "SQL_INCOMPLETE", "incomplete SQL", sqlString, nil)
 					}
 					if sqlString[i] == '}' && sqlString[i+1] == '}' {
 						i++
 						sqlClause := buf.Dump()
 						part, err := m.Section.checkTemplate(sqlClause)
 						if err != nil {
-							return fmt.Errorf("sql [%s] dynamic template %s err:%w", sqlString, sqlClause, err)
+							return m.diagSQL(i, "TEMPLATE_PARSE", "template parse error", sqlClause, err)
 						}
 						m.Section.members = append(m.Section.members, part)
 						break
@@ -423,7 +432,7 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 							varString := buf.Dump()
 							params, err := m.Section.checkSQLVar(varString, status, m)
 							if err != nil {
-								return fmt.Errorf("sql [%s] varable %s err:%s", sqlString, varString, err)
+							return m.diagSQL(i, "SQL_VAR", "variable parse error", varString, err)
 							}
 							m.Section.members = append(m.Section.members, params)
 							break
@@ -431,7 +440,7 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 						varString := buf.Dump()
 						params, err := m.Section.checkSQLVar(varString, status, m)
 						if err != nil {
-							return fmt.Errorf("sql [%s] varable %s err:%s", sqlString, varString, err)
+						return m.diagSQL(i, "SQL_VAR", "variable parse error", varString, err)
 						}
 						m.Section.members = append(m.Section.members, params)
 						i--
@@ -452,6 +461,47 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 	}
 
 	return nil
+}
+
+func (m *InterfaceMethod) diagSQL(idx int, code, message, sql string, err error) error {
+	line := m.DocLine
+	col := m.DocColumn
+	if line <= 0 {
+		line = 1
+	}
+	if col <= 0 {
+		col = 1
+	}
+	if idx > 0 && idx <= len(sql) {
+		prefix := sql[:idx]
+		line += strings.Count(prefix, "\n")
+		if last := strings.LastIndex(prefix, "\n"); last >= 0 {
+			col = len(prefix[last+1:]) + 1
+		} else {
+			col += len(prefix)
+		}
+	}
+	d := diagnostic.New(code, message)
+	d.Diag.File = m.File
+	d.Diag.Line = line
+	d.Diag.Column = col
+	d.Diag.Interface = m.InterfaceName
+	d.Diag.Method = m.MethodName
+	if len(sql) > 0 {
+		if len(sql) > 400 {
+			d.Diag.Snippet = sql[:400]
+		} else {
+			d.Diag.Snippet = sql
+		}
+	}
+	if err != nil {
+		if e, ok := err.(*diagnostic.Error); ok {
+			d.Err = e
+		} else {
+			d.Err = err
+		}
+	}
+	return d
 }
 
 // checkSQLVarByParams return external parameters, table name

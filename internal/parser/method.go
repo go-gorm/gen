@@ -24,6 +24,9 @@ type Method struct {
 	Receiver   Param
 	MethodName string
 	Doc        string
+	File       string
+	Line       int
+	Column     int
 	Params     []Param
 	Result     []Param
 	Body       string

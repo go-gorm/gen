@@ -16,6 +16,8 @@ import (
 type InterfaceSet struct {
 	Interfaces []InterfaceInfo
 	imports    map[string]string // package name -> quoted "package path"
+	fset       *token.FileSet
+	filename   string
 }
 
 // InterfaceInfo ...
@@ -82,9 +84,17 @@ func (i *InterfaceSet) Visit(n ast.Node) (w ast.Visitor) {
 
 			for _, m := range methods {
 				for _, name := range m.Names {
+					pos := name.Pos()
+					if m.Doc != nil {
+						pos = m.Doc.Pos()
+					}
+					p := i.fset.Position(pos)
 					method := &Method{
 						MethodName: name.Name,
 						Doc:        m.Doc.Text(),
+						File:       i.filename,
+						Line:       p.Line,
+						Column:     p.Column,
 						Params:     getParamList(m.Type.(*ast.FuncType).Params),
 						Result:     getParamList(m.Type.(*ast.FuncType).Results),
 					}
@@ -110,7 +120,7 @@ func (i *InterfaceSet) getInterfaceFromFile(filename string, name, Package strin
 		return fmt.Errorf("can't parse file %q: %s", filename, err)
 	}
 
-	astResult := &InterfaceSet{imports: make(map[string]string)}
+	astResult := &InterfaceSet{imports: make(map[string]string), fset: fileset, filename: filename}
 	ast.Walk(astResult, f)
 
 	for _, info := range astResult.Interfaces {
