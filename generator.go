@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -449,7 +450,7 @@ func (g *Generator) buildMergedQueryData(manifest *genManifest) (map[string]genM
 			mergedTables[k] = v
 		}
 		for k, v := range mergedTables {
-			if _, err := os.Stat(filepath.Join(g.OutPath, v.FileName+".gen.go")); err != nil {
+			if _, err := os.Stat(filepath.Join(g.OutPath, v.FileName+".gen.go")); err != nil && errors.Is(err, os.ErrNotExist) {
 				if _, ok := currentTables[k]; !ok {
 					delete(mergedTables, k)
 				}
