@@ -37,6 +37,8 @@ type Config struct {
 	OutFile      string // query code file name, default: gen.go
 	ModelPkgPath string // generated model code's package name
 	WithUnitTest bool   // generate unit test for query code
+	Incremental  bool   // skip writing unchanged generated files (based on manifest hash)
+	MergeQuery   bool   // keep previously generated query entries (A+B) when generating subsets
 
 	// generate model global configuration
 	FieldNullable       bool // generate pointer when field is nullable
