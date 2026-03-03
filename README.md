@@ -12,14 +12,14 @@ Friendly & Safer GORM powered by Code Generation.
 
 ## Overview
 
-- Idiomatic & Reusable API from Dynamic Raw SQL
-- 100% Type-safe DAO API without `interface{}`
-- Database To Struct follows GORM conventions
-- GORM under the hood, supports all features, plugins, DBMS that GORM supports
+- Generate idiomatic, reusable DAO APIs from database schema and/or interface-based SQL templates
+- Type-safe query DSL (fields, conditions, assignments) with strong static typing (including generics mode)
+- Database-to-struct follows GORM conventions (tags, nullable/default/unsigned/index/type, etc.)
+- Built on top of GORM: use the same plugins, dialectors, and ecosystem you already have
 
 ## Documentation
 
-- Gen Guides: https://gorm.io/gen/index.html
+- Gen Guides (official site): https://gorm.io/gen/index.html
 - GORM Guides: https://gorm.io/docs
 
 ## Quick Start
@@ -30,7 +30,9 @@ Install as a library:
 go get gorm.io/gen@latest
 ```
 
-Generate code:
+### 1) Generate code
+
+Create a generator entry (recommended: `cmd/gen/main.go`):
 
 ```go
 package main
@@ -48,7 +50,8 @@ func main() {
 	}
 
 	g := gen.NewGenerator(gen.Config{
-		OutPath: "dao/query",
+		OutPath: "internal/dal/query",
+		Mode:    gen.WithDefaultQuery | gen.WithQueryInterface, // enable query.SetDefault(db)
 	})
 
 	g.UseDB(db)
@@ -57,7 +60,137 @@ func main() {
 }
 ```
 
-More examples: [examples](./examples)
+Run generation:
+
+```bash
+go run ./cmd/gen
+```
+
+### 2) Use generated code
+
+If you enabled `WithDefaultQuery`, initialize once at startup:
+
+```go
+package main
+
+import (
+	"context"
+
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+
+	"your/module/internal/dal/query"
+)
+
+func main() {
+	db, err := gorm.Open(mysql.Open("dsn"), &gorm.Config{})
+	if err != nil {
+		panic(err)
+	}
+
+	query.SetDefault(db)
+
+	u := query.User
+	_, _ = u.WithContext(context.Background()).
+		Where(u.Age.Gt(18)).
+		Find()
+}
+```
+
+`query.SetDefault(db)` only needs to run once (e.g. during service startup). After that, use `query.<Table>` directly.
+
+If you don’t want a global default, skip `WithDefaultQuery` and use:
+
+```go
+q := query.Use(db)
+_, _ = q.User.WithContext(ctx).Where(q.User.Age.Gt(18)).Find()
+```
+
+More runnable examples: [examples](./examples)
+
+## Common Setups
+
+Gen has one generator entry point (`gen.NewGenerator(gen.Config{...})`). The main knobs you typically use are:
+
+- What to generate: DB schema → models/query; plus optional interface-SQL methods
+- How the query API looks: `Config.Mode` flags (`WithDefaultQuery`, `WithoutContext`, `WithQueryInterface`, `WithGeneric`)
+
+### Setup A: DB schema → model + query (recommended baseline)
+
+```go
+g := gen.NewGenerator(gen.Config{
+	OutPath: "internal/dal/query",
+	Mode:    gen.WithDefaultQuery | gen.WithQueryInterface,
+
+	FieldNullable:     true,
+	FieldCoverable:    true,
+	FieldWithIndexTag: true,
+})
+g.UseDB(db)
+g.ApplyBasic(g.GenerateAllTable()...)
+g.Execute()
+```
+
+### Setup B: Interface SQL templates → reusable typed methods
+
+Define an interface with SQL comments/templates:
+
+```go
+package dal
+
+import "gorm.io/gen"
+
+type UserMethods interface {
+	// FindByID
+	//
+	// SELECT * FROM users WHERE id=@id
+	FindByID(id int) gen.T
+
+	// FindByOptionalName
+	//
+	// SELECT * FROM users
+	// {{where}}
+	// {{if name != ""}}
+	// name=@name
+	// {{end}}
+	// {{end}}
+	FindByOptionalName(name string) []gen.T
+}
+```
+
+Bind the interface to a generated model/table:
+
+```go
+g.ApplyInterface(func(m UserMethods) {}, g.GenerateModel("users"))
+```
+
+Template syntax reference exists in the test corpus: [method.go](./tests/diy_method/method.go).
+
+### Setup C: Generics query API
+
+Generics is not a separate “workflow”; it changes the generated query API surface for stronger typing.
+
+```go
+g := gen.NewGenerator(gen.Config{
+	OutPath: "internal/dal/query",
+	Mode:    gen.WithDefaultQuery | gen.WithGeneric,
+})
+```
+
+## Recommended Project Layout
+
+Keep code generation isolated and reproducible (works well with `go:generate` and CI).
+
+```
+your-repo/
+  internal/
+    dal/
+      model/        # generated model structs (optional)
+      query/        # generated query (+ DIY methods)
+  cmd/
+    gen/
+      main.go       # generator entry (checked in)
+```
 
 ## CLI Tool
 
