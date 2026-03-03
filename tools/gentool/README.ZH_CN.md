@@ -14,7 +14,15 @@
 
 ```shell
  
- gentool -h  
+ gentool -h
+
+ gentool init
+
+ gentool gen -c gen.yml
+
+ gentool doctor -c gen.yml
+
+ gentool version
  
  Usage of gentool:
   -db string
@@ -49,6 +57,11 @@
         detect integer field's unsigned type, adjust generated data type
 
 ```
+
+说明：
+
+- `gentool [flags]` 兼容旧用法，等价于 `gentool gen [flags]`。
+- 使用文档统一在：https://gorm.io/gen/index.html
 
 #### c
 default ""

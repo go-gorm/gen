@@ -1,10 +1,15 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
+	"path/filepath"
+	"reflect"
+	"runtime/debug"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -31,6 +36,45 @@ const (
 const (
 	defaultQueryPath = "./dao/query"
 )
+
+const defaultConfigFileName = "gen.yml"
+
+const defaultConfigTemplate = `version: "0.1"
+database:
+  # consult[https://gorm.io/docs/connecting_to_the_database.html]"
+  dsn : "user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local"
+  # input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]
+  db  : "mysql"
+  # enter the required data table or leave it blank.You can input :
+  # tables  :
+  #   - orders
+  #   - users
+  #   - goods
+  tables  :
+  # only generate models (without query file)
+  onlyModel : false
+  # specify a directory for output
+  outPath :  "./dao/query"
+  # query code file name, default: gen.go
+  outFile :  ""
+  # generate unit test for query code
+  withUnitTest  : false
+  unitTestTemplate : ""
+  # generated model code's package name
+  modelPkgName  : ""
+  # generate with pointer when field is nullable
+  fieldNullable : false
+  # generate with pointer when field has default value
+  fieldCoverable : false
+  # generate field with gorm index tag
+  fieldWithIndexTag : false
+  # generate field with gorm column type tag
+  fieldWithTypeTag  : false
+  # generate field with gorm default tag
+  fieldWithDefaultTag : false
+  # detect integer field's unsigned type, adjust generated data type
+  fieldSignable  : false
+`
 
 // CmdParams is command line parameters
 type CmdParams struct {
@@ -124,127 +168,109 @@ func genModels(g *gen.Generator, db *gorm.DB, tables []string) (models []interfa
 }
 
 // parseCmdFromYaml parse cmd param from yaml
-func parseCmdFromYaml(path string) *CmdParams {
+func parseCmdFromYaml(path string) (*CmdParams, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		log.Fatalf("parseCmdFromYaml fail %s", err.Error())
-		return nil
+		return nil, fmt.Errorf("open config fail: %w", err)
 	}
 	defer file.Close() // nolint
 	var yamlConfig YamlConfig
 	if err = yaml.NewDecoder(file).Decode(&yamlConfig); err != nil {
-		log.Fatalf("parseCmdFromYaml fail %s", err.Error())
-		return nil
+		return nil, fmt.Errorf("decode config fail: %w", err)
 	}
-	return yamlConfig.Database
+	return yamlConfig.Database, nil
 }
 
-// argParse is parser for cmd
-func argParse() *CmdParams {
-	// choose is file or flag
-	genPath := flag.String("c", "", "is path for gen.yml")
-	dsn := flag.String("dsn", "", "consult[https://gorm.io/docs/connecting_to_the_database.html]")
-	db := flag.String("db", string(dbMySQL), "input mysql|postgres|sqlite|sqlserver|clickhouse. consult[https://gorm.io/docs/connecting_to_the_database.html]")
-	tableList := flag.String("tables", "", "enter the required data table or leave it blank")
-	onlyModel := flag.Bool("onlyModel", false, "only generate models (without query file)")
-	outPath := flag.String("outPath", defaultQueryPath, "specify a directory for output")
-	outFile := flag.String("outFile", "", "query code file name, default: gen.go")
-	withUnitTest := flag.Bool("withUnitTest", false, "generate unit test for query code")
-	unitTestTemplate := flag.String("unitTestTemplate", "", "custom unit test template file path for query code")
-	modelPkgName := flag.String("modelPkgName", "", "generated model code's package name")
-	fieldNullable := flag.Bool("fieldNullable", false, "generate with pointer when field is nullable")
-	fieldCoverable := flag.Bool("fieldCoverable", false, "generate with pointer when field has default value")
-	fieldWithIndexTag := flag.Bool("fieldWithIndexTag", false, "generate field with gorm index tag")
-	fieldWithTypeTag := flag.Bool("fieldWithTypeTag", false, "generate field with gorm column type tag")
-	fieldWithDefaultTag := flag.Bool("fieldWithDefaultTag", false, "generate field with gorm default tag")
-	fieldSignable := flag.Bool("fieldSignable", false, "detect integer field's unsigned type, adjust generated data type")
-	flag.Parse()
+func parseGenArgs(args []string) (*CmdParams, error) {
+	fs := flag.NewFlagSet("gentool gen", flag.ContinueOnError)
+	fs.SetOutput(os.Stderr)
 
-	if *genPath != "" { //use yml config
-		return parseCmdFromYaml(*genPath)
+	configPath := fs.String("c", "", "is path for gen.yml")
+	dsn := fs.String("dsn", "", "consult[https://gorm.io/docs/connecting_to_the_database.html]")
+	db := fs.String("db", string(dbMySQL), "input mysql|postgres|sqlite|sqlserver|clickhouse. consult[https://gorm.io/docs/connecting_to_the_database.html]")
+	tableList := fs.String("tables", "", "enter the required data table or leave it blank")
+	onlyModel := fs.Bool("onlyModel", false, "only generate models (without query file)")
+	outPath := fs.String("outPath", defaultQueryPath, "specify a directory for output")
+	outFile := fs.String("outFile", "", "query code file name, default: gen.go")
+	withUnitTest := fs.Bool("withUnitTest", false, "generate unit test for query code")
+	unitTestTemplate := fs.String("unitTestTemplate", "", "custom unit test template file path for query code")
+	modelPkgName := fs.String("modelPkgName", "", "generated model code's package name")
+	fieldNullable := fs.Bool("fieldNullable", false, "generate with pointer when field is nullable")
+	fieldCoverable := fs.Bool("fieldCoverable", false, "generate with pointer when field has default value")
+	fieldWithIndexTag := fs.Bool("fieldWithIndexTag", false, "generate field with gorm index tag")
+	fieldWithTypeTag := fs.Bool("fieldWithTypeTag", false, "generate field with gorm column type tag")
+	fieldWithDefaultTag := fs.Bool("fieldWithDefaultTag", false, "generate field with gorm default tag")
+	fieldSignable := fs.Bool("fieldSignable", false, "detect integer field's unsigned type, adjust generated data type")
+
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil, flag.ErrHelp
+		}
+		return nil, err
 	}
 
-	var cmdParse CmdParams
-	// cmd first
-	if *dsn != "" {
-		cmdParse.DSN = *dsn
+	if *configPath != "" {
+		return parseCmdFromYaml(*configPath)
 	}
-	if *db != "" {
-		cmdParse.DB = *db
+
+	cmdParse := &CmdParams{
+		DSN:                 strings.TrimSpace(*dsn),
+		DB:                  strings.TrimSpace(*db),
+		OnlyModel:           *onlyModel,
+		OutPath:             strings.TrimSpace(*outPath),
+		OutFile:             strings.TrimSpace(*outFile),
+		WithUnitTest:        *withUnitTest,
+		UnitTestTemplate:    strings.TrimSpace(*unitTestTemplate),
+		ModelPkgName:        strings.TrimSpace(*modelPkgName),
+		FieldNullable:       *fieldNullable,
+		FieldCoverable:      *fieldCoverable,
+		FieldWithIndexTag:   *fieldWithIndexTag,
+		FieldWithTypeTag:    *fieldWithTypeTag,
+		FieldWithDefaultTag: *fieldWithDefaultTag,
+		FieldSignable:       *fieldSignable,
 	}
-	if *tableList != "" {
+	if strings.TrimSpace(*tableList) != "" {
 		cmdParse.Tables = strings.Split(*tableList, ",")
 	}
-	if *onlyModel {
-		cmdParse.OnlyModel = true
-	}
-	if *outPath != "" {
-		cmdParse.OutPath = *outPath
-	}
-	if *outFile != "" {
-		cmdParse.OutFile = *outFile
-	}
-	if *withUnitTest {
-		cmdParse.WithUnitTest = *withUnitTest
-	}
-	if *unitTestTemplate != "" {
-		cmdParse.UnitTestTemplate = *unitTestTemplate
-	}
-	if *modelPkgName != "" {
-		cmdParse.ModelPkgName = *modelPkgName
-	}
-	if *fieldNullable {
-		cmdParse.FieldNullable = *fieldNullable
-	}
-	if *fieldCoverable {
-		cmdParse.FieldCoverable = *fieldCoverable
-	}
-	if *fieldWithIndexTag {
-		cmdParse.FieldWithIndexTag = *fieldWithIndexTag
-	}
-	if *fieldWithTypeTag {
-		cmdParse.FieldWithTypeTag = *fieldWithTypeTag
-	}
-	if *fieldWithDefaultTag {
-		cmdParse.FieldWithDefaultTag = *fieldWithDefaultTag
-	}
-	if *fieldSignable {
-		cmdParse.FieldSignable = *fieldSignable
-	}
-	return &cmdParse
+	return cmdParse, nil
 }
 
-func main() {
-	// cmdParse
-	config := argParse().revise()
+func runGen(args []string) error {
+	config, err := parseGenArgs(args)
+	if err != nil {
+		return err
+	}
+	config = config.revise()
 	if config == nil {
-		log.Fatalln("parse config fail")
+		return fmt.Errorf("parse config fail")
 	}
 
 	db, err := connectDB(DBType(config.DB), config.DSN)
 	if err != nil {
-		log.Fatalln("connect db server fail:", err)
+		return fmt.Errorf("connect db server fail: %w", err)
 	}
 
-	g := gen.NewGenerator(gen.Config{
-		OutPath:             config.OutPath,
-		OutFile:             config.OutFile,
-		ModelPkgPath:        config.ModelPkgName,
-		WithUnitTest:        config.WithUnitTest,
-		UnitTestTemplate:    config.UnitTestTemplate,
-		FieldNullable:       config.FieldNullable,
-		FieldCoverable:      config.FieldCoverable,
-		FieldWithIndexTag:   config.FieldWithIndexTag,
-		FieldWithTypeTag:    config.FieldWithTypeTag,
-		FieldWithDefaultTag: config.FieldWithDefaultTag,
-		FieldSignable:       config.FieldSignable,
-	})
+	cfg := gen.Config{
+		OutPath:           config.OutPath,
+		OutFile:           config.OutFile,
+		ModelPkgPath:      config.ModelPkgName,
+		WithUnitTest:      config.WithUnitTest,
+		FieldNullable:     config.FieldNullable,
+		FieldCoverable:    config.FieldCoverable,
+		FieldWithIndexTag: config.FieldWithIndexTag,
+		FieldWithTypeTag:  config.FieldWithTypeTag,
+		FieldSignable:     config.FieldSignable,
+	}
+	setConfigFieldIfExists(&cfg, "UnitTestTemplate", config.UnitTestTemplate)
+	setConfigFieldIfExists(&cfg, "FieldWithDefaultTag", config.FieldWithDefaultTag)
+
+	g := gen.NewGenerator(cfg)
 
 	g.UseDB(db)
 
 	models, err := genModels(g, db, config.Tables)
 	if err != nil {
-		log.Fatalln("get tables info fail:", err)
+		return fmt.Errorf("get tables info fail: %w", err)
 	}
 
 	if !config.OnlyModel {
@@ -252,4 +278,189 @@ func main() {
 	}
 
 	g.Execute()
+	return nil
+}
+
+func setConfigFieldIfExists(cfg *gen.Config, field string, value any) {
+	v := reflect.ValueOf(cfg).Elem()
+	f := v.FieldByName(field)
+	if !f.IsValid() || !f.CanSet() {
+		return
+	}
+	val := reflect.ValueOf(value)
+	if !val.IsValid() {
+		return
+	}
+	if val.Type().AssignableTo(f.Type()) {
+		f.Set(val)
+		return
+	}
+	if val.Type().ConvertibleTo(f.Type()) {
+		f.Set(val.Convert(f.Type()))
+	}
+}
+
+func runInit(args []string) error {
+	fs := flag.NewFlagSet("gentool init", flag.ContinueOnError)
+	fs.SetOutput(os.Stderr)
+	out := fs.String("o", defaultConfigFileName, "output path for config file")
+	force := fs.Bool("f", false, "overwrite if file exists")
+
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return flag.ErrHelp
+		}
+		return err
+	}
+
+	target := strings.TrimSpace(*out)
+	if target == "" {
+		return fmt.Errorf("output path cannot be empty")
+	}
+
+	if !*force {
+		if _, err := os.Stat(target); err == nil {
+			return fmt.Errorf("%s already exists (use -f to overwrite)", target)
+		}
+	}
+
+	if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil && filepath.Dir(target) != "." {
+		return fmt.Errorf("create directory fail: %w", err)
+	}
+
+	if err := os.WriteFile(target, []byte(defaultConfigTemplate), 0o644); err != nil {
+		return fmt.Errorf("write config fail: %w", err)
+	}
+	fmt.Fprintf(os.Stdout, "created %s\n", target)
+	return nil
+}
+
+func runDoctor(args []string) error {
+	config, err := parseGenArgs(args)
+	if err != nil {
+		return err
+	}
+	config = config.revise()
+	if config == nil {
+		return fmt.Errorf("parse config fail")
+	}
+
+	db, err := connectDB(DBType(config.DB), config.DSN)
+	if err != nil {
+		return fmt.Errorf("connect db server fail: %w", err)
+	}
+
+	allTables, err := db.Migrator().GetTables()
+	if err != nil {
+		return fmt.Errorf("get tables fail: %w", err)
+	}
+
+	tableSet := make(map[string]struct{}, len(allTables))
+	for _, t := range allTables {
+		tableSet[t] = struct{}{}
+	}
+
+	missing := make([]string, 0)
+	for _, t := range config.Tables {
+		t = strings.TrimSpace(t)
+		if t == "" {
+			continue
+		}
+		if _, ok := tableSet[t]; !ok {
+			missing = append(missing, t)
+		}
+	}
+	if len(missing) > 0 {
+		return fmt.Errorf("tables not found: %s", strings.Join(missing, ","))
+	}
+
+	outDir := strings.TrimSpace(config.OutPath)
+	if outDir == "" {
+		outDir = defaultQueryPath
+	}
+	if err := os.MkdirAll(outDir, 0o755); err != nil {
+		return fmt.Errorf("ensure outPath fail: %w", err)
+	}
+
+	fmt.Fprintf(os.Stdout, "db=%s tables=%d outPath=%s\n", config.DB, len(allTables), outDir)
+	if len(config.Tables) > 0 {
+		fmt.Fprintf(os.Stdout, "selectedTables=%d\n", len(config.Tables))
+	}
+	return nil
+}
+
+func buildVersion() string {
+	bi, ok := debug.ReadBuildInfo()
+	if !ok {
+		return "dev"
+	}
+	for _, dep := range bi.Deps {
+		if dep.Path == "gorm.io/gen/tools/gentool" && dep.Version != "" {
+			return dep.Version
+		}
+	}
+	if bi.Main.Path == "gorm.io/gen/tools/gentool" && bi.Main.Version != "" {
+		return bi.Main.Version
+	}
+	if bi.Main.Version != "" {
+		return bi.Main.Version
+	}
+	return "dev"
+}
+
+func printMainUsage(w io.Writer) {
+	fmt.Fprintln(w, "gentool is a binary helper for gorm.io/gen")
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "Usage:")
+	fmt.Fprintln(w, "  gentool [flags]              (same as: gentool gen [flags])")
+	fmt.Fprintln(w, "  gentool gen [flags]          generate code")
+	fmt.Fprintln(w, "  gentool init [-o path] [-f]  create a gen.yml template")
+	fmt.Fprintln(w, "  gentool doctor [flags]       validate config and database connectivity")
+	fmt.Fprintln(w, "  gentool version              print version")
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "Docs: https://gorm.io/gen/index.html")
+}
+
+func main() {
+	args := os.Args[1:]
+	if len(args) == 0 || strings.HasPrefix(args[0], "-") {
+		if err := runGen(args); err != nil {
+			if errors.Is(err, flag.ErrHelp) {
+				return
+			}
+			log.Fatalln(err)
+		}
+		return
+	}
+
+	switch args[0] {
+	case "gen":
+		if err := runGen(args[1:]); err != nil {
+			if errors.Is(err, flag.ErrHelp) {
+				return
+			}
+			log.Fatalln(err)
+		}
+	case "init":
+		if err := runInit(args[1:]); err != nil {
+			if errors.Is(err, flag.ErrHelp) {
+				return
+			}
+			log.Fatalln(err)
+		}
+	case "doctor":
+		if err := runDoctor(args[1:]); err != nil {
+			if errors.Is(err, flag.ErrHelp) {
+				return
+			}
+			log.Fatalln(err)
+		}
+	case "version":
+		fmt.Fprintf(os.Stdout, "%s\n", buildVersion())
+	case "help", "-h", "--help":
+		printMainUsage(os.Stdout)
+	default:
+		printMainUsage(os.Stderr)
+		log.Fatalln("unknown command:", args[0])
+	}
 }

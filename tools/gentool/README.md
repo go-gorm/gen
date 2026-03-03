@@ -12,7 +12,15 @@ Install GEN as a binary tool
 
 ```shell
  
- gentool -h  
+ gentool -h
+
+ gentool init
+
+ gentool gen -c gen.yml
+
+ gentool doctor -c gen.yml
+
+ gentool version
  
  Usage of gentool:
   -db string
@@ -47,6 +55,11 @@ Install GEN as a binary tool
         detect integer field's unsigned type, adjust generated data type
 
 ```
+
+Notes:
+
+- `gentool [flags]` is backward compatible and is the same as `gentool gen [flags]`.
+- Docs: https://gorm.io/gen/index.html
 #### c
 default ""
 Is path for gen.yml
