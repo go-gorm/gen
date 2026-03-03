@@ -80,7 +80,9 @@ func (i *InterfaceSet) Visit(n ast.Node) (w ast.Visitor) {
 			}
 			methods := data.Methods.List
 			r.Name = n.Name.Name
-			r.Doc = n.Doc.Text()
+			if n.Doc != nil {
+				r.Doc = n.Doc.Text()
+			}
 
 			for _, m := range methods {
 				for _, name := range m.Names {
@@ -89,9 +91,13 @@ func (i *InterfaceSet) Visit(n ast.Node) (w ast.Visitor) {
 						pos = m.Doc.Pos()
 					}
 					p := i.fset.Position(pos)
+					doc := ""
+					if m.Doc != nil {
+						doc = m.Doc.Text()
+					}
 					method := &Method{
 						MethodName: name.Name,
-						Doc:        m.Doc.Text(),
+						Doc:        doc,
 						File:       i.filename,
 						Line:       p.Line,
 						Column:     p.Column,

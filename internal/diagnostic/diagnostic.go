@@ -84,9 +84,15 @@ func WithLocation(err error, file string, line, column int) error {
 		return nil
 	}
 	if e, ok := err.(*Error); ok {
-		e.Diag.File = file
-		e.Diag.Line = line
-		e.Diag.Column = column
+		if e.Diag.File == "" && file != "" {
+			e.Diag.File = file
+		}
+		if e.Diag.Line == 0 && line != 0 {
+			e.Diag.Line = line
+		}
+		if e.Diag.Column == 0 && column != 0 {
+			e.Diag.Column = column
+		}
 		return e
 	}
 	return &Error{Diag: Diagnostic{File: file, Line: line, Column: column, Message: err.Error()}, Err: err}
@@ -97,10 +103,13 @@ func WithMethod(err error, iface, method string) error {
 		return nil
 	}
 	if e, ok := err.(*Error); ok {
-		e.Diag.Interface = iface
-		e.Diag.Method = method
+		if e.Diag.Interface == "" && iface != "" {
+			e.Diag.Interface = iface
+		}
+		if e.Diag.Method == "" && method != "" {
+			e.Diag.Method = method
+		}
 		return e
 	}
 	return &Error{Diag: Diagnostic{Interface: iface, Method: method, Message: err.Error()}, Err: err}
 }
-
