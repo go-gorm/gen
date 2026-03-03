@@ -311,6 +311,10 @@ func (g *Generator) generateQueryFile() (err error) {
 	if err != nil {
 		return err
 	}
+	prevMode := manifest.Mode
+	if g.MergeQuery && prevMode != 0 && prevMode != uint(g.Mode) {
+		return fmt.Errorf("cannot merge query tables with different mode: previous=%d current=%d", prevMode, g.Mode)
+	}
 	manifest.Mode = uint(g.Mode)
 	var manifestMu sync.Mutex
 
@@ -705,7 +709,6 @@ func (g *Generator) outputWithManifest(fileName string, content []byte, m *genMa
 	if g.Incremental {
 		mu.Lock()
 		old := m.Files[key]
-		m.Files[key] = hash
 		mu.Unlock()
 		if old == hash {
 			if _, err := os.Stat(fileName); err == nil {
@@ -713,12 +716,17 @@ func (g *Generator) outputWithManifest(fileName string, content []byte, m *genMa
 			}
 		}
 	} else {
-		mu.Lock()
-		m.Files[key] = hash
-		mu.Unlock()
+		// always write
 	}
 
-	return os.WriteFile(fileName, result, 0640)
+	if err := os.WriteFile(fileName, result, 0640); err != nil {
+		return err
+	}
+
+	mu.Lock()
+	m.Files[key] = hash
+	mu.Unlock()
+	return nil
 }
 
 func (g *Generator) pushQueryStructMeta(meta *generate.QueryStructMeta) (*genInfo, error) {
