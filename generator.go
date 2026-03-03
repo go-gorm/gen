@@ -307,16 +307,21 @@ func (g *Generator) generateQueryFile() (err error) {
 		return fmt.Errorf("make dir outpath(%s) fail: %s", g.OutPath, err)
 	}
 
-	manifest, manifestPath, err := loadManifest(g.OutPath)
-	if err != nil {
-		return err
-	}
-	prevMode := manifest.Mode
-	if g.MergeQuery && prevMode != 0 && prevMode != uint(g.Mode) {
-		return fmt.Errorf("cannot merge query tables with different mode: previous=%d current=%d", prevMode, g.Mode)
-	}
-	manifest.Mode = uint(g.Mode)
+	manifestEnabled := g.Incremental || g.MergeQuery
+	var manifest *genManifest
+	var manifestPath string
 	var manifestMu sync.Mutex
+	if manifestEnabled {
+		manifest, manifestPath, err = loadManifest(g.OutPath)
+		if err != nil {
+			return err
+		}
+		prevMode := manifest.Mode
+		if g.MergeQuery && prevMode != 0 && prevMode != uint(g.Mode) {
+			return fmt.Errorf("cannot merge query tables with different mode: previous=%d current=%d", prevMode, g.Mode)
+		}
+		manifest.Mode = uint(g.Mode)
+	}
 
 	errChan := make(chan error)
 	pool := pools.NewPool(concurrent)
@@ -344,10 +349,12 @@ func (g *Generator) generateQueryFile() (err error) {
 	case <-pool.AsyncWaitAll():
 	}
 
-	mergedTables, dataForGenGo := g.buildMergedQueryData(manifest)
-	manifest.Tables = mergedTables
 	genForRoot := *g
-	genForRoot.Data = dataForGenGo
+	if g.MergeQuery {
+		mergedTables, dataForGenGo := g.buildMergedQueryData(manifest)
+		manifest.Tables = mergedTables
+		genForRoot.Data = dataForGenGo
+	}
 
 	// generate query file
 	var buf bytes.Buffer
@@ -370,7 +377,11 @@ func (g *Generator) generateQueryFile() (err error) {
 		return err
 	}
 
-	err = g.outputWithManifest(g.OutFile, buf.Bytes(), manifest, filepath.Base(g.OutFile), &manifestMu)
+	if manifestEnabled {
+		err = g.outputWithManifest(g.OutFile, buf.Bytes(), manifest, filepath.Base(g.OutFile), &manifestMu)
+	} else {
+		err = g.output(g.OutFile, buf.Bytes())
+	}
 	if err != nil {
 		return err
 	}
@@ -398,7 +409,11 @@ func (g *Generator) generateQueryFile() (err error) {
 			return nil
 		}
 		fileName := strings.TrimSuffix(g.OutFile, ".go") + "_test.go"
-		err = g.outputWithManifest(fileName, buf.Bytes(), manifest, filepath.Base(fileName), &manifestMu)
+		if manifestEnabled {
+			err = g.outputWithManifest(fileName, buf.Bytes(), manifest, filepath.Base(fileName), &manifestMu)
+		} else {
+			err = g.output(fileName, buf.Bytes())
+		}
 		if err != nil {
 			g.db.Logger.Error(context.Background(), "generate query unit test fail: %s", err)
 			return nil
@@ -406,8 +421,10 @@ func (g *Generator) generateQueryFile() (err error) {
 		g.info("generate unit test file: " + fileName)
 	}
 
-	if err := saveManifest(manifestPath, manifest); err != nil {
-		return err
+	if manifestEnabled {
+		if err := saveManifest(manifestPath, manifest); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -527,6 +544,9 @@ func (g *Generator) generateSingleQueryFile(data *genInfo, m *genManifest, mu *s
 
 	defer g.info(fmt.Sprintf("generate query file: %s%s%s.gen.go", g.OutPath, string(os.PathSeparator), data.FileName))
 	fileName := fmt.Sprintf("%s%s%s.gen.go", g.OutPath, string(os.PathSeparator), data.FileName)
+	if m == nil {
+		return g.output(fileName, buf.Bytes())
+	}
 	return g.outputWithManifest(fileName, buf.Bytes(), m, filepath.Base(fileName), mu)
 }
 
@@ -568,6 +588,9 @@ func (g *Generator) generateQueryUnitTestFile(data *genInfo, m *genManifest, mu 
 
 	defer g.info(fmt.Sprintf("generate unit test file: %s%s%s.gen_test.go", g.OutPath, string(os.PathSeparator), data.FileName))
 	fileName := fmt.Sprintf("%s%s%s.gen_test.go", g.OutPath, string(os.PathSeparator), data.FileName)
+	if m == nil {
+		return g.output(fileName, buf.Bytes())
+	}
 	return g.outputWithManifest(fileName, buf.Bytes(), m, filepath.Base(fileName), mu)
 }
 
@@ -586,12 +609,17 @@ func (g *Generator) generateModelFile() error {
 		return fmt.Errorf("create model pkg path(%s) fail: %s", modelOutPath, err)
 	}
 
-	manifest, manifestPath, err := loadManifest(modelOutPath)
-	if err != nil {
-		return err
-	}
-	manifest.Mode = uint(g.Mode)
+	manifestEnabled := g.Incremental
+	var manifest *genManifest
+	var manifestPath string
 	var manifestMu sync.Mutex
+	if manifestEnabled {
+		manifest, manifestPath, err = loadManifest(modelOutPath)
+		if err != nil {
+			return err
+		}
+		manifest.Mode = uint(g.Mode)
+	}
 
 	errChan := make(chan error)
 	pool := pools.NewPool(concurrent)
@@ -619,7 +647,11 @@ func (g *Generator) generateModelFile() error {
 			}
 
 			modelFile := modelOutPath + data.FileName + ".gen.go"
-			err = g.outputWithManifest(modelFile, buf.Bytes(), manifest, filepath.Base(modelFile), &manifestMu)
+			if manifestEnabled {
+				err = g.outputWithManifest(modelFile, buf.Bytes(), manifest, filepath.Base(modelFile), &manifestMu)
+			} else {
+				err = g.output(modelFile, buf.Bytes())
+			}
 			if err != nil {
 				errChan <- err
 				return
@@ -632,8 +664,10 @@ func (g *Generator) generateModelFile() error {
 	case err = <-errChan:
 		return err
 	case <-pool.AsyncWaitAll():
-		if err := saveManifest(manifestPath, manifest); err != nil {
-			return err
+		if manifestEnabled {
+			if err := saveManifest(manifestPath, manifest); err != nil {
+				return err
+			}
 		}
 		g.fillModelPkgPath(modelOutPath)
 	}
