@@ -17,10 +17,54 @@ Friendly & Safer GORM powered by Code Generation.
 - Database To Struct follows GORM conventions
 - GORM under the hood, supports all features, plugins, DBMS that GORM supports
 
-## Getting Started
+## Documentation
 
-* Gen Guides [https://gorm.io/gen/index.html](https://gorm.io/gen/index.html)
-* GORM Guides [http://gorm.io/docs](http://gorm.io/docs)
+- Gen Guides: https://gorm.io/gen/index.html
+- GORM Guides: https://gorm.io/docs
+
+## Quick Start
+
+Install as a library:
+
+```bash
+go get gorm.io/gen@latest
+```
+
+Generate code:
+
+```go
+package main
+
+import (
+	"gorm.io/driver/mysql"
+	"gorm.io/gen"
+	"gorm.io/gorm"
+)
+
+func main() {
+	db, err := gorm.Open(mysql.Open("dsn"), &gorm.Config{})
+	if err != nil {
+		panic(err)
+	}
+
+	g := gen.NewGenerator(gen.Config{
+		OutPath: "dao/query",
+	})
+
+	g.UseDB(db)
+	g.ApplyBasic(g.GenerateAllTable()...)
+	g.Execute()
+}
+```
+
+More examples: [examples](./examples)
+
+## CLI Tool
+
+If you prefer a CLI workflow, use GenTool:
+
+- [GenTool README](./tools/gentool/README.md)
+- [GenTool README (ZH-CN)](./tools/gentool/README.ZH_CN.md)
 
 ## Maintainers
 
