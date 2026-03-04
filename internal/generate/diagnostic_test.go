@@ -59,7 +59,7 @@ type UserMethods interface {
 	if !errors.As(err, &de) {
 		t.Fatalf("expected diagnostic error, got %T: %v", err, err)
 	}
-	if de.Diag.Code != "SQL_INCOMPLETE" {
+	if de.Diag.Code != diagnostic.CodeSQLIncomplete {
 		t.Fatalf("unexpected code: %s", de.Diag.Code)
 	}
 	if de.Diag.File == "" || de.Diag.Line == 0 {
@@ -114,7 +114,7 @@ type UserMethods interface {
 	if !errors.As(err, &de) {
 		t.Fatalf("expected diagnostic error, got %T: %v", err, err)
 	}
-	if de.Diag.Code != "TEMPLATE_PARSE" {
+	if de.Diag.Code != diagnostic.CodeTemplateParse {
 		t.Fatalf("unexpected code: %s", de.Diag.Code)
 	}
 	if de.Diag.Interface != "UserMethods" || de.Diag.Method != "FindByName" {

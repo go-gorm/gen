@@ -366,7 +366,7 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 			_ = buf.WriteByte(sqlString[i])
 			for i++; ; i++ {
 				if strOutRange(i, sqlString) {
-					return m.diagSQL(i, "SQL_INCOMPLETE", "incomplete SQL", sqlString, nil)
+					return m.diagSQL(i, diagnostic.CodeSQLIncomplete, "incomplete SQL", sqlString, nil)
 				}
 				_ = buf.WriteByte(sqlString[i])
 				if sqlString[i] == '"' && sqlString[i-1] != '\\' {
@@ -377,7 +377,7 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 			_ = buf.WriteByte(sqlString[i])
 			for i++; ; i++ {
 				if strOutRange(i, sqlString) {
-					return m.diagSQL(i, "SQL_INCOMPLETE", "incomplete SQL", sqlString, nil)
+					return m.diagSQL(i, diagnostic.CodeSQLIncomplete, "incomplete SQL", sqlString, nil)
 				}
 				_ = buf.WriteByte(sqlString[i])
 				if sqlString[i] == '\'' && sqlString[i-1] != '\\' {
@@ -400,18 +400,18 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 			}
 
 			if strOutRange(i+1, sqlString) {
-				return m.diagSQL(i, "SQL_INCOMPLETE", "incomplete SQL", sqlString, nil)
+				return m.diagSQL(i, diagnostic.CodeSQLIncomplete, "incomplete SQL", sqlString, nil)
 			}
 			if b == '{' && sqlString[i+1] == '{' {
 				for i += 2; ; i++ {
 					if strOutRange(i, sqlString) {
-						return m.diagSQL(i, "SQL_INCOMPLETE", "incomplete SQL", sqlString, nil)
+						return m.diagSQL(i, diagnostic.CodeSQLIncomplete, "incomplete SQL", sqlString, nil)
 					}
 					if sqlString[i] == '"' {
 						_ = buf.WriteByte(sqlString[i])
 						for i++; ; i++ {
 							if strOutRange(i, sqlString) {
-								return m.diagSQL(i, "SQL_INCOMPLETE", "incomplete SQL", sqlString, nil)
+								return m.diagSQL(i, diagnostic.CodeSQLIncomplete, "incomplete SQL", sqlString, nil)
 							}
 							_ = buf.WriteByte(sqlString[i])
 							if sqlString[i] == '"' && sqlString[i-1] != '\\' {
@@ -422,14 +422,14 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 					}
 
 					if strOutRange(i+1, sqlString) {
-						return m.diagSQL(i, "SQL_INCOMPLETE", "incomplete SQL", sqlString, nil)
+						return m.diagSQL(i, diagnostic.CodeSQLIncomplete, "incomplete SQL", sqlString, nil)
 					}
 					if sqlString[i] == '}' && sqlString[i+1] == '}' {
 						i++
 						sqlClause := buf.Dump()
 						part, err := m.Section.checkTemplate(sqlClause)
 						if err != nil {
-							return m.diagSQL(i, "TEMPLATE_PARSE", "template parse error", sqlClause, err)
+							return m.diagSQL(i, diagnostic.CodeTemplateParse, "template parse error", sqlClause, err)
 						}
 						m.Section.members = append(m.Section.members, part)
 						break
@@ -453,7 +453,7 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 							varString := buf.Dump()
 							params, err := m.Section.checkSQLVar(varString, status, m)
 							if err != nil {
-								return m.diagSQL(i, "SQL_VAR", "variable parse error", varString, err)
+								return m.diagSQL(i, diagnostic.CodeSQLVar, "variable parse error", varString, err)
 							}
 							m.Section.members = append(m.Section.members, params)
 							break
@@ -461,7 +461,7 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 						varString := buf.Dump()
 						params, err := m.Section.checkSQLVar(varString, status, m)
 						if err != nil {
-							return m.diagSQL(i, "SQL_VAR", "variable parse error", varString, err)
+							return m.diagSQL(i, diagnostic.CodeSQLVar, "variable parse error", varString, err)
 						}
 						m.Section.members = append(m.Section.members, params)
 						i--
