@@ -221,7 +221,7 @@ func BuildDIYMethod(f *parser.InterfaceSet, s *QueryStructMeta, data []*Interfac
 				}
 				_, err = t.Section.BuildSQL()
 				if err != nil {
-					err = diagnostic.Wrap(err, "SQL_BUILD", "build SQL error")
+					err = diagnostic.Wrap(err, diagnostic.CodeSQLBuild, "build SQL error")
 					err = diagnostic.WithMethod(err, t.InterfaceName, t.MethodName)
 					err = diagnostic.WithLocation(err, t.File, t.DocLine, t.DocColumn)
 					return
