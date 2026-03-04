@@ -12,6 +12,7 @@ import (
 
 	"gorm.io/gen/field"
 	"gorm.io/gen/helper"
+	"gorm.io/gen/internal/diagnostic"
 	"gorm.io/gen/internal/model"
 	"gorm.io/gen/internal/parser"
 )
@@ -195,6 +196,9 @@ func BuildDIYMethod(f *parser.InterfaceSet, s *QueryStructMeta, data []*Interfac
 					MethodName:    method.MethodName,
 					Params:        method.Params,
 					Doc:           method.Doc,
+					File:          method.File,
+					DocLine:       method.Line,
+					DocColumn:     method.Column,
 					Table:         s.TableName,
 					InterfaceName: interfaceInfo.Name,
 					Package:       getPackageName(interfaceInfo.Package),
@@ -217,7 +221,9 @@ func BuildDIYMethod(f *parser.InterfaceSet, s *QueryStructMeta, data []*Interfac
 				}
 				_, err = t.Section.BuildSQL()
 				if err != nil {
-					err = fmt.Errorf("sql [%s] build err:%w", t.SQLString, err)
+					err = diagnostic.Wrap(err, "SQL_BUILD", "build SQL error")
+					err = diagnostic.WithMethod(err, t.InterfaceName, t.MethodName)
+					err = diagnostic.WithLocation(err, t.File, t.DocLine, t.DocColumn)
 					return
 				}
 				checkResults = append(checkResults, t)
