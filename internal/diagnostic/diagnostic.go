@@ -60,12 +60,18 @@ func (e *Error) MarshalJSON() ([]byte, error) {
 }
 
 func New(code, message string) *Error {
-	return &Error{Diag: Diagnostic{Code: code, Message: message}}
+	if message == "" {
+		message = DefaultMessage(code)
+	}
+	return &Error{Diag: Diagnostic{Code: code, Message: message, Hint: DefaultHint(code)}}
 }
 
 func Wrap(err error, code, message string) *Error {
 	if err == nil {
 		return New(code, message)
+	}
+	if message == "" {
+		message = DefaultMessage(code)
 	}
 	if e, ok := err.(*Error); ok {
 		if code != "" {
@@ -74,9 +80,12 @@ func Wrap(err error, code, message string) *Error {
 		if message != "" {
 			e.Diag.Message = message
 		}
+		if e.Diag.Hint == "" {
+			e.Diag.Hint = DefaultHint(e.Diag.Code)
+		}
 		return e
 	}
-	return &Error{Diag: Diagnostic{Code: code, Message: message}, Err: err}
+	return &Error{Diag: Diagnostic{Code: code, Message: message, Hint: DefaultHint(code)}, Err: err}
 }
 
 func WithLocation(err error, file string, line, column int) error {
