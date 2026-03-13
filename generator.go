@@ -96,8 +96,8 @@ type Logger interface {
 // Generator code generator
 type Generator struct {
 	Config
-	Data   map[string]*genInfo                  //gen query data
-	models map[string]*generate.QueryStructMeta //gen model data
+	Data   map[string]*genInfo                  // gen query data
+	models map[string]*generate.QueryStructMeta // gen model data
 
 	logger Logger
 }
@@ -334,12 +334,14 @@ func (g *Generator) generateQueryFile() (err error) {
 			err := g.generateSingleQueryFile(info, manifest, &manifestMu)
 			if err != nil {
 				errChan <- err
+				return
 			}
 
 			if g.WithUnitTest {
 				err = g.generateQueryUnitTestFile(info, manifest, &manifestMu)
 				if err != nil { // do not panic
 					g.db.Logger.Error(context.Background(), "generate unit test fail: %s", err)
+					return
 				}
 			}
 		}(info)
