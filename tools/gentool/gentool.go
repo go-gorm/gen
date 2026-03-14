@@ -63,6 +63,9 @@ func (c *CmdParams) revise() *CmdParams {
 	if c.OutPath == "" {
 		c.OutPath = defaultQueryPath
 	}
+
+	c.modeGenerateMode = parseMode(c.Mode...)
+
 	if len(c.Tables) == 0 {
 		return c
 	}
@@ -77,7 +80,6 @@ func (c *CmdParams) revise() *CmdParams {
 	}
 	c.Tables = tableList
 
-	c.modeGenerateMode = parseMode(c.Mode...)
 	return c
 }
 
@@ -231,8 +233,6 @@ func parseModeCode(mode string) (gen.GenerateMode, error) {
 		return gen.WithoutContext, nil
 	case "WithQueryInterface":
 		return gen.WithQueryInterface, nil
-	case "WithGeneric":
-		return gen.WithGeneric, nil
 	}
 
 	return 0, fmt.Errorf("unknown mode %q", mode)
