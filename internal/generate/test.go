@@ -8,7 +8,7 @@ import (
 	"gorm.io/gen/internal/parser"
 )
 
-//GetTestParamInTmpl return param list
+// GetTestParamInTmpl return param list
 func (m *InterfaceMethod) GetTestParamInTmpl() string {
 	return testParamToString(m.Params)
 }
