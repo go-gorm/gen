@@ -135,7 +135,7 @@ detect integer field's unsigned type, adjust generated data type
 
 #### mode
 
-Value: enter the required data table or leave it blank
+Value: enter the required mode(s) or leave it blank
 
 Items to be selected:
 

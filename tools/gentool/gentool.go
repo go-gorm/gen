@@ -34,23 +34,23 @@ const (
 
 // CmdParams is command line parameters
 type CmdParams struct {
-	DSN                 string   `yaml:"dsn"`          // consult[https://gorm.io/docs/connecting_to_the_database.html]"
-	DB                  string   `yaml:"db"`           // input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]
-	Tables              []string `yaml:"tables"`       // enter the required data table or leave it blank
-	OnlyModel           bool     `yaml:"onlyModel"`    // only generate model
-	OutPath             string   `yaml:"outPath"`      // specify a directory for output
-	OutFile             string   `yaml:"outFile"`      // query code file name, default: gen.go
-	WithUnitTest        bool     `yaml:"withUnitTest"` // generate unit test for query code
-	UnitTestTemplate    string   `yaml:"unitTestTemplate"`
-	ModelPkgName        string   `yaml:"modelPkgName"`        // generated model code's package name
-	FieldNullable       bool     `yaml:"fieldNullable"`       // generate with pointer when field is nullable
-	FieldCoverable      bool     `yaml:"fieldCoverable"`      // generate with pointer when field has default value
-	FieldWithIndexTag   bool     `yaml:"fieldWithIndexTag"`   // generate field with gorm index tag
-	FieldWithTypeTag    bool     `yaml:"fieldWithTypeTag"`    // generate field with gorm column type tag
-	FieldWithDefaultTag bool     `yaml:"fieldWithDefaultTag"` // generate field with gorm default tag
-	FieldSignable       bool     `yaml:"fieldSignable"`       // detect integer field's unsigned type, adjust generated data type
-	Mode              []string         `yaml:"mode"`              // generate mode
-	modeGenerateMode  gen.GenerateMode // generate mode has been converted to gen.GenerateMode
+	DSN                 string           `yaml:"dsn"`          // consult[https://gorm.io/docs/connecting_to_the_database.html]"
+	DB                  string           `yaml:"db"`           // input mysql or postgres or sqlite or sqlserver. consult[https://gorm.io/docs/connecting_to_the_database.html]
+	Tables              []string         `yaml:"tables"`       // enter the required data table or leave it blank
+	OnlyModel           bool             `yaml:"onlyModel"`    // only generate model
+	OutPath             string           `yaml:"outPath"`      // specify a directory for output
+	OutFile             string           `yaml:"outFile"`      // query code file name, default: gen.go
+	WithUnitTest        bool             `yaml:"withUnitTest"` // generate unit test for query code
+	UnitTestTemplate    string           `yaml:"unitTestTemplate"`
+	ModelPkgName        string           `yaml:"modelPkgName"`        // generated model code's package name
+	FieldNullable       bool             `yaml:"fieldNullable"`       // generate with pointer when field is nullable
+	FieldCoverable      bool             `yaml:"fieldCoverable"`      // generate with pointer when field has default value
+	FieldWithIndexTag   bool             `yaml:"fieldWithIndexTag"`   // generate field with gorm index tag
+	FieldWithTypeTag    bool             `yaml:"fieldWithTypeTag"`    // generate field with gorm column type tag
+	FieldWithDefaultTag bool             `yaml:"fieldWithDefaultTag"` // generate field with gorm default tag
+	FieldSignable       bool             `yaml:"fieldSignable"`       // detect integer field's unsigned type, adjust generated data type
+	Mode                []string         `yaml:"mode"`                // generate mode
+	modeGenerateMode    gen.GenerateMode // generate mode has been converted to gen.GenerateMode
 }
 
 func (c *CmdParams) revise() *CmdParams {
@@ -231,6 +231,8 @@ func parseModeCode(mode string) (gen.GenerateMode, error) {
 		return gen.WithoutContext, nil
 	case "WithQueryInterface":
 		return gen.WithQueryInterface, nil
+	case "WithGeneric":
+		return gen.WithGeneric, nil
 	}
 
 	return 0, fmt.Errorf("unknown mode %q", mode)
@@ -244,7 +246,12 @@ func parseMode(mode ...string) gen.GenerateMode {
 
 	g := gen.GenerateMode(0)
 	for i := 0; i < len(mode); i++ {
-		modeCode, err := parseModeCode(mode[i])
+		modeStr := strings.TrimSpace(mode[i])
+		if modeStr == "" {
+			continue
+		}
+
+		modeCode, err := parseModeCode(modeStr)
 		if err != nil {
 			log.Fatalln("failed to parse generate mode: ", err)
 		}
@@ -279,7 +286,7 @@ func main() {
 		FieldWithTypeTag:    config.FieldWithTypeTag,
 		FieldWithDefaultTag: config.FieldWithDefaultTag,
 		FieldSignable:       config.FieldSignable,
-		Mode:              config.modeGenerateMode,
+		Mode:                config.modeGenerateMode,
 	})
 
 	g.UseDB(db)
