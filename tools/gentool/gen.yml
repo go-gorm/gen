@@ -33,3 +33,5 @@ database:
   fieldWithDefaultTag : false
   # detect integer field's unsigned type, adjust generated data type
   fieldSignable  : false
+  # detect generated/computed columns and add gorm readonly tag ->
+  fieldReadonly : false

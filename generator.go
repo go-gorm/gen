@@ -197,6 +197,7 @@ func (g *Generator) genModelConfig(tableName string, modelName string, modelOpts
 			FieldWithIndexTag:   g.FieldWithIndexTag,
 			FieldWithTypeTag:    g.FieldWithTypeTag,
 			FieldWithDefaultTag: g.FieldWithDefaultTag,
+			FieldReadonly:       g.FieldReadonly,
 
 			FieldJSONTagNS: g.fieldJSONTagNS,
 		},

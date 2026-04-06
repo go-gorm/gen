@@ -36,6 +36,11 @@ func GetQueryStructMeta(db *gorm.DB, conf *model.Config) (*QueryStructMeta, erro
 	if err != nil {
 		return nil, err
 	}
+	if conf.FieldReadonly {
+		if err := markReadOnlyColumns(db, conf.GetSchemaName(db), tableName, columns); err != nil {
+			return nil, err
+		}
+	}
 
 	tc := getTableComment(db, tableName)
 

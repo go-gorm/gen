@@ -49,6 +49,7 @@ type CmdParams struct {
 	FieldWithTypeTag    bool     `yaml:"fieldWithTypeTag"`    // generate field with gorm column type tag
 	FieldWithDefaultTag bool     `yaml:"fieldWithDefaultTag"` // generate field with gorm default tag
 	FieldSignable       bool     `yaml:"fieldSignable"`       // detect integer field's unsigned type, adjust generated data type
+	FieldReadonly       bool     `yaml:"fieldReadonly"`       // detect generated/computed columns and mark as readonly
 }
 
 func (c *CmdParams) revise() *CmdParams {
@@ -158,6 +159,7 @@ func argParse() *CmdParams {
 	fieldWithTypeTag := flag.Bool("fieldWithTypeTag", false, "generate field with gorm column type tag")
 	fieldWithDefaultTag := flag.Bool("fieldWithDefaultTag", false, "generate field with gorm default tag")
 	fieldSignable := flag.Bool("fieldSignable", false, "detect integer field's unsigned type, adjust generated data type")
+	fieldReadonly := flag.Bool("fieldReadonly", false, "detect generated/computed columns and add gorm readonly tag ->")
 	flag.Parse()
 
 	if *genPath != "" { //use yml config
@@ -211,6 +213,9 @@ func argParse() *CmdParams {
 	if *fieldSignable {
 		cmdParse.FieldSignable = *fieldSignable
 	}
+	if *fieldReadonly {
+		cmdParse.FieldReadonly = *fieldReadonly
+	}
 	return &cmdParse
 }
 
@@ -238,6 +243,7 @@ func main() {
 		FieldWithTypeTag:    config.FieldWithTypeTag,
 		FieldWithDefaultTag: config.FieldWithDefaultTag,
 		FieldSignable:       config.FieldSignable,
+		FieldReadonly:       config.FieldReadonly,
 	})
 
 	g.UseDB(db)

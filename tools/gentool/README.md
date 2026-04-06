@@ -29,6 +29,8 @@ Install GEN as a binary tool
         generate field with gorm column type tag
   -fieldWithDefaultTag
         generate field with gorm default tag
+  -fieldReadonly
+        detect generated/computed columns and add gorm readonly tag ->
   -modelPkgName string
         generated model code's package name
   -outFile string
@@ -87,6 +89,21 @@ generate field with gorm column type tag
 #### fieldWithDefaultTag
 
 generate field with gorm default tag
+
+#### fieldReadonly
+
+Value : False / True
+
+Detect generated/computed columns and generate readonly model tag:
+
+`gorm:"...;->"`
+
+Supported dialects:
+
+- mysql (`information_schema.COLUMNS`: `GENERATION_TYPE` / `EXTRA`)
+- postgres (`information_schema.columns.is_generated`)
+- sqlite (`PRAGMA table_xinfo`, `hidden` in `2/3`)
+- clickhouse (`system.columns.default_kind` in `MATERIALIZED/ALIAS/EPHEMERAL`)
 
 #### modelPkgName
 

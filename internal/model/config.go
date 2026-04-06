@@ -41,6 +41,7 @@ type FieldConfig struct {
 	FieldWithIndexTag   bool // generate with gorm index tag
 	FieldWithTypeTag    bool // generate with gorm column type tag
 	FieldWithDefaultTag bool
+	FieldReadonly       bool // generate with gorm readonly tag if column is generated/computed
 
 	FieldJSONTagNS func(columnName string) string
 

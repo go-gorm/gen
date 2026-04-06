@@ -31,6 +31,8 @@
         generate field with gorm column type tag
   -fieldWithDefaultTag
         generate field with gorm default tag
+  -fieldReadonly
+        detect generated/computed columns and add gorm readonly tag ->
   -modelPkgName string
         generated model code's package name
   -outFile string
@@ -89,6 +91,23 @@ default ""
 #### fieldWithDefaultTag
 
 使用gorm默认值标记生成字段
+
+#### fieldReadonly
+
+值为：False / True
+
+检测数据库中的生成列/计算列，并在模型字段上生成 GORM 只读标记 `->`，最终形如：
+
+`gorm:"...;->"`
+
+支持的数据库：
+
+- **mysql**：`information_schema.COLUMNS` 中的 `GENERATION_TYPE` / `EXTRA`
+- **postgres**：`information_schema.columns` 中的 `is_generated`
+- **sqlite**：`PRAGMA table_xinfo`，`hidden` 为 `2`（虚拟生成列）或 `3`（存储生成列）
+- **clickhouse**：`system.columns` 中的 `default_kind` 为 `MATERIALIZED` / `ALIAS` / `EPHEMERAL`
+
+配置文件（`gen.yml`）中对应项为 `fieldReadonly`。
 
 #### modelPkgName
 
