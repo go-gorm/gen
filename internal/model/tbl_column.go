@@ -16,6 +16,7 @@ type Column struct {
 	TableName   string                                                        `gorm:"column:TABLE_NAME"`
 	Indexes     []*Index                                                      `gorm:"-"`
 	UseScanType bool                                                          `gorm:"-"`
+	ReadOnly    bool                                                          `gorm:"-"`
 	dataTypeMap map[string]func(columnType gorm.ColumnType) (dataType string) `gorm:"-"`
 	jsonTagNS   func(columnName string) string                                `gorm:"-"`
 }
@@ -153,6 +154,9 @@ func (c *Column) buildGormTag(withDefaultTag bool) field.GormTag {
 			comment = strings.ReplaceAll(comment, ";", " ")
 		}
 		tag.Set(field.TagKeyGormComment, comment)
+	}
+	if c.ReadOnly && !isValidPriKey {
+		tag.Set(field.TagKeyGormReadonly, "")
 	}
 	return tag
 }

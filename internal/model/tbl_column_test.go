@@ -3,6 +3,7 @@ package model
 import (
 	"database/sql"
 	"reflect"
+	"strings"
 	"testing"
 
 	"gorm.io/gen/field"
@@ -72,5 +73,41 @@ func TestBuildGormTagIndexOrderDeterministic(t *testing.T) {
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("unexpected index order: got=%v want=%v", got, want)
+	}
+}
+
+func TestBuildGormTagReadOnly(t *testing.T) {
+	col := Column{
+		ColumnType: testColumnType{
+			name:         "full_name",
+			databaseType: "varchar",
+			columnType:   "varchar(255)",
+		},
+		ReadOnly: true,
+	}
+
+	got := col.buildGormTag(false).Build()
+	if !strings.Contains(got, "->") {
+		t.Fatalf("expected readonly mark in gorm tag, got=%q", got)
+	}
+	if !strings.HasSuffix(got, "->") {
+		t.Fatalf("expected readonly mark at the end of gorm tag, got=%q", got)
+	}
+}
+
+func TestBuildGormTagReadOnlyPrimaryKeyIgnored(t *testing.T) {
+	col := Column{
+		ColumnType: testColumnType{
+			name:         "id",
+			databaseType: "bigint",
+			columnType:   "bigint",
+			primaryKey:   true,
+		},
+		ReadOnly: true,
+	}
+
+	got := col.buildGormTag(false).Build()
+	if strings.Contains(got, "->") {
+		t.Fatalf("did not expect readonly mark for primary key, got=%q", got)
 	}
 }

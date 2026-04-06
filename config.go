@@ -47,6 +47,7 @@ type Config struct {
 	FieldWithIndexTag   bool // generate with gorm index tag
 	FieldWithTypeTag    bool // generate with gorm column type tag
 	FieldWithDefaultTag bool
+	FieldReadonly       bool // detect generated/computed columns and mark them as readonly in gorm tag
 
 	Mode GenerateMode // generate mode
 

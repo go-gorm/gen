@@ -21,6 +21,7 @@ const (
 	TagKeyGormIndex         = "index"
 	TagKeyGormDefault       = "default"
 	TagKeyGormComment       = "comment"
+	TagKeyGormReadonly      = "->"
 )
 
 var (
@@ -37,6 +38,7 @@ var (
 		TagKeyGormIndex:         4,
 		TagKeyGormDefault:       3,
 		TagKeyGormComment:       0,
+		TagKeyGormReadonly:      -1,
 	}
 )
 
