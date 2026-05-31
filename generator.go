@@ -620,3 +620,15 @@ func getImportPkgPaths(data *genInfo) []string {
 	}
 	return importPkgPaths
 }
+
+// RelationDepth caps how many levels of nested relation fields are generated
+// for query code (1 = direct relations only). The default is unlimited, which
+// matches upstream gorm/gen behavior. (lemmata fork)
+func RelationDepth(depth int) { generate.SetRelationDepth(depth) }
+
+// DeepRelations marks specific root-qualified relation paths (e.g.
+// "OrgAssessment.OrgOngoingAssessment.OrgQuestionnaires") to be generated as
+// typed nested accessors regardless of the RelationDepth cap. Only the listed
+// branches are expanded, so the generated-code cost is limited to exactly those
+// paths. (lemmata fork)
+func DeepRelations(paths ...string) { generate.SetDeepRelations(paths) }

@@ -216,14 +216,15 @@ func BuildDIYMethod(f *parser.InterfaceSet, s *QueryStructMeta, data []*Interfac
 
 // ParseStructRelationShip parse struct's relationship
 // No one should use it directly in project
-func ParseStructRelationShip(relationship *schema.Relationships) []field.Relation {
+func ParseStructRelationShip(relationship *schema.Relationships, rootName string) []field.Relation {
 	cache := make(map[string]bool)
+	depth := relationDepth()
 	return append(append(append(append(
 		make([]field.Relation, 0, 4),
-		pullRelationShip(cache, relationship.HasOne)...),
-		pullRelationShip(cache, relationship.HasMany)...),
-		pullRelationShip(cache, relationship.BelongsTo)...),
-		pullRelationShip(cache, relationship.Many2Many)...,
+		pullRelationShip(cache, relationship.HasOne, depth, rootName)...),
+		pullRelationShip(cache, relationship.HasMany, depth, rootName)...),
+		pullRelationShip(cache, relationship.BelongsTo, depth, rootName)...),
+		pullRelationShip(cache, relationship.Many2Many, depth, rootName)...,
 	)
 }
 

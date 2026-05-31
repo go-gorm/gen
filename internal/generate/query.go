@@ -3,7 +3,9 @@ package generate
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"gorm.io/gorm"
@@ -74,7 +76,7 @@ func (b *QueryStructMeta) parseStruct(st interface{}) error {
 		gf.MultilineComment = strings.Contains(gf.ColumnComment, "\n")
 		b.appendOrUpdateField(gf)
 	}
-	for _, r := range ParseStructRelationShip(&stmt.Schema.Relationships) {
+	for _, r := range ParseStructRelationShip(&stmt.Schema.Relationships, stmt.Schema.Name) {
 		r := r
 		b.appendOrUpdateField(&model.Field{Relation: &r})
 	}
@@ -254,15 +256,80 @@ func isStructType(data reflect.Value) bool {
 		(data.Kind() == reflect.Ptr && data.Elem().Kind() == reflect.Struct)
 }
 
-func pullRelationShip(cache map[string]bool, relationships []*schema.Relationship) []field.Relation {
+// Relation-generation controls (lemmata fork).
+//
+// gorm/gen normally expands the full transitive closure of model relations into
+// nested RelationField structs. In a densely-connected schema that is
+// combinatorial and produces millions of lines of generated code. These knobs
+// cap that expansion while still allowing specific paths to stay fully typed.
+var (
+	relationDepthLimit = -1     // <0 => use GEN_RELATION_DEPTH / default
+	deepRelationPaths  []string // root-qualified paths kept typed past the cap
+)
+
+// SetRelationDepth caps how many levels of nested relation fields are generated
+// (1 = direct relations only). Overrides GEN_RELATION_DEPTH.
+func SetRelationDepth(d int) { relationDepthLimit = d }
+
+// SetDeepRelations marks specific root-qualified relation paths (e.g.
+// "OrgAssessment.OrgOngoingAssessment.OrgQuestionnaires") to be generated as
+// typed nested accessors regardless of the depth cap. Only the listed branches
+// are expanded, so the size cost is limited to exactly those paths.
+func SetDeepRelations(paths []string) { deepRelationPaths = paths }
+
+func relationDepth() int {
+	if relationDepthLimit >= 0 {
+		return relationDepthLimit
+	}
+	if v := os.Getenv("GEN_RELATION_DEPTH"); v != "" {
+		if d, err := strconv.Atoi(v); err == nil && d >= 0 {
+			return d
+		}
+	}
+	return 1 << 30 // effectively unlimited (upstream behavior)
+}
+
+// onDeepPath reports whether path is itself a marked deep relation or an
+// ancestor of one (so the node must be generated to reach the marked leaf).
+func onDeepPath(path string) bool {
+	for _, e := range deepRelationPaths {
+		if e == path || strings.HasPrefix(e, path+".") {
+			return true
+		}
+	}
+	return false
+}
+
+// hasDeepDescendant reports whether some marked deep path extends past path,
+// i.e. we must recurse into path's children to reach it.
+func hasDeepDescendant(path string) bool {
+	for _, e := range deepRelationPaths {
+		if strings.HasPrefix(e, path+".") {
+			return true
+		}
+	}
+	return false
+}
+
+func pullRelationShip(cache map[string]bool, relationships []*schema.Relationship, depth int, prefix string) []field.Relation {
 	if len(relationships) == 0 {
 		return nil
 	}
-	result := make([]field.Relation, len(relationships))
-	for i, relationship := range relationships {
+	result := make([]field.Relation, 0, len(relationships))
+	for _, relationship := range relationships {
+		nodePath := relationship.Name
+		if prefix != "" {
+			nodePath = prefix + "." + relationship.Name
+		}
+		// Generate this node if it is within the global depth cap, or if it lies
+		// on a marked deep path.
+		if depth < 1 && !onDeepPath(nodePath) {
+			continue
+		}
 		var childRelations []field.Relation
 		varType := strings.TrimLeft(relationship.Field.FieldType.String(), "[]*")
-		if !cache[varType] {
+		recurse := depth > 1 || hasDeepDescendant(nodePath)
+		if recurse && !cache[varType] {
 			cache[varType] = true
 			childRelations = pullRelationShip(cache, append(append(append(append(
 				make([]*schema.Relationship, 0, 4),
@@ -270,9 +337,10 @@ func pullRelationShip(cache map[string]bool, relationships []*schema.Relationshi
 				relationship.FieldSchema.Relationships.HasOne...),
 				relationship.FieldSchema.Relationships.HasMany...),
 				relationship.FieldSchema.Relationships.Many2Many...),
+				depth-1, nodePath,
 			)
 		}
-		result[i] = *field.NewRelationWithType(field.RelationshipType(relationship.Type), relationship.Name, varType, childRelations...)
+		result = append(result, *field.NewRelationWithType(field.RelationshipType(relationship.Type), relationship.Name, varType, childRelations...))
 	}
 	return result
 }
