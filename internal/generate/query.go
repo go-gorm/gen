@@ -271,8 +271,7 @@ var (
 // (1 = direct relations only). Overrides GEN_RELATION_DEPTH.
 func SetRelationDepth(d int) { relationDepthLimit = d }
 
-// SetDeepRelations marks specific root-qualified relation paths (e.g.
-// "OrgAssessment.OrgOngoingAssessment.OrgQuestionnaires") to be generated as
+// SetDeepRelations marks specific root-qualified relation paths (e.g. "Users.Groups.Permissions") to be generated as
 // typed nested accessors regardless of the depth cap. Only the listed branches
 // are expanded, so the size cost is limited to exactly those paths.
 func SetDeepRelations(paths []string) { deepRelationPaths = paths }

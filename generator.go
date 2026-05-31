@@ -626,8 +626,7 @@ func getImportPkgPaths(data *genInfo) []string {
 // matches upstream gorm/gen behavior. (lemmata fork)
 func RelationDepth(depth int) { generate.SetRelationDepth(depth) }
 
-// DeepRelations marks specific root-qualified relation paths (e.g.
-// "OrgAssessment.OrgOngoingAssessment.OrgQuestionnaires") to be generated as
+// DeepRelations marks specific root-qualified relation paths (e.g. "Users.Groups.Permissions") to be generated as
 // typed nested accessors regardless of the RelationDepth cap. Only the listed
 // branches are expanded, so the generated-code cost is limited to exactly those
 // paths. (lemmata fork)
