@@ -324,8 +324,8 @@ func (g *Generator) generateQueryFile() (err error) {
 		manifest.Mode = uint(g.Mode)
 	}
 
-	errChan := make(chan error)
 	var errOnce sync.Once
+	errChan := make(chan error, 1)
 	pool := pools.NewPool(concurrent)
 	// generate query code for all struct
 	for _, info := range g.Data {
@@ -353,6 +353,12 @@ func (g *Generator) generateQueryFile() (err error) {
 	case err = <-errChan:
 		return err
 	case <-pool.AsyncWaitAll():
+		// check queued error when both select cases are ready and pool wins
+		select {
+		case err = <-errChan:
+			return err
+		default:
+		}
 	}
 
 	genForRoot := *g
