@@ -1,13 +1,18 @@
 package gen
 
 import (
+	"context"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"gorm.io/gorm/logger"
+	"gorm.io/gorm/utils/tests"
 	"gorm.io/hints"
 
 	"gorm.io/gen/field"
@@ -421,5 +426,150 @@ func TestDO_methods(t *testing.T) {
 
 	for _, testcase := range testcases {
 		checkBuildExpr(t, testcase.Expr, testcase.Opts, testcase.Result, testcase.ExpectedVars)
+	}
+}
+
+type captureLogger struct {
+	lastSQL string
+}
+
+func (l *captureLogger) LogMode(level logger.LogLevel) logger.Interface { return l }
+func (l *captureLogger) Info(ctx context.Context, s string, args ...interface{}) {
+}
+func (l *captureLogger) Warn(ctx context.Context, s string, args ...interface{}) {
+}
+func (l *captureLogger) Error(ctx context.Context, s string, args ...interface{}) {
+}
+func (l *captureLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
+	sql, _ := fc()
+	l.lastSQL = sql
+}
+
+type updateColumnSimpleModel struct {
+	gorm.Model
+	Num int
+}
+
+func TestUpdateColumnSimpleNoUpdatedAt(t *testing.T) {
+	l := &captureLogger{}
+	dry := db.Session(&gorm.Session{DryRun: true, NewDB: true, Logger: l})
+	var d DO
+	d.UseDB(dry)
+	d.UseModel(updateColumnSimpleModel{})
+
+	_, err := d.Where(field.NewInt("", "id").Eq(1)).UpdateColumnSimple(field.NewInt("", "num").Add(1))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if l.lastSQL == "" {
+		t.Fatalf("empty sql")
+	}
+	if strings.Contains(strings.ToLower(l.lastSQL), "updated_at") {
+		t.Fatalf("unexpected updated_at in sql: %s", l.lastSQL)
+	}
+}
+
+type postgresDialector struct{ tests.DummyDialector }
+
+func (postgresDialector) Name() string { return "postgres" }
+
+func (postgresDialector) BindVarTo(writer clause.Writer, stmt *gorm.Statement, v interface{}) {
+	writer.WriteByte('$')
+	writer.WriteString(strconv.Itoa(len(stmt.Vars)))
+}
+
+func (postgresDialector) QuoteTo(writer clause.Writer, str string) {
+	var (
+		underQuoted, selfQuoted bool
+		continuousBacktick      int8
+		shiftDelimiter          int8
+	)
+
+	for _, v := range []byte(str) {
+		switch v {
+		case '"':
+			continuousBacktick++
+			if continuousBacktick == 2 {
+				writer.WriteString(`""`)
+				continuousBacktick = 0
+			}
+		case '.':
+			if continuousBacktick > 0 || !selfQuoted {
+				shiftDelimiter = 0
+				underQuoted = false
+				continuousBacktick = 0
+				writer.WriteByte('"')
+			}
+			writer.WriteByte(v)
+			continue
+		default:
+			if shiftDelimiter-continuousBacktick <= 0 && !underQuoted {
+				writer.WriteByte('"')
+				underQuoted = true
+				if selfQuoted = continuousBacktick > 0; selfQuoted {
+					continuousBacktick -= 1
+				}
+			}
+
+			for ; continuousBacktick > 0; continuousBacktick -= 1 {
+				writer.WriteString(`""`)
+			}
+
+			writer.WriteByte(v)
+		}
+		shiftDelimiter++
+	}
+
+	if continuousBacktick > 0 && !selfQuoted {
+		writer.WriteString(`""`)
+	}
+	writer.WriteByte('"')
+}
+
+type deleteReturningModel struct {
+	ID int64
+}
+
+func (deleteReturningModel) TableName() string { return "records" }
+
+func TestDeleteReturningBackfillDest(t *testing.T) {
+	base, err := gorm.Open(postgresDialector{}, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("open db: %v", err)
+	}
+	var dest interface{}
+	base.Callback().Delete().Before("gorm:delete").Register("test:dest", func(db *gorm.DB) {
+		dest = db.Statement.Dest
+	})
+	dry := base.Session(&gorm.Session{DryRun: true, NewDB: true})
+	var d DO
+	d.UseDB(dry)
+	d.UseModel(deleteReturningModel{})
+
+	var result []*deleteReturningModel
+	_, err = d.Returning(&result).Where(field.NewInt("", "id").Eq(1)).Delete()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if dest != &result {
+		t.Fatalf("unexpected delete dest: %v", dest)
+	}
+}
+
+func TestPostgresSelectVarBind(t *testing.T) {
+	base, err := gorm.Open(postgresDialector{}, &gorm.Config{})
+	if err != nil {
+		t.Fatalf("open db: %v", err)
+	}
+	l := &captureLogger{}
+	dry := base.Session(&gorm.Session{DryRun: true, NewDB: true, Logger: l})
+	var d DO
+	d.UseDB(dry)
+	d.UseTable("user")
+
+	_ = d.Select(field.NewInt("", "balance").Sub(1), field.NewInt("", "score").Sub(2)).Row()
+	expect := `SELECT "balance"-$1,"score"-$2 FROM "user"`
+	if l.lastSQL != expect {
+		t.Fatalf("expect %s, got %s", expect, l.lastSQL)
 	}
 }

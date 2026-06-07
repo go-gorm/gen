@@ -27,6 +27,16 @@ func ({{.S}} {{.TargetStruct}}Do){{.FuncSign}}{
 
 `
 
+// CRUDGenericMethod generic CRUD method
+const CRUDGenericMethod = `
+func ({{.S}} *{{.QueryStructName}}Do) withDO(do gen.Dao) {{.ReturnObject}} {
+	_r := &{{.QueryStructName}}Do{}
+	_r.DO = *do.(*gen.DO)
+	_r.IWithDO = gen.WithDOFunc[{{.ReturnObject}}]({{.S}}.withDO)
+	return _r
+}
+`
+
 // CRUDMethod CRUD method
 const CRUDMethod = `
 func ({{.S}} {{.QueryStructName}}Do) Debug() {{.ReturnObject}} {
@@ -298,11 +308,12 @@ func Test_{{.QueryStructName}}Query(t *testing.T) {
 		t.Error("create item in table <{{.TableName}}> fail:", err)
 	}
 
+{{ if not .HasUniqueIndex }}
 	err = _do.CreateInBatches([]*{{.StructInfo.Package}}.{{.ModelStructName}}{ {}, {} }, 10)
 	if err != nil {
 		t.Error("create item in table <{{.TableName}}> fail:", err)
 	}
-
+{{ end }}
 	_, err = _do.Select({{.QueryStructName}}.ALL).Take()
 	if err != nil {
 		t.Error("Take() on table <{{.TableName}}> fail:", err)

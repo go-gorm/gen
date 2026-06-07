@@ -12,25 +12,25 @@ var Func = new(function)
 type function struct{}
 
 // UnixTimestamp same as UNIX_TIMESTAMP([date])
-func (f *function) UnixTimestamp(date ...string) Uint64 {
+func (f *function) UnixTimestamp(date ...string) Number[uint64] {
 	if len(date) > 0 {
-		return Uint64{expr{e: clause.Expr{SQL: "UNIX_TIMESTAMP(?)", Vars: []interface{}{date[0]}}}}
+		return newNumber[uint64](expr{e: clause.Expr{SQL: "UNIX_TIMESTAMP(?)", Vars: []interface{}{date[0]}}})
 	}
-	return Uint64{expr{e: clause.Expr{SQL: "UNIX_TIMESTAMP()"}}}
+	return newNumber[uint64](expr{e: clause.Expr{SQL: "UNIX_TIMESTAMP()"}})
 }
 
 // FromUnixTime FROM_UNIXTIME(unix_timestamp[,format])
 func (f *function) FromUnixTime(date uint64, format string) String {
 	if strings.TrimSpace(format) != "" {
-		return String{expr{e: clause.Expr{SQL: "FROM_UNIXTIME(?, ?)", Vars: []interface{}{date, format}}}}
+		return String{genericsField[string]{expr{e: clause.Expr{SQL: "FROM_UNIXTIME(?, ?)", Vars: []interface{}{date, format}}}}}
 	}
-	return String{expr{e: clause.Expr{SQL: "FROM_UNIXTIME(?)", Vars: []interface{}{date}}}}
+	return String{genericsField[string]{expr{e: clause.Expr{SQL: "FROM_UNIXTIME(?)", Vars: []interface{}{date}}}}}
 }
 
 func (f *function) Rand() String {
-	return String{expr{e: clause.Expr{SQL: "RAND()"}}}
+	return String{genericsField[string]{expr{e: clause.Expr{SQL: "RAND()"}}}}
 }
 
 func (f *function) Random() String {
-	return String{expr{e: clause.Expr{SQL: "RANDOM()"}}}
+	return String{genericsField[string]{expr{e: clause.Expr{SQL: "RANDOM()"}}}}
 }

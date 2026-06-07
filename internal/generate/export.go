@@ -12,6 +12,7 @@ import (
 
 	"gorm.io/gen/field"
 	"gorm.io/gen/helper"
+	"gorm.io/gen/internal/diagnostic"
 	"gorm.io/gen/internal/model"
 	"gorm.io/gen/internal/parser"
 )
@@ -36,19 +37,22 @@ func GetQueryStructMeta(db *gorm.DB, conf *model.Config) (*QueryStructMeta, erro
 		return nil, err
 	}
 
+	tc := getTableComment(db, tableName)
+
 	return (&QueryStructMeta{
-		db:              db,
-		Source:          model.Table,
-		Generated:       true,
-		FileName:        fileName,
-		TableName:       tableName,
-		TableComment:    getTableComment(db, tableName),
-		ModelStructName: structName,
-		QueryStructName: uncaptialize(structName),
-		S:               strings.ToLower(structName[0:1]),
-		StructInfo:      parser.Param{Type: structName, Package: conf.ModelPkg},
-		ImportPkgPaths:  conf.ImportPkgPaths,
-		Fields:          getFields(db, conf, columns),
+		db:                    db,
+		Source:                model.Table,
+		Generated:             true,
+		FileName:              fileName,
+		TableName:             tableName,
+		MultilineTableComment: strings.Contains(tc, "\n"),
+		TableComment:          tc,
+		ModelStructName:       structName,
+		QueryStructName:       uncaptialize(structName),
+		S:                     strings.ToLower(structName[0:1]),
+		StructInfo:            parser.Param{Type: structName, Package: conf.ModelPkg},
+		ImportPkgPaths:        conf.ImportPkgPaths,
+		Fields:                getFields(db, conf, columns),
 	}).addMethodFromAddMethodOpt(conf.GetModelMethods()...), nil
 }
 
@@ -97,14 +101,20 @@ func GetQueryStructMetaFromObject(obj helper.Object, conf *model.Config) (*Query
 			tag.Set(field.TagKeyJson, jt)
 		}
 
-		fields = append(fields, &model.Field{
+		nf := model.Field{
 			Name:             fl.Name(),
 			Type:             fl.Type(),
 			ColumnName:       fl.ColumnName(),
 			Tag:              tag,
 			ColumnComment:    fl.Comment(),
 			MultilineComment: strings.Contains(fl.Comment(), "\n"),
-		})
+		}
+
+		if nf.MultilineComment {
+			nf.ColumnComment = strings.Replace(fl.Comment(), "*/", "* /", -1)
+		}
+
+		fields = append(fields, &nf)
 	}
 
 	return &QueryStructMeta{
@@ -186,6 +196,9 @@ func BuildDIYMethod(f *parser.InterfaceSet, s *QueryStructMeta, data []*Interfac
 					MethodName:    method.MethodName,
 					Params:        method.Params,
 					Doc:           method.Doc,
+					File:          method.File,
+					DocLine:       method.Line,
+					DocColumn:     method.Column,
 					Table:         s.TableName,
 					InterfaceName: interfaceInfo.Name,
 					Package:       getPackageName(interfaceInfo.Package),
@@ -199,12 +212,18 @@ func BuildDIYMethod(f *parser.InterfaceSet, s *QueryStructMeta, data []*Interfac
 				if err = t.checkResult(method.Result); err != nil {
 					return
 				}
+				if method.SkipImpl {
+					checkResults = append(checkResults, t)
+					continue
+				}
 				if err = t.checkSQL(); err != nil {
 					return
 				}
 				_, err = t.Section.BuildSQL()
 				if err != nil {
-					err = fmt.Errorf("sql [%s] build err:%w", t.SQLString, err)
+					err = diagnostic.WrapCode(err, diagnostic.CodeSQLBuild)
+					err = diagnostic.WithMethod(err, t.InterfaceName, t.MethodName)
+					err = diagnostic.WithLocation(err, t.File, t.DocLine, t.DocColumn)
 					return
 				}
 				checkResults = append(checkResults, t)

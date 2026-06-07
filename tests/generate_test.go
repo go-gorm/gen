@@ -144,15 +144,13 @@ var generateCase = map[string]func(dir string) *gen.Generator{
 			OutPath: dir + "/query",
 			Mode:    gen.WithDefaultQuery | gen.WithQueryInterface,
 
-			WithUnitTest: true,
-
+			WithUnitTest:      true,
 			FieldNullable:     true,
 			FieldCoverable:    true,
 			FieldWithIndexTag: true,
 		})
 		g.UseDB(DB)
 		g.WithJSONTagNameStrategy(func(c string) string { return "-" })
-
 		banks := g.GenerateModel("banks")
 		creditCards := g.GenerateModel("credit_cards")
 		customers := g.GenerateModel("customers",
@@ -172,6 +170,24 @@ var generateCase = map[string]func(dir string) *gen.Generator{
 			}),
 		)
 		g.ApplyBasic(customers)
+		return g
+	},
+	generateDirPrefix + "dal_generic": func(dir string) *gen.Generator {
+		g := gen.NewGenerator(gen.Config{
+			OutPath: dir + "/query",
+			Mode:    gen.WithDefaultQuery | gen.WithGeneric,
+
+			WithUnitTest: true,
+
+			FieldNullable:     true,
+			FieldCoverable:    true,
+			FieldWithIndexTag: true,
+		})
+		g.UseDB(DB)
+		g.WithJSONTagNameStrategy(func(c string) string { return "-" })
+		g.ApplyBasic(g.GenerateModel("banks"))
+		g.ApplyInterface(func(testIF diy_method.TestIF, testFor diy_method.TestFor, method diy_method.InsertMethod, selectMethod diy_method.SelectMethod) {
+		}, g.GenerateModel("users"))
 		return g
 	},
 	generateDirPrefix + "dal_8": func(dir string) *gen.Generator {
@@ -259,4 +275,53 @@ func TestGenerate_expect(t *testing.T) {
 	)
 	g.ApplyBasic(customers, creditCards, banks)
 	g.Execute()
+}
+
+func Test_GenSkipImpl(t *testing.T) {
+	dir := ".gen/skip_impl_test"
+	os.RemoveAll(dir)
+	g := gen.NewGenerator(gen.Config{
+		OutPath: dir + "/query",
+		Mode:    gen.WithDefaultQuery | gen.WithQueryInterface,
+	})
+	g.UseDB(DB)
+	model := g.GenerateModel("users")
+	g.ApplyInterface(func(diy_method.TestSkipImpl) {}, model)
+	g.Execute()
+
+	queryFile := dir + "/query/users.gen.go"
+	content, err := os.ReadFile(queryFile)
+	if err != nil {
+		t.Fatalf("read generated file failed: %v", err)
+	}
+	str := string(content)
+	if !strings.Contains(str, "func (u userDo) NoSkipMethod(") {
+		t.Error("should generate NoSkipMethod implementation")
+	}
+	if strings.Contains(str, "func (u userDo) SkipMethod(") || strings.Contains(str, "func (u usersDo) SkipMethod(") {
+		t.Error("should not generate SkipMethod implementation for // gen:skip interface")
+	}
+}
+
+func Test_GenVariadic(t *testing.T) {
+	dir := ".gen/variadic_test"
+	os.RemoveAll(dir)
+	g := gen.NewGenerator(gen.Config{
+		OutPath: dir + "/query",
+		Mode:    gen.WithDefaultQuery | gen.WithQueryInterface,
+	})
+	g.UseDB(DB)
+	model := g.GenerateModel("users")
+	g.ApplyInterface(func(diy_method.VariadicTest) {}, model)
+	g.Execute()
+
+	queryFile := dir + "/query/users.gen.go"
+	content, err := os.ReadFile(queryFile)
+	if err != nil {
+		t.Fatalf("read generated file failed: %v", err)
+	}
+	str := string(content)
+	if !strings.Contains(str, "VariadicMethod(ids ...int)") {
+		t.Error("should generate VariadicMethod implementation")
+	}
 }

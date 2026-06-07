@@ -27,6 +27,8 @@ Install GEN as a binary tool
         generate field with gorm index tag
   -fieldWithTypeTag
         generate field with gorm column type tag
+  -fieldWithDefaultTag
+        generate field with gorm default tag
   -modelPkgName string
         generated model code's package name
   -outFile string
@@ -39,6 +41,8 @@ Install GEN as a binary tool
         only generate models (without query file)
   -withUnitTest
         generate unit test for query code
+  -unitTestTemplate string
+        custom unit test template file path for query code
   -fieldSignable
         detect integer field's unsigned type, adjust generated data type
 
@@ -80,6 +84,10 @@ generate field with gorm index tag
 
 generate field with gorm column type tag
 
+#### fieldWithDefaultTag
+
+generate field with gorm default tag
+
 #### modelPkgName
 
 defalut table name.
@@ -113,6 +121,10 @@ Generate some tables code.
 Value : False / True
 
 Generate unit test.
+
+#### unitTestTemplate
+
+custom unit test template file path for query code
 
 #### fieldSignable
 

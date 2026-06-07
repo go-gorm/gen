@@ -58,12 +58,8 @@ jobs:
           --health-start-period 10s
           --health-timeout 5s
           --health-retries 10
-          --name mysql_server
 
     steps:
-      - name: Change MySQL sql_mode
-        run: docker exec mysql_server mysql -uroot -p123456 -e "SET GLOBAL sql_mode = 'NO_ENGINE_SUBSTITUTION';"
-
       - name: Set up Go 1.x
         uses: actions/setup-go@v5
         with:
@@ -79,4 +75,4 @@ jobs:
           key: ${{ runner.os }}-go-${{ matrix.go }}-${{ hashFiles('tests/go.mod') }}
 
       - name: Tests
-        run: GITHUB_ACTION=true GORM_DIALECT=mysql GORM_DSN="gen:gen@tcp(localhost:9910)/gen?charset=utf8&parseTime=True" ./tests/test.sh
+        run: GITHUB_ACTION=true GORM_DIALECT=mysql GEN_DSN="gen:gen@tcp(localhost:9910)/gen?charset=utf8&parseTime=True&sql_mode=NO_ENGINE_SUBSTITUTION" ./tests/test.sh

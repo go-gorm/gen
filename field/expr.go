@@ -1,6 +1,7 @@
 package field
 
 import (
+	"database/sql/driver"
 	"fmt"
 	"strings"
 	"time"
@@ -35,6 +36,8 @@ type Expr interface {
 	MulCol(col Expr) Expr
 	DivCol(col Expr) Expr
 	ConcatCol(cols ...Expr) Expr
+	Desc() Expr
+	Asc() Expr
 
 	// implement Condition
 	BeCond() interface{}
@@ -135,9 +138,10 @@ func (e expr) BuildWithArgs(stmt *gorm.Statement) (sql, []interface{}) {
 	if e.e == nil {
 		return sql(e.BuildColumn(stmt, WithAll)), nil
 	}
-	newStmt := &gorm.Statement{DB: stmt.DB, Table: stmt.Table, Schema: stmt.Schema}
+	offset := len(stmt.Vars)
+	newStmt := &gorm.Statement{DB: stmt.DB, Table: stmt.Table, Schema: stmt.Schema, Vars: make([]interface{}, offset)}
 	e.e.Build(newStmt)
-	return sql(newStmt.SQL.String()), newStmt.Vars
+	return sql(newStmt.SQL.String()), newStmt.Vars[offset:]
 }
 
 func (e expr) RawExpr() expression {
@@ -171,32 +175,32 @@ func (e expr) IsNotNull() Expr {
 	return e.setE(clause.Expr{SQL: "? IS NOT NULL", Vars: []interface{}{e.RawExpr()}})
 }
 
-func (e expr) Count() Int {
-	return Int{e.setE(clause.Expr{SQL: "COUNT(?)", Vars: []interface{}{e.RawExpr()}})}
+func (e expr) Count() Number[int] {
+	return newNumber[int](e.setE(clause.Expr{SQL: "COUNT(?)", Vars: []interface{}{e.RawExpr()}}))
 }
 
-func (e expr) Distinct() Int {
-	return Int{e.setE(clause.Expr{SQL: "DISTINCT ?", Vars: []interface{}{e.RawExpr()}})}
+func (e expr) Distinct() Number[int] {
+	return newNumber[int](e.setE(clause.Expr{SQL: "DISTINCT ?", Vars: []interface{}{e.RawExpr()}}))
 }
 
-func (e expr) Length() Int {
-	return Int{e.setE(clause.Expr{SQL: "LENGTH(?)", Vars: []interface{}{e.RawExpr()}})}
+func (e expr) Length() Number[int] {
+	return newNumber[int](e.setE(clause.Expr{SQL: "LENGTH(?)", Vars: []interface{}{e.RawExpr()}}))
 }
 
-func (e expr) Max() Float64 {
-	return Float64{e.setE(clause.Expr{SQL: "MAX(?)", Vars: []interface{}{e.RawExpr()}})}
+func (e expr) Max() Number[float64] {
+	return newNumber[float64](e.setE(clause.Expr{SQL: "MAX(?)", Vars: []interface{}{e.RawExpr()}}))
 }
 
-func (e expr) Min() Float64 {
-	return Float64{e.setE(clause.Expr{SQL: "MIN(?)", Vars: []interface{}{e.RawExpr()}})}
+func (e expr) Min() Number[float64] {
+	return newNumber[float64](e.setE(clause.Expr{SQL: "MIN(?)", Vars: []interface{}{e.RawExpr()}}))
 }
 
-func (e expr) Avg() Float64 {
-	return Float64{e.setE(clause.Expr{SQL: "AVG(?)", Vars: []interface{}{e.RawExpr()}})}
+func (e expr) Avg() Number[float64] {
+	return newNumber[float64](e.setE(clause.Expr{SQL: "AVG(?)", Vars: []interface{}{e.RawExpr()}}))
 }
 
-func (e expr) Abs() Float64 {
-	return Float64{e.setE(clause.Expr{SQL: "ABS(?)", Vars: []interface{}{e.RawExpr()}})}
+func (e expr) Abs() Number[float64] {
+	return newNumber[float64](e.setE(clause.Expr{SQL: "ABS(?)", Vars: []interface{}{e.RawExpr()}}))
 }
 
 func (e expr) Null() AssignExpr {
@@ -238,19 +242,19 @@ func (e expr) SetCol(col Expr) AssignExpr {
 
 // ======================== operate columns ========================
 func (e expr) AddCol(col Expr) Expr {
-	return Field{e.setE(clause.Expr{SQL: "? + ?", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})}
+	return Field(genericsField[driver.Valuer]{e.setE(clause.Expr{SQL: "? + ?", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})})
 }
 
 func (e expr) SubCol(col Expr) Expr {
-	return Field{e.setE(clause.Expr{SQL: "? - ?", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})}
+	return Field(genericsField[driver.Valuer]{e.setE(clause.Expr{SQL: "? - ?", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})})
 }
 
 func (e expr) MulCol(col Expr) Expr {
-	return Field{e.setE(clause.Expr{SQL: "(?) * (?)", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})}
+	return Field(genericsField[driver.Valuer]{e.setE(clause.Expr{SQL: "(?) * (?)", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})})
 }
 
 func (e expr) DivCol(col Expr) Expr {
-	return Field{e.setE(clause.Expr{SQL: "(?) / (?)", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})}
+	return Field(genericsField[driver.Valuer]{e.setE(clause.Expr{SQL: "(?) / (?)", Vars: []interface{}{e.RawExpr(), col.RawExpr()}})})
 }
 
 func (e expr) ConcatCol(cols ...Expr) Expr {
@@ -260,10 +264,10 @@ func (e expr) ConcatCol(cols ...Expr) Expr {
 		placeholders = append(placeholders, "?")
 		vars = append(vars, col.RawExpr())
 	}
-	return Field{e.setE(clause.Expr{
+	return Field(genericsField[driver.Valuer]{e.setE(clause.Expr{
 		SQL:  fmt.Sprintf("CONCAT(%s)", strings.Join(placeholders, ",")),
 		Vars: vars,
-	})}
+	})})
 }
 
 // ======================== keyword ========================

@@ -16,6 +16,8 @@ import (
 type InterfaceSet struct {
 	Interfaces []InterfaceInfo
 	imports    map[string]string // package name -> quoted "package path"
+	fset       *token.FileSet
+	filename   string
 }
 
 // InterfaceInfo ...
@@ -78,15 +80,32 @@ func (i *InterfaceSet) Visit(n ast.Node) (w ast.Visitor) {
 			}
 			methods := data.Methods.List
 			r.Name = n.Name.Name
-			r.Doc = n.Doc.Text()
+			if n.Doc != nil {
+				r.Doc = n.Doc.Text()
+			}
 
 			for _, m := range methods {
 				for _, name := range m.Names {
+					pos := name.Pos()
+					if m.Doc != nil {
+						pos = m.Doc.Pos()
+					}
+					p := i.fset.Position(pos)
+					doc := ""
+					if m.Doc != nil {
+						doc = m.Doc.Text()
+					}
 					method := &Method{
 						MethodName: name.Name,
-						Doc:        m.Doc.Text(),
+						Doc:        doc,
+						File:       i.filename,
+						Line:       p.Line,
+						Column:     p.Column,
 						Params:     getParamList(m.Type.(*ast.FuncType).Params),
 						Result:     getParamList(m.Type.(*ast.FuncType).Results),
+					}
+					if strings.Contains(method.Doc, "gen:skip") {
+						method.SkipImpl = true
 					}
 					fixParamPackagePath(i.imports, method.Params)
 					r.Methods = append(r.Methods, method)
@@ -107,7 +126,7 @@ func (i *InterfaceSet) getInterfaceFromFile(filename string, name, Package strin
 		return fmt.Errorf("can't parse file %q: %s", filename, err)
 	}
 
-	astResult := &InterfaceSet{imports: make(map[string]string)}
+	astResult := &InterfaceSet{imports: make(map[string]string), fset: fileset, filename: filename}
 	ast.Walk(astResult, f)
 
 	for _, info := range astResult.Interfaces {
@@ -129,6 +148,7 @@ type Param struct { // (user model.User)
 	Type      string // param's type: User
 	IsArray   bool   // is array or not
 	IsPointer bool   // is pointer or not
+	IsVariadic bool  // is variadic or not
 }
 
 // Eq if param equal to another
@@ -218,7 +238,11 @@ func (p *Param) TmplString() string {
 	}
 
 	if p.IsArray {
-		res.WriteString("[]")
+		if p.IsVariadic {
+			res.WriteString("...")
+		} else {
+			res.WriteString("[]")
+		}
 	}
 	if p.IsPointer {
 		res.WriteString("*")
@@ -264,6 +288,7 @@ func (p *Param) astGetParamType(param *ast.Field) {
 	case *ast.Ellipsis:
 		p.astGetEltType(v.Elt)
 		p.IsArray = true
+		p.IsVariadic = true
 	case *ast.MapType:
 		p.astGetMapType(v)
 	case *ast.InterfaceType:

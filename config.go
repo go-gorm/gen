@@ -24,6 +24,9 @@ const (
 
 	// WithQueryInterface generate code with exported interface object
 	WithQueryInterface
+
+	// WithGeneric generate code with generic
+	WithGeneric
 )
 
 // Config generator's basic configuration
@@ -34,15 +37,20 @@ type Config struct {
 	OutFile      string // query code file name, default: gen.go
 	ModelPkgPath string // generated model code's package name
 	WithUnitTest bool   // generate unit test for query code
+	Incremental  bool   // skip writing unchanged generated files (based on manifest hash)
+	MergeQuery   bool   // keep previously generated query entries (A+B) when generating subsets
 
 	// generate model global configuration
-	FieldNullable     bool // generate pointer when field is nullable
-	FieldCoverable    bool // generate pointer when field has default value, to fix problem zero value cannot be assign: https://gorm.io/docs/create.html#Default-Values
-	FieldSignable     bool // detect integer field's unsigned type, adjust generated data type
-	FieldWithIndexTag bool // generate with gorm index tag
-	FieldWithTypeTag  bool // generate with gorm column type tag
+	FieldNullable       bool // generate pointer when field is nullable
+	FieldCoverable      bool // generate pointer when field has default value, to fix problem zero value cannot be assign: https://gorm.io/docs/create.html#Default-Values
+	FieldSignable       bool // detect integer field's unsigned type, adjust generated data type
+	FieldWithIndexTag   bool // generate with gorm index tag
+	FieldWithTypeTag    bool // generate with gorm column type tag
+	FieldWithDefaultTag bool
 
 	Mode GenerateMode // generate mode
+
+	UnitTestTemplate string
 
 	queryPkgName   string // generated query code's package name
 	modelPkgPath   string // model pkg path in target project
