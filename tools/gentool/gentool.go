@@ -53,6 +53,7 @@ type CmdParams struct {
 	WithDefaultQuery    bool     `yaml:"withDefaultQuery"`    // create default query in generated code
 	WithoutContext      bool     `yaml:"withoutContext"`      // generate code without context constrain
 	WithQueryInterface  bool     `yaml:"withQueryInterface"`  // generate code with exported interface object
+	WithGeneric         bool     `yaml:"withGeneric"`         // generate code with generic
 }
 
 func (c *CmdParams) revise() *CmdParams {
@@ -165,6 +166,7 @@ func argParse() *CmdParams {
 	withDefaultQuery := flag.Bool("withDefaultQuery", false, "create default query in generated code")
 	withoutContext := flag.Bool("withoutContext", false, "generate code without context constrain")
 	withQueryInterface := flag.Bool("withQueryInterface", false, "generate code with exported interface object")
+	withGeneric := flag.Bool("withGeneric", false, "generate code with generic")
 
 	flag.Parse()
 
@@ -228,6 +230,9 @@ func argParse() *CmdParams {
 	if *withQueryInterface {
 		cmdParse.WithQueryInterface = true
 	}
+	if *withGeneric {
+		cmdParse.WithGeneric = true
+	}
 
 	return &cmdParse
 }
@@ -253,6 +258,9 @@ func main() {
 	}
 	if config.WithQueryInterface {
 		generateMode |= gen.WithQueryInterface
+	}
+	if config.WithGeneric {
+		generateMode |= gen.WithGeneric
 	}
 
 	g := gen.NewGenerator(gen.Config{

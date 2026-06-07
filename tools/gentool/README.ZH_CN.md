@@ -44,6 +44,8 @@ Usage of gentool:
         enter the required data table or leave it blank
   -withDefaultQuery
         create default query in generated code
+  -withGeneric
+        generate code with generic
   -withQueryInterface
         generate code with exported interface object
   -withUnitTest
@@ -148,6 +150,12 @@ Value : False / True
 默认: false
 
 为 true 时，生成 query 类的默认实例变量。
+
+#### withGeneric
+
+默认: false
+
+为 true 时，生成泛型代码。
 
 #### withQueryInterface
 

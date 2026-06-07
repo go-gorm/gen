@@ -44,6 +44,8 @@ Usage of gentool:
         enter the required data table or leave it blank
   -withDefaultQuery
         create default query in generated code
+  -withGeneric
+        generate code with generic
   -withQueryInterface
         generate code with exported interface object
   -withUnitTest
@@ -144,6 +146,12 @@ detect integer field's unsigned type, adjust generated data type
 Default: false
 
 create default query in generated code
+
+#### withGeneric
+
+Default: false
+
+generate code with generic
 
 #### withQueryInterface
 
