@@ -162,9 +162,9 @@ func argParse() *CmdParams {
 	fieldWithTypeTag := flag.Bool("fieldWithTypeTag", false, "generate field with gorm column type tag")
 	fieldWithDefaultTag := flag.Bool("fieldWithDefaultTag", false, "generate field with gorm default tag")
 	fieldSignable := flag.Bool("fieldSignable", false, "detect integer field's unsigned type, adjust generated data type")
-	WithDefaultQuery := flag.Bool("withDefaultQuery", false, "create default query in generated code")
-	WithoutContext := flag.Bool("withoutContext", false, "generate code without context constrain")
-	WithQueryInterface := flag.Bool("withQueryInterface", false, "generate code with exported interface object")
+	withDefaultQuery := flag.Bool("withDefaultQuery", false, "create default query in generated code")
+	withoutContext := flag.Bool("withoutContext", false, "generate code without context constrain")
+	withQueryInterface := flag.Bool("withQueryInterface", false, "generate code with exported interface object")
 
 	flag.Parse()
 
@@ -219,13 +219,13 @@ func argParse() *CmdParams {
 	if *fieldSignable {
 		cmdParse.FieldSignable = *fieldSignable
 	}
-	if *WithDefaultQuery {
+	if *withDefaultQuery {
 		cmdParse.WithDefaultQuery = true
 	}
-	if *WithoutContext {
+	if *withoutContext {
 		cmdParse.WithoutContext = true
 	}
-	if *WithQueryInterface {
+	if *withQueryInterface {
 		cmdParse.WithQueryInterface = true
 	}
 
