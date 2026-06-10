@@ -13,8 +13,9 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/driver/sqlserver"
-	"gorm.io/gen"
 	"gorm.io/gorm"
+
+	"gorm.io/gen"
 )
 
 // DBType database type
@@ -49,6 +50,10 @@ type CmdParams struct {
 	FieldWithTypeTag    bool     `yaml:"fieldWithTypeTag"`    // generate field with gorm column type tag
 	FieldWithDefaultTag bool     `yaml:"fieldWithDefaultTag"` // generate field with gorm default tag
 	FieldSignable       bool     `yaml:"fieldSignable"`       // detect integer field's unsigned type, adjust generated data type
+	WithDefaultQuery    bool     `yaml:"withDefaultQuery"`    // create default query in generated code
+	WithoutContext      bool     `yaml:"withoutContext"`      // generate code without context constrain
+	WithQueryInterface  bool     `yaml:"withQueryInterface"`  // generate code with exported interface object
+	WithGeneric         bool     `yaml:"withGeneric"`         // generate code with generic
 }
 
 func (c *CmdParams) revise() *CmdParams {
@@ -158,9 +163,14 @@ func argParse() *CmdParams {
 	fieldWithTypeTag := flag.Bool("fieldWithTypeTag", false, "generate field with gorm column type tag")
 	fieldWithDefaultTag := flag.Bool("fieldWithDefaultTag", false, "generate field with gorm default tag")
 	fieldSignable := flag.Bool("fieldSignable", false, "detect integer field's unsigned type, adjust generated data type")
+	withDefaultQuery := flag.Bool("withDefaultQuery", false, "create default query in generated code")
+	withoutContext := flag.Bool("withoutContext", false, "generate code without context constrain")
+	withQueryInterface := flag.Bool("withQueryInterface", false, "generate code with exported interface object")
+	withGeneric := flag.Bool("withGeneric", false, "generate code with generic")
+
 	flag.Parse()
 
-	if *genPath != "" { //use yml config
+	if *genPath != "" { // use yml config
 		return parseCmdFromYaml(*genPath)
 	}
 
@@ -211,6 +221,19 @@ func argParse() *CmdParams {
 	if *fieldSignable {
 		cmdParse.FieldSignable = *fieldSignable
 	}
+	if *withDefaultQuery {
+		cmdParse.WithDefaultQuery = true
+	}
+	if *withoutContext {
+		cmdParse.WithoutContext = true
+	}
+	if *withQueryInterface {
+		cmdParse.WithQueryInterface = true
+	}
+	if *withGeneric {
+		cmdParse.WithGeneric = true
+	}
+
 	return &cmdParse
 }
 
@@ -226,6 +249,20 @@ func main() {
 		log.Fatalln("connect db server fail:", err)
 	}
 
+	var generateMode gen.GenerateMode
+	if config.WithDefaultQuery {
+		generateMode |= gen.WithDefaultQuery
+	}
+	if config.WithoutContext {
+		generateMode |= gen.WithoutContext
+	}
+	if config.WithQueryInterface {
+		generateMode |= gen.WithQueryInterface
+	}
+	if config.WithGeneric {
+		generateMode |= gen.WithGeneric
+	}
+
 	g := gen.NewGenerator(gen.Config{
 		OutPath:             config.OutPath,
 		OutFile:             config.OutFile,
@@ -238,6 +275,7 @@ func main() {
 		FieldWithTypeTag:    config.FieldWithTypeTag,
 		FieldWithDefaultTag: config.FieldWithDefaultTag,
 		FieldSignable:       config.FieldSignable,
+		Mode:                generateMode,
 	})
 
 	g.UseDB(db)
