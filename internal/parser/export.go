@@ -1,9 +1,15 @@
 package parser
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"go/ast"
 	"go/build"
+	goparser "go/parser"
+	"go/token"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -18,12 +24,24 @@ type InterfacePath struct {
 	Package  string
 }
 
+type goListPackage struct {
+	Name    string   `json:"Name"`
+	Import  string   `json:"ImportPath"`
+	Dir     string   `json:"Dir"`
+	GoFiles []string `json:"GoFiles"`
+}
+
 // GetInterfacePath get interface's directory path and all files it contains
 func GetInterfacePath(v interface{}) (paths []*InterfacePath, err error) {
 	value := reflect.ValueOf(v)
 	if value.Kind() != reflect.Func {
 		err = fmt.Errorf("model param is not function:%s", value.String())
 		return
+	}
+
+	callerDirs, err := interfaceCallerDirs()
+	if err != nil {
+		return nil, err
 	}
 
 	for i := 0; i < value.Type().NumIn(); i++ {
@@ -36,22 +54,17 @@ func GetInterfacePath(v interface{}) (paths []*InterfacePath, err error) {
 			path.Name = n
 		}
 
-		ctx := build.Default
-		var p *build.Package
-
-		if strings.Split(arg.String(), ".")[0] == "main" {
-			_, file, _, _ := runtime.Caller(3)
-			p, err = ctx.ImportDir(filepath.Dir(file), build.ImportComment)
-		} else {
-			p, err = ctx.Import(arg.PkgPath(), "", build.ImportComment)
+		p, loadErr := loadInterfacePackage(arg, path.Name, callerDirs)
+		if loadErr != nil {
+			return nil, loadErr
 		}
 
-		if err != nil {
-			return
-		}
-
+		path.Package = p.Import
 		for _, file := range p.GoFiles {
-			goFile := fmt.Sprintf("%s/%s", p.Dir, file)
+			goFile := file
+			if !filepath.IsAbs(goFile) {
+				goFile = filepath.Join(p.Dir, goFile)
+			}
 			if fileExists(goFile) {
 				path.Files = append(path.Files, goFile)
 			}
@@ -66,6 +79,149 @@ func GetInterfacePath(v interface{}) (paths []*InterfacePath, err error) {
 	}
 
 	return
+}
+
+func loadInterfacePackage(arg reflect.Type, interfaceName string, callerDirs []string) (*goListPackage, error) {
+	pattern := arg.PkgPath()
+	if isMainPackage(arg) {
+		pattern = "."
+	}
+	if pattern == "" {
+		return nil, fmt.Errorf("interface package not found:%s", arg.String())
+	}
+
+	var firstErr error
+	for _, callerDir := range callerDirs {
+		pkg, err := loadPackageInDir(pattern, callerDir)
+		if err != nil {
+			if firstErr == nil {
+				firstErr = err
+			}
+			continue
+		}
+		if !isMainPackage(arg) || (pkg.Name == "main" && packageHasInterface(pkg.GoFiles, pkg.Dir, interfaceName)) {
+			return pkg, nil
+		}
+	}
+
+	if firstErr != nil && !isMainPackage(arg) {
+		return nil, firstErr
+	}
+	return nil, fmt.Errorf("load interface package %s fail: interface %s not found", pattern, arg.String())
+}
+
+func loadPackageInDir(pattern, callerDir string) (*goListPackage, error) {
+	cmd := exec.Command("go", "list", "-json", pattern)
+	cmd.Dir = callerDir
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("load interface package %s fail:%w\n%s", pattern, err, bytes.TrimSpace(output))
+	}
+
+	var pkg goListPackage
+	if err := json.Unmarshal(output, &pkg); err != nil {
+		return nil, fmt.Errorf("parse go list output for %s fail:%w", pattern, err)
+	}
+	return &pkg, nil
+}
+
+func packageHasInterface(files []string, callerDir, interfaceName string) bool {
+	for _, file := range files {
+		goFile := file
+		if !filepath.IsAbs(goFile) {
+			goFile = filepath.Join(callerDir, goFile)
+		}
+		if fileHasInterface(goFile, interfaceName) {
+			return true
+		}
+	}
+	return false
+}
+
+func fileHasInterface(file, interfaceName string) bool {
+	f, err := goparser.ParseFile(token.NewFileSet(), file, nil, 0)
+	if err != nil {
+		return false
+	}
+	for _, decl := range f.Decls {
+		genDecl, ok := decl.(*ast.GenDecl)
+		if !ok {
+			continue
+		}
+		for _, spec := range genDecl.Specs {
+			typeSpec, ok := spec.(*ast.TypeSpec)
+			if !ok || typeSpec.Name.Name != interfaceName {
+				continue
+			}
+			if _, ok := typeSpec.Type.(*ast.InterfaceType); ok {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func isMainPackage(arg reflect.Type) bool {
+	return strings.Split(arg.String(), ".")[0] == "main"
+}
+
+func interfaceCallerDir() (string, error) {
+	callerDirs, err := interfaceCallerDirs()
+	if err != nil {
+		return "", err
+	}
+	return callerDirs[0], nil
+}
+
+func interfaceCallerDirs() ([]string, error) {
+	_, parserFile, _, ok := runtime.Caller(0)
+	if !ok {
+		return nil, fmt.Errorf("interface caller not found")
+	}
+	parserPackageDir := filepath.ToSlash(filepath.Dir(parserFile))
+
+	var dirs []string
+	seen := map[string]bool{}
+	for skip := 1; ; skip++ {
+		pc, file, _, ok := runtime.Caller(skip)
+		if !ok {
+			break
+		}
+		if file == "" {
+			continue
+		}
+		fn := ""
+		if runtimeFn := runtime.FuncForPC(pc); runtimeFn != nil {
+			fn = runtimeFn.Name()
+		}
+		if isGenInternalFrame(file, parserPackageDir, fn) {
+			continue
+		}
+		dir := filepath.Dir(file)
+		if !seen[dir] {
+			dirs = append(dirs, dir)
+			seen[dir] = true
+		}
+	}
+	if len(dirs) > 0 {
+		return dirs, nil
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		return nil, fmt.Errorf("interface caller not found:%w", err)
+	}
+	return []string{wd}, nil
+}
+
+func isGenInternalFrame(file, parserPackageDir, fn string) bool {
+	if strings.HasPrefix(fn, "gorm.io/gen/internal/parser.") {
+		return true
+	}
+	if strings.HasPrefix(fn, "gorm.io/gen.(*Generator).") {
+		return true
+	}
+	return fn == "" && filepath.ToSlash(filepath.Dir(file)) == parserPackageDir
 }
 
 func fileExists(path string) bool {

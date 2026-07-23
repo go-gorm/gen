@@ -42,16 +42,21 @@ func (i *InterfaceInfo) MatchStruct(name string) bool {
 // ParseFile get interface's info from source file
 func (i *InterfaceSet) ParseFile(paths []*InterfacePath, structNames []string) error {
 	for _, path := range paths {
+		found := false
 		for _, file := range path.Files {
 			absFilePath, err := filepath.Abs(file)
 			if err != nil {
 				return fmt.Errorf("file not found: %s", file)
 			}
 
-			err = i.getInterfaceFromFile(absFilePath, path.Name, path.FullName, structNames)
+			matched, err := i.getInterfaceFromFile(absFilePath, path.Name, path.FullName, structNames)
 			if err != nil {
 				return fmt.Errorf("can't get interface from %s:%s", path.FullName, err)
 			}
+			found = found || matched
+		}
+		if !found {
+			return fmt.Errorf("interface %s not found in package %s", path.FullName, path.Package)
 		}
 	}
 	return nil
@@ -119,36 +124,38 @@ func (i *InterfaceSet) Visit(n ast.Node) (w ast.Visitor) {
 
 // getInterfaceFromFile get interfaces
 // get all interfaces from file and compare with specified name
-func (i *InterfaceSet) getInterfaceFromFile(filename string, name, Package string, structNames []string) error {
+func (i *InterfaceSet) getInterfaceFromFile(filename string, name, Package string, structNames []string) (bool, error) {
 	fileset := token.NewFileSet()
 	f, err := parser.ParseFile(fileset, filename, nil, parser.ParseComments)
 	if err != nil {
-		return fmt.Errorf("can't parse file %q: %s", filename, err)
+		return false, fmt.Errorf("can't parse file %q: %s", filename, err)
 	}
 
 	astResult := &InterfaceSet{imports: make(map[string]string), fset: fileset, filename: filename}
 	ast.Walk(astResult, f)
 
+	matched := false
 	for _, info := range astResult.Interfaces {
 		if name == info.Name {
 			info.Package = Package
 			info.ApplyStruct = structNames
 			i.Interfaces = append(i.Interfaces, info)
+			matched = true
 		}
 	}
 
-	return nil
+	return matched, nil
 }
 
 // Param parameters in method
 type Param struct { // (user model.User)
-	PkgPath   string // package's path: internal/model
-	Package   string // package's name: model
-	Name      string // param's name: user
-	Type      string // param's type: User
-	IsArray   bool   // is array or not
-	IsPointer bool   // is pointer or not
-	IsVariadic bool  // is variadic or not
+	PkgPath    string // package's path: internal/model
+	Package    string // package's name: model
+	Name       string // param's name: user
+	Type       string // param's type: User
+	IsArray    bool   // is array or not
+	IsPointer  bool   // is pointer or not
+	IsVariadic bool   // is variadic or not
 }
 
 // Eq if param equal to another
