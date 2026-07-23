@@ -14,6 +14,22 @@ import (
 	"gorm.io/gen/field"
 )
 
+func TestFieldNew(t *testing.T) {
+	// 有 gorm column 标签时设置 ColumnName
+	opt := FieldNew("external_id", "string", field.Tag{field.TagKeyGorm: "column:external_id"})
+	f := opt(nil)
+	if f.ColumnName != "external_id" {
+		t.Errorf("FieldNew with gorm:column tag: expected 'external_id', got '%s'", f.ColumnName)
+	}
+
+	// 没有 gorm column 标签时保留空 ColumnName
+	opt2 := FieldNew("name", "string", field.Tag{})
+	f2 := opt2(nil)
+	if f2.ColumnName != "" {
+		t.Errorf("FieldNew without gorm:column tag: expected empty ColumnName, got '%s'", f2.ColumnName)
+	}
+}
+
 func TestConfig(t *testing.T) {
 	_ = &Config{
 		db: nil,

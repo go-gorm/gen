@@ -85,13 +85,10 @@ var (
 				Type: fieldType,
 				Tag:  fieldTag,
 			}
-			if gormTags, ok := fieldTag["gorm"]; ok {
-				for _, tag := range strings.Split(gormTags, ";") {
-					tag = strings.TrimSpace(tag)
-					if strings.HasPrefix(tag, "column:") {
-						f.ColumnName = strings.TrimPrefix(tag, "column:")
-						break
-					}
+			if gormTag, ok := fieldTag[field.TagKeyGorm]; ok {
+				settings := schema.ParseTagSetting(gormTag, ";")
+				if col, ok := settings["COLUMN"]; ok {
+					f.ColumnName = col
 				}
 			}
 			return f
