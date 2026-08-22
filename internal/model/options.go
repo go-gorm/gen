@@ -28,12 +28,22 @@ type MethodOption interface {
 	Methods() (methods []interface{})
 }
 
+const templateType = "template"
+
+// TemplateOption ...
+type TemplateOption interface {
+	Option
+	Templates() (templates []string)
+}
+
 var (
 	_ Option = ModifyFieldOpt(nil)
 	_ Option = FilterFieldOpt(nil)
 	_ Option = CreateFieldOpt(nil)
 
 	_ Option = AddMethodOpt(nil)
+
+	_ Option = AddTemplateOpt(nil)
 )
 
 // ModifyFieldOpt modify field option
@@ -72,7 +82,16 @@ func (AddMethodOpt) OptionType() string { return methodType }
 // Methods ...
 func (o AddMethodOpt) Methods() []interface{} { return o() }
 
-func sortOptions(opts []Option) (modifyOpts []FieldOption, filterOpts []FieldOption, createOpts []FieldOption, methodOpt []MethodOption) {
+// AddTemplateOpt diy template option
+type AddTemplateOpt func() (templates []string)
+
+// OptionType implement for interface Option
+func (AddTemplateOpt) OptionType() string { return templateType }
+
+// Templates ...
+func (o AddTemplateOpt) Templates() []string { return o() }
+
+func sortOptions(opts []Option) (modifyOpts []FieldOption, filterOpts []FieldOption, createOpts []FieldOption, methodOpt []MethodOption, templateOpts []TemplateOption) {
 	for _, opt := range opts {
 		switch opt := opt.(type) {
 		case ModifyFieldOpt:
@@ -83,6 +102,8 @@ func sortOptions(opts []Option) (modifyOpts []FieldOption, filterOpts []FieldOpt
 			createOpts = append(createOpts, opt)
 		case AddMethodOpt:
 			methodOpt = append(methodOpt, opt)
+		case AddTemplateOpt:
+			templateOpts = append(templateOpts, opt)
 		}
 	}
 	return

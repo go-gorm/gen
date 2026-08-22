@@ -20,6 +20,7 @@ type Config struct {
 	NameStrategy
 	FieldConfig
 	MethodConfig
+	TemplateConfig
 }
 
 // NameStrategy name strategy
@@ -55,6 +56,11 @@ type MethodConfig struct {
 	MethodOpts []MethodOption
 }
 
+// TemplateConfig custom template configuration
+type TemplateConfig struct {
+	TemplateOpts []TemplateOption
+}
+
 // Preprocess revise invalid field
 func (cfg *Config) Preprocess() *Config {
 	if cfg.ModelPkg == "" {
@@ -62,7 +68,7 @@ func (cfg *Config) Preprocess() *Config {
 	}
 	cfg.ModelPkg = filepath.Base(cfg.ModelPkg)
 
-	cfg.ModifyOpts, cfg.FilterOpts, cfg.CreateOpts, cfg.MethodOpts = sortOptions(cfg.ModelOpts)
+	cfg.ModifyOpts, cfg.FilterOpts, cfg.CreateOpts, cfg.MethodOpts, cfg.TemplateOpts = sortOptions(cfg.ModelOpts)
 
 	return cfg
 }
@@ -98,6 +104,18 @@ func (cfg *Config) GetModelMethods() (methods []interface{}) {
 
 	for _, opt := range cfg.MethodOpts {
 		methods = append(methods, opt.Methods()...)
+	}
+	return
+}
+
+// GetCustomTemplates get diy custom template from option
+func (cfg *Config) GetCustomTemplates() (templates []string) {
+	if cfg == nil {
+		return
+	}
+
+	for _, opt := range cfg.TemplateOpts {
+		templates = append(templates, opt.Templates()...)
 	}
 	return
 }

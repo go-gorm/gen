@@ -321,6 +321,11 @@ var (
 	WithMethod = func(methods ...interface{}) model.AddMethodOpt {
 		return func() []interface{} { return methods }
 	}
+
+	// WithTemplate add custom template text for table model
+	WithTemplate = func(templates ...string) model.AddTemplateOpt {
+		return func() []string { return templates }
+	}
 )
 
 var (

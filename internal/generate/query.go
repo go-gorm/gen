@@ -275,6 +275,11 @@ func (b *QueryStructMeta) addMethodFromAddMethodOpt(methods ...interface{}) *Que
 	return b
 }
 
+func (b *QueryStructMeta) addCustomTemplateFromOpt(templates ...string) *QueryStructMeta {
+	b.CustomTemplates = append(b.CustomTemplates, templates...)
+	return b
+}
+
 // IfaceMode object mode
 func (b QueryStructMeta) IfaceMode(on bool) *QueryStructMeta {
 	b.interfaceMode = on
