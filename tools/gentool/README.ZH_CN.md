@@ -42,6 +42,8 @@ Usage of gentool:
         specify a directory for output (default "./dao/query")
   -tables string
         enter the required data table or leave it blank
+  -useAny
+        emit "any" instead of "interface{}" in generated code (requires Go 1.18+)
   -withDefaultQuery
         create default query in generated code
   -withGeneric
@@ -162,6 +164,12 @@ Value : False / True
 默认: false
 
 为 true 时，生成 query 类的相应接口。
+
+#### useAny
+
+默认: false
+
+为 true 时，在生成代码中使用 `any` 代替 `interface{}`（要求目标模块使用 Go 1.18+ 编译）。注释和字符串字面量中的 `interface{}` 文本也会被一并改写。
 
 #### withoutContext
 

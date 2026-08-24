@@ -114,6 +114,7 @@ Gen has one generator entry point (`gen.NewGenerator(gen.Config{...})`). The mai
 
 - What to generate: DB schema → models/query; plus optional interface-SQL methods
 - How the query API looks: `Config.Mode` flags (`WithDefaultQuery`, `WithoutContext`, `WithQueryInterface`, `WithGeneric`)
+- Code style: `Config.UseAny` emits `any` instead of `interface{}` in generated code (opt-in; target module needs Go 1.18+; also rewrites the literal text `interface{}` in comments and string literals)
 
 ### Setup A: DB schema → model + query (recommended baseline)
 

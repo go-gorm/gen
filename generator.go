@@ -706,6 +706,16 @@ func (g *Generator) fillModelPkgPath(filePath string) {
 func (g *Generator) format(fileName string, content []byte) ([]byte, error) {
 	result, err := imports.Process(fileName, content, nil)
 	if err == nil {
+		if g.UseAny {
+			// Rewrite the empty interface onto its "any" alias as the last step,
+			// after gofmt normalization: the formatted text spells every empty
+			// interface exactly "interface{}", so a plain ReplaceAll cannot miss
+			// occurrences or touch non-empty interfaces like "interface{ M() }".
+			// Doing it here also lets the incremental manifest hash cover the
+			// final bytes. Literal "interface{}" inside comments and string
+			// literals is rewritten too.
+			result = []byte(strings.ReplaceAll(string(result), "interface{}", "any"))
+		}
 		return result, nil
 	}
 

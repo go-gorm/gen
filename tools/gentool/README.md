@@ -42,6 +42,8 @@ Usage of gentool:
         specify a directory for output (default "./dao/query")
   -tables string
         enter the required data table or leave it blank
+  -useAny
+        emit "any" instead of "interface{}" in generated code (requires Go 1.18+)
   -withDefaultQuery
         create default query in generated code
   -withGeneric
@@ -158,6 +160,12 @@ generate code with generic
 Default: false
 
 generate code with exported interface object
+
+#### useAny
+
+Default: false
+
+emit "any" instead of "interface{}" in generated code. Requires the target module to build with Go 1.18 or later. The literal text "interface{}" in comments and string literals is rewritten too.
 
 #### withoutContext
 

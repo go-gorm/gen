@@ -41,3 +41,5 @@ database:
   withoutContext: false
   # generate code with exported interface object
   withQueryInterface: false
+  # emit "any" instead of "interface{}" in generated code (requires Go 1.18+)
+  useAny: false

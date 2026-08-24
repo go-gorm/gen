@@ -39,6 +39,7 @@ type Config struct {
 	WithUnitTest bool   // generate unit test for query code
 	Incremental  bool   // skip writing unchanged generated files (based on manifest hash)
 	MergeQuery   bool   // keep previously generated query entries (A+B) when generating subsets
+	UseAny       bool   // emit "any" instead of "interface{}" in generated code (requires Go 1.18+ in the target module)
 
 	// generate model global configuration
 	FieldNullable       bool // generate pointer when field is nullable
