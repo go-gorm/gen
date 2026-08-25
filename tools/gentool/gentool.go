@@ -54,6 +54,7 @@ type CmdParams struct {
 	WithoutContext      bool     `yaml:"withoutContext"`      // generate code without context constrain
 	WithQueryInterface  bool     `yaml:"withQueryInterface"`  // generate code with exported interface object
 	WithGeneric         bool     `yaml:"withGeneric"`         // generate code with generic
+	UseAny              bool     `yaml:"useAny"`              // emit "any" instead of "interface{}" in generated code (requires Go 1.18+)
 }
 
 func (c *CmdParams) revise() *CmdParams {
@@ -167,6 +168,7 @@ func argParse() *CmdParams {
 	withoutContext := flag.Bool("withoutContext", false, "generate code without context constrain")
 	withQueryInterface := flag.Bool("withQueryInterface", false, "generate code with exported interface object")
 	withGeneric := flag.Bool("withGeneric", false, "generate code with generic")
+	useAny := flag.Bool("useAny", false, `emit "any" instead of "interface{}" in generated code (requires Go 1.18+)`)
 
 	flag.Parse()
 
@@ -233,6 +235,9 @@ func argParse() *CmdParams {
 	if *withGeneric {
 		cmdParse.WithGeneric = true
 	}
+	if *useAny {
+		cmdParse.UseAny = true
+	}
 
 	return &cmdParse
 }
@@ -275,6 +280,7 @@ func main() {
 		FieldWithTypeTag:    config.FieldWithTypeTag,
 		FieldWithDefaultTag: config.FieldWithDefaultTag,
 		FieldSignable:       config.FieldSignable,
+		UseAny:              config.UseAny,
 		Mode:                generateMode,
 	})
 

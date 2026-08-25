@@ -196,3 +196,17 @@ var m = func() *InterfaceMethod {
 	return m
 
 }
+
+func TestCheckResultRejectsInterfaceReturn(t *testing.T) {
+	for _, typ := range []string{"interface{}", "any"} {
+		m := &InterfaceMethod{
+			InterfaceName: "IF",
+			MethodName:    "M",
+			OriginStruct:  parser.Param{Package: "model", Type: "User"},
+		}
+		err := m.checkResult([]parser.Param{{Type: typ}, {Type: "error"}})
+		if err == nil {
+			t.Errorf("checkResult(%s): expected rejection, got nil", typ)
+		}
+	}
+}

@@ -188,9 +188,9 @@ func (p *Param) IsGenT() bool {
 	return p.Package == "gen" && p.Type == "T"
 }
 
-// IsInterface ...
+// IsInterface ... ("interface{}" or its "any" alias)
 func (p *Param) IsInterface() bool {
-	return p.Type == "interface{}"
+	return p.Package == "" && (p.Type == "interface{}" || p.Type == "any")
 }
 
 // IsNull ...
@@ -283,7 +283,7 @@ func (p *Param) IsBaseType() bool {
 func (p *Param) astGetParamType(param *ast.Field) {
 	switch v := param.Type.(type) {
 	case *ast.Ident:
-		p.Type = v.Name
+		p.Type = normalizeIdentType(v)
 		if v.Obj != nil {
 			p.Package = "UNDEFINED" // set a placeholder
 		}
@@ -315,7 +315,7 @@ func (p *Param) astGetParamType(param *ast.Field) {
 func (p *Param) astGetEltType(expr ast.Expr) {
 	switch v := expr.(type) {
 	case *ast.Ident:
-		p.Type = v.Name
+		p.Type = normalizeIdentType(v)
 		if v.Obj != nil {
 			p.Package = "UNDEFINED"
 		}
@@ -353,9 +353,23 @@ func (p *Param) astGetMapType(expr *ast.MapType) {
 func astGetType(expr ast.Expr) string {
 	switch v := expr.(type) {
 	case *ast.Ident:
-		return v.Name
+		return normalizeIdentType(v)
 	case *ast.InterfaceType:
 		return "interface{}"
 	}
 	return ""
+}
+
+// normalizeIdentType canonicalizes a type identifier: the universe-scope
+// "any" alias is mapped onto the canonical "interface{}" spelling so
+// downstream checks only ever see one form. v.Obj == nil plus no package
+// qualifier identifies the predeclared alias; a user-defined type named
+// "any" in the parsed file resolves to an object and is left alone (a
+// same-named type declared in another file of the package is beyond the
+// file scope go/parser resolves).
+func normalizeIdentType(v *ast.Ident) string {
+	if v.Name == "any" && v.Obj == nil {
+		return "interface{}"
+	}
+	return v.Name
 }

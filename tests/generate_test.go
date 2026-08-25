@@ -303,6 +303,36 @@ func Test_GenSkipImpl(t *testing.T) {
 	}
 }
 
+func Test_GenUseAny(t *testing.T) {
+	dir := ".gen/use_any_test"
+	os.RemoveAll(dir)
+	g := gen.NewGenerator(gen.Config{
+		OutPath: dir + "/query",
+		Mode:    gen.WithDefaultQuery | gen.WithQueryInterface,
+
+		UseAny: true,
+	})
+	g.UseDB(DB)
+	model := g.GenerateModel("users")
+	g.ApplyInterface(func(diy_method.TrimTest) {}, model)
+	g.Execute()
+
+	content, err := os.ReadFile(dir + "/query/users.gen.go")
+	if err != nil {
+		t.Fatalf("read generated file failed: %v", err)
+	}
+	str := string(content)
+	if strings.Contains(str, "interface{}") {
+		t.Error("should not contain interface{} when UseAny is enabled")
+	}
+	if !strings.Contains(str, "Scan(result any)") {
+		t.Error("should emit any in CRUD method signatures")
+	}
+	if !strings.Contains(str, "map[string]any") {
+		t.Error("should emit map[string]any for gen.M parameters")
+	}
+}
+
 func Test_GenVariadic(t *testing.T) {
 	dir := ".gen/variadic_test"
 	os.RemoveAll(dir)
