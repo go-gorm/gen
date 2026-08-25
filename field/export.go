@@ -15,6 +15,8 @@ var (
 	Star = NewAsterisk("")
 	// ALL same with Star
 	ALL = Star
+
+	NULL = Field{expr: expr{col: clause.Column{Name: "NULL", Raw: true}}}
 )
 
 // ScanValuer interface for Field
