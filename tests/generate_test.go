@@ -1,26 +1,21 @@
 package tests_test
 
 import (
-	"context"
-	"fmt"
 	"os"
-	"os/exec"
 	"strings"
 	"testing"
-	"time"
 
 	"gorm.io/gen"
 	"gorm.io/gen/field"
 
 	"gorm.io/gen/tests/diy_method"
+	"gorm.io/gen/tests/internal/golden"
 )
 
 const (
 	generateDirPrefix = ".gen/"
 	expectDirPrefix   = ".expect/"
 )
-
-var _ = os.Setenv("GORM_DIALECT", "mysql")
 
 type User struct {
 	Id       string    `gorm:"primaryKey"`
@@ -223,18 +218,8 @@ func TestGenerate(t *testing.T) {
 func matchGeneratedFile(dir string) error {
 	_ = os.Remove(dir + "/query/gen_test.db")
 
-	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Second)
-	defer cancel()
-
 	expectDir := expectDirPrefix + strings.TrimPrefix(dir, generateDirPrefix)
-	diffResult, err := exec.CommandContext(ctx, "diff", "-r", expectDir, dir).CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("diff %s and %s got: %w\n%s", expectDir, dir, err, diffResult)
-	}
-	if len(diffResult) != 0 {
-		return fmt.Errorf("unexpected content: %s", diffResult)
-	}
-	return nil
+	return golden.CompareDirs(expectDir, dir)
 }
 
 func TestGenerate_expect(t *testing.T) {

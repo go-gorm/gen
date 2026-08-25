@@ -18,8 +18,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Label of the container job
-  tests:
+  root-unit:
+    name: root unit (Go ${{ matrix.go }})
     strategy:
       matrix:
         go: ["1.26", "1.25", "1.24", "1.23", "1.22"]
@@ -43,6 +43,29 @@ jobs:
 
       - name: Tests
         run: go test -race ./...
+
+  sqlite-runtime:
+    name: SQLite generation and runtime
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v7
+
+      - name: Set up canonical Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: "1.26"
+          cache-dependency-path: |
+            go.sum
+            tests/go.sum
+
+      - name: Verify generated fixture and golden comparator
+        run: go -C tests test -race -count=1 ./generation/... ./internal/golden/...
+
+      - name: Run SQLite runtime contracts
+        run: go -C tests test -race -count=1 ./runtime/...
 
   mysql:
     strategy:
@@ -88,7 +111,7 @@ jobs:
         run: GITHUB_ACTION=true GORM_DIALECT=mysql GEN_DSN="gen:gen@tcp(localhost:9910)/gen?charset=utf8&parseTime=True&sql_mode=NO_ENGINE_SUBSTITUTION" ./tests/test.sh
 
   modules:
-    name: build nested modules
+    name: test nested modules
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -104,11 +127,46 @@ jobs:
             tools/gentool/go.sum
             examples/go.sum
 
-      - name: Build examples module
-        run: cd examples && go build ./...
+      - name: Test examples module
+        run: go -C examples test ./...
 
-      - name: Build gentool module
-        run: cd tools/gentool && go build ./...
+      - name: Test gentool module
+        run: go -C tools/gentool test ./...
+
+  coverage:
+    name: canonical coverage artifacts
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v7
+
+      - name: Set up canonical Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: "1.26"
+          cache-dependency-path: |
+            go.sum
+            tests/go.sum
+
+      - name: Collect root coverage
+        run: go test -covermode=atomic -coverprofile=coverage-root.out ./...
+
+      - name: Collect SQLite runtime coverage
+        run: go -C tests test -covermode=atomic -coverpkg=gorm.io/gen -coverprofile=coverage-runtime.out ./runtime/...
+
+      - name: Upload root coverage
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-root-go-1.26
+          path: coverage-root.out
+
+      - name: Upload SQLite runtime coverage
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-runtime-go-1.26
+          path: tests/coverage-runtime.out
 
   tidy:
     name: go mod tidy check
