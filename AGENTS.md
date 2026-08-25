@@ -19,7 +19,7 @@ Run commands from the repository root unless noted. For nested-module changes, a
 
 ## Coding Style & Naming Conventions
 
-Use standard Go formatting and tabs; run `goimports` on edited Go files. Package names are short, lowercase nouns. Exported identifiers use `PascalCase`, local identifiers use `camelCase`, and tests use `*_test.go`. Preserve Go 1.18 compatibility unless maintainers change it.
+Use standard Go formatting and tabs; run `goimports` on edited Go files. Package names are short, lowercase nouns. Exported identifiers use `PascalCase`, local identifiers use `camelCase`, and tests use `*_test.go`. Preserve Go 1.22 compatibility unless maintainers change it.
 
 The lint configuration also enables `bodyclose`, `revive`, and `unparam`. Do not hand-edit generated `.gen.go` files unless the change specifically tests generated output.
 
