@@ -21,9 +21,9 @@ func NewSection() *Section {
 // Section split sql into chunks
 type Section struct {
 	members      []section
-	Tmpls        []string
+	Tmpls        []string // generated Go statements appended in source order
 	currentIndex int
-	ClauseTotal  map[model.Status]int
+	ClauseTotal  map[model.Status]int // per-clause counters used to create unique builder names
 	forValue     []ForRange
 }
 
@@ -695,6 +695,7 @@ type ForRange struct {
 	rangeList string
 }
 
+// String renders the Go range clause without braces.
 func (f *ForRange) String() string {
 	return fmt.Sprintf("for %s, %s := range %s", f.index, f.value, f.rangeList)
 }

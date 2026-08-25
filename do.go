@@ -18,8 +18,10 @@ import (
 
 // ResultInfo query/execute info
 type ResultInfo struct {
+	// RowsAffected is the row count reported by the callback's final GORM statement.
 	RowsAffected int64
-	Error        error
+	// Error is the last error recorded by the underlying GORM statement.
+	Error error
 }
 
 var _ Dao = new(DO)
@@ -860,6 +862,8 @@ func (d *DO) newResultSlicePointer() interface{} {
 	return reflect.New(reflect.SliceOf(reflect.PtrTo(d.modelType))).Interface()
 }
 
+// AddError records err on the underlying GORM statement and returns the
+// combined statement error.
 func (d *DO) AddError(err error) error {
 	return d.underlyingDB().AddError(err)
 }

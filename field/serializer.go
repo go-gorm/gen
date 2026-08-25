@@ -9,11 +9,17 @@ import (
 	"gorm.io/gorm/schema"
 )
 
+// ValuerType delays conversion of a serializer value until GORM builds the statement.
 type ValuerType struct {
+	// Column identifies the schema field whose serializer should perform the conversion.
 	Column string
-	Value  schema.SerializerValuerInterface
+	// Value is the application value passed to the schema serializer.
+	Value schema.SerializerValuerInterface
 }
 
+// GormValue converts Value with the serializer registered for Column.
+// Conversion errors are recorded on db and the returned expression still uses
+// a bind variable so statement construction remains parameterized.
 func (v ValuerType) GormValue(ctx context.Context, db *gorm.DB) (expr clause.Expr) {
 	stmt := db.Statement.Schema
 	field := stmt.LookUpField(v.Column)

@@ -10,7 +10,9 @@ import (
 
 var testDB, _ = gorm.Open(tests.DummyDialector{}, nil)
 
+// IValues exposes the assignment value represented by a field expression.
 type IValues interface {
+	// Values returns a model, map, or filtered map suitable for a GORM assignment.
 	Values() interface{}
 }
 
@@ -112,6 +114,8 @@ func (att *attrs) Omit(fields ...IColumnName) *attrs {
 	return att
 }
 
+// Attrs wraps a model or map as an assignment expression.
+// Call Select or Omit on the result to restrict which fields are included.
 func Attrs(attr interface{}) *attrs {
 	res := &attrs{db: testDB.Debug()}
 	if attr != nil {

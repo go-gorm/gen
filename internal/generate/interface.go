@@ -17,9 +17,9 @@ type InterfaceMethod struct { // feature will replace InterfaceMethod to parser.
 	OriginStruct  parser.Param // origin struct name
 	TargetStruct  string       // generated query struct bane
 	MethodName    string       // generated function name
-	File          string
-	DocLine       int
-	DocColumn     int
+	File          string       // source file containing the interface method
+	DocLine       int          // 1-based line where the method's SQL comment begins
+	DocColumn     int          // 1-based byte column where the method's SQL comment begins
 	sqlBaseLine   int
 	sqlBaseColumn int
 	Params        []parser.Param // function input params
@@ -133,7 +133,7 @@ func (m *InterfaceMethod) IsRepeatFromSameInterface(newMethod *InterfaceMethod) 
 	return m.MethodName == newMethod.MethodName && m.InterfaceName == newMethod.InterfaceName && m.TargetStruct == newMethod.TargetStruct
 }
 
-//GetParamInTmpl return param list
+// GetParamInTmpl return param list
 func (m *InterfaceMethod) GetParamInTmpl() string {
 	return paramToString(m.Params)
 }

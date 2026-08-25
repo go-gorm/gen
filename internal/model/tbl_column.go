@@ -13,9 +13,9 @@ import (
 // Column table column's info
 type Column struct {
 	gorm.ColumnType
-	TableName   string                                                        `gorm:"column:TABLE_NAME"`
-	Indexes     []*Index                                                      `gorm:"-"`
-	UseScanType bool                                                          `gorm:"-"`
+	TableName   string                                                        `gorm:"column:TABLE_NAME"` // source table containing the column
+	Indexes     []*Index                                                      `gorm:"-"`                 // indexes that include this column
+	UseScanType bool                                                          `gorm:"-"`                 // prefer driver ScanType over database type mapping
 	dataTypeMap map[string]func(columnType gorm.ColumnType) (dataType string) `gorm:"-"`
 	jsonTagNS   func(columnName string) string                                `gorm:"-"`
 }

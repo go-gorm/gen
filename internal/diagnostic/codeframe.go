@@ -6,6 +6,9 @@ import (
 	"os"
 )
 
+// CodeFrame renders the selected 1-based line and column with surrounding
+// context lines. Out-of-range coordinates are clamped to the available source,
+// and tabs are expanded before the caret is positioned.
 func CodeFrame(src []byte, line, column, context int) string {
 	if context < 0 {
 		context = 0
@@ -62,6 +65,7 @@ func CodeFrame(src []byte, line, column, context int) string {
 	return out.String()
 }
 
+// CodeFrameFromFile reads file and renders a CodeFrame for it.
 func CodeFrameFromFile(file string, line, column, context int) (string, error) {
 	b, err := os.ReadFile(file)
 	if err != nil {

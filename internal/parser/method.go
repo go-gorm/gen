@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+// DefaultMethodTableName builds the synthetic TableName method added to a
+// generated model when a custom model name needs a stable table binding.
 func DefaultMethodTableName(structName string) *Method {
 	return &Method{
 		Receiver:   Param{IsPointer: true, Type: structName},
@@ -21,16 +23,16 @@ func DefaultMethodTableName(structName string) *Method {
 
 // Method Apply to query struct and base struct custom method
 type Method struct {
-	Receiver   Param
-	MethodName string
-	Doc        string
-	File       string
-	Line       int
-	Column     int
-	Params     []Param
-	Result     []Param
-	Body       string
-	SkipImpl   bool
+	Receiver   Param   // receiver type and pointer metadata
+	MethodName string  // declared Go method name
+	Doc        string  // source documentation used to derive DIY SQL
+	File       string  // source file containing the declaration
+	Line       int     // 1-based source line of the declaration or its documentation
+	Column     int     // 1-based byte column of the declaration or its documentation
+	Params     []Param // input parameter metadata
+	Result     []Param // result parameter metadata
+	Body       string  // original method body copied into generated model code
+	SkipImpl   bool    // whether a gen:skip directive suppresses implementation generation
 }
 
 // FuncSign function signature
@@ -69,12 +71,12 @@ func (m *Method) DocComment() string {
 
 // DIYMethods user Custom methods bind to db base struct
 type DIYMethods struct {
-	BaseStructType string
-	MethodName     string
+	BaseStructType string // receiver type selected from the caller expression
+	MethodName     string // optional single method name; empty selects every receiver method
 	pkgPath        string
 	currentFile    string
 	pkgFiles       []string
-	Methods        []*Method
+	Methods        []*Method // methods discovered across pkgFiles
 }
 
 func (m *DIYMethods) parserPath(path string) error {

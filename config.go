@@ -47,10 +47,11 @@ type Config struct {
 	FieldSignable       bool // detect integer field's unsigned type, adjust generated data type
 	FieldWithIndexTag   bool // generate with gorm index tag
 	FieldWithTypeTag    bool // generate with gorm column type tag
-	FieldWithDefaultTag bool
+	FieldWithDefaultTag bool // include database defaults in generated gorm tags
 
 	Mode GenerateMode // generate mode
 
+	// UnitTestTemplate is the path to a custom CRUD test template used when WithUnitTest is enabled.
 	UnitTestTemplate string
 
 	queryPkgName   string // generated query code's package name

@@ -21,12 +21,15 @@ type Field = *model.Field
 var ns = schema.NamingStrategy{}
 
 var (
+	// FieldModify adapts a function over the public Field alias into a model option.
 	FieldModify = func(opt func(Field) Field) model.ModifyFieldOpt {
 		return func(f *model.Field) *model.Field {
 			return opt(f)
 		}
 	}
 
+	// FieldFilter adapts a predicate-like field transform into a model filter option.
+	// Returning nil from opt removes the field from generated models.
 	FieldFilter = func(opt func(Field) Field) model.FilterFieldOpt {
 		return func(f *model.Field) *model.Field {
 			return opt(f)
@@ -314,6 +317,8 @@ var (
 )
 
 var (
+	// DefaultMethodTableWithNamer resolves the default table placeholder through
+	// the supplied naming strategy.
 	DefaultMethodTableWithNamer = (&defaultModel{}).TableName
 )
 

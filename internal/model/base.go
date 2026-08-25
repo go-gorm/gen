@@ -164,16 +164,17 @@ func (m dataTypeMap) Get(dataType, detailType string) string {
 
 // Field user input structures
 type Field struct {
-	Name             string
-	Type             string
-	ColumnName       string
-	ColumnComment    string
-	MultilineComment bool
-	Tag              field.Tag
-	GORMTag          field.GormTag
-	CustomGenType    string
-	Relation         *field.Relation
+	Name             string          // generated Go field name
+	Type             string          // generated model field type
+	ColumnName       string          // source database column name
+	ColumnComment    string          // sanitized source column comment
+	MultilineComment bool            // whether ColumnComment requires block-comment rendering
+	Tag              field.Tag       // complete non-GORM struct tags
+	GORMTag          field.GormTag   // structured GORM directives merged into Tag during rendering
+	CustomGenType    string          // explicit query field type override
+	Relation         *field.Relation // relationship metadata for synthetic relation fields
 
+	// Column retains the introspected database metadata when the field came from a table.
 	Column *Column
 }
 

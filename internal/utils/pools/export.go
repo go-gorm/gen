@@ -1,4 +1,4 @@
-// Package pools : goroutine pools
+// Package pools provides bounded goroutine pools used during code generation.
 package pools
 
 // NewPool return a new pool

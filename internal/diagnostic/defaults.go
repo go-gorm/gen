@@ -1,5 +1,7 @@
 package diagnostic
 
+// DefaultMessage returns the short fallback message for code.
+// Unknown codes have no fallback message.
 func DefaultMessage(code string) string {
 	switch code {
 	case CodeSQLIncomplete:
@@ -15,6 +17,8 @@ func DefaultMessage(code string) string {
 	}
 }
 
+// DefaultHint returns remediation guidance for code.
+// Unknown codes have no default hint.
 func DefaultHint(code string) string {
 	switch code {
 	case CodeSQLIncomplete:

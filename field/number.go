@@ -2,6 +2,7 @@ package field
 
 import (
 	"database/sql/driver"
+
 	"golang.org/x/exp/constraints"
 	"gorm.io/gorm/clause"
 )
@@ -53,30 +54,37 @@ func newNumber[T constraints.Integer | constraints.Float](e expr) Number[T] {
 	return Number[T]{genericsField: newGenerics[T](e)}
 }
 
+// ValuerNumber is a numeric expression whose values are converted through driver.Valuer.
 type ValuerNumber[T driver.Valuer] struct {
 	genericsField[T]
 }
 
+// Between reports whether the field is between left and right, inclusive.
 func (field ValuerNumber[T]) Between(left T, right T) Expr {
 	return field.between([]interface{}{left, right})
 }
 
+// NotBetween negates Between.
 func (field ValuerNumber[T]) NotBetween(left T, right T) Expr {
 	return Not(field.Between(left, right))
 }
 
+// Add returns an arithmetic expression that adds value to the field.
 func (field ValuerNumber[T]) Add(value T) ValuerNumber[T] {
 	return newValuerNumber[T](field.add(value))
 }
 
+// Sub returns an arithmetic expression that subtracts value from the field.
 func (field ValuerNumber[T]) Sub(value T) ValuerNumber[T] {
 	return newValuerNumber[T](field.sub(value))
 }
 
+// Mul returns an arithmetic expression that multiplies the field by value.
 func (field ValuerNumber[T]) Mul(value T) ValuerNumber[T] {
 	return newValuerNumber[T](field.mul(value))
 }
 
+// Div returns an arithmetic expression that divides the field by value.
 func (field ValuerNumber[T]) Div(value T) ValuerNumber[T] {
 	return newValuerNumber[T](field.div(value))
 }

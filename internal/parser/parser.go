@@ -14,7 +14,7 @@ import (
 
 // InterfaceSet ...
 type InterfaceSet struct {
-	Interfaces []InterfaceInfo
+	Interfaces []InterfaceInfo   // interfaces discovered in the requested source packages
 	imports    map[string]string // package name -> quoted "package path"
 	fset       *token.FileSet
 	filename   string
@@ -22,11 +22,11 @@ type InterfaceSet struct {
 
 // InterfaceInfo ...
 type InterfaceInfo struct {
-	Name        string
-	Doc         string
-	Methods     []*Method
-	Package     string
-	ApplyStruct []string
+	Name        string    // interface type name
+	Doc         string    // interface documentation
+	Methods     []*Method // parsed DIY query methods
+	Package     string    // import path containing the interface
+	ApplyStruct []string  // model names to which the interface should be bound
 }
 
 // MatchStruct ...

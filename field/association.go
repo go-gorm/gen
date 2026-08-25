@@ -69,8 +69,11 @@ type RelationField interface {
 
 // RelationJoin represents a join operation for a relation
 type RelationJoin struct {
-	Table     schema.Tabler
-	Type      clause.JoinType
+	// Table identifies the table joined to the relation.
+	Table schema.Tabler
+	// Type is the SQL join type.
+	Type clause.JoinType
+	// Condition contains the expressions used by the join's ON clause.
 	Condition []Expr
 }
 
@@ -264,13 +267,20 @@ var defaultRelationshipPrefix = map[RelationshipType]string{
 
 // RelateConfig config for relationship
 type RelateConfig struct {
-	RelatePointer      bool
-	RelateSlice        bool
+	// RelatePointer generates a pointer field regardless of relationship type.
+	RelatePointer bool
+	// RelateSlice generates a slice of values regardless of relationship type.
+	RelateSlice bool
+	// RelateSlicePointer generates a slice of pointers regardless of relationship type.
 	RelateSlicePointer bool
 
-	JSONTag      string
-	GORMTag      GormTag
-	Tag          Tag
+	// JSONTag overrides the generated JSON tag value.
+	JSONTag string
+	// GORMTag supplies relationship-specific GORM tag components.
+	GORMTag GormTag
+	// Tag supplies additional struct tags and receives the default JSON tag when needed.
+	Tag Tag
+	// OverwriteTag replaces all generated struct tags when non-nil.
 	OverwriteTag Tag
 }
 
@@ -287,6 +297,10 @@ func (c *RelateConfig) RelateFieldPrefix(relationshipType RelationshipType) stri
 		return defaultRelationshipPrefix[relationshipType]
 	}
 }
+
+// GetTag returns the struct tags for fieldName.
+// It returns OverwriteTag unchanged when configured; otherwise it initializes
+// Tag as needed and adds a naming-strategy-derived JSON tag when JSONTag is empty.
 func (c *RelateConfig) GetTag(fieldName string) Tag {
 	if c == nil {
 		return Tag{}

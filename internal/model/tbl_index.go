@@ -5,6 +5,7 @@ import "gorm.io/gorm"
 // Index table index info
 type Index struct {
 	gorm.Index
+	// Priority is the 1-based position of the column within the index.
 	Priority int32 `gorm:"column:SEQ_IN_INDEX"`
 }
 

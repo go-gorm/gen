@@ -1,8 +1,12 @@
 package diagnostic
 
 const (
+	// CodeSQLIncomplete indicates that SQL or a template block ended prematurely.
 	CodeSQLIncomplete = "SQL_INCOMPLETE"
-	CodeSQLVar        = "SQL_VAR"
+	// CodeSQLVar indicates that a template SQL variable could not be parsed.
+	CodeSQLVar = "SQL_VAR"
+	// CodeTemplateParse indicates invalid template syntax.
 	CodeTemplateParse = "TEMPLATE_PARSE"
-	CodeSQLBuild      = "SQL_BUILD"
+	// CodeSQLBuild indicates that parsed template sections could not produce SQL.
+	CodeSQLBuild = "SQL_BUILD"
 )
