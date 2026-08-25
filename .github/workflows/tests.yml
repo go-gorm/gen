@@ -106,8 +106,5 @@ jobs:
       - name: Build examples module
         run: cd examples && go build ./...
 
-      # TODO: enable once tools/gentool's gorm.io/gen dependency is bumped to
-      # the first release shipping Config.UseAny (PR #1482); it cannot compile
-      # against the currently published version.
-      # - name: Build gentool module
-      #   run: cd tools/gentool && go build ./...
+      - name: Build gentool module
+        run: cd tools/gentool && go build ./...
