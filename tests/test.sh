@@ -10,9 +10,7 @@ fi
 if [ -d tests ]
 then
   cd tests
-  go get -t ./...
   go mod download
-  go mod tidy
   cd ..
 fi
 
