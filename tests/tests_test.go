@@ -13,14 +13,18 @@ import (
 )
 
 const (
-	mysqlDSN     = "gen:gen@tcp(localhost:9910)/gen?charset=utf8&parseTime=True&loc=Local"
-	postgresDSN  = "user=gen password=gen dbname=gen host=localhost port=9920 sslmode=disable TimeZone=Asia/Shanghai"
-	sqlserverDSN = "sqlserver://gen:LoremIpsum86@localhost:9930?database=gen"
+	mysqlDSN = "gen:gen@tcp(localhost:9910)/gen?charset=utf8&parseTime=True&loc=Local"
 )
 
 var DB *gorm.DB
 
 func TestMain(m *testing.M) {
+	// Keep local module-wide test runs database-free, but fail if CI omits its contract configuration.
+	if os.Getenv("GORM_DIALECT") == "" && os.Getenv("CI") == "" {
+		log.Print("skipping MySQL contract tests; set GORM_DIALECT=mysql to run them")
+		return
+	}
+
 	cleanup, err := setupMySQLContract()
 	if err != nil {
 		log.Printf("mysql contract setup failed: %v", err)

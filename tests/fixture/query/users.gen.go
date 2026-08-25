@@ -583,7 +583,7 @@ func (u userDo) FindWithTrim(names []string) (result []*model.User, err error) {
 	return
 }
 
-// InsertUser is intentionally dialect-neutral.
+// InsertUser omits MySQL-specific upsert syntax so it can run on SQLite.
 //
 // INSERT INTO @@table (name, age, active, role, company_id)
 // VALUES (@name, @age, @active, @role, @companyID)
