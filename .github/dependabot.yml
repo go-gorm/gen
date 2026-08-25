@@ -17,3 +17,7 @@ updates:
     directory: /tools/gentool
     schedule:
       interval: weekly
+  - package-ecosystem: gomod
+    directory: /examples
+    schedule:
+      interval: weekly
