@@ -5,7 +5,7 @@ go 1.22.0
 toolchain go1.24.4
 
 require (
-	gorm.io/driver/mysql v1.5.7
+	gorm.io/driver/mysql v1.6.0
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gen v0.3.25
 	gorm.io/gorm v1.31.2
