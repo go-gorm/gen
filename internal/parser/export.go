@@ -18,10 +18,10 @@ import (
 
 // InterfacePath interface path
 type InterfacePath struct {
-	Name     string
-	FullName string
-	Files    []string
-	Package  string
+	Name     string   // unqualified interface type name
+	FullName string   // reflected package-qualified type name
+	Files    []string // Go source files that may contain the interface declaration
+	Package  string   // import path containing the interface
 }
 
 type goListPackage struct {

@@ -11,8 +11,10 @@ import (
 
 // ITableInfo table info interface
 type ITableInfo interface {
+	// GetTableColumns returns normalized metadata for a table's columns.
 	GetTableColumns(schemaName string, tableName string) (result []*model.Column, err error)
 
+	// GetTableIndex returns indexes declared for a table.
 	GetTableIndex(schemaName string, tableName string) (indexes []gorm.Index, err error)
 }
 

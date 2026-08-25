@@ -8,7 +8,9 @@ import (
 
 // Cond ...
 type Cond struct {
-	Cond   bool
+	// Cond controls whether Result participates in the generated clause.
+	Cond bool
+	// Result is the SQL fragment emitted when Cond is true.
 	Result string
 }
 
@@ -139,6 +141,7 @@ func JoinTrimAllBuilder(src *strings.Builder, setValue strings.Builder) {
 // JoinTblExpr join clause with table expression(sub query...)
 type JoinTblExpr struct {
 	clause.Join
+	// TableExpr is the table or subquery expression written after JOIN.
 	TableExpr clause.Expression
 }
 

@@ -56,6 +56,7 @@ type OrderExpr interface {
 
 type expression interface{}
 
+// IColumnName exposes the unquoted column name carried by a field expression.
 type IColumnName interface {
 	ColumnName() sql
 }

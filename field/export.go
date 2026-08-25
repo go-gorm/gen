@@ -3,11 +3,12 @@ package field
 import (
 	"database/sql/driver"
 	"fmt"
+	"strings"
+	"time"
+
 	"golang.org/x/exp/constraints"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"strings"
-	"time"
 )
 
 var (
@@ -16,6 +17,7 @@ var (
 	// ALL same with Star
 	ALL = Star
 
+	// NULL represents the raw SQL NULL literal.
 	NULL = Field{expr: expr{col: clause.Column{Name: "NULL", Raw: true}}}
 )
 
@@ -68,6 +70,7 @@ func NewNumber[T constraints.Integer | constraints.Float](table, column string, 
 	return newNumber[T](expr{col: toColumn(table, column, opts...)})
 }
 
+// NewValuerNumber creates a numeric field whose values implement driver.Valuer.
 func NewValuerNumber[T driver.Valuer](table, column string, opts ...Option) ValuerNumber[T] {
 	return newValuerNumber[T](expr{col: toColumn(table, column, opts...)})
 }

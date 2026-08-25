@@ -9,7 +9,9 @@ import (
 
 // Clause a symbol of clause, it can be sql condition clause, if clause, where clause, set clause and else clause
 type Clause interface {
+	// String returns the Go expression used to build this clause.
 	String() string
+	// Create returns the Go statement that initializes or emits this clause.
 	Create() string
 }
 
@@ -29,9 +31,11 @@ type clause struct {
 // SQLClause sql condition clause
 type SQLClause struct {
 	clause
+	// Value contains Go string expressions joined into one SQL fragment.
 	Value []string
 }
 
+// String normalizes Value into a Go expression that ends with one SQL space.
 func (s SQLClause) String() string {
 	sqlString := strings.Join(s.Value, "+")
 	// trim left space
@@ -59,10 +63,12 @@ func (s SQLClause) Finish() string {
 // IfClause if clause
 type IfClause struct {
 	clause
+	// Value contains the clauses nested inside the conditional block.
 	Value []Clause
 	slice section
 }
 
+// String returns the generated Go condition.
 func (i IfClause) String() string {
 	return i.slice.Value
 }
@@ -82,6 +88,7 @@ type ElseClause struct {
 	IfClause
 }
 
+// String returns the generated else or else-if expression.
 func (e ElseClause) String() (res string) {
 	return e.slice.Value
 }
@@ -99,9 +106,11 @@ func (e ElseClause) Finish() string {
 // WhereClause where clause
 type WhereClause struct {
 	clause
+	// Value contains the clauses collected into the WHERE builder.
 	Value []Clause
 }
 
+// String returns the expression that trims the accumulated WHERE fragment.
 func (w WhereClause) String() string {
 	return fmt.Sprintf("helper.WhereTrim(%s.String())", w.VarName)
 }
@@ -119,9 +128,11 @@ func (w WhereClause) Finish(name string) string {
 // SetClause set clause
 type SetClause struct {
 	clause
+	// Value contains the clauses collected into the SET builder.
 	Value []Clause
 }
 
+// String returns the expression that trims the accumulated SET fragment.
 func (s SetClause) String() string {
 	return fmt.Sprintf("helper.SetTrim(%s.String())", s.VarName)
 }
@@ -139,9 +150,11 @@ func (s SetClause) Finish(name string) string {
 // TrimClause set clause
 type TrimClause struct {
 	clause
+	// Value contains the clauses whose edge separators are trimmed.
 	Value []Clause
 }
 
+// String returns the expression that trims logical operators and separators.
 func (s TrimClause) String() string {
 	return fmt.Sprintf("helper.TrimALL(%s.String())", s.VarName)
 }
@@ -159,11 +172,14 @@ func (s TrimClause) Finish(name string) string {
 // ForClause set clause
 type ForClause struct {
 	clause
-	Value    []Clause
+	// Value contains the clauses emitted for each iteration.
+	Value []Clause
+	// ForRange describes the generated Go range statement.
 	ForRange ForRange
 	forSlice section
 }
 
+// String returns the generated Go range statement and opening brace.
 func (f ForClause) String() string {
 	return f.forSlice.Value + "{"
 }
