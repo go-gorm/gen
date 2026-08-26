@@ -58,6 +58,11 @@ func NewSerializer(table, column string, opts ...Option) Serializer {
 	return Serializer{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
+// NewSerialized creates a field whose values are converted by a GORM schema serializer.
+func NewSerialized(table, column string, opts ...Option) Serialized {
+	return Serialized{expr: expr{col: toColumn(table, column, opts...)}}
+}
+
 // NewAsterisk create new * field
 func NewAsterisk(table string, opts ...Option) Asterisk {
 	return Asterisk{asteriskExpr: asteriskExpr{expr{col: toColumn(table, "*", opts...)}}}

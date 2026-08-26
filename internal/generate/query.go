@@ -64,13 +64,15 @@ func (b *QueryStructMeta) parseStruct(st interface{}) error {
 		fp = fps
 	}
 	for _, f := range stmt.Schema.Fields {
+		fieldType := b.getFieldRealType(f.FieldType)
 		gf := &model.Field{
-			Name:          f.Name,
-			Type:          b.getFieldRealType(f.FieldType),
-			ColumnName:    f.DBName,
-			CustomGenType: fp.GetFieldGenType(f),
-			ColumnComment: f.Comment,
-			Tag:           f.TagSettings,
+			Name:             f.Name,
+			Type:             fieldType,
+			ColumnName:       f.DBName,
+			CustomGenType:    fp.GetFieldGenType(f),
+			ColumnComment:    f.Comment,
+			Tag:              f.TagSettings,
+			SchemaSerializer: f.Serializer != nil,
 		}
 		if len(f.EmbeddedBindNames) > 1 {
 			gf.Name = strings.Join(f.EmbeddedBindNames, "")

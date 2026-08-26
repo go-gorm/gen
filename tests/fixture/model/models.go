@@ -14,6 +14,7 @@ type User struct {
 	Age       int
 	Active    bool
 	Role      string
+	Photos    []*string `gorm:"serializer:json"`
 	CompanyID uint
 	Company   Company
 	Orders    []Order

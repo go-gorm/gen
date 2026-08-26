@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"gorm.io/gen/field"
+	"gorm.io/gorm/schema"
 )
 
 const (
@@ -172,6 +173,7 @@ type Field struct {
 	Tag              field.Tag       // complete non-GORM struct tags
 	GORMTag          field.GormTag   // structured GORM directives merged into Tag during rendering
 	CustomGenType    string          // explicit query field type override
+	SchemaSerializer bool            // whether GORM parsed a serializer for an existing model field
 	Relation         *field.Relation // relationship metadata for synthetic relation fields
 
 	// Column retains the introspected database metadata when the field came from a table.
@@ -202,6 +204,12 @@ func (m *Field) GenType() string {
 		return m.CustomGenType
 	}
 	typ := strings.TrimLeft(m.Type, "*")
+	if typ == "serializer" {
+		return "Serializer"
+	}
+	if m.hasSerializerTag() {
+		return "Serialized"
+	}
 	switch typ {
 	case "string", "bytes":
 		return strings.Title(typ)
@@ -215,11 +223,25 @@ func (m *Field) GenType() string {
 		return "Time"
 	case "json.RawMessage", "[]byte":
 		return "Bytes"
-	case "serializer":
-		return "Serializer"
 	default:
 		return "Field"
 	}
+}
+
+func (m *Field) hasSerializerTag() bool {
+	if m.SchemaSerializer {
+		return true
+	}
+	for key := range m.GORMTag {
+		if strings.EqualFold(key, "serializer") || strings.EqualFold(key, "json") {
+			return true
+		}
+	}
+	if tag, ok := m.Tag[field.TagKeyGorm]; ok {
+		settings := schema.ParseTagSetting(tag, ";")
+		return settings["SERIALIZER"] != "" || settings["JSON"] != ""
+	}
+	return false
 }
 
 // EscapeKeyword escape keyword

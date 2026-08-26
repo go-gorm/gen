@@ -209,6 +209,37 @@ func TestGeneratedQueryBatchingScopesAndWrites(t *testing.T) {
 	assertUsers(t, remaining, err, "alice", "carol")
 }
 
+func TestGeneratedQueryUpdatesRawSerializerValue(t *testing.T) {
+	_, q := newSQLiteDB(t)
+	u := q.User.WithContext(context.Background())
+	one, two := "1", "2"
+
+	info, err := u.Where(q.User.ID.Eq(1)).UpdateSimple(q.User.Photos.Value([]*string{&one, &two}))
+	if err != nil || info.RowsAffected != 1 {
+		t.Fatalf("UpdateSimple() info=%#v err=%v", info, err)
+	}
+	updated, err := u.Where(q.User.ID.Eq(1)).First()
+	if err != nil || !reflect.DeepEqual(updated.Photos, []*string{&one, &two}) {
+		t.Fatalf("serialized photos = %#v, err=%v", updated.Photos, err)
+	}
+
+	if _, err = u.Where(q.User.ID.Eq(1)).UpdateSimple(q.User.Photos.Value([]*string{})); err != nil {
+		t.Fatalf("update empty serializer value: %v", err)
+	}
+	updated, err = u.Where(q.User.ID.Eq(1)).First()
+	if err != nil || updated.Photos == nil || len(updated.Photos) != 0 {
+		t.Fatalf("empty serialized photos = %#v, err=%v", updated.Photos, err)
+	}
+
+	if _, err = u.Where(q.User.ID.Eq(1)).UpdateSimple(q.User.Photos.Value([]*string(nil))); err != nil {
+		t.Fatalf("update nil serializer value: %v", err)
+	}
+	updated, err = u.Where(q.User.ID.Eq(1)).First()
+	if err != nil || updated.Photos != nil {
+		t.Fatalf("nil serialized photos = %#v, err=%v", updated.Photos, err)
+	}
+}
+
 func TestGeneratedQueryWriteSafetyRelationsTransactionsAndErrors(t *testing.T) {
 	_, q := newSQLiteDB(t)
 	u := q.User.WithContext(context.Background())
