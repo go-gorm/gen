@@ -29,149 +29,90 @@ func (v ValuerType) GormValue(ctx context.Context, db *gorm.DB) (expr clause.Exp
 	return clause.Expr{SQL: "?", Vars: []interface{}{newValue}}
 }
 
-// Serializer a standard field struct
-type Serializer struct{ expr }
+// SerializerField is a typed field whose values are converted by a GORM serializer.
+type SerializerField[T any] struct{ expr }
+
+// Serializer preserves the original field type for values that implement
+// GORM's serializer interface.
+type Serializer = SerializerField[schema.SerializerValuerInterface]
 
 // Eq judge equal
-func (field Serializer) Eq(value schema.SerializerValuerInterface) Expr {
-	return expr{e: clause.Eq{Column: field.RawExpr(), Value: ValuerType{Column: field.ColumnName().String(), Value: value}}}
+func (field SerializerField[T]) Eq(value T) Expr {
+	return expr{e: clause.Eq{Column: field.RawExpr(), Value: field.wrap(value)}}
 }
 
 // Neq judge not equal
-func (field Serializer) Neq(value schema.SerializerValuerInterface) Expr {
-	return expr{e: clause.Neq{Column: field.RawExpr(), Value: ValuerType{Column: field.ColumnName().String(), Value: value}}}
+func (field SerializerField[T]) Neq(value T) Expr {
+	return expr{e: clause.Neq{Column: field.RawExpr(), Value: field.wrap(value)}}
 }
 
 // In ...
-func (field Serializer) In(values ...schema.SerializerValuerInterface) Expr {
+func (field SerializerField[T]) In(values ...T) Expr {
 	return expr{e: clause.IN{Column: field.RawExpr(), Values: field.toSlice(values...)}}
 }
 
 // Gt ...
-func (field Serializer) Gt(value schema.SerializerValuerInterface) Expr {
-	return expr{e: clause.Gt{Column: field.RawExpr(), Value: ValuerType{Column: field.ColumnName().String(), Value: value}}}
+func (field SerializerField[T]) Gt(value T) Expr {
+	return expr{e: clause.Gt{Column: field.RawExpr(), Value: field.wrap(value)}}
 }
 
 // Gte ...
-func (field Serializer) Gte(value schema.SerializerValuerInterface) Expr {
-	return expr{e: clause.Gte{Column: field.RawExpr(), Value: ValuerType{Column: field.ColumnName().String(), Value: value}}}
+func (field SerializerField[T]) Gte(value T) Expr {
+	return expr{e: clause.Gte{Column: field.RawExpr(), Value: field.wrap(value)}}
 }
 
 // Lt ...
-func (field Serializer) Lt(value schema.SerializerValuerInterface) Expr {
-	return expr{e: clause.Lt{Column: field.RawExpr(), Value: ValuerType{Column: field.ColumnName().String(), Value: value}}}
+func (field SerializerField[T]) Lt(value T) Expr {
+	return expr{e: clause.Lt{Column: field.RawExpr(), Value: field.wrap(value)}}
 }
 
 // Lte ...
-func (field Serializer) Lte(value schema.SerializerValuerInterface) Expr {
-	return expr{e: clause.Lte{Column: field.RawExpr(), Value: ValuerType{Column: field.ColumnName().String(), Value: value}}}
+func (field SerializerField[T]) Lte(value T) Expr {
+	return expr{e: clause.Lte{Column: field.RawExpr(), Value: field.wrap(value)}}
 }
 
 // Like ...
-func (field Serializer) Like(value schema.SerializerValuerInterface) Expr {
-	return expr{e: clause.Like{Column: field.RawExpr(), Value: ValuerType{Column: field.ColumnName().String(), Value: value}}}
+func (field SerializerField[T]) Like(value T) Expr {
+	return expr{e: clause.Like{Column: field.RawExpr(), Value: field.wrap(value)}}
 }
 
 // Value ...
-func (field Serializer) Value(value schema.SerializerValuerInterface) AssignExpr {
-	return field.value(ValuerType{Column: field.ColumnName().String(), Value: value})
+func (field SerializerField[T]) Value(value T) AssignExpr {
+	return field.value(field.wrap(value))
 }
 
 // Sum ...
-func (field Serializer) Sum() Number[float64] {
+func (field SerializerField[T]) Sum() Number[float64] {
 	return newNumber[float64](field.sum())
 }
 
 // IfNull ...
-func (field Serializer) IfNull(value schema.SerializerValuerInterface) Expr {
-	return field.ifNull(ValuerType{Column: field.ColumnName().String(), Value: value})
-}
-
-func (field Serializer) toSlice(values ...schema.SerializerValuerInterface) []interface{} {
-	slice := make([]interface{}, len(values))
-	for i, v := range values {
-		slice[i] = ValuerType{Column: field.ColumnName().String(), Value: v}
-	}
-	return slice
-}
-
-// Serialized is a field whose values are converted by the serializer configured
-// on the corresponding GORM schema field.
-type Serialized struct{ expr }
-
-// Eq compares the field with a value after schema serialization.
-func (field Serialized) Eq(value interface{}) Expr {
-	return expr{e: clause.Eq{Column: field.RawExpr(), Value: field.wrap(value)}}
-}
-
-// Neq compares the field with a value for inequality after schema serialization.
-func (field Serialized) Neq(value interface{}) Expr {
-	return expr{e: clause.Neq{Column: field.RawExpr(), Value: field.wrap(value)}}
-}
-
-// In compares the field with serialized candidate values.
-func (field Serialized) In(values ...interface{}) Expr {
-	return expr{e: clause.IN{Column: field.RawExpr(), Values: field.toSerializedSlice(values...)}}
-}
-
-// Gt compares the field with a serialized value using greater-than semantics.
-func (field Serialized) Gt(value interface{}) Expr {
-	return expr{e: clause.Gt{Column: field.RawExpr(), Value: field.wrap(value)}}
-}
-
-// Gte compares the field with a serialized value using greater-than-or-equal semantics.
-func (field Serialized) Gte(value interface{}) Expr {
-	return expr{e: clause.Gte{Column: field.RawExpr(), Value: field.wrap(value)}}
-}
-
-// Lt compares the field with a serialized value using less-than semantics.
-func (field Serialized) Lt(value interface{}) Expr {
-	return expr{e: clause.Lt{Column: field.RawExpr(), Value: field.wrap(value)}}
-}
-
-// Lte compares the field with a serialized value using less-than-or-equal semantics.
-func (field Serialized) Lte(value interface{}) Expr {
-	return expr{e: clause.Lte{Column: field.RawExpr(), Value: field.wrap(value)}}
-}
-
-// Like compares the field with a serialized pattern value.
-func (field Serialized) Like(value interface{}) Expr {
-	return expr{e: clause.Like{Column: field.RawExpr(), Value: field.wrap(value)}}
-}
-
-// Value creates an assignment whose value is converted by the schema serializer.
-func (field Serialized) Value(value interface{}) AssignExpr {
-	return field.value(field.wrap(value))
-}
-
-// Sum returns a numeric sum expression for the field.
-func (field Serialized) Sum() Number[float64] {
-	return newNumber[float64](field.sum())
-}
-
-// IfNull returns the serialized fallback value when the field is NULL.
-func (field Serialized) IfNull(value interface{}) Expr {
+func (field SerializerField[T]) IfNull(value T) Expr {
 	return field.ifNull(field.wrap(value))
 }
 
-func (field Serialized) wrap(value interface{}) serializedValue {
-	return serializedValue{Column: field.ColumnName().String(), Value: value}
+func (field SerializerField[T]) wrap(value T) interface{} {
+	column := field.ColumnName().String()
+	if valuer, ok := any(value).(schema.SerializerValuerInterface); ok {
+		return ValuerType{Column: column, Value: valuer}
+	}
+	return schemaSerializerValue{Column: column, Value: value}
 }
 
-func (field Serialized) toSerializedSlice(values ...interface{}) []interface{} {
+func (field SerializerField[T]) toSlice(values ...T) []interface{} {
 	slice := make([]interface{}, len(values))
-	for i, value := range values {
-		slice[i] = field.wrap(value)
+	for i, v := range values {
+		slice[i] = field.wrap(v)
 	}
 	return slice
 }
 
-type serializedValue struct {
+type schemaSerializerValue struct {
 	Column string
 	Value  interface{}
 }
 
-func (v serializedValue) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
+func (v schemaSerializerValue) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
 	expr := clause.Expr{SQL: "?", Vars: []interface{}{v.Value}}
 	if db == nil || db.Statement == nil || db.Statement.Schema == nil {
 		if db != nil {
@@ -186,10 +127,7 @@ func (v serializedValue) GormValue(ctx context.Context, db *gorm.DB) clause.Expr
 		return expr
 	}
 
-	var valuer schema.SerializerValuerInterface = schemaField.Serializer
-	if valueValuer, ok := v.Value.(schema.SerializerValuerInterface); ok {
-		valuer = valueValuer
-	}
+	valuer := schemaField.Serializer
 	if valuer == nil {
 		_ = db.AddError(fmt.Errorf("field: column %q has no schema serializer", v.Column))
 		return expr

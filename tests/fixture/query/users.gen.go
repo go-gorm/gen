@@ -35,7 +35,7 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 	_user.Age = field.NewInt(tableName, "age")
 	_user.Active = field.NewBool(tableName, "active")
 	_user.Role = field.NewString(tableName, "role")
-	_user.Photos = field.NewSerialized(tableName, "photos")
+	_user.Photos = field.NewSerializerField[[]*string](tableName, "photos")
 	_user.CompanyID = field.NewUint(tableName, "company_id")
 	_user.Orders = userHasManyOrders{
 		db: db.Session(&gorm.Session{}),
@@ -100,7 +100,7 @@ type user struct {
 	Age       field.Int
 	Active    field.Bool
 	Role      field.String
-	Photos    field.Serialized
+	Photos    field.SerializerField[[]*string]
 	CompanyID field.Uint
 	Orders    userHasManyOrders
 
@@ -126,7 +126,7 @@ func (u *user) updateTableName(table string) *user {
 	u.Age = field.NewInt(table, "age")
 	u.Active = field.NewBool(table, "active")
 	u.Role = field.NewString(table, "role")
-	u.Photos = field.NewSerialized(table, "photos")
+	u.Photos = field.NewSerializerField[[]*string](table, "photos")
 	u.CompanyID = field.NewUint(table, "company_id")
 
 	u.fillFieldMap()

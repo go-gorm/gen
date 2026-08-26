@@ -10,10 +10,13 @@ import (
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gen"
+	"gorm.io/gen/field"
 	fixture "gorm.io/gen/tests/fixture/model"
 	"gorm.io/gen/tests/fixture/query"
 	"gorm.io/gorm"
 )
+
+var _ func([]*string) field.AssignExpr = query.Q.User.Photos.Value
 
 func newSQLiteDB(t *testing.T) (*gorm.DB, *query.Query) {
 	t.Helper()

@@ -173,7 +173,6 @@ type Field struct {
 	Tag              field.Tag       // complete non-GORM struct tags
 	GORMTag          field.GormTag   // structured GORM directives merged into Tag during rendering
 	CustomGenType    string          // explicit query field type override
-	SchemaSerializer bool            // whether GORM parsed a serializer for an existing model field
 	Relation         *field.Relation // relationship metadata for synthetic relation fields
 
 	// Column retains the introspected database metadata when the field came from a table.
@@ -208,7 +207,7 @@ func (m *Field) GenType() string {
 		return "Serializer"
 	}
 	if m.hasSerializerTag() {
-		return "Serialized"
+		return "SerializerField[" + m.Type + "]"
 	}
 	switch typ {
 	case "string", "bytes":
@@ -229,9 +228,6 @@ func (m *Field) GenType() string {
 }
 
 func (m *Field) hasSerializerTag() bool {
-	if m.SchemaSerializer {
-		return true
-	}
 	for key := range m.GORMTag {
 		if strings.EqualFold(key, "serializer") || strings.EqualFold(key, "json") {
 			return true

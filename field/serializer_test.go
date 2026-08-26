@@ -46,7 +46,7 @@ func newSerializedTestDB(t *testing.T) *gorm.DB {
 	return testDB
 }
 
-func TestSerializedValueUsesSchemaSerializer(t *testing.T) {
+func TestSchemaSerializerValueUsesSchemaSerializer(t *testing.T) {
 	one, two := "1", "2"
 	tests := []struct {
 		name   string
@@ -63,7 +63,7 @@ func TestSerializedValueUsesSchemaSerializer(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testDB := newSerializedTestDB(t)
-			got := (serializedValue{Column: tt.column, Value: tt.value}).GormValue(context.Background(), testDB)
+			got := (schemaSerializerValue{Column: tt.column, Value: tt.value}).GormValue(context.Background(), testDB)
 			if testDB.Error != nil {
 				t.Fatalf("GormValue() error = %v", testDB.Error)
 			}
@@ -74,11 +74,15 @@ func TestSerializedValueUsesSchemaSerializer(t *testing.T) {
 	}
 }
 
-func TestSerializedValuePrefersValueSerializerAndRecordsErrors(t *testing.T) {
+func TestSerializerFieldPreservesValueSerializerBehavior(t *testing.T) {
 	t.Run("value serializer", func(t *testing.T) {
 		testDB := newSerializedTestDB(t)
 		value := testSerializerValuer{value: "custom"}
-		got := (serializedValue{Column: "photos", Value: value}).GormValue(context.Background(), testDB)
+		wrapped, ok := NewSerializer("", "photos").wrap(value).(ValuerType)
+		if !ok {
+			t.Fatalf("wrap() type = %T, want ValuerType", wrapped)
+		}
+		got := wrapped.GormValue(context.Background(), testDB)
 		if testDB.Error != nil {
 			t.Fatalf("GormValue() error = %v", testDB.Error)
 		}
@@ -91,14 +95,18 @@ func TestSerializedValuePrefersValueSerializerAndRecordsErrors(t *testing.T) {
 		testDB := newSerializedTestDB(t)
 		wantErr := errors.New("serialize")
 		value := testSerializerValuer{err: wantErr}
-		_ = (serializedValue{Column: "photos", Value: value}).GormValue(context.Background(), testDB)
+		wrapped, ok := NewSerializer("", "photos").wrap(value).(ValuerType)
+		if !ok {
+			t.Fatalf("wrap() type = %T, want ValuerType", wrapped)
+		}
+		_ = wrapped.GormValue(context.Background(), testDB)
 		if !errors.Is(testDB.Error, wantErr) {
 			t.Fatalf("GormValue() error = %v, want %v", testDB.Error, wantErr)
 		}
 	})
 }
 
-func TestSerializedValueReportsInvalidSchemaState(t *testing.T) {
+func TestSchemaSerializerValueReportsInvalidSchemaState(t *testing.T) {
 	tests := []struct {
 		name   string
 		column string
@@ -113,7 +121,7 @@ func TestSerializedValueReportsInvalidSchemaState(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			testDB := newSerializedTestDB(t)
 			tt.setup(testDB)
-			got := (serializedValue{Column: tt.column, Value: "value"}).GormValue(context.Background(), testDB)
+			got := (schemaSerializerValue{Column: tt.column, Value: "value"}).GormValue(context.Background(), testDB)
 			if testDB.Error == nil {
 				t.Fatal("GormValue() error = nil")
 			}

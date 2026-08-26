@@ -53,14 +53,14 @@ func NewUnsafeFieldRaw(rawSQL string, vars ...interface{}) Field {
 	return Field{expr: expr{e: clause.Expr{SQL: rawSQL, Vars: vars}}}
 }
 
-// NewSerializer create new field2
+// NewSerializer creates a field for values that implement GORM's serializer interface.
 func NewSerializer(table, column string, opts ...Option) Serializer {
 	return Serializer{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
-// NewSerialized creates a field whose values are converted by a GORM schema serializer.
-func NewSerialized(table, column string, opts ...Option) Serialized {
-	return Serialized{expr: expr{col: toColumn(table, column, opts...)}}
+// NewSerializerField creates a typed field whose values use a GORM serializer.
+func NewSerializerField[T any](table, column string, opts ...Option) SerializerField[T] {
+	return SerializerField[T]{expr: expr{col: toColumn(table, column, opts...)}}
 }
 
 // NewAsterisk create new * field
