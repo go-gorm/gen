@@ -135,7 +135,11 @@ func (v schemaSerializerValue) GormValue(ctx context.Context, db *gorm.DB) claus
 
 	destination := db.Statement.ReflectValue
 	if !destination.IsValid() {
-		destination = reflect.ValueOf(v.Value)
+		if db.Statement.Schema.ModelType == nil {
+			_ = db.AddError(fmt.Errorf("field: schema model type is unavailable for serialized column %q", v.Column))
+			return expr
+		}
+		destination = reflect.New(db.Statement.Schema.ModelType)
 	}
 	newValue, err := valuer.Value(ctx, schemaField, destination, v.Value)
 	_ = db.AddError(err)

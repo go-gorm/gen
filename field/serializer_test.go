@@ -28,6 +28,19 @@ func (v testSerializerValuer) Value(context.Context, *schema.Field, reflect.Valu
 	return v.value, v.err
 }
 
+type destinationSerializer struct {
+	destination reflect.Value
+}
+
+func (*destinationSerializer) Scan(context.Context, *schema.Field, reflect.Value, interface{}) error {
+	return nil
+}
+
+func (s *destinationSerializer) Value(_ context.Context, _ *schema.Field, destination reflect.Value, _ interface{}) (interface{}, error) {
+	s.destination = destination
+	return "serialized", nil
+}
+
 func newSerializedTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 	testDB, err := gorm.Open(gormtests.DummyDialector{}, nil)
@@ -129,5 +142,27 @@ func TestSchemaSerializerValueReportsInvalidSchemaState(t *testing.T) {
 				t.Fatalf("GormValue() fallback = %#v", got)
 			}
 		})
+	}
+}
+
+func TestSchemaSerializerValueSuppliesValidDestination(t *testing.T) {
+	testDB := newSerializedTestDB(t)
+	testDB.Statement.ReflectValue = reflect.Value{}
+	serializer := new(destinationSerializer)
+	testDB.Statement.Schema.LookUpField("photos").Serializer = serializer
+
+	got := (schemaSerializerValue{Column: "photos", Value: nil}).GormValue(context.Background(), testDB)
+	if testDB.Error != nil {
+		t.Fatalf("GormValue() error = %v", testDB.Error)
+	}
+	if !serializer.destination.IsValid() {
+		t.Fatal("serializer destination is invalid")
+	}
+	wantType := reflect.New(testDB.Statement.Schema.ModelType).Type()
+	if serializer.destination.Type() != wantType {
+		t.Fatalf("serializer destination type = %v, want %v", serializer.destination.Type(), wantType)
+	}
+	if !reflect.DeepEqual(got.Vars, []interface{}{"serialized"}) {
+		t.Fatalf("GormValue() vars = %#v, want serialized", got.Vars)
 	}
 }

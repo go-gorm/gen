@@ -225,6 +225,14 @@ func TestGeneratedQueryUpdatesRawSerializerValue(t *testing.T) {
 	if err != nil || !reflect.DeepEqual(updated.Photos, []*string{&one, &two}) {
 		t.Fatalf("serialized photos = %#v, err=%v", updated.Photos, err)
 	}
+	matched, err := u.Where(q.User.Photos.Eq([]*string{&one, &two})).First()
+	if err != nil || matched.ID != 1 {
+		t.Fatalf("serialized Eq() result = %#v, err=%v", matched, err)
+	}
+	matched, err = u.Where(q.User.Photos.In([]*string{}, []*string{&one, &two})).First()
+	if err != nil || matched.ID != 1 {
+		t.Fatalf("serialized In() result = %#v, err=%v", matched, err)
+	}
 
 	if _, err = u.Where(q.User.ID.Eq(1)).UpdateSimple(q.User.Photos.Value([]*string{})); err != nil {
 		t.Fatalf("update empty serializer value: %v", err)
