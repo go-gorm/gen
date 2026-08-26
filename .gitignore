@@ -37,3 +37,7 @@ __debug_bin
 **/go.work.sum
 
 *.db
+
+# local go build cache
+/.gocache/
+/tools/gentool/gentool
