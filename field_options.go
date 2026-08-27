@@ -83,11 +83,18 @@ var (
 	// FieldNew add new field (any type your want)
 	FieldNew = func(fieldName, fieldType string, fieldTag field.Tag) model.CreateFieldOpt {
 		return func(*model.Field) *model.Field {
-			return &model.Field{
+			f := &model.Field{
 				Name: fieldName,
 				Type: fieldType,
 				Tag:  fieldTag,
 			}
+			if gormTag, ok := fieldTag[field.TagKeyGorm]; ok {
+				settings := schema.ParseTagSetting(gormTag, ";")
+				if col, ok := settings["COLUMN"]; ok {
+					f.ColumnName = col
+				}
+			}
+			return f
 		}
 	}
 	// FieldIgnore ignore some columns by name
