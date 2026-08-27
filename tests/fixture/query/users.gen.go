@@ -35,6 +35,7 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 	_user.Age = field.NewInt(tableName, "age")
 	_user.Active = field.NewBool(tableName, "active")
 	_user.Role = field.NewString(tableName, "role")
+	_user.Photos = field.NewSerializerField[[]*string](tableName, "photos")
 	_user.CompanyID = field.NewUint(tableName, "company_id")
 	_user.Orders = userHasManyOrders{
 		db: db.Session(&gorm.Session{}),
@@ -99,6 +100,7 @@ type user struct {
 	Age       field.Int
 	Active    field.Bool
 	Role      field.String
+	Photos    field.SerializerField[[]*string]
 	CompanyID field.Uint
 	Orders    userHasManyOrders
 
@@ -124,6 +126,7 @@ func (u *user) updateTableName(table string) *user {
 	u.Age = field.NewInt(table, "age")
 	u.Active = field.NewBool(table, "active")
 	u.Role = field.NewString(table, "role")
+	u.Photos = field.NewSerializerField[[]*string](table, "photos")
 	u.CompanyID = field.NewUint(table, "company_id")
 
 	u.fillFieldMap()
@@ -149,12 +152,13 @@ func (u *user) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (u *user) fillFieldMap() {
-	u.fieldMap = make(map[string]field.Expr, 8)
+	u.fieldMap = make(map[string]field.Expr, 9)
 	u.fieldMap["id"] = u.ID
 	u.fieldMap["name"] = u.Name
 	u.fieldMap["age"] = u.Age
 	u.fieldMap["active"] = u.Active
 	u.fieldMap["role"] = u.Role
+	u.fieldMap["photos"] = u.Photos
 	u.fieldMap["company_id"] = u.CompanyID
 
 }

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"gorm.io/gen/field"
+	"gorm.io/gorm/schema"
 )
 
 const (
@@ -202,6 +203,12 @@ func (m *Field) GenType() string {
 		return m.CustomGenType
 	}
 	typ := strings.TrimLeft(m.Type, "*")
+	if typ == "serializer" {
+		return "Serializer"
+	}
+	if m.hasSerializerTag() {
+		return "SerializerField[" + m.Type + "]"
+	}
 	switch typ {
 	case "string", "bytes":
 		return strings.Title(typ)
@@ -215,11 +222,22 @@ func (m *Field) GenType() string {
 		return "Time"
 	case "json.RawMessage", "[]byte":
 		return "Bytes"
-	case "serializer":
-		return "Serializer"
 	default:
 		return "Field"
 	}
+}
+
+func (m *Field) hasSerializerTag() bool {
+	for key := range m.GORMTag {
+		if strings.EqualFold(key, "serializer") || strings.EqualFold(key, "json") {
+			return true
+		}
+	}
+	if tag, ok := m.Tag[field.TagKeyGorm]; ok {
+		settings := schema.ParseTagSetting(tag, ";")
+		return settings["SERIALIZER"] != "" || settings["JSON"] != ""
+	}
+	return false
 }
 
 // EscapeKeyword escape keyword

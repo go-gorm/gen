@@ -64,11 +64,16 @@ func (b *QueryStructMeta) parseStruct(st interface{}) error {
 		fp = fps
 	}
 	for _, f := range stmt.Schema.Fields {
+		fieldType := b.getFieldRealType(f.FieldType)
+		customGenType := fp.GetFieldGenType(f)
+		if customGenType == "" && f.Serializer != nil && fieldType != "serializer" {
+			customGenType = fmt.Sprintf("SerializerField[%s]", f.FieldType.String())
+		}
 		gf := &model.Field{
 			Name:          f.Name,
-			Type:          b.getFieldRealType(f.FieldType),
+			Type:          fieldType,
 			ColumnName:    f.DBName,
-			CustomGenType: fp.GetFieldGenType(f),
+			CustomGenType: customGenType,
 			ColumnComment: f.Comment,
 			Tag:           f.TagSettings,
 		}
