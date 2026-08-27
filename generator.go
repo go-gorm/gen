@@ -324,41 +324,42 @@ func (g *Generator) generateQueryFile() (err error) {
 		manifest.Mode = uint(g.Mode)
 	}
 
-	var errOnce sync.Once
-	errChan := make(chan error, 1)
+	errs := newAbortGroup()
 	pool := pools.NewPool(concurrent)
-	// generate query code for all struct
+	// generate query code for all struct, stopping as soon as any table fails
+queryLoop:
 	for _, info := range g.Data {
+		select {
+		case <-errs.Aborted(): // stop scheduling further tables
+			break queryLoop
+		default:
+		}
 		pool.Wait()
 		go func(info *genInfo) {
 			defer pool.Done()
-			err := g.generateSingleQueryFile(info, manifest, &manifestMu)
-			if err != nil {
-				errOnce.Do(func() {
-					errChan <- err
-				})
+			select {
+			case <-errs.Aborted(): // a sibling already failed; skip wasted work
+				return
+			default:
+			}
+
+			if err := g.generateSingleQueryFile(info, manifest, &manifestMu); err != nil {
+				errs.Abort(err)
 				return
 			}
 
 			if g.WithUnitTest {
-				err = g.generateQueryUnitTestFile(info, manifest, &manifestMu)
-				if err != nil { // do not panic
+				if err := g.generateQueryUnitTestFile(info, manifest, &manifestMu); err != nil { // do not panic
 					g.db.Logger.Error(context.Background(), "generate unit test fail: %s", err)
 					return
 				}
 			}
 		}(info)
 	}
-	select {
-	case err = <-errChan:
+	// wait for in-flight workers to wind down before draining the failure
+	<-pool.AsyncWaitAll()
+	if err := errs.Err(); err != nil {
 		return err
-	case <-pool.AsyncWaitAll():
-		// check queued error when both select cases are ready and pool wins
-		select {
-		case err = <-errChan:
-			return err
-		default:
-		}
 	}
 
 	genForRoot := *g
@@ -633,56 +634,67 @@ func (g *Generator) generateModelFile() error {
 		manifest.Mode = uint(g.Mode)
 	}
 
-	errChan := make(chan error)
+	errs := newAbortGroup()
 	pool := pools.NewPool(concurrent)
+modelLoop:
 	for _, data := range g.models {
 		if data == nil || !data.Generated {
 			continue
 		}
+		select {
+		case <-errs.Aborted(): // stop scheduling further tables
+			break modelLoop
+		default:
+		}
 		pool.Wait()
 		go func(data *generate.QueryStructMeta) {
 			defer pool.Done()
+			select {
+			case <-errs.Aborted(): // a sibling already failed; skip wasted work
+				return
+			default:
+			}
 
 			var buf bytes.Buffer
-			err := render(tmpl.Model, &buf, data)
-			if err != nil {
-				errChan <- err
+			if err := render(tmpl.Model, &buf, data); err != nil {
+				errs.Abort(err)
 				return
 			}
 
 			for _, method := range data.ModelMethods {
-				err = render(tmpl.ModelMethod, &buf, method)
-				if err != nil {
-					errChan <- err
+				if err := render(tmpl.ModelMethod, &buf, method); err != nil {
+					errs.Abort(err)
 					return
 				}
 			}
 
 			modelFile := modelOutPath + data.FileName + ".gen.go"
+			var err error
 			if manifestEnabled {
 				err = g.outputWithManifest(modelFile, buf.Bytes(), manifest, filepath.Base(modelFile), &manifestMu)
 			} else {
 				err = g.output(modelFile, buf.Bytes())
 			}
 			if err != nil {
-				errChan <- err
+				errs.Abort(err)
 				return
 			}
 
 			g.info(fmt.Sprintf("generate model file(table <%s> -> {%s.%s}): %s", data.TableName, data.StructInfo.Package, data.StructInfo.Type, modelFile))
 		}(data)
 	}
-	select {
-	case err = <-errChan:
+	// wait for in-flight workers to wind down before draining the failure
+	<-pool.AsyncWaitAll()
+	if err := errs.Err(); err != nil {
+		// the round failed; skip manifest persistence and pkg path detection
 		return err
-	case <-pool.AsyncWaitAll():
-		if manifestEnabled {
-			if err := saveManifest(manifestPath, manifest); err != nil {
-				return err
-			}
-		}
-		g.fillModelPkgPath(modelOutPath)
 	}
+	if manifestEnabled {
+		if err := saveManifest(manifestPath, manifest); err != nil {
+			return err
+		}
+	}
+	g.fillModelPkgPath(modelOutPath)
 	return nil
 }
 
