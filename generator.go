@@ -96,8 +96,8 @@ type Logger interface {
 // Generator code generator
 type Generator struct {
 	Config
-	Data   map[string]*genInfo                  //gen query data
-	models map[string]*generate.QueryStructMeta //gen model data
+	Data   map[string]*genInfo                  // gen query data
+	models map[string]*generate.QueryStructMeta // gen model data
 
 	logger Logger
 }
@@ -324,7 +324,8 @@ func (g *Generator) generateQueryFile() (err error) {
 		manifest.Mode = uint(g.Mode)
 	}
 
-	errChan := make(chan error)
+	var errOnce sync.Once
+	errChan := make(chan error, 1)
 	pool := pools.NewPool(concurrent)
 	// generate query code for all struct
 	for _, info := range g.Data {
@@ -333,13 +334,17 @@ func (g *Generator) generateQueryFile() (err error) {
 			defer pool.Done()
 			err := g.generateSingleQueryFile(info, manifest, &manifestMu)
 			if err != nil {
-				errChan <- err
+				errOnce.Do(func() {
+					errChan <- err
+				})
+				return
 			}
 
 			if g.WithUnitTest {
 				err = g.generateQueryUnitTestFile(info, manifest, &manifestMu)
 				if err != nil { // do not panic
 					g.db.Logger.Error(context.Background(), "generate unit test fail: %s", err)
+					return
 				}
 			}
 		}(info)
@@ -348,6 +353,12 @@ func (g *Generator) generateQueryFile() (err error) {
 	case err = <-errChan:
 		return err
 	case <-pool.AsyncWaitAll():
+		// check queued error when both select cases are ready and pool wins
+		select {
+		case err = <-errChan:
+			return err
+		default:
+		}
 	}
 
 	genForRoot := *g
