@@ -340,3 +340,33 @@ func Test_GenVariadic(t *testing.T) {
 		t.Error("should generate VariadicMethod implementation")
 	}
 }
+
+func Test_GenWithTemplate(t *testing.T) {
+	dir := ".gen/with_template_test"
+	os.RemoveAll(dir)
+	g := gen.NewGenerator(gen.Config{
+		OutPath: dir + "/query",
+		Mode:    gen.WithDefaultQuery,
+	})
+	g.UseDB(DB)
+	g.ApplyBasic(g.GenerateModel("users", gen.WithTemplate(`
+// CustomHello says hello for {{.ModelStructName}}
+func ({{.S}} *{{.ModelStructName}}) CustomHello() string {
+	return "hello from {{.ModelStructName}}"
+}
+`)))
+	g.Execute()
+
+	modelFile := dir + "/model/users.gen.go"
+	content, err := os.ReadFile(modelFile)
+	if err != nil {
+		t.Fatalf("read generated file failed: %v", err)
+	}
+	str := string(content)
+	if !strings.Contains(str, "func (u *User) CustomHello() string {") {
+		t.Error("should render custom template into generated model file")
+	}
+	if !strings.Contains(str, `return "hello from User"`) {
+		t.Error("should render template data (ModelStructName) into custom template")
+	}
+}

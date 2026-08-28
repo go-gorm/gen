@@ -661,6 +661,13 @@ modelLoop:
 				return
 			}
 
+			for _, customTemplate := range data.CustomTemplates {
+				if err := render(customTemplate, &buf, data); err != nil {
+					errs.Abort(err)
+					return
+				}
+			}
+
 			for _, method := range data.ModelMethods {
 				if err := render(tmpl.ModelMethod, &buf, method); err != nil {
 					errs.Abort(err)
