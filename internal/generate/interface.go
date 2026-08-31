@@ -259,6 +259,9 @@ func (m *InterfaceMethod) checkResult(result []parser.Param) (err error) {
 			param.SetName("rows")
 			m.GormOption = "Raw"
 			param.IsPointer = true
+		case param.IsGormDB():
+			param.SetName("executeSQL")
+			m.ResultData = param
 		default:
 			if !m.ResultData.IsNull() {
 				return fmt.Errorf("query method cannot return more than 1 data value in [%s.%s]", m.InterfaceName, m.MethodName)

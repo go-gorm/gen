@@ -16,8 +16,8 @@ func ({{.S}} {{.TargetStruct}}Do){{.FuncSign}}{
 	result,{{if .ReturnError}}err{{else}}_{{end}} = stmt.ConnPool.ExecContext(stmt.Context,generateSQL.String(){{if .HasSQLData}},params...{{end}}) // ignore_security_alert
 	{{else if .ReturnSQLRow}}row = {{.S}}.UnderlyingDB().Raw(generateSQL.String(){{if .HasSQLData}},params...{{end}}).Row() // ignore_security_alert
 	{{else if .ReturnSQLRows}}rows,{{if .ReturnError}}err{{else}}_{{end}} = {{.S}}.UnderlyingDB().Raw(generateSQL.String(){{if .HasSQLData}},params...{{end}}).Rows() // ignore_security_alert
-	{{else}}var executeSQL *gorm.DB
-	executeSQL = {{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL.String(){{if .HasSQLData}},params...{{end}}){{if not .ResultData.IsNull}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}  // ignore_security_alert
+	{{else}}{{if not .ResultData.IsGormDB}}var executeSQL *gorm.DB{{end}}
+	executeSQL = {{if and (.ResultData.IsGormDB) (not .ResultData.IsPointer)}}*{{end}}{{.S}}.UnderlyingDB().{{.GormOption}}(generateSQL.String(){{if .HasSQLData}},params...{{end}}){{if and (not .ResultData.IsNull) (not .ResultData.IsGormDB)}}.{{.GormRunMethodName}}({{if .HasGotPoint}}&{{end}}{{.ResultData.Name}}){{end}}  // ignore_security_alert
 	{{if .ReturnRowsAffected}}rowsAffected = executeSQL.RowsAffected
 	{{end}}{{if .ReturnError}}err = executeSQL.Error
 	{{end}}{{if .ReturnNothing}}_ = executeSQL
