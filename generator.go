@@ -661,9 +661,9 @@ modelLoop:
 				return
 			}
 
-			for _, customTemplate := range data.CustomTemplates {
+			for i, customTemplate := range data.CustomTemplates {
 				if err := render(customTemplate, &buf, data); err != nil {
-					errs.Abort(err)
+					errs.Abort(fmt.Errorf("render custom template #%d for model %s: %w", i+1, data.ModelStructName, err))
 					return
 				}
 			}
@@ -820,7 +820,7 @@ func render(tmpl string, wr io.Writer, data interface{}) error {
 	if tmpl == "" {
 		return nil
 	}
-	t, err := template.New(tmpl).Parse(tmpl)
+	t, err := template.New("gen").Parse(tmpl)
 	if err != nil {
 		return err
 	}
