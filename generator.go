@@ -214,6 +214,7 @@ func (g *Generator) genModelObjConfig() *model.Config {
 	return &model.Config{
 		ModelPkg:       g.Config.ModelPkgPath,
 		ImportPkgPaths: g.importPkgPaths,
+		ModelOpts:      g.modelOpts,
 		NameStrategy: model.NameStrategy{
 			TableNameNS: g.tableNameNS,
 			ModelNameNS: g.modelNameNS,

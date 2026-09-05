@@ -117,7 +117,7 @@ func GetQueryStructMetaFromObject(obj helper.Object, conf *model.Config) (*Query
 		fields = append(fields, &nf)
 	}
 
-	return &QueryStructMeta{
+	meta := &QueryStructMeta{
 		Source:          model.Object,
 		Generated:       true,
 		FileName:        fileName,
@@ -128,7 +128,8 @@ func GetQueryStructMetaFromObject(obj helper.Object, conf *model.Config) (*Query
 		StructInfo:      parser.Param{Type: structName, Package: conf.ModelPkg},
 		ImportPkgPaths:  append(conf.ImportPkgPaths, obj.ImportPkgPaths()...),
 		Fields:          fields,
-	}, nil
+	}
+	return meta.addMethodFromAddMethodOpt(conf.GetModelMethods()...).addCustomTemplateFromOpt(conf.GetCustomTemplates()...), nil
 }
 
 // ConvertStructs convert to base structures
