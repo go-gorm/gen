@@ -9,6 +9,7 @@ import (
 	"gorm.io/gen/field"
 	"gorm.io/gen/internal/generate"
 	"gorm.io/gen/internal/model"
+	"gorm.io/gen/internal/parser"
 	"gorm.io/gorm/schema"
 )
 
@@ -17,6 +18,12 @@ type ModelOpt = model.Option
 
 // Field exported model.Field
 type Field = *model.Field
+
+// CustomMethod exported parser.Method
+type CustomMethod = parser.Method
+
+// CustomParam exported parser.Param
+type CustomParam = parser.Param
 
 var ns = schema.NamingStrategy{}
 
