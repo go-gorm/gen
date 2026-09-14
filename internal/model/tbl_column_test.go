@@ -1,14 +1,20 @@
 package model
 
 import (
+	"bytes"
 	"database/sql"
+	"go/parser"
+	"go/token"
 	"reflect"
 	"strings"
 	"testing"
+	"text/template"
 
 	"gorm.io/gen/field"
+	gentemplate "gorm.io/gen/internal/template"
 	"gorm.io/gorm"
 	"gorm.io/gorm/migrator"
+	"gorm.io/gorm/schema"
 )
 
 type testColumnType struct {
@@ -200,5 +206,132 @@ func TestColumnDefaultAndCommentSanitization(t *testing.T) {
 	commentTag := got.GORMTag[field.TagKeyGormComment]
 	if len(commentTag) != 1 || strings.ContainsAny(commentTag[0], "\n`;:") {
 		t.Fatalf("comment tag was not sanitized: %v", commentTag)
+	}
+}
+
+// TestColumnTagValueEscaping verifies that single-line comments and default
+// values are escaped before entering the gorm tag: a double quote used to
+// truncate the quoted tag value at the reflect.StructTag level and silently
+// swallow the following directives, a backtick terminated the raw-string
+// literal of the generated struct tag, and a semicolon started a bogus gorm
+// directive.
+func TestColumnTagValueEscaping(t *testing.T) {
+	tests := []struct {
+		name         string
+		comment      string
+		defaultValue string
+		withDefault  bool
+		wantComment  string
+		wantDefault  string
+	}{
+		{
+			name:        "single-line double quote",
+			comment:     `say "hi" ok`,
+			wantComment: `say "hi" ok`,
+		},
+		{
+			name:        "single-line backtick",
+			comment:     "has `tick` inside",
+			wantComment: "has 'tick' inside",
+		},
+		{
+			name:        "single-line semicolon",
+			comment:     "a;b",
+			wantComment: "a b",
+		},
+		{
+			name:        "single-line colon preserved",
+			comment:     "start: 10",
+			wantComment: "start: 10",
+		},
+		{
+			name:         "default value with double quote",
+			defaultValue: `"none"`,
+			withDefault:  true,
+			wantDefault:  `"none"`,
+		},
+		{
+			name:         "default value with backtick",
+			defaultValue: "`v`",
+			withDefault:  true,
+			wantDefault:  "'v'",
+		},
+		{
+			name:         "comment and default combined",
+			comment:      `x";y`,
+			defaultValue: `"z"`,
+			withDefault:  true,
+			wantComment:  `x" y`,
+			wantDefault:  `"z"`,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			column := Column{ColumnType: testColumnType{
+				name:         "note",
+				databaseType: "text",
+				comment:      tt.comment,
+				defaultValue: tt.defaultValue,
+				defaultValid: true,
+			}}
+			column.WithNS(nil)
+			got := column.ToField(false, false, false, tt.withDefault)
+
+			tag := got.Tags()
+			value, ok := reflect.StructTag(tag).Lookup("gorm")
+			if !ok {
+				t.Fatalf("gorm tag lookup failed for %s", tag)
+			}
+			settings := schema.ParseTagSetting(value, ";")
+			if settings["COLUMN"] != "note" {
+				t.Errorf("COLUMN = %q, want %q (raw gorm value %q)", settings["COLUMN"], "note", value)
+			}
+			if tt.wantComment != "" && settings["COMMENT"] != tt.wantComment {
+				t.Errorf("COMMENT = %q, want %q (raw gorm value %q)", settings["COMMENT"], tt.wantComment, value)
+			}
+			if tt.wantDefault != "" && settings["DEFAULT"] != tt.wantDefault {
+				t.Errorf("DEFAULT = %q, want %q (raw gorm value %q)", settings["DEFAULT"], tt.wantDefault, value)
+			}
+		})
+	}
+}
+
+// TestColumnTagEscapingRendersCompilableModel renders the model template with
+// a field whose comment contains a backtick and a double quote and verifies
+// the generated file parses as Go source.
+func TestColumnTagEscapingRendersCompilableModel(t *testing.T) {
+	column := Column{ColumnType: testColumnType{
+		name:         "note",
+		databaseType: "text",
+		comment:      "has `tick` and \"quote\"",
+	}}
+	column.WithNS(nil)
+	field := column.ToField(false, false, false, false)
+
+	tmpl, err := template.New("model").Parse(gentemplate.Model)
+	if err != nil {
+		t.Fatalf("parse model template: %v", err)
+	}
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, map[string]interface{}{
+		"StructInfo":            map[string]string{"Package": "model", "Type": "Note"},
+		"ModelStructName":       "Note",
+		"TableName":             "notes",
+		"MultilineTableComment": false,
+		"StructComment":         "",
+		"ImportPkgPaths":        []string{},
+		"Fields":                []*Field{field},
+	})
+	if err != nil {
+		t.Fatalf("execute model template: %v", err)
+	}
+
+	if _, err := parser.ParseFile(token.NewFileSet(), "note.gen.go", buf.String(), 0); err != nil {
+		t.Fatalf("generated model does not parse: %v\nsource:\n%s", err, buf.String())
+	}
+	if strings.ContainsRune(field.Tags(), '`') {
+		t.Fatalf("tag still contains a raw backtick: %s", field.Tags())
 	}
 }
