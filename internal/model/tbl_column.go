@@ -142,19 +142,31 @@ func (c *Column) buildGormTag(withDefaultTag bool) field.GormTag {
 	}
 
 	if dtValue := c.defaultTagValue(); c.needDefaultTag(dtValue, withDefaultTag) { // cannot set default tag for primary key
-		tag.Set(field.TagKeyGormDefault, dtValue)
+		tag.Set(field.TagKeyGormDefault, sanitizeGormTagValue(dtValue))
 	}
 	if comment, ok := c.Comment(); ok && comment != "" {
 		if c.multilineComment() {
 			comment = strings.ReplaceAll(comment, "\n", "\\n")
-			comment = strings.ReplaceAll(comment, `"`, `\"`)
-			comment = strings.ReplaceAll(comment, "`", "'")
+			comment = sanitizeGormTagValue(comment)
 			comment = strings.ReplaceAll(comment, ":", " ")
-			comment = strings.ReplaceAll(comment, ";", " ")
+		} else {
+			comment = sanitizeGormTagValue(comment)
 		}
 		tag.Set(field.TagKeyGormComment, comment)
 	}
 	return tag
+}
+
+// sanitizeGormTagValue escapes characters that would otherwise break the
+// generated struct tag. A double quote terminates the quoted tag value at the
+// reflect.StructTag level and silently swallows every following directive, a
+// backtick terminates the surrounding raw-string literal (it cannot be escaped
+// inside a raw literal), and a semicolon starts a new gorm directive.
+func sanitizeGormTagValue(value string) string {
+	value = strings.ReplaceAll(value, `"`, `\"`)
+	value = strings.ReplaceAll(value, "`", "'")
+	value = strings.ReplaceAll(value, ";", " ")
+	return value
 }
 
 // needDefaultTag check if default tag needed
