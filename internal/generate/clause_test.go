@@ -1,8 +1,11 @@
 package generate
 
 import (
+	"errors"
+	"strings"
 	"testing"
 
+	"gorm.io/gen/internal/diagnostic"
 	"gorm.io/gen/internal/parser"
 )
 
@@ -191,10 +194,115 @@ var m = func() *InterfaceMethod {
 			Name:    "names",
 			IsArray: true,
 		},
+		{
+			Type:    "time.Time",
+			Package: "time",
+			Name:    "wrong",
+		},
 	}
 
 	return m
 
+}
+
+func TestCheckSQLVarParamValidation(t *testing.T) {
+	newMethod := func() *InterfaceMethod {
+		mm := m()
+		mm.S = "u"
+		mm.InterfaceName = "IF"
+		mm.MethodName = "M"
+		return mm
+	}
+
+	mustFailWith := func(t *testing.T, sql, causePart string) {
+		t.Helper()
+		mm := newMethod()
+		mm.SQLString = sql
+		err := mm.sqlStateCheckAndSplit()
+		if err == nil {
+			t.Fatalf("expected generation-time validation error for %q, got nil", sql)
+		}
+		var de *diagnostic.Error
+		if !errors.As(err, &de) {
+			t.Fatalf("expected *diagnostic.Error, got %T: %v", err, err)
+		}
+		if de.Diag.Code != diagnostic.CodeSQLVar {
+			t.Fatalf("expected code %q, got %q", diagnostic.CodeSQLVar, de.Diag.Code)
+		}
+		if de.Diag.Method != mm.MethodName || de.Diag.Interface != mm.InterfaceName {
+			t.Fatalf("diagnostic should carry the failing method: %+v", de.Diag)
+		}
+		cause := errors.Unwrap(de)
+		if cause == nil {
+			t.Fatalf("diagnostic should wrap the param-level cause: %v", err)
+		}
+		if !strings.Contains(cause.Error(), causePart) {
+			t.Fatalf("cause should mention %q, got %q", causePart, cause.Error())
+		}
+	}
+
+	mustGenerate := func(t *testing.T, sql string, wantParts ...string) {
+		t.Helper()
+		mm := newMethod()
+		mm.SQLString = sql
+		if err := mm.sqlStateCheckAndSplit(); err != nil {
+			t.Fatalf("unexpected validation error for %q: %v", sql, err)
+		}
+		if _, err := mm.Section.BuildSQL(); err != nil {
+			t.Fatalf("unexpected build error for %q: %v", sql, err)
+		}
+		joined := strings.Join(mm.Section.Tmpls, "\n")
+		for _, part := range wantParts {
+			if !strings.Contains(joined, part) {
+				t.Fatalf("generated code for %q should contain %q, got:\n%s", sql, part, joined)
+			}
+		}
+	}
+
+	t.Run("typo data param rejected", func(t *testing.T) {
+		mustFailWith(t, "select * from @@table where name=@nmae", "unknow variable param:nmae")
+	})
+
+	t.Run("typo variable param rejected", func(t *testing.T) {
+		mustFailWith(t, "select * from @@table where @@nmae = @name", "unknow variable param:nmae")
+	})
+
+	t.Run("non string variable param rejected", func(t *testing.T) {
+		mustFailWith(t, "select * from @@table where @@id = @id", "variable name must be string")
+	})
+
+	t.Run("array variable param rejected", func(t *testing.T) {
+		mustFailWith(t, "select * from @@table where @@names = @name", "variable name must be string")
+	})
+
+	t.Run("for value and index params accepted", func(t *testing.T) {
+		mm := newMethod()
+		mm.Params = append(mm.Params, parser.Param{Type: "map[string]string", Name: "attrs"})
+		mm.SQLString = "select * from @@table {{where}}{{for k, v := range attrs}}and @@k = @v{{end}}{{end}}"
+		if err := mm.sqlStateCheckAndSplit(); err != nil {
+			t.Fatalf("unexpected validation error: %v", err)
+		}
+		if _, err := mm.Section.BuildSQL(); err != nil {
+			t.Fatalf("unexpected build error: %v", err)
+		}
+		joined := strings.Join(mm.Section.Tmpls, "\n")
+		if !strings.Contains(joined, "u.Quote(k)") {
+			t.Fatalf("variable for-index should be quoted at generation time:\n%s", joined)
+		}
+		if !strings.Contains(joined, "params = append(params,v)") {
+			t.Fatalf("for-value should be appended to params:\n%s", joined)
+		}
+	})
+
+	t.Run("string variable param accepted", func(t *testing.T) {
+		mustGenerate(t, "select * from @@table where @@name = @name",
+			"u.Quote(name)", "params = append(params,name)")
+	})
+
+	t.Run("struct field data param accepted", func(t *testing.T) {
+		mustGenerate(t, "update @@table set modify_time=@wrong.Now() where id=@wrong.Id",
+			"params = append(params,wrong.Now())", "params = append(params,wrong.Id)")
+	})
 }
 
 func TestCheckResultRejectsInterfaceReturn(t *testing.T) {
