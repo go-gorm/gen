@@ -45,6 +45,44 @@ func TestConfigPreprocessAndNames(t *testing.T) {
 	}
 }
 
+// TestConfigGetNamesTablePrefix pins the TablePrefix normalization semantics
+// used by GetNames, including the ambiguous cases that the generator-level
+// collision guard (see Generator.registerModel) has to compensate for.
+func TestConfigGetNamesTablePrefix(t *testing.T) {
+	cases := []struct {
+		name   string
+		prefix string
+		table  string
+		want   string
+	}{
+		// The normal case: source table without the prefix gets prefixed.
+		{"un-prefixed table gets the prefix", "t_", "users", "t_users"},
+		// gorm naming convention: an already-prefixed source table is kept
+		// as-is instead of being double-prefixed. Note this collides with
+		// the previous case ("users" and "t_users" both normalize to
+		// "t_users"); the generator rejects such cross-source collisions at
+		// registration time instead of emitting a DO that queries the wrong
+		// physical table.
+		{"already-prefixed table is kept", "t_", "t_users", "t_users"},
+		// A coincidental prefix cannot be distinguished from an intentional
+		// one at this layer, so "users" stays "users" rather than becoming
+		// "userusers". Documented inherited semantics; disambiguate with
+		// TableNameNS when the prefixed table is intended.
+		{"coincidental prefix is not applied", "user", "users", "users"},
+		// An empty prefix must be a no-op for every table name.
+		{"empty prefix is a no-op", "", "users", "users"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg := (&Config{TablePrefix: tc.prefix, TableName: tc.table}).Preprocess()
+			if got, _, _ := cfg.GetNames(); got != tc.want {
+				t.Fatalf("GetNames() tableName = %q, want %q (prefix=%q source=%q)", got, tc.want, tc.prefix, tc.table)
+			}
+		})
+	}
+}
+
 func TestConfigDefaultsAndSchemaName(t *testing.T) {
 	cfg := (&Config{}).Preprocess()
 	if cfg.ModelPkg != DefaultModelPkg {

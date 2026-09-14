@@ -56,9 +56,10 @@ func NewGenerator(cfg Config) *Generator {
 	}
 
 	return &Generator{
-		Config: cfg,
-		Data:   make(map[string]*genInfo),
-		models: make(map[string]*generate.QueryStructMeta),
+		Config:            cfg,
+		Data:              make(map[string]*genInfo),
+		models:            make(map[string]*generate.QueryStructMeta),
+		modelTableSources: make(map[string]string),
 
 		logger: log.Default(),
 	}
@@ -99,6 +100,11 @@ type Generator struct {
 	Data   map[string]*genInfo                  // gen query data
 	models map[string]*generate.QueryStructMeta // gen model data
 
+	// modelTableSources maps each generated table name to the source table
+	// (database table name or object TableName) that produced it. It backs
+	// the registration-time TablePrefix collision check; see registerModel.
+	modelTableSources map[string]string
+
 	logger Logger
 }
 
@@ -135,10 +141,40 @@ func (g *Generator) GenerateModelAs(tableName string, modelName string, opts ...
 		g.info(fmt.Sprintf("ignore table <%s>", tableName))
 		return nil
 	}
-	g.models[meta.ModelStructName] = meta
+	g.registerModel(tableName, meta)
 
 	g.info(fmt.Sprintf("got %d columns from table <%s>", len(meta.Fields), meta.TableName))
 	return meta
+}
+
+// registerModel records meta for model generation and fails fast when a
+// different source table already normalized to the same generated table name.
+//
+// TablePrefix (mirrored from gorm's schema.NamingStrategy) can map two
+// distinct source tables onto one generated table name: with prefix "t_",
+// both "users" and "t_users" normalize to "t_users". Without this check the
+// generated DO of one model silently queries the other physical table at
+// runtime (fields read from one table, rows fetched from the other), so the
+// collision is rejected here instead of emitted. Disambiguate by renaming one
+// of the tables via WithTableNameStrategy, or drop one of them.
+func (g *Generator) registerModel(sourceTable string, meta *generate.QueryStructMeta) {
+	if meta == nil {
+		return
+	}
+	if g.modelTableSources == nil {
+		g.modelTableSources = make(map[string]string)
+	}
+	if prevSource, exist := g.modelTableSources[meta.TableName]; exist && prevSource != sourceTable {
+		err := fmt.Errorf(
+			"gen: source tables %q and %q both normalize to generated table name %q (TablePrefix %q): "+
+				"the generated DO for %q would silently query the wrong physical table at runtime; "+
+				"rename one table via WithTableNameStrategy or drop one of them",
+			prevSource, sourceTable, meta.TableName, g.getTablePrefix(), sourceTable)
+		g.db.Logger.Error(context.Background(), "%s", err.Error())
+		panic(err)
+	}
+	g.modelTableSources[meta.TableName] = sourceTable
+	g.models[meta.ModelStructName] = meta
 }
 
 // GenerateAllTable generate all tables in db
@@ -163,7 +199,7 @@ func (g *Generator) GenerateModelFrom(obj helper.Object) *generate.QueryStructMe
 	if err != nil {
 		panic(fmt.Errorf("generate struct from object fail: %w", err))
 	}
-	g.models[s.ModelStructName] = s
+	g.registerModel(obj.TableName(), s)
 
 	g.info(fmt.Sprintf("parse object %s", obj.StructName()))
 	return s

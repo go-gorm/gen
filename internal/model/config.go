@@ -9,10 +9,23 @@ import (
 
 // Config model configuration
 type Config struct {
-	ModelPkg    string // package name for generated models
-	TablePrefix string // prefix applied to normalized table names that do not already contain it
-	TableName   string // source database table name
-	ModelName   string // requested generated model type name
+	ModelPkg  string // package name for generated models
+	TableName string // source database table name
+	ModelName string // requested generated model type name
+
+	// TablePrefix prefixes normalized table names that do not already start
+	// with it. The prefix mirrors gorm's schema.NamingStrategy.TablePrefix so
+	// generated TableName() values match the runtime table mapping.
+	//
+	// The "already starts with it" check follows gorm's naming convention but
+	// cannot tell an intentionally prefixed table from a coincidental one:
+	// with prefix "user" a source table named "users" is kept as-is instead
+	// of becoming "userusers", and with prefix "t_" the source tables
+	// "users" and "t_users" both normalize to "t_users". The generator
+	// therefore rejects such collisions when models are registered instead of
+	// silently emitting code that queries the wrong physical table; use
+	// WithTableNameStrategy (TableNameNS) to disambiguate.
+	TablePrefix string
 
 	ImportPkgPaths []string // additional quoted imports required by generated models
 	ModelOpts      []Option // unsorted field and method options from the public configuration
@@ -84,7 +97,13 @@ func (cfg *Config) GetNames() (tableName, structName, fileName string) {
 	if cfg.TableNameNS != nil {
 		tableName = cfg.TableNameNS(tableName)
 	}
-	if tableName != "" && !strings.HasPrefix(tableName, cfg.TablePrefix) {
+	// Skip only when the (already normalized) table name starts with the
+	// prefix, matching gorm's naming convention for pre-prefixed tables. An
+	// empty prefix never applies, and coincidental prefixes (prefix "user",
+	// table "users") are indistinguishable from intentional ones at this
+	// layer; the generator detects the resulting cross-table collisions at
+	// registration time.
+	if tableName != "" && cfg.TablePrefix != "" && !strings.HasPrefix(tableName, cfg.TablePrefix) {
 		tableName = cfg.TablePrefix + tableName
 	}
 
