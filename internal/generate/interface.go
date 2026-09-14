@@ -277,7 +277,12 @@ func (m *InterfaceMethod) checkResult(result []parser.Param) (err error) {
 
 // checkSQL get sql from comment and check it
 func (m *InterfaceMethod) checkSQL() (err error) {
-	m.SQLString, m.sqlBaseLine, m.sqlBaseColumn = m.parseDocString()
+	m.SQLString, m.sqlBaseLine, m.sqlBaseColumn, err = m.parseDocString()
+	if err != nil {
+		err = diagnostic.WithMethod(err, m.InterfaceName, m.MethodName)
+		err = diagnostic.WithLocation(err, m.File, m.DocLine, m.DocColumn)
+		return
+	}
 	if err = m.sqlStateCheckAndSplit(); err != nil {
 		err = diagnostic.WithMethod(err, m.InterfaceName, m.MethodName)
 		err = diagnostic.WithLocation(err, m.File, m.DocLine, m.DocColumn)
@@ -285,10 +290,14 @@ func (m *InterfaceMethod) checkSQL() (err error) {
 	return
 }
 
-func (m *InterfaceMethod) parseDocString() (string, int, int) {
-	docString, lineOffset, colOffset := m.getSQLDocString()
-	leftTrimmed := strings.TrimLeft(docString, " \t\r\n")
-	trimmedPrefix := docString[:len(docString)-len(leftTrimmed)]
+// parseDocString extracts the raw SQL text from the method's doc comment.
+// The comment may be wrapped in a "sql(...)" or "where(...)" form; a wrapper
+// that is present but unterminated is rejected instead of being sliced
+// blindly, so malformed comments surface as regular diagnostics.
+func (m *InterfaceMethod) parseDocString() (docString string, baseLine, baseCol int, err error) {
+	raw, lineOffset, colOffset := m.getSQLDocString()
+	leftTrimmed := strings.TrimLeft(raw, " \t\r\n")
+	trimmedPrefix := raw[:len(raw)-len(leftTrimmed)]
 	if trimmedPrefix != "" {
 		lineOffset += strings.Count(trimmedPrefix, "\n")
 		if last := strings.LastIndex(trimmedPrefix, "\n"); last >= 0 {
@@ -297,21 +306,20 @@ func (m *InterfaceMethod) parseDocString() (string, int, int) {
 			colOffset += len(trimmedPrefix)
 		}
 	}
-	docString = strings.TrimSpace(docString)
+	docString = strings.TrimSpace(raw)
 
-	baseLine := m.DocLine + lineOffset
-	baseCol := m.DocColumn + colOffset
+	baseLine = m.DocLine + lineOffset
+	baseCol = m.DocColumn + colOffset
+	var wrapperLen int
 	switch {
 	case strings.HasPrefix(strings.ToLower(docString), "sql("):
-		baseCol += 4
-		docString = docString[4 : len(docString)-1]
+		wrapperLen = 4
 		m.GormOption = "Raw"
 		if m.ResultData.IsNull() {
 			m.GormOption = "Exec"
 		}
 	case strings.HasPrefix(strings.ToLower(docString), "where("):
-		baseCol += 6
-		docString = docString[6 : len(docString)-1]
+		wrapperLen = 6
 		m.GormOption = "Where"
 	default:
 		m.GormOption = "Raw"
@@ -319,13 +327,21 @@ func (m *InterfaceMethod) parseDocString() (string, int, int) {
 			m.GormOption = "Exec"
 		}
 	}
+	if wrapperLen > 0 {
+		if len(docString) <= wrapperLen || !strings.HasSuffix(docString, ")") {
+			return "", 0, 0, diagnostic.New(diagnostic.CodeSQLIncomplete,
+				fmt.Sprintf("unterminated %q wrapper in doc comment: %q", docString[:wrapperLen], docString))
+		}
+		baseCol += wrapperLen
+		docString = docString[wrapperLen : len(docString)-1]
+	}
 
 	// if wrapped by ", trim it
-	if strings.HasPrefix(docString, `"`) && strings.HasSuffix(docString, `"`) {
+	if len(docString) >= 2 && strings.HasPrefix(docString, `"`) && strings.HasSuffix(docString, `"`) {
 		baseCol++
 		docString = docString[1 : len(docString)-1]
 	}
-	return docString, baseLine, baseCol
+	return docString, baseLine, baseCol, nil
 }
 
 func (m *InterfaceMethod) getSQLDocString() (string, int, int) {
