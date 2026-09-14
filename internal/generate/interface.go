@@ -436,6 +436,10 @@ func (m *InterfaceMethod) sqlStateCheckAndSplit() error {
 					}
 					buf.WriteSQL(sqlString[i])
 				}
+			} else if b == '{' {
+				// A lone '{' is not part of the DIY template syntax. Previously it was
+				// silently dropped, so the generated SQL diverged from the doc comment.
+				return m.diagSQL(i, diagnostic.CodeSQLIncomplete, "unexpected lone '{' in SQL template", sqlString, nil)
 			}
 			if b == '@' {
 				i++
