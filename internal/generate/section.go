@@ -571,14 +571,32 @@ func (s *Section) checkSQLVar(param string, status model.Status, method *Interfa
 	if status == model.DATA {
 		method.HasForParams = true
 	}
-	if status == model.VARIABLE {
-		param = fmt.Sprintf("%s.Quote(%s)", method.S, param)
+
+	// Loop variables of an enclosing {{for}} clause are valid params; both the
+	// range value and the range index may be referenced (map keys are commonly
+	// quoted as dynamic identifiers via @@index).
+	paramName := strings.Split(param, ".")[0]
+	for _, part := range s.members {
+		if part.Type != model.FOR {
+			continue
+		}
+		if part.ForRange.value != paramName && part.ForRange.index != paramName {
+			continue
+		}
+		if status == model.VARIABLE {
+			param = fmt.Sprintf("%s.Quote(%s)", method.S, param)
+		}
+		result = section{
+			Type:  status,
+			Value: param,
+		}
+		return
 	}
-	result = section{
-		Type:  status,
-		Value: param,
-	}
-	return
+
+	// Anything else must reference a declared method parameter; this keeps
+	// typos and non-string @@ bindings from failing at generated-code compile
+	// time instead of generation time.
+	return method.checkSQLVarByParams(param, status)
 }
 
 // GetName ...
