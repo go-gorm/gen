@@ -154,12 +154,16 @@ func (cfg *Config) Revise() (err error) {
 		cfg.ModelPkgPath = model.DefaultModelPkg
 	}
 
+	// The default must be applied before filepath.Abs: Abs("") resolves to the
+	// current working directory with a nil error, so an empty OutPath would
+	// otherwise never reach the branch below and query files would be written
+	// into the working directory.
+	if strings.TrimSpace(cfg.OutPath) == "" {
+		cfg.OutPath = fmt.Sprintf(".%squery%s", string(os.PathSeparator), string(os.PathSeparator))
+	}
 	cfg.OutPath, err = filepath.Abs(cfg.OutPath)
 	if err != nil {
 		return fmt.Errorf("outpath is invalid: %w", err)
-	}
-	if cfg.OutPath == "" {
-		cfg.OutPath = fmt.Sprintf(".%squery%s", string(os.PathSeparator), string(os.PathSeparator))
 	}
 	if cfg.OutFile == "" {
 		cfg.OutFile = filepath.Join(cfg.OutPath, "gen.go")
