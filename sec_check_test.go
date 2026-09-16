@@ -136,6 +136,8 @@ func TestCheckLocking(t *testing.T) {
 		{name: "update", locking: clause.Locking{Strength: " update "}},
 		{name: "share nowait", locking: clause.Locking{Strength: "SHARE", Options: "nowait"}},
 		{name: "skip locked", locking: clause.Locking{Strength: "UPDATE", Options: " skip locked "}},
+		{name: "no key update", locking: clause.Locking{Strength: "NO KEY UPDATE"}},
+		{name: "key share", locking: clause.Locking{Strength: "KEY SHARE", Options: "NOWAIT"}},
 		{name: "empty strength", locking: clause.Locking{}, wantErr: true},
 		{name: "invalid strength", locking: clause.Locking{Strength: "EXCLUSIVE"}, wantErr: true},
 		{name: "raw table", locking: clause.Locking{Strength: "UPDATE", Table: clause.Table{Raw: true}}, wantErr: true},
