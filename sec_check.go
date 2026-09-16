@@ -82,8 +82,8 @@ func checkOnConflict(c clause.OnConflict) error {
 }
 
 func checkLocking(c clause.Locking) error {
-	if strength := strings.ToUpper(strings.TrimSpace(c.Strength)); strength != "UPDATE" && strength != "SHARE" {
-		return errors.New("Locking clause's Strength only allow assignments of UPDATE/SHARE")
+	if strength := strings.ToUpper(strings.TrimSpace(c.Strength)); !in(strength, "UPDATE", "NO KEY UPDATE", "SHARE", "KEY SHARE") {
+		return errors.New("Locking clause's Strength only allow assignments of UPDATE/NO KEY UPDATE/SHARE/KEY SHARE")
 	}
 	if c.Table.Raw {
 		return errors.New("Locking clause's Table cannot be set Raw==true")
