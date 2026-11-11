@@ -12,6 +12,7 @@ type String = Chars[string]
 // Bytes []byte type field
 type Bytes = Chars[[]byte]
 
+// NewChars create field for chars
 func NewChars[T ~string | ~[]byte](table, column string, opts ...Option) Chars[T] {
 	return newChars[T](expr{col: toColumn(table, column, opts...)})
 }
