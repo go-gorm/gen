@@ -60,11 +60,19 @@ func (q *Query) clone(db *gorm.DB) *Query {
 }
 
 func (q *Query) ReadDB() *Query {
-	return q.clone(q.db.Clauses(dbresolver.Read))
+	return q.withResolver(dbresolver.Read)
 }
 
 func (q *Query) WriteDB() *Query {
-	return q.clone(q.db.Clauses(dbresolver.Write))
+	return q.withResolver(dbresolver.Write)
+}
+
+func (q *Query) withResolver(op dbresolver.Operation) *Query {
+	routed := q.clone(q.db.Clauses(op))
+	routed.Comment.commentDo.ReplaceDB(routed.Comment.commentDo.UnderlyingDB().Clauses(op))
+	routed.Post.postDo.ReplaceDB(routed.Post.postDo.UnderlyingDB().Clauses(op))
+	routed.User.userDo.ReplaceDB(routed.User.userDo.UnderlyingDB().Clauses(op))
+	return routed
 }
 
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {

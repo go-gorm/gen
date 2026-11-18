@@ -60,11 +60,19 @@ func (q *Query) clone(db *gorm.DB) *Query {
 }
 
 func (q *Query) ReadDB() *Query {
-	return q.clone(q.db.Clauses(dbresolver.Read))
+	return q.withResolver(dbresolver.Read)
 }
 
 func (q *Query) WriteDB() *Query {
-	return q.clone(q.db.Clauses(dbresolver.Write))
+	return q.withResolver(dbresolver.Write)
+}
+
+func (q *Query) withResolver(op dbresolver.Operation) *Query {
+	routed := q.clone(q.db.Clauses(op))
+	routed.Bank.bankDo.ReplaceDB(routed.Bank.bankDo.UnderlyingDB().Clauses(op))
+	routed.CreditCard.creditCardDo.ReplaceDB(routed.CreditCard.creditCardDo.UnderlyingDB().Clauses(op))
+	routed.Customer.customerDo.ReplaceDB(routed.Customer.customerDo.UnderlyingDB().Clauses(op))
+	return routed
 }
 
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {

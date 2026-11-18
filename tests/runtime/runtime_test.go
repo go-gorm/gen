@@ -14,6 +14,7 @@ import (
 	fixture "gorm.io/gen/tests/fixture/model"
 	"gorm.io/gen/tests/fixture/query"
 	"gorm.io/gorm"
+	"gorm.io/plugin/dbresolver"
 )
 
 var _ func([]*string) field.AssignExpr = query.Q.User.Photos.Value
@@ -322,5 +323,45 @@ func assertUsers(t *testing.T, users []*fixture.User, err error, wantNames ...st
 		if got[index] != wantNames[index] {
 			t.Fatalf("user names = %v, want %v", got, wantNames)
 		}
+	}
+}
+
+func TestQueryResolverRouting(t *testing.T) {
+	source, _ := newSQLiteDB(t)
+	replica, _ := newSQLiteDB(t)
+	if err := source.Model(&fixture.User{}).Where("id = ?", 1).Update("role", "source").Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := replica.Model(&fixture.User{}).Where("id = ?", 1).Update("role", "replica").Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := source.Use(dbresolver.Register(dbresolver.Config{
+		Replicas: []gorm.Dialector{sqlite.Dialector{Conn: replica.ConnPool}},
+	})); err != nil {
+		t.Fatal(err)
+	}
+	q := query.Use(source)
+	aliased := query.Use(source)
+	aliased.User = *aliased.User.As("writer")
+	for _, tc := range []struct {
+		name  string
+		query *query.Query
+		role  string
+	}{
+		{"write", q.WriteDB(), "source"},
+		{"aliased table", aliased.WriteDB(), "source"},
+		{"read after write", q.WriteDB().ReadDB(), "replica"},
+		{"original", q, "replica"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			u := tc.query.User
+			row, err := u.WithContext(context.Background()).Where(u.ID.Eq(1)).Take()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if row.Role != tc.role {
+				t.Fatalf("got role %q, want %q", row.Role, tc.role)
+			}
+		})
 	}
 }
